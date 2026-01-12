@@ -62,6 +62,7 @@ const HeroSlider = () => {
     const cardVariants = {
         center: {
             x: 0,
+            y: "-40%",
             scale: 1.1,
             zIndex: 10,
             rotate: 0,
@@ -70,6 +71,7 @@ const HeroSlider = () => {
         },
         left: {
             x: -220,
+            y: "-40%",
             scale: 0.9,
             zIndex: 5,
             rotate: -6,
@@ -78,6 +80,7 @@ const HeroSlider = () => {
         },
         right: {
             x: 220,
+            y: "-40%",
             scale: 0.9,
             zIndex: 5,
             rotate: 6,
@@ -86,6 +89,7 @@ const HeroSlider = () => {
         },
         enter: {
             x: 400,
+            y: "-40%",
             scale: 0.7,
             zIndex: 1,
             rotate: 15,
@@ -94,6 +98,7 @@ const HeroSlider = () => {
         },
         exit: {
             x: -400,
+            y: "-40%",
             scale: 0.7,
             zIndex: 1,
             rotate: -15,
@@ -156,9 +161,9 @@ const HeroSlider = () => {
 
     // For static mode, we need to override the Variant positions to be static visuals
     const staticVariants = {
-        center: { x: 0, scale: 1.1, zIndex: 10, opacity: 1 },
-        left: { x: -130, scale: 0.85, zIndex: 5, opacity: 1 },
-        right: { x: 130, scale: 0.85, zIndex: 5, opacity: 1 },
+        center: { x: 0, y: "-40%", scale: 1.1, zIndex: 10, opacity: 1 },
+        left: { x: -130, y: "-40%", scale: 0.85, zIndex: 5, opacity: 1 },
+        right: { x: 130, y: "-40%", scale: 0.85, zIndex: 5, opacity: 1 },
         hidden: { opacity: 0, display: 'none' }
     };
 
