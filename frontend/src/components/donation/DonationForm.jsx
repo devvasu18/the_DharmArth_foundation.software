@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useConfirm } from '../../context/ConfirmContext';
 import { User, Smartphone, Mail, MapPin, CreditCard } from 'lucide-react';
 import api from '../../services/api';
 import './DonationForm.css';
+import { validatePAN, validateAadhaar } from '../../utils/validators';
 
 const DonationForm = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { showAlert } = useConfirm();
     const [amount, setAmount] = useState(1000);
+    const [donationConfig, setDonationConfig] = useState({ plans: [600, 1000, 5000], popularAmount: 1000 });
     const [customAmount, setCustomAmount] = useState('');
     const [motivatorMobile, setMotivatorMobile] = useState('');
     const [referralSource, setReferralSource] = useState('');
@@ -17,26 +24,85 @@ const DonationForm = () => {
     const [email, setEmail] = useState('');
     const [pan, setPan] = useState('');
     const [aadhaar, setAadhaar] = useState('');
+    const [errors, setErrors] = useState({});
 
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const { data } = await api.get('/content/settings');
+                if (data.donation_config) {
+                    const config = typeof data.donation_config === 'string'
+                        ? JSON.parse(data.donation_config)
+                        : data.donation_config;
+
+                    if (config && config.plans && config.plans.length > 0) {
+                        setDonationConfig(config);
+                        setAmount(config.popularAmount || config.plans[0]);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to load donation config", error);
+            }
+        };
+        fetchSettings();
+
+        // Auto-fill user details if logged in
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                setFullName(user.name || '');
+                setMobile(user.mobile || '');
+                setEmail(user.email || '');
+            } catch (e) {
+                console.error("Error parsing user from localstorage");
+            }
+        }
+    }, []);
+
+    // Check for referral link
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const ref = params.get('ref');
+        if (ref) {
+            setMotivatorMobile(ref);
+        }
+    }, [location]);
 
     // Debounce motivator check
     useEffect(() => {
         const checkMotivator = async () => {
+            // Prevent self-referral
+            if (motivatorMobile && mobile && motivatorMobile === mobile) {
+                setMotivatorName("");
+                setErrors(prev => ({ ...prev, motivator: "Please fill motivators no. not self" }));
+                return;
+            }
+
             if (motivatorMobile.length === 10) {
                 try {
                     const { data } = await api.get(`/donate/validate-motivator/${motivatorMobile}`);
                     if (data.valid) {
                         setMotivatorName(data.name);
+                        setErrors(prev => ({ ...prev, motivator: null }));
                     } else {
                         setMotivatorName('');
+                        setErrors(prev => ({ ...prev, motivator: "Invalid motivator number" }));
                     }
                 } catch (error) {
                     console.error("Error validating motivator:", error);
                     setMotivatorName('');
+                    setErrors(prev => ({ ...prev, motivator: "Error validating number" }));
                 }
             } else {
                 setMotivatorName('');
+                if (motivatorMobile.length > 0) {
+                    // Check length (optional, maybe wait for 10)
+                } else {
+                    setErrors(prev => ({ ...prev, motivator: null }));
+                }
             }
         };
 
@@ -45,19 +111,52 @@ const DonationForm = () => {
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [motivatorMobile]);
+    }, [motivatorMobile, mobile]);
 
     const handleDonate = async () => {
         const finalAmount = customAmount ? Number(customAmount) : amount;
 
         if (!fullName || !mobile || !finalAmount) {
-            alert("Please fill in required fields.");
+            await showAlert("Please fill in required fields.");
             return;
         }
 
-        if (!referralSource && !motivatorMobile) {
-            alert("Please let us know what motivated you to donate (Motivator Mobile or Referral Source).");
+        const newErrors = {};
+        if (need80G) {
+            if (!validatePAN(pan)) {
+                newErrors.pan = "Invalid PAN Number format (e.g. ABCDE1234F)";
+            }
+            // Aadhaar is optional in the UI "Aadhaar Number (Optional)", but if entered, must be valid
+            if (aadhaar && !validateAadhaar(aadhaar)) {
+                newErrors.aadhaar = "Invalid Aadhaar Number (Check for typos)";
+            }
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
             return;
+        }
+        setErrors({});
+
+        // Referral/Motivator Validation Logic
+        if (referralSource) {
+            // Valid because referral source is selected
+        } else {
+            // Must have a valid motivator
+            if (!motivatorMobile) {
+                await showAlert("Please let us know what motivated you to donate (Motivator Mobile or Referral Source).");
+                return;
+            }
+            // Check for specific errors set during validation
+            if (errors.motivator) {
+                await showAlert(errors.motivator);
+                return;
+            }
+            // Check if user is trying to submit an invalid/unverified motivator
+            if (!motivatorName) {
+                await showAlert("Please enter a valid motivator number.");
+                return;
+            }
         }
 
         setLoading(true);
@@ -75,13 +174,13 @@ const DonationForm = () => {
             };
 
             const { data } = await api.post('/donate', payload);
-            alert(`Payment Successful! Donation ID: ${data.donationId}`);
+            await showAlert(`Payment Successful! Donation ID: ${data.donationId}`);
             // Reset form or redirect
-            window.location.href = '/';
+            navigate('/');
 
         } catch (error) {
             console.error("Donation failed:", error);
-            alert("Donation failed. Please try again.");
+            await showAlert("Donation failed. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -92,9 +191,15 @@ const DonationForm = () => {
             <h2 className="donation-title">Donation amount</h2>
 
             <div className="amount-options">
-                <button className={`amount-btn ${amount === 600 ? 'active' : ''}`} onClick={() => { setAmount(600); setCustomAmount(''); }}>₹600</button>
-                <button className={`amount-btn ${amount === 1000 ? 'active' : ''}`} onClick={() => { setAmount(1000); setCustomAmount(''); }}>₹1,000</button>
-                <button className={`amount-btn ${amount === 5000 ? 'active' : ''}`} onClick={() => { setAmount(5000); setCustomAmount(''); }}>₹5,000</button>
+                {donationConfig.plans.map((planAmount) => (
+                    <button
+                        key={planAmount}
+                        className={`amount-btn ${amount === planAmount ? 'active' : ''} ${donationConfig.popularAmount === planAmount ? 'popular' : ''}`}
+                        onClick={() => { setAmount(planAmount); setCustomAmount(''); }}
+                    >
+                        ₹{planAmount.toLocaleString()}
+                    </button>
+                ))}
             </div>
 
             <div className="custom-amount">
@@ -162,7 +267,7 @@ const DonationForm = () => {
                         <label>Motivated By (Mobile Number)</label>
                         <input
                             type="text"
-                            className="form-input"
+                            className={`form-input ${errors.motivator ? 'error-border' : ''}`}
                             placeholder="Enter 10 digit mobile"
                             value={motivatorMobile}
                             onChange={(e) => {
@@ -172,6 +277,7 @@ const DonationForm = () => {
                             disabled={!!referralSource}
                         />
                         {motivatorName && <span className="success-text">Motivated by: {motivatorName}</span>}
+                        {errors.motivator && <small className="error-text" style={{ color: 'red' }}>{errors.motivator}</small>}
                     </div>
 
                     <div className="text-center text-muted" style={{ textAlign: 'center', margin: '10px 0' }}>OR</div>
@@ -206,20 +312,32 @@ const DonationForm = () => {
                             <label>PAN Number*</label>
                             <input
                                 type="text"
-                                className="form-input"
+                                className={`form-input ${errors.pan ? 'error-border' : ''}`}
                                 placeholder="ABCDE1234F"
                                 value={pan}
-                                onChange={(e) => setPan(e.target.value)}
+                                onChange={(e) => {
+                                    setPan(e.target.value.toUpperCase());
+                                    if (errors.pan) setErrors({ ...errors, pan: null });
+                                }}
+                                maxLength={10}
                             />
+                            {errors.pan && <small className="error-text" style={{ color: 'red' }}>{errors.pan}</small>}
                         </div>
                         <div className="form-group">
                             <label>Aadhaar Number (Optional)</label>
                             <input
                                 type="text"
-                                className="form-input"
+                                className={`form-input ${errors.aadhaar ? 'error-border' : ''}`}
                                 value={aadhaar}
-                                onChange={(e) => setAadhaar(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (/^\d*$/.test(val) && val.length <= 12) {
+                                        setAadhaar(val);
+                                        if (errors.aadhaar) setErrors({ ...errors, aadhaar: null });
+                                    }
+                                }}
                             />
+                            {errors.aadhaar && <small className="error-text" style={{ color: 'red' }}>{errors.aadhaar}</small>}
                         </div>
                     </div>
                 )}

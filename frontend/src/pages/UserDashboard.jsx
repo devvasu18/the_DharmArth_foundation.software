@@ -87,8 +87,28 @@ const UserDashboard = () => {
                                 </div>
 
                                 <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem' }}>
-                                    <button className="btn" style={{ background: '#25D366', color: 'white', border: 'none', flex: 1 }}>WhatsApp</button>
-                                    <button className="btn" style={{ background: '#1877F2', color: 'white', border: 'none', flex: 1 }}>Facebook</button>
+                                    <button
+                                        className="btn"
+                                        style={{ background: '#25D366', color: 'white', border: 'none', flex: 1, cursor: 'pointer' }}
+                                        onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent("Check this out! " + shareLink)}`, '_blank')}
+                                    >
+                                        WhatsApp
+                                    </button>
+                                    <button
+                                        className="btn"
+                                        style={{ background: '#1877F2', color: 'white', border: 'none', flex: 1, cursor: 'pointer' }}
+                                        onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareLink)}`, '_blank')}
+                                    >
+                                        Facebook
+                                    </button>
+                                    <button
+                                        className="btn"
+                                        style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', color: 'white', border: 'none', flex: 1, cursor: 'pointer' }}
+                                        onClick={() => window.open('https://www.instagram.com/', '_blank')}
+                                        title="Open Instagram to share"
+                                    >
+                                        Instagram
+                                    </button>
                                 </div>
                             </div>
                         </div>

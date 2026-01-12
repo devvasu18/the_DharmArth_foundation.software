@@ -35,15 +35,21 @@ const userSchema = new mongoose.Schema({
     referredBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
+    },
+    language: {
+        type: String,
+        default: 'hi',
+        enum: ['en', 'hi']
     }
 }, {
     timestamps: true,
 });
 
 // Encrypt password
-userSchema.pre('save', async function (next) {
+// Encrypt password
+userSchema.pre('save', async function () {
     if (!this.isModified('password')) {
-        next();
+        return;
     }
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);

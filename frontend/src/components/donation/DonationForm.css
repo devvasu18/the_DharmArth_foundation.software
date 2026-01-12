@@ -32,10 +32,16 @@
     border-color: var(--danger);
     color: var(--danger);
     background: #fff5f5;
-    position: relative;
 }
 
-.amount-btn.active::after {
+.amount-btn.popular {
+    position: relative;
+    /* border-color: var(--danger); Removed to prevent red border when not active */
+    /* Optional: maybe popular always looks distinct? or only when active? */
+    /* Let's keep it simple. Popular tag shows up. */
+}
+
+.amount-btn.popular::after {
     content: 'Popular';
     position: absolute;
     top: -10px;
@@ -45,6 +51,9 @@
     color: var(--danger);
     font-size: 0.7rem;
     padding: 0 4px;
+    border: 1px solid #ffeeba;
+    /* Add a border around tag for visibility? */
+    border: 1px solid #ddd;
 }
 
 .custom-amount {
@@ -172,4 +181,15 @@ small {
     margin-top: 1rem;
     padding-left: 1rem;
     border-left: 2px solid var(--primary);
+}
+
+.error-border {
+    border-color: #dc3545 !important;
+}
+
+.error-text {
+    color: #dc3545;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    display: block;
 }

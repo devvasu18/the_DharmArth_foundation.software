@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import './HeroSlider.css';
 
 const HeroSlider = () => {
+    const { i18n } = useTranslation();
     const [slides, setSlides] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -199,7 +201,9 @@ const HeroSlider = () => {
                         transition={{ duration: 0.5, delay: 0.1 }}
                         className="hero-text-wrapper"
                     >
-                        <h1 className="hero-title">{textSlide.title}</h1>
+                        <h1 className="hero-title">
+                            {i18n.language === 'hi' && textSlide.title_hi ? textSlide.title_hi : textSlide.title}
+                        </h1>
 
                         <div className="hero-stats">
                             {/* Hardcoded stats for visual matching or dynamic if available */}
@@ -211,14 +215,11 @@ const HeroSlider = () => {
                                 <h3>72 Lakh+</h3>
                                 <p>CONTRIBUTORS</p>
                             </div>
-                            <div className="stat-item">
-                                <h3>3.2 Lakh+</h3>
-                                <p>RAISED</p>
-                            </div>
+
                         </div>
 
                         <p className="hero-description">
-                            {textSlide.subtitle || "Every contribution brings us closer to a better world. Join our mission today."}
+                            {i18n.language === 'hi' && textSlide.subtitle_hi ? textSlide.subtitle_hi : (textSlide.subtitle || "Every contribution brings us closer to a better world. Join our mission today.")}
                         </p>
 
                         <Link to={textSlide.ctaLink} className="hero-cta-btn">

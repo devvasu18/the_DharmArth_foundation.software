@@ -3,7 +3,7 @@ const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const Setting = require('../models/Setting');
 
-const processDonationCommission = async (donationAmount, motivatorMobile, donationId) => {
+const processDonationCommission = async (donationAmount, motivatorMobile, donationId, donorName, donorMobile) => {
     if (!motivatorMobile) return;
 
     try {
@@ -37,7 +37,7 @@ const processDonationCommission = async (donationAmount, motivatorMobile, donati
             type: 'credit',
             reason: 'referral_commission_l1',
             referenceId: donationId,
-            description: `10% Commission for donation ${donationId}`
+            description: `10% Commission for donation from ${donorName} (${donorMobile})`
         });
 
         console.log(`L1 Commission: ${comm1} credited to ${motivator.name}`);
@@ -66,7 +66,7 @@ const processDonationCommission = async (donationAmount, motivatorMobile, donati
                     type: 'credit',
                     reason: 'referral_commission_l2',
                     referenceId: donationId,
-                    description: `3% L2 Commission via ${motivator.name} for donation ${donationId}`
+                    description: `3% L2 Commission via ${motivator.name} for donation from ${donorName} (${donorMobile})`
                 });
 
                 console.log(`L2 Commission: ${comm2} credited to ${grandMotivator.name}`);

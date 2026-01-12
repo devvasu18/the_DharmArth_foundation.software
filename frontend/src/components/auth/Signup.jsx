@@ -1,0 +1,159 @@
+import React, { useState } from 'react';
+import Navbar from '../layout/Navbar';
+import api from '../../services/api';
+import { useNavigate, Link } from 'react-router-dom';
+import './Auth.css';
+
+const Signup = () => {
+    // Form States
+    const [name, setName] = useState('');
+    const [mobile, setMobile] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const navigate = useNavigate();
+
+    const handleSignup = async () => {
+        if (!name || !mobile || !password) {
+            setError("Please fill all required fields");
+            return;
+        }
+
+        setError('');
+        setLoading(true);
+        try {
+            const { data } = await api.post('/auth/register', { name, mobile, email, password });
+
+            // Automatically login or redirect
+            // For now, let's login (save token) and redirect
+            localStorage.setItem('user', JSON.stringify(data));
+
+            alert('Registration Successful!');
+            navigate('/');
+
+        } catch (err) {
+            setError(err.response?.data?.message || 'Registration failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleSignup = () => {
+        alert("Google Signup Logic initiated! (Requires Google Cloud Credentials setup)");
+    };
+
+    const handleMobileChange = (e) => {
+        const val = e.target.value;
+        if (/^\d*$/.test(val) && val.length <= 10) {
+            setMobile(val);
+        }
+    };
+
+    return (
+        <>
+            <Navbar />
+            <div className="auth-page">
+                <div className="auth-container">
+                    <h2 className="auth-title">Create Account</h2>
+
+                    {/* Reuse auth-content structure */}
+                    <div className="auth-content">
+                        {/* LEFT SIDE */}
+                        <div className="auth-left">
+
+                            {/* ERROR MESSAGE */}
+                            {error && <div style={{ color: 'red', marginBottom: '10px', fontSize: '0.9rem' }}>{error}</div>}
+
+                            <label className="input-label" style={{ color: '#d9534f' }}>
+                                Full Name *
+                            </label>
+                            <input
+                                type="text"
+                                className="input-field"
+                                placeholder="Enter Full Name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+
+                            <label className="input-label" style={{ color: '#d9534f', marginTop: '1rem' }}>
+                                Mobile Number *
+                            </label>
+                            <input
+                                type="text"
+                                className="input-field"
+                                placeholder="Enter 10-digit Mobile"
+                                value={mobile}
+                                onChange={handleMobileChange}
+                            />
+
+                            <label className="input-label" style={{ color: '#d9534f', marginTop: '1rem' }}>
+                                Email Address (Optional)
+                            </label>
+                            <input
+                                type="email"
+                                className="input-field"
+                                placeholder="Enter Email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+
+                            <label className="input-label" style={{ color: '#d9534f', marginTop: '1rem' }}>
+                                Password *
+                            </label>
+                            <input
+                                type="password"
+                                className="input-field"
+                                placeholder="Create Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+
+                            {/* ACTION BUTTON */}
+                            <button
+                                className="btn bg-primary text-white full-width"
+                                style={{ marginTop: '1.5rem' }}
+                                onClick={handleSignup}
+                                disabled={loading}
+                            >
+                                {loading ? 'Creating Account...' : 'Sign Up'}
+                            </button>
+
+                            {/* TOGGLE TO LOGIN */}
+                            <div className="justify-center flex mt-4" style={{ marginTop: '1.5rem', fontSize: '0.9rem' }}>
+                                <span style={{ color: '#666' }}>Already have an account? </span>
+                                <Link to="/login" className="link-text" style={{ marginLeft: '5px' }}>
+                                    Login here
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* DIVIDER */}
+                        <div className="auth-divider">
+                            <span>OR</span>
+                        </div>
+
+                        {/* RIGHT SIDE (GOOGLE) */}
+                        <div className="auth-right" style={{ display: 'flex', alignItems: 'center' }}>
+                            <button className="btn btn-google full-width" onClick={handleGoogleSignup}>
+                                <span style={{ background: 'white', borderRadius: '2px', padding: '2px', display: 'flex' }}>
+                                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="G" width={18} />
+                                </span>
+                                <span style={{ flex: 1 }}>Sign up with Google</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <p style={{ fontSize: '0.75rem', textAlign: 'center', marginTop: '1rem', color: '#999' }}>
+                        By continuing you agree to our<br />
+                        <span className="link-text">Terms of Service</span> and <span className="link-text">Privacy Policy</span>
+                    </p>
+                </div>
+            </div>
+        </>
+    );
+};
+
+export default Signup;

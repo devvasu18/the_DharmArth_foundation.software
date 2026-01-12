@@ -49,4 +49,43 @@ router.post('/', protect, checkPermission('Role Management', 'create'), async (r
     }
 });
 
+// @desc    Update Role
+// @route   PUT /api/roles/:id
+router.put('/:id', protect, checkPermission('Role Management', 'edit'), async (req, res) => {
+    const { name, permissions } = req.body;
+
+    try {
+        const role = await Role.findById(req.params.id);
+
+        if (!role) {
+            return res.status(404).json({ message: 'Role not found' });
+        }
+
+        role.name = name || role.name;
+        role.permissions = permissions || role.permissions;
+
+        const updatedRole = await role.save();
+        res.json(updatedRole);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// @desc    Delete Role
+// @route   DELETE /api/roles/:id
+router.delete('/:id', protect, checkPermission('Role Management', 'delete'), async (req, res) => {
+    try {
+        const role = await Role.findById(req.params.id);
+
+        if (!role) {
+            return res.status(404).json({ message: 'Role not found' });
+        }
+
+        await role.deleteOne();
+        res.json({ message: 'Role removed' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;

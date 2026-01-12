@@ -19,6 +19,7 @@ const loginUser = async (req, res) => {
                 mobile: user.mobile,
                 isSuperAdmin: user.isSuperAdmin,
                 roles: user.roles,
+                language: user.language,
                 token: generateToken(user._id),
             });
         } else {

@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Search, ChevronDown, Menu, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import api from '../../services/api';
 import './Navbar.css';
 
 const Navbar = () => {
+    const { i18n } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [user, setUser] = useState(null);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -11,7 +14,13 @@ const Navbar = () => {
     // Check auth status on mount
     React.useEffect(() => {
         const storedUser = localStorage.getItem('user');
-        if (storedUser) setUser(JSON.parse(storedUser));
+        if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+            if (parsedUser.language) {
+                i18n.changeLanguage(parsedUser.language);
+            }
+        }
     }, []);
 
     const handleLogout = () => {
@@ -44,6 +53,41 @@ const Navbar = () => {
                 </div>
 
                 <div className="navbar-actions hidden-mobile">
+                    {/* Language Toggle */}
+                    <div
+                        onClick={() => {
+                            const currentLang = i18n.language || 'hi';
+                            const newLang = currentLang.startsWith('en') ? 'hi' : 'en';
+                            i18n.changeLanguage(newLang);
+                            if (user) {
+                                const updatedUser = { ...user, language: newLang };
+                                setUser(updatedUser);
+                                localStorage.setItem('user', JSON.stringify(updatedUser));
+                                api.put('/users/language', { language: newLang }).catch(console.error);
+                            }
+                        }}
+                        style={{
+                            cursor: 'pointer',
+                            marginRight: '15px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            fontSize: '0.9rem',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        <span style={{
+                            color: (i18n.language && i18n.language.startsWith('hi')) ? 'var(--primary)' : '#888',
+                            fontWeight: (i18n.language && i18n.language.startsWith('hi')) ? '800' : '400'
+                        }}>HI</span>
+
+                        <span style={{ margin: '0 6px', color: '#ccc' }}>|</span>
+
+                        <span style={{
+                            color: (i18n.language && i18n.language.startsWith('en')) ? 'var(--primary)' : '#888',
+                            fontWeight: (i18n.language && i18n.language.startsWith('en')) ? '800' : '400'
+                        }}>EN</span>
+                    </div>
+
                     <Link to="/donate" className="btn btn-outline">Donate</Link>
                     {user ? (
                         <div className="nav-dropdown" style={{ cursor: 'pointer', position: 'relative' }}>
@@ -62,7 +106,7 @@ const Navbar = () => {
                                     borderRadius: '4px', minWidth: '150px', zIndex: 1000
                                 }}>
                                     {!user.isSuperAdmin && (
-                                        <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333' }} onClick={() => setIsProfileOpen(false)}>User Dashboard</Link>
+                                        <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333' }} onClick={() => setIsProfileOpen(false)}>Wallet</Link>
                                     )}
                                     <div onClick={handleLogout} style={{ display: 'block', padding: '8px', color: 'red', cursor: 'pointer' }}>Logout</div>
                                 </div>
@@ -94,7 +138,7 @@ const Navbar = () => {
                         <span className="nav-link" onClick={handleLogout} style={{ color: 'red' }}>Logout</span>
                     )}
 
-                    <Link to="/start-fundraiser" className="btn btn-outline" style={{ width: '100%', textAlign: 'center' }}>Start a Fundraiser</Link>
+                    <Link to="/donate" className="btn btn-outline" style={{ width: '100%', textAlign: 'center' }}>Donate</Link>
                 </div>
             )}
         </nav>

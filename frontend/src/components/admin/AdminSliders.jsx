@@ -6,9 +6,11 @@ const AdminSliders = () => {
     const [loading, setLoading] = useState(true);
     const [isAdding, setIsAdding] = useState(false);
 
+    const [editingId, setEditingId] = useState(null);
+
     // Form State
     const [formData, setFormData] = useState({
-        title: '', subtitle: '', imageUrl: '', order: 0, ctaLink: ''
+        title: '', title_hi: '', subtitle: '', subtitle_hi: '', imageUrl: '', order: 0, ctaLink: ''
     });
 
     useEffect(() => {
@@ -49,15 +51,41 @@ const AdminSliders = () => {
         }
     };
 
-    const handleAdd = async (e) => {
+    const handleEdit = (slider) => {
+        setFormData({
+            title: slider.title,
+            title_hi: slider.title_hi || '',
+            subtitle: slider.subtitle || '',
+            subtitle_hi: slider.subtitle_hi || '',
+            imageUrl: slider.imageUrl,
+            order: slider.order || 0,
+            ctaLink: slider.ctaLink || ''
+        });
+        setEditingId(slider._id);
+        setIsAdding(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const resetForm = () => {
+        setFormData({ title: '', title_hi: '', subtitle: '', subtitle_hi: '', imageUrl: '', order: 0, ctaLink: '' });
+        setEditingId(null);
+        setIsAdding(false);
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/content/sliders', formData);
-            setFormData({ title: '', subtitle: '', imageUrl: '', order: 0, ctaLink: '' });
-            setIsAdding(false);
+            if (editingId) {
+                await api.put(`/content/sliders/${editingId}`, formData);
+                alert("Slider Updated!");
+            } else {
+                await api.post('/content/sliders', formData);
+                alert("Slider Created!");
+            }
+            resetForm();
             fetchSliders(); // Refresh
         } catch (error) {
-            alert(error.response?.data?.message || 'Failed to add slider');
+            alert(error.response?.data?.message || 'Failed to save slider');
         }
     };
 
@@ -67,17 +95,23 @@ const AdminSliders = () => {
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h3>Hero Sliders</h3>
-                <button className="btn bg-primary text-white" onClick={() => setIsAdding(!isAdding)}>
+                <button className="btn bg-primary text-white" onClick={() => {
+                    if (isAdding) resetForm();
+                    else setIsAdding(true);
+                }}>
                     {isAdding ? 'Cancel' : '+ Add New Slider'}
                 </button>
             </div>
 
             {isAdding && (
                 <div className="admin-card" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                    <h4>Add New Slider</h4>
-                    <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                        <input className="form-input" placeholder="Title" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} required />
-                        <input className="form-input" placeholder="Subtitle" value={formData.subtitle} onChange={e => setFormData({ ...formData, subtitle: e.target.value })} />
+                    <h4>{editingId ? 'Edit Slider' : 'Add New Slider'}</h4>
+                    <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                        <input className="form-input" placeholder="Title (En)" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} required />
+                        <input className="form-input" placeholder="Title (Hi)" value={formData.title_hi} onChange={e => setFormData({ ...formData, title_hi: e.target.value })} />
+
+                        <input className="form-input" placeholder="Subtitle (En)" value={formData.subtitle} onChange={e => setFormData({ ...formData, subtitle: e.target.value })} />
+                        <input className="form-input" placeholder="Subtitle (Hi)" value={formData.subtitle_hi} onChange={e => setFormData({ ...formData, subtitle_hi: e.target.value })} />
 
                         <div style={{ gridColumn: 'span 2' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Slider Image</label>
@@ -100,7 +134,9 @@ const AdminSliders = () => {
 
                         <input type="number" className="form-input" placeholder="Order (e.g. 1)" value={formData.order} onChange={e => setFormData({ ...formData, order: e.target.value })} />
                         <input className="form-input" placeholder="CTA Link (e.g. /donate)" value={formData.ctaLink} onChange={e => setFormData({ ...formData, ctaLink: e.target.value })} />
-                        <button type="submit" className="btn bg-primary text-white" disabled={uploading}>Save Slider</button>
+                        <button type="submit" className="btn bg-primary text-white" disabled={uploading}>
+                            {editingId ? 'Update Slider' : 'Save Slider'}
+                        </button>
                     </form>
                 </div>
             )}
@@ -119,12 +155,18 @@ const AdminSliders = () => {
                     <tbody>
                         {sliders.map(slider => (
                             <tr key={slider._id}>
-                                <td>{slider.order}</td>
+                                <td style={{ width: '50px', textAlign: 'center' }}>{slider.order}</td>
                                 <td><img src={slider.imageUrl} alt="prev" style={{ width: '60px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} /></td>
                                 <td>{slider.title}</td>
                                 <td><span className="badge badge-green">Visible</span></td>
                                 <td>
-                                    <button className="btn btn-outline" style={{ padding: '5px 10px', fontSize: '0.8rem' }}>Edit</button>
+                                    <button
+                                        className="btn btn-outline"
+                                        style={{ padding: '5px 10px', fontSize: '0.8rem' }}
+                                        onClick={() => handleEdit(slider)}
+                                    >
+                                        Edit
+                                    </button>
                                 </td>
                             </tr>
                         ))}

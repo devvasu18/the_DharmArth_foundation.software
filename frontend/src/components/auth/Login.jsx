@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Navbar from '../layout/Navbar';
 import api from '../../services/api';
 import { useNavigate, Link } from 'react-router-dom';
 import './Auth.css';
 
 const Login = () => {
+    const { i18n } = useTranslation();
     const [loginMethod, setLoginMethod] = useState('otp'); // 'otp' or 'password'
-    const [showSaveLifeMessage, setShowSaveLifeMessage] = useState(false);
+    const [bannerData, setBannerData] = useState(null);
 
     // Form States
     const [mobile, setMobile] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const navigate = useNavigate();
 
@@ -21,7 +26,13 @@ const Login = () => {
             try {
                 const { data } = await api.get('/content/settings');
                 if (data.show_save_life_banner) {
-                    setShowSaveLifeMessage(true);
+                    setBannerData({
+                        text: data.save_life_banner_text || 'Save a life regarding fetched settings',
+                        text_hi: data.save_life_banner_text_hi,
+                        btnText: data.save_life_banner_btn_text || 'Click Here',
+                        btnText_hi: data.save_life_banner_btn_text_hi,
+                        link: data.save_life_banner_link || '#'
+                    });
                 }
             } catch (err) {
                 console.error("Failed fetching settings", err);
@@ -39,12 +50,17 @@ const Login = () => {
             // Save user & token
             localStorage.setItem('user', JSON.stringify(data));
 
+            if (data.language) {
+                i18n.changeLanguage(data.language);
+            }
+
             // Redirect based on role or default
             if (data.isSuperAdmin) {
-                alert('Welcome Super Admin!');
+                toast.success('Welcome back, Super Admin!');
                 // navigate('/admin/dashboard'); // Future
                 navigate('/');
             } else {
+                toast.success('Welcome back!');
                 navigate('/');
             }
         } catch (err) {
@@ -85,9 +101,52 @@ const Login = () => {
                 <div className="auth-container">
                     <h2 className="auth-title">Login</h2>
 
-                    {showSaveLifeMessage && (
+                    {bannerData && (
                         <div className="auth-banner">
-                            <span>🎁 Save a life with just ₹10 on the App. <strong>Download Now</strong></span>
+                            {(() => {
+                                let { text, btnText, link, text_hi, btnText_hi } = bannerData;
+
+                                if (i18n.language === 'hi') {
+                                    text = text_hi || text;
+                                    btnText = btnText_hi || btnText;
+                                }
+
+                                if (btnText && text.includes(btnText)) {
+                                    const parts = text.split(btnText);
+                                    return (
+                                        <span>
+                                            {parts.map((part, index) => (
+                                                <React.Fragment key={index}>
+                                                    <span dangerouslySetInnerHTML={{ __html: part }}></span>
+                                                    {index < parts.length - 1 && (
+                                                        <Link
+                                                            to={link}
+                                                            style={{ fontWeight: 'bold', textDecoration: 'underline', color: 'inherit' }}
+                                                        >
+                                                            {btnText}
+                                                        </Link>
+                                                    )}
+                                                </React.Fragment>
+                                            ))}
+                                        </span>
+                                    );
+                                } else {
+                                    // Fallback if substring not found
+                                    return (
+                                        <>
+                                            <span dangerouslySetInnerHTML={{ __html: text }}></span>
+                                            {btnText && (
+                                                <Link
+                                                    to={link}
+                                                    style={{ fontWeight: 'bold', marginLeft: '5px', textDecoration: 'underline', color: 'inherit' }}
+                                                >
+                                                    {btnText}
+                                                </Link>
+                                            )}
+                                        </>
+                                    );
+                                }
+                            })()}
                         </div>
                     )}
 
@@ -108,21 +167,52 @@ const Login = () => {
                                 placeholder={loginMethod === 'otp' ? "Enter Mobile / Email" : "Enter Mobile Number"}
                                 value={mobile}
                                 onChange={handleInputChange}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && loginMethod === 'password') {
+                                        handlePasswordLogin();
+                                    }
+                                }}
                             />
 
-                            {/* PASSWORD FIELD (Only in Password Mode) */}
                             {loginMethod === 'password' && (
                                 <>
                                     <label className="input-label" style={{ color: '#d9534f', marginTop: '1rem' }}>
                                         Password *
                                     </label>
-                                    <input
-                                        type="password"
-                                        className="input-field"
-                                        placeholder="Enter Password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                    />
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            className="input-field"
+                                            placeholder="Enter Password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    handlePasswordLogin();
+                                                }
+                                            }}
+                                            style={{ paddingRight: '40px' }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            style={{
+                                                position: 'absolute',
+                                                right: '10px',
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                color: '#666',
+                                                padding: 0,
+                                                display: 'flex',
+                                                alignItems: 'center'
+                                            }}
+                                        >
+                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                        </button>
+                                    </div>
                                 </>
                             )}
 
@@ -143,23 +233,22 @@ const Login = () => {
                             )}
 
                             {/* TOGGLE LOGIN METHOD */}
-                            <div className="justify-center flex mt-4" style={{ marginTop: '1.5rem' }}>
+                            <div className="justify-center flex mt-4" style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
                                 <span
                                     className="link-text"
                                     onClick={() => setLoginMethod(loginMethod === 'otp' ? 'password' : 'otp')}
                                 >
                                     {loginMethod === 'otp' ? 'Login via Password' : 'Login via OTP'}
                                 </span>
+
+                                <span style={{ fontSize: '0.9rem', color: '#666' }}>
+                                    Don't have an account? <Link to="/signup" className="link-text">Sign Up</Link>
+                                </span>
                             </div>
 
-                            <p style={{ fontSize: '0.75rem', textAlign: 'center', marginTop: '1rem', color: '#999' }}>
-                                By continuing you agree to our<br />
-                                <span className="link-text">Terms of Service</span> and <span className="link-text">Privacy Policy</span>
-                            </p>
 
-                            <p style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-                                Want to start a fundraiser? <Link to="/start-fundraiser" className="link-text" style={{ fontWeight: 'bold' }}>Click here</Link>
-                            </p>
+
+
                         </div>
 
                         {/* DIVIDER */}
@@ -177,6 +266,10 @@ const Login = () => {
                             </button>
                         </div>
                     </div>
+                    <p style={{ fontSize: '0.75rem', textAlign: 'center', marginTop: '1rem', color: '#999' }}>
+                        By continuing you agree to our<br />
+                        <span className="link-text">Terms of Service</span> and <span className="link-text">Privacy Policy</span>
+                    </p>
                 </div>
             </div>
         </>

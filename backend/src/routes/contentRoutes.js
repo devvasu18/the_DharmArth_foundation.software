@@ -26,6 +26,17 @@ router.post('/sliders', protect, checkPermission('Content Management', 'create')
     }
 });
 
+// Admin: Update Slider
+router.put('/sliders/:id', protect, checkPermission('Content Management', 'edit'), async (req, res) => {
+    try {
+        const slider = await Slider.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!slider) return res.status(404).json({ message: 'Slider not found' });
+        res.json(slider);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
 // --- SETTINGS ---
 
 // Get Public Settings (Filtered) or All?

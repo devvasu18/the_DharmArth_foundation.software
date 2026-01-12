@@ -4,6 +4,18 @@ const Donation = require('../models/Donation');
 const User = require('../models/User');
 const { processDonationCommission } = require('../services/commissionService');
 
+// @desc    Get All Donations (Admin)
+// @route   GET /api/donate
+router.get('/', async (req, res) => {
+    // Ideally check permission
+    try {
+        const donations = await Donation.find({}).sort({ createdAt: -1 });
+        res.json(donations);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @desc    Initiate Donation (Mock Payment)
 // @route   POST /api/donate
 router.post('/', async (req, res) => {
@@ -48,7 +60,7 @@ router.post('/', async (req, res) => {
         if (motivatorMobile) {
             // Run async, don't block response? Or await?
             // Safer to await to ensure data integrity during test, but usually async background job.
-            await processDonationCommission(amount, motivatorMobile, donation._id);
+            await processDonationCommission(amount, motivatorMobile, donation._id, donorName, donorMobile);
         }
 
         res.status(201).json({
