@@ -56,6 +56,7 @@ const HeroSlider = () => {
     const activeSlide = slides[currentIndex];
 
     // Card Variants for Animation
+    // Card Variants for Animation
     const cardVariants = {
         center: {
             x: 0,
@@ -66,23 +67,23 @@ const HeroSlider = () => {
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
         },
         left: {
-            x: -250,
+            x: -220,
             scale: 0.9,
             zIndex: 5,
             rotate: -6,
-            opacity: 0.8,
+            opacity: 0.9,
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
         },
         right: {
-            x: 250,
+            x: 220,
             scale: 0.9,
             zIndex: 5,
             rotate: 6,
-            opacity: 0.8,
+            opacity: 0.9,
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
         },
         enter: {
-            x: 450,
+            x: 400,
             scale: 0.7,
             zIndex: 1,
             rotate: 15,
@@ -90,7 +91,7 @@ const HeroSlider = () => {
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
         },
         exit: {
-            x: -450,
+            x: -400,
             scale: 0.7,
             zIndex: 1,
             rotate: -15,
@@ -154,8 +155,8 @@ const HeroSlider = () => {
     // For static mode, we need to override the Variant positions to be static visuals
     const staticVariants = {
         center: { x: 0, scale: 1.1, zIndex: 10, opacity: 1 },
-        left: { x: -220, scale: 0.9, zIndex: 5, opacity: 1 },
-        right: { x: 220, scale: 0.9, zIndex: 5, opacity: 1 },
+        left: { x: -130, scale: 0.85, zIndex: 5, opacity: 1 },
+        right: { x: 130, scale: 0.85, zIndex: 5, opacity: 1 },
         hidden: { opacity: 0, display: 'none' }
     };
 
@@ -228,9 +229,7 @@ const HeroSlider = () => {
                             </svg>
                         </Link>
 
-                        <Link to="/how-it-works" className="hero-link-arrow">
-                            See how it works &gt;
-                        </Link>
+
                     </motion.div>
                 </div>
             </div>

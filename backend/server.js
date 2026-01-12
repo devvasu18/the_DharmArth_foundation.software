@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config(); // Load environment variables
 const app = require('./src/app');
 const connectDB = require('./src/config/db');
 

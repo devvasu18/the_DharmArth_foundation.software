@@ -6,6 +6,7 @@ import './Navbar.css';
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [user, setUser] = useState(null);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
 
     // Check auth status on mount
     React.useEffect(() => {
@@ -23,7 +24,7 @@ const Navbar = () => {
         <nav className="navbar">
             <div className="container navbar-container">
                 <Link to="/" className="navbar-logo">
-                    <span className="logo-text">Ketto</span>
+                    <span className="logo-text">Dharmarth</span>
                 </Link>
 
                 {/* Desktop Menu */}
@@ -43,23 +44,29 @@ const Navbar = () => {
                 </div>
 
                 <div className="navbar-actions hidden-mobile">
-                    <Link to="/start-fundraiser" className="btn btn-outline">Start a Fundraiser</Link>
+                    <Link to="/donate" className="btn btn-outline">Donate</Link>
                     {user ? (
-                        <div className="nav-dropdown" style={{ cursor: 'pointer' }}>
-                            <span className="nav-link" style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <div className="nav-dropdown" style={{ cursor: 'pointer', position: 'relative' }}>
+                            <span
+                                className="nav-link"
+                                style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}
+                                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                            >
                                 <img src={`https://ui-avatars.com/api/?name=${user.name}&background=0D8ABC&color=fff`} alt="Av" style={{ width: 32, borderRadius: '50%' }} />
-                                {user.name.split(' ')[0]}
+
                             </span>
-                            <div className="dropdown-menu" style={{
-                                position: 'absolute', top: '100%', right: 0,
-                                background: 'white', padding: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                borderRadius: '4px', minWidth: '150px'
-                            }}>
-                                {!user.isSuperAdmin && (
-                                    <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333' }}>User Dashboard</Link>
-                                )}
-                                <div onClick={handleLogout} style={{ display: 'block', padding: '8px', color: 'red', cursor: 'pointer' }}>Logout</div>
-                            </div>
+                            {isProfileOpen && (
+                                <div className="dropdown-menu" style={{
+                                    position: 'absolute', top: '100%', right: 0,
+                                    background: 'white', padding: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                    borderRadius: '4px', minWidth: '150px', zIndex: 1000
+                                }}>
+                                    {!user.isSuperAdmin && (
+                                        <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333' }} onClick={() => setIsProfileOpen(false)}>User Dashboard</Link>
+                                    )}
+                                    <div onClick={handleLogout} style={{ display: 'block', padding: '8px', color: 'red', cursor: 'pointer' }}>Logout</div>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <Link to="/login" className="btn-link">Sign In</Link>

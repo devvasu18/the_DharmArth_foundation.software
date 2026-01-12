@@ -6,6 +6,7 @@ import './AdminLayout.css';
 const AdminLayout = () => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
 
     useEffect(() => {
         // Basic protection check
@@ -28,30 +29,43 @@ const AdminLayout = () => {
 
     return (
         <div className="admin-container">
-            <div className="admin-sidebar">
-                <div className="admin-brand">Admin Panel</div>
+            <div className={`admin-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+                <div
+                    className="admin-brand"
+                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                    style={{ cursor: 'pointer', title: 'Toggle Sidebar' }}
+                >
+                    {isSidebarCollapsed ? 'AP' : 'Admin Panel'}
+                </div>
                 <nav className="admin-nav">
                     <NavLink to="/admin" end className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
-                        <LayoutDashboard size={18} style={{ marginRight: '10px' }} /> Dashboard
+                        <LayoutDashboard size={20} title={isSidebarCollapsed ? "Dashboard" : ""} />
+                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Dashboard</span>}
                     </NavLink>
                     <NavLink to="/admin/users" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
-                        <Users size={18} style={{ marginRight: '10px' }} /> User Management
+                        <Users size={20} title={isSidebarCollapsed ? "User Management" : ""} />
+                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>User Management</span>}
                     </NavLink>
                     <NavLink to="/admin/sliders" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
-                        <Image size={18} style={{ marginRight: '10px' }} /> Hero Sliders
+                        <Image size={20} title={isSidebarCollapsed ? "Hero Sliders" : ""} />
+                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Hero Sliders</span>}
                     </NavLink>
                     <NavLink to="/admin/settings" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
-                        <Settings size={18} style={{ marginRight: '10px' }} /> Site Settings
+                        <Settings size={20} title={isSidebarCollapsed ? "Site Settings" : ""} />
+                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Site Settings</span>}
                     </NavLink>
                     <NavLink to="/admin/roles" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
-                        <Users size={18} style={{ marginRight: '10px' }} /> Roles & Permissions
+                        <Users size={20} title={isSidebarCollapsed ? "Roles & Permissions" : ""} />
+                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Roles & Permissions</span>}
                     </NavLink>
 
                     <div className="admin-link" onClick={handleLogout} style={{ marginTop: 'auto', cursor: 'pointer', borderTop: '1px solid #2d3748' }}>
-                        <LogOut size={18} style={{ marginRight: '10px' }} /> Logout
+                        <LogOut size={20} title={isSidebarCollapsed ? "Logout" : ""} />
+                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Logout</span>}
                     </div>
                 </nav>
             </div>
+
 
             <div className="admin-content">
                 <div className="admin-header">

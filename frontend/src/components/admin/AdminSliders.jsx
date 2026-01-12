@@ -26,6 +26,29 @@ const AdminSliders = () => {
         }
     };
 
+    const [uploading, setUploading] = useState(false);
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const uploadData = new FormData();
+        uploadData.append('image', file);
+
+        setUploading(true);
+        try {
+            const { data } = await api.post('/upload', uploadData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setFormData({ ...formData, imageUrl: data.imageUrl });
+        } catch (error) {
+            console.error('Upload failed', error);
+            alert('Image upload failed');
+        } finally {
+            setUploading(false);
+        }
+    };
+
     const handleAdd = async (e) => {
         e.preventDefault();
         try {
@@ -55,10 +78,29 @@ const AdminSliders = () => {
                     <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
                         <input className="form-input" placeholder="Title" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} required />
                         <input className="form-input" placeholder="Subtitle" value={formData.subtitle} onChange={e => setFormData({ ...formData, subtitle: e.target.value })} />
-                        <input className="form-input" placeholder="Image URL (Unsplash/Cloudinary)" value={formData.imageUrl} onChange={e => setFormData({ ...formData, imageUrl: e.target.value })} required />
+
+                        <div style={{ gridColumn: 'span 2' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Slider Image</label>
+                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                    className="form-input"
+                                />
+                                {uploading && <span>Uploading...</span>}
+                            </div>
+                            {formData.imageUrl && (
+                                <div style={{ marginTop: '0.5rem' }}>
+                                    <p style={{ fontSize: '0.8rem', color: 'green' }}>Image Uploaded!</p>
+                                    <img src={formData.imageUrl} alt="Preview" style={{ height: '80px', borderRadius: '4px', objectFit: 'cover' }} />
+                                </div>
+                            )}
+                        </div>
+
                         <input type="number" className="form-input" placeholder="Order (e.g. 1)" value={formData.order} onChange={e => setFormData({ ...formData, order: e.target.value })} />
                         <input className="form-input" placeholder="CTA Link (e.g. /donate)" value={formData.ctaLink} onChange={e => setFormData({ ...formData, ctaLink: e.target.value })} />
-                        <button type="submit" className="btn bg-primary text-white">Save Slider</button>
+                        <button type="submit" className="btn bg-primary text-white" disabled={uploading}>Save Slider</button>
                     </form>
                 </div>
             )}
