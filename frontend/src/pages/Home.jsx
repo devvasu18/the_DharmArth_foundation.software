@@ -10,7 +10,7 @@ const Home = () => {
             <HeroSlider />
             <div className="container" style={{ padding: '4rem 1rem', textAlign: 'center' }}>
                 <h2 style={{ fontSize: 'var(--text-4xl)', marginBottom: 'var(--spacing-4)', color: 'var(--secondary)' }}>Welcome to The Dharmarth Foundation</h2>
-                <p style={{ color: 'var(--text-muted )' }}>Empowering change through your generous contributions.</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.25rem' }}>Empowering change through your generous contributions.</p>
             </div>
             <Footer />
         </div>

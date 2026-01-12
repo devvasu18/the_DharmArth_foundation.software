@@ -8,16 +8,24 @@ import './HeroSlider.css';
 const HeroSlider = () => {
     const { i18n } = useTranslation();
     const [slides, setSlides] = useState([]);
+    const [textSlides, setTextSlides] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [currentTextIndex, setCurrentTextIndex] = useState(0);
 
     useEffect(() => {
         const fetchSlides = async () => {
             try {
                 const { data } = await api.get('/content/sliders');
-                // Ensure only visible slides are used
-                const visibleSlides = data.filter(s => s.isVisible !== false).sort((a, b) => a.order - b.order);
-                setSlides(visibleSlides);
+                const visible = data.filter(s => s.isVisible !== false).sort((a, b) => a.order - b.order);
+                const visuals = visible.filter(s => s.type === 'image' || !s.type); // Default to image if undefined
+                const texts = visible.filter(s => s.type === 'text');
+
+                // If no explicit text slides, use visuals as legacy text source
+                const finalTexts = texts.length > 0 ? texts : visuals;
+
+                setSlides(visuals);
+                setTextSlides(finalTexts);
             } catch (error) {
                 console.error("Failed to fetch sliders", error);
             } finally {
@@ -38,26 +46,26 @@ const HeroSlider = () => {
         }
     }, [heroMode, slides.length]);
 
+    // Rotate text independently if there are multiple text contents
+    useEffect(() => {
+        if (textSlides.length > 1) {
+            const interval = setInterval(() => {
+                setCurrentTextIndex((prev) => (prev + 1) % textSlides.length);
+            }, 6000);
+            return () => clearInterval(interval);
+        }
+    }, [textSlides.length]);
+
     if (loading) return <div style={{ height: '550px', background: '#F0F9FF' }}></div>;
-    if (slides.length === 0) return null;
+    // We display even if only text or only images exist?
+    // If no images (slides), might look empty. 
+    // If slides is empty but texts exist, we might want to show placeholders? 
+    // Assuming at least one image exists for now.
+    if (slides.length === 0 && textSlides.length === 0) return null;
 
-    // Determine current slide for text content
-    // For static mode (< 4), we just pick the first one or let the user click? 
-    // The prompt implies static layout for < 4. Let's default to the first one for text 
-    // but maybe allow clicking to select in future? converting static to just 'no auto rotate'.
-    // actually, for <4, let's just make the "Center" one the focus if possible, or just index 1.
-    // Let's stick to using currentIndex even for static, but maybe without auto-rotation?
-    // User said: "Show a static layout with 3 images fixed side-by-side. No animation."
-    // This implies purely static. So text is likely from the primary (first) slide or generic.
-    // But checking the 'admin/sliders' requirement, likely dynamic.
-    // I will use slides[currentIndex] for text. In static mode, currentIndex defaults to 0 and stays there?
-    // Or maybe I should make the static cards clickable to change the text?
-    // For now, I'll default to index 1 (center visual) as the 'active' one for text if static, or just 0. 
-    // Let's go with 0 for static.
+    // Use currentTextIndex for text, fallback to first
+    const activeTextSlide = textSlides[currentTextIndex] || textSlides[0];
 
-    const activeSlide = slides[currentIndex];
-
-    // Card Variants for Animation
     // Card Variants for Animation
     const cardVariants = {
         center: {
@@ -129,25 +137,7 @@ const HeroSlider = () => {
         const isRight = index === (currentIndex + 1) % len;
 
         // We need to identify 'enter' (next to come) and 'exit' (just left)
-        // If moving Right -> Left (slides rotate Left)
-        // active: 1. Next active: 2.
-        // 2 (Right) -> Center
-        // 1 (Center) -> Left
-        // 0 (Left) -> Exit
-        // 3 (New) -> Right (Enter)
-
-        // So for a specific render current=C
-        // (C-1) is Left
-        // (C+1) is Right
-        // (C+2) is Enter (waiting at right)
-        // (C-2) is Exit (just left) - actually standard is just hiding any others.
-        // But to animate 'Left' -> 'Exit', it needs to be identified.
-        // With only 4 visible states, we can treat all others as Hidden/Enter.
-
         const isEnter = index === (currentIndex + 2) % len;
-        // If we want the 'exit' animation to happen, the item that WAS left needs to go to 'exit'.
-        // That is index === (currentIndex - 2 + len) % len ?
-        // Yes, roughly.
         const isExit = index === (currentIndex - 2 + len) % len;
 
         if (isCenter) return 'center';
@@ -166,10 +156,6 @@ const HeroSlider = () => {
         right: { x: 130, y: "-40%", scale: 0.85, zIndex: 5, opacity: 1 },
         hidden: { opacity: 0, display: 'none' }
     };
-
-    // Use a secondary index for text if static? 
-    // If static, let's fix the text to the center card (index 1) if it exists, else 0
-    const textSlide = !heroMode && slides.length >= 2 ? slides[1] : activeSlide;
 
     return (
         <section className="hero-section">
@@ -199,44 +185,45 @@ const HeroSlider = () => {
 
                 {/* Content */}
                 <div className="hero-content">
-                    <motion.div
-                        key={textSlide._id} // Animate text when slide changes
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.1 }}
-                        className="hero-text-wrapper"
-                    >
-                        <h1 className="hero-title">
-                            {i18n.language === 'hi' && textSlide.title_hi ? textSlide.title_hi : textSlide.title}
-                        </h1>
+                    {activeTextSlide && (
+                        <motion.div
+                            key={activeTextSlide._id} // Animate text when slide changes
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.1 }}
+                            className="hero-text-wrapper"
+                        >
+                            <h1 className="hero-title">
+                                {i18n.language === 'hi' && activeTextSlide.title_hi ? activeTextSlide.title_hi : activeTextSlide.title}
+                            </h1>
 
-                        <div className="hero-stats">
-                            {/* Hardcoded stats for visual matching or dynamic if available */}
-                            <div className="stat-item">
-                                <h3>0%</h3>
-                                <p>PLATFORM FEE</p>
+                            <div className="hero-stats">
+                                {/* Hardcoded stats for visual matching or dynamic if available */}
+                                <div className="stat-item">
+                                    <h3>0%</h3>
+                                    <p>PLATFORM FEE</p>
+                                </div>
+                                <div className="stat-item">
+                                    <h3>72 Lakh+</h3>
+                                    <p>CONTRIBUTORS</p>
+                                </div>
+
                             </div>
-                            <div className="stat-item">
-                                <h3>72 Lakh+</h3>
-                                <p>CONTRIBUTORS</p>
-                            </div>
 
-                        </div>
+                            <p className="hero-description">
+                                {i18n.language === 'hi' && activeTextSlide.subtitle_hi ? activeTextSlide.subtitle_hi : (activeTextSlide.subtitle || "Every contribution brings us closer to a better world. Join our mission today.")}
+                            </p>
 
-                        <p className="hero-description">
-                            {i18n.language === 'hi' && textSlide.subtitle_hi ? textSlide.subtitle_hi : (textSlide.subtitle || "Every contribution brings us closer to a better world. Join our mission today.")}
-                        </p>
+                            <Link to={activeTextSlide.ctaLink} className="hero-cta-btn">
+                                {activeTextSlide.ctaText}
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M5 12h14"></path>
+                                    <path d="M12 5l7 7-7 7"></path>
+                                </svg>
+                            </Link>
 
-                        <Link to={textSlide.ctaLink} className="hero-cta-btn">
-                            {textSlide.ctaText}
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M5 12h14"></path>
-                                <path d="M12 5l7 7-7 7"></path>
-                            </svg>
-                        </Link>
-
-
-                    </motion.div>
+                        </motion.div>
+                    )}
                 </div>
             </div>
         </section>

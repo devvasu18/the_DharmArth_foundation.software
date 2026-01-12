@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
 
 const sliderSchema = new mongoose.Schema({
-    title: { type: String, required: true },
+    type: { type: String, enum: ['image', 'text'], default: 'image' }, // Separates concerns
+    title: { type: String }, // Required only for type='text' logically
     title_hi: { type: String }, // Hindi Title
     subtitle: { type: String },
     subtitle_hi: { type: String }, // Hindi Subtitle
-    imageUrl: { type: String, required: true },
+    imageUrl: { type: String }, // Required only for type='image' logically
     ctaText: { type: String, default: 'Donate' },
     ctaLink: { type: String, default: '/donate' }, // Internal route or external link
     order: { type: Number, default: 0 },
