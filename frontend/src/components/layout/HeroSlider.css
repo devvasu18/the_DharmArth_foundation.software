@@ -1,0 +1,101 @@
+.static-slider-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    height: 400px;
+    width: 100%;
+}
+
+.static-slide {
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 2rem;
+}
+
+.hero-slider {
+    position: relative;
+    height: 500px;
+    overflow: hidden;
+    background-color: var(--bg-light);
+}
+
+.hero-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+}
+
+.hero-overlay {
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.2) 60%, transparent 100%);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.hero-content-box {
+    padding-left: 5%;
+}
+
+.hero-title {
+    color: var(--bg-white);
+    font-size: var(--text-4xl);
+    font-weight: 800;
+    margin-bottom: var(--spacing-4);
+    max-width: 600px;
+    line-height: 1.2;
+}
+
+.hero-subtitle {
+    color: #e0e0e0;
+    font-size: var(--text-lg);
+    margin-bottom: var(--spacing-8);
+    max-width: 500px;
+}
+
+.hero-cta {
+    padding: var(--spacing-3) var(--spacing-6);
+    font-size: var(--text-lg);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    background-color: var(--primary);
+    color: var(--bg-white);
+    font-weight: 700;
+}
+
+.hero-cta:hover {
+    background-color: var(--primary-hover);
+}
+
+.hero-indicators {
+    position: absolute;
+    bottom: 2rem;
+    left: 5rem;
+    /* Aligned left usually better for large text */
+    display: flex;
+    gap: 0.5rem;
+}
+
+.indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.indicator.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    width: 25px;
+    /* Pill shape for active */
+    border-radius: 10px;
+}

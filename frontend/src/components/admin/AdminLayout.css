@@ -1,0 +1,106 @@
+.admin-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f4f7f6;
+}
+
+.admin-sidebar {
+    width: 250px;
+    background-color: #1a202c;
+    color: white;
+    padding-top: 2rem;
+    flex-shrink: 0;
+}
+
+.admin-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #4fd1c5;
+    /* Teal */
+}
+
+.admin-nav {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-link {
+    padding: 1rem 2rem;
+    color: #cbd5e0;
+    text-decoration: none;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.admin-link:hover,
+.admin-link.active {
+    background-color: #2d3748;
+    color: white;
+    border-left-color: #4fd1c5;
+}
+
+.admin-content {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    background: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.admin-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.data-table th {
+    background-color: #f7fafc;
+    font-weight: 600;
+}
+
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-green {
+    background-color: #c6f6d5;
+    color: #22543d;
+}
+
+.badge-blue {
+    background-color: #bee3f8;
+    color: #2c5282;
+}
+
+.badge-red {
+    background-color: #fed7d7;
+    color: #822727;
+}

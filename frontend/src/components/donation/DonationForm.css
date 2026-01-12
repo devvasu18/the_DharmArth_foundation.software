@@ -1,0 +1,175 @@
+.donation-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.donation-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--text-main);
+}
+
+.amount-options {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.amount-btn {
+    flex: 1;
+    border: 1px solid #ddd;
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    background: white;
+    color: var(--text-main);
+    transition: all 0.2s;
+}
+
+.amount-btn.active {
+    border-color: var(--danger);
+    color: var(--danger);
+    background: #fff5f5;
+    position: relative;
+}
+
+.amount-btn.active::after {
+    content: 'Popular';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    color: var(--danger);
+    font-size: 0.7rem;
+    padding: 0 4px;
+}
+
+.custom-amount {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    background: white;
+    margin-bottom: 1.5rem;
+}
+
+.custom-amount input {
+    border: none;
+    outline: none;
+    width: 100%;
+    margin-left: 0.5rem;
+    font-size: 1rem;
+}
+
+.checkbox-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.checkbox-wrap.sm {
+    font-size: 0.8rem;
+    font-weight: 400;
+    margin-top: 0.5rem;
+}
+
+.details-card {
+    background: white;
+    padding: 0;
+    margin-top: 2rem;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: #444;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    background: #fff;
+}
+
+.form-input:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.form-input:disabled {
+    background: #eee;
+    cursor: not-allowed;
+}
+
+.phone-input {
+    display: flex;
+    border: 1px solid #ddd;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.phone-input .flag-icon {
+    background: #f9f9f9;
+    padding: 0.75rem;
+    border-right: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+}
+
+.phone-input input {
+    border: none;
+    padding: 0.75rem;
+    flex: 1;
+    outline: none;
+}
+
+small {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.referral-section {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1.5rem;
+    border: 1px solid #eee;
+}
+
+.success-text {
+    color: var(--success);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.tax-fields {
+    margin-top: 1rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--primary);
+}

@@ -1,0 +1,145 @@
+.auth-page {
+    display: flex;
+    justify-content: center;
+    padding: var(--spacing-12) 0;
+    min-height: 80vh;
+}
+
+.auth-container {
+    background: var(--bg-white);
+    width: 100%;
+    max-width: 800px;
+    padding: var(--spacing-8);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    /* Using lighter shadow as per image clean look */
+}
+
+.auth-title {
+    text-align: center;
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    margin-bottom: var(--spacing-6);
+    color: var(--text-main);
+}
+
+.auth-banner {
+    background-color: #e0f2f1;
+    /* Light teal bg */
+    padding: var(--spacing-4);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    color: var(--secondary);
+    font-size: var(--text-sm);
+    margin-bottom: var(--spacing-8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2);
+}
+
+.auth-content {
+    display: flex;
+    gap: var(--spacing-8);
+    align-items: flex-start;
+}
+
+.auth-left,
+.auth-right {
+    flex: 1;
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    color: var(--text-muted);
+    font-weight: 500;
+    position: relative;
+    height: 200px;
+    /* Vertical divider */
+    width: 20px;
+    justify-content: center;
+}
+
+.auth-divider::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background-color: #eee;
+}
+
+.auth-divider span {
+    background: var(--bg-white);
+    padding: var(--spacing-2) 0;
+    z-index: 1;
+}
+
+.input-label {
+    display: block;
+    color: var(--danger);
+    /* Red as per image 'Field required' style or just label color */
+    font-size: var(--text-base);
+    margin-bottom: var(--spacing-2);
+}
+
+.input-field {
+    width: 100%;
+    padding: var(--spacing-3);
+    border: 1px solid #ddd;
+    /* Bottom border only in image? No, looks like box */
+    border-radius: var(--radius-sm);
+    /* Or actually maybe standard material input */
+    border: none;
+    border-bottom: 2px solid var(--primary);
+    background: transparent;
+    font-size: var(--text-base);
+    margin-bottom: var(--spacing-6);
+    outline: none;
+}
+
+.full-width {
+    width: 100%;
+    padding: var(--spacing-3);
+    font-size: var(--text-lg);
+}
+
+.link-text {
+    color: var(--primary);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    font-weight: 500;
+}
+
+.btn-google {
+    border: 1px solid #4285f4;
+    background: #4285f4;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2);
+}
+
+@media (max-width: 768px) {
+    .auth-content {
+        flex-direction: column;
+    }
+
+    .auth-divider {
+        height: auto;
+        width: 100%;
+        margin: var(--spacing-6) 0;
+    }
+
+    .auth-divider::before {
+        top: 50%;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 1px;
+        bottom: auto;
+    }
+}
