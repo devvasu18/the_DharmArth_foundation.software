@@ -41,7 +41,7 @@ const seedContent = async () => {
             order: 3
         },
         {
-            title: 'Start a Fundraiser',
+            title: 'Start a Donation',
             subtitle: 'Raise funds for a cause you care about.',
             imageUrl: 'https://images.unsplash.com/photo-1603415526960-f7e0328c63b1?q=80&w=2670&auto=format&fit=crop',
             order: 4

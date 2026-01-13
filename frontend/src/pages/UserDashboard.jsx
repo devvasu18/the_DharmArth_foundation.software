@@ -4,12 +4,15 @@ import Footer from '../components/layout/Footer';
 import api from '../services/api';
 import { Wallet, Share2, TrendingUp, Clock, Copy, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
+import './UserDashboard.css';
+import PayoutModal from './PayoutModal';
 
 const UserDashboard = () => {
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
     const [wallet, setWallet] = useState(null);
     const [transactions, setTransactions] = useState([]);
     const [copied, setCopied] = useState(false);
+    const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
 
     useEffect(() => {
         // Only fetch wallet data for normal users
@@ -40,125 +43,162 @@ const UserDashboard = () => {
     if (!user) return <div style={{ padding: '2rem', textAlign: 'center' }}>Please Login First</div>;
 
     return (
-        <div style={{ background: '#f4f7f6', minHeight: '100vh' }}>
+        <div className="dashboard-page">
             <Navbar />
 
-            <div className="container" style={{ padding: '2rem 1rem' }}>
-                <h1 style={{ fontSize: '1.8rem', marginBottom: '1.5rem', color: '#2d3748' }}>User Dashboard</h1>
+            <div className="dashboard-container">
+                <div className="dashboard-header">
+
+                    <p className="dashboard-subtitle">Manage your earnings, payouts, and referrals</p>
+                </div>
 
                 {/* Only show Wallet & Share options to Normal Users (Not Admin/Role-based) */}
                 {(!user?.isSuperAdmin && (!user?.roles || user.roles.length === 0)) ? (
                     <>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                        <div className="dashboard-grid">
 
                             {/* WALLET CARD */}
-                            <div className="admin-card" style={{ position: 'relative', overflow: 'hidden' }}>
-                                <div style={{ position: 'absolute', top: -10, right: -10, opacity: 0.1 }}>
-                                    <Wallet size={100} />
+                            <motion.div
+                                className="dashboard-card wallet-card"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <div className="wallet-icon-bg">
+                                    <Wallet size={120} strokeWidth={1} />
                                 </div>
-                                <h3 style={{ color: '#718096', fontSize: '1rem', fontWeight: 600 }}>My Wallet Balance</h3>
-                                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#2d3748', margin: '10px 0' }}>
+
+                                <div className="wallet-label">My Wallet Balance</div>
+                                <div className="wallet-balance">
                                     ₹ {wallet?.balance?.toLocaleString() || 0}
                                 </div>
-                                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                                    <div style={{ fontSize: '0.9rem', color: '#38a169' }}>
-                                        <TrendingUp size={14} style={{ display: 'inline' }} /> Total Earned: ₹ {wallet?.totalEarned?.toLocaleString() || 0}
-                                    </div>
+
+                                <div className="wallet-stats">
+                                    <TrendingUp size={16} />
+                                    <span>Total Earned: ₹ {wallet?.totalEarned?.toLocaleString() || 0}</span>
                                 </div>
-                                <button className="btn bg-primary text-white" style={{ marginTop: '1.5rem', width: '100%' }}>
+
+                                <button
+                                    className="payout-btn"
+                                    onClick={() => setIsPayoutModalOpen(true)}
+                                >
                                     Request Payout
                                 </button>
-                            </div>
+                            </motion.div>
 
                             {/* SHARE CARD */}
-                            <div className="admin-card" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-                                <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Share & Earn</h3>
-                                <p style={{ opacity: 0.9, fontSize: '0.95rem', marginBottom: '1.5rem' }}>
-                                    Share this link. When someone donates using your link, you earn 10% commission instantly!
+                            <motion.div
+                                className="dashboard-card share-card"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, delay: 0.1 }}
+                            >
+                                <div className="share-header">
+                                    <Share2 size={24} color="#667eea" />
+                                    <h3 className="share-title">Share & Earn</h3>
+                                </div>
+
+                                <p className="share-desc">
+                                    Share this personalized link with your network. When someone donates using your link, you receive a <strong>10% commission</strong> instantly in your wallet!
                                 </p>
 
-                                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '10px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.9rem' }}>
-                                        {shareLink}
-                                    </span>
-                                    <button onClick={handleCopy} style={{ background: 'white', color: '#764ba2', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold' }}>
-                                        {copied ? <Check size={14} /> : <Copy size={14} />} {copied ? 'Copied' : 'Copy'}
+                                <div className="share-input-group">
+                                    <span className="share-link">{shareLink}</span>
+                                    <button onClick={handleCopy} className="copy-btn">
+                                        {copied ? <Check size={14} /> : <Copy size={14} />}
+                                        {copied ? 'Copied' : 'Copy'}
                                     </button>
                                 </div>
 
-                                <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem' }}>
+                                <div className="share-actions">
                                     <button
-                                        className="btn"
-                                        style={{ background: '#25D366', color: 'white', border: 'none', flex: 1, cursor: 'pointer' }}
+                                        className="share-action-btn btn-whatsapp"
                                         onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent("Check this out! " + shareLink)}`, '_blank')}
                                     >
                                         WhatsApp
                                     </button>
                                     <button
-                                        className="btn"
-                                        style={{ background: '#1877F2', color: 'white', border: 'none', flex: 1, cursor: 'pointer' }}
+                                        className="share-action-btn btn-facebook"
                                         onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareLink)}`, '_blank')}
                                     >
                                         Facebook
                                     </button>
                                     <button
-                                        className="btn"
-                                        style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', color: 'white', border: 'none', flex: 1, cursor: 'pointer' }}
+                                        className="share-action-btn btn-instagram"
                                         onClick={() => window.open('https://www.instagram.com/', '_blank')}
-                                        title="Open Instagram to share"
                                     >
                                         Instagram
                                     </button>
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
 
                         {/* TRANSACTIONS */}
-                        <div className="admin-card" style={{ marginTop: '2rem' }}>
-                            <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>Transaction History</h3>
+                        <motion.div
+                            className="transactions-section"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: 0.2 }}
+                        >
+                            <h3 className="section-title">Transaction History</h3>
+
                             {transactions.length === 0 ? (
-                                <p style={{ color: '#aaa', textAlign: 'center', padding: '2rem' }}>No transactions yet.</p>
+                                <div className="empty-state">
+                                    <Clock size={40} style={{ margin: '0 auto', marginBottom: '1rem', opacity: 0.3 }} />
+                                    <p>No transactions yet.</p>
+                                </div>
                             ) : (
-                                <table className="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Description</th>
-                                            <th>Amount</th>
-                                            <th>Type</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {transactions.map(txn => (
-                                            <tr key={txn._id}>
-                                                <td style={{ fontSize: '0.9rem', color: '#666' }}>
-                                                    {new Date(txn.createdAt).toLocaleDateString()}
-                                                </td>
-                                                <td>{txn.description}</td>
-                                                <td style={{ fontWeight: 'bold', color: txn.type === 'credit' ? '#38a169' : '#e53e3e' }}>
-                                                    {txn.type === 'credit' ? '+' : '-'} ₹{txn.amount}
-                                                </td>
-                                                <td>
-                                                    <span className={`badge ${txn.type === 'credit' ? 'badge-green' : 'badge-red'}`}>
-                                                        {txn.type.toUpperCase()}
-                                                    </span>
-                                                </td>
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table className="txn-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Description</th>
+                                                <th>Amount</th>
+                                                <th>Status</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {transactions.map(txn => (
+                                                <tr key={txn._id}>
+                                                    <td style={{ color: '#718096', fontSize: '0.9rem' }}>
+                                                        {new Date(txn.createdAt).toLocaleDateString()}
+                                                    </td>
+                                                    <td>
+                                                        <div style={{ fontWeight: 500 }}>{txn.description}</div>
+                                                    </td>
+                                                    <td className={txn.type === 'credit' ? 'amount-positive' : 'amount-negative'}>
+                                                        {txn.type === 'credit' ? '+' : '-'} ₹{txn.amount}
+                                                    </td>
+                                                    <td>
+                                                        <span className={`status-badge ${txn.type === 'credit' ? 'badge-credit' : 'badge-debit'}`}>
+                                                            {txn.type}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             )}
-                        </div>
+                        </motion.div>
                     </>
                 ) : (
-                    <div className="admin-card" style={{ textAlign: 'center', padding: '3rem' }}>
+                    <div className="dashboard-card" style={{ textAlign: 'center', padding: '4rem' }}>
                         <h3 style={{ color: '#718096' }}>Access Restricted</h3>
-                        <p>Wallet and Referrals are available for standard user accounts only.</p>
+                        <p style={{ color: '#a0aec0', marginTop: '0.5rem' }}>Wallet and Referrals are available for standard user accounts only.</p>
                     </div>
                 )}
 
             </div>
             <Footer />
+
+            <PayoutModal
+                isOpen={isPayoutModalOpen}
+                onClose={() => setIsPayoutModalOpen(false)}
+                wallet={wallet}
+                user={user}
+            />
         </div>
     );
 };

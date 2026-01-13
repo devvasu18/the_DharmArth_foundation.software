@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Navbar from '../layout/Navbar';
+import AuthFooter from './AuthFooter';
 import api from '../../services/api';
 import { useNavigate, Link } from 'react-router-dom';
 import './Auth.css';
@@ -145,12 +146,9 @@ const Signup = () => {
 
                     </div>
 
-                    <p style={{ fontSize: '0.75rem', textAlign: 'center', marginTop: '1rem', color: '#999' }}>
-                        By continuing you agree to our<br />
-                        <span className="link-text">Terms of Service</span> and <span className="link-text">Privacy Policy</span>
-                    </p>
                 </div>
             </div>
+            <AuthFooter />
         </>
     );
 };

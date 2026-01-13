@@ -3,6 +3,7 @@ import { Eye, EyeOff, Key, Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Navbar from '../layout/Navbar';
+import AuthFooter from './AuthFooter';
 import api from '../../services/api';
 import { useNavigate, Link } from 'react-router-dom';
 import './Auth.css';
@@ -279,12 +280,11 @@ const Login = () => {
 
 
                     </div>
-                    <p style={{ fontSize: '0.75rem', textAlign: 'center', marginTop: '1rem', color: '#999' }}>
-                        By continuing you agree to our<br />
-                        <span className="link-text">Terms of Service</span> and <span className="link-text">Privacy Policy</span>
-                    </p>
+
                 </div>
+
             </div>
+            <AuthFooter />
         </>
     );
 };

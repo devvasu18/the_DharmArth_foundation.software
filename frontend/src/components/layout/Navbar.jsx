@@ -38,7 +38,7 @@ const Navbar = () => {
 
                 {/* Desktop Menu */}
                 <div className="navbar-links hidden-mobile">
-                    <Link to="/fundraisers" className="nav-link">Browse Fundraisers</Link>
+                    <Link to="/donate" className="nav-link">Browse Donations</Link>
                     <div className="nav-dropdown">
                         <span className="nav-link">Fundraise For <ChevronDown size={14} /></span>
                     </div>
@@ -126,7 +126,7 @@ const Navbar = () => {
             {/* Mobile Menu */}
             {isOpen && (
                 <div className="mobile-menu">
-                    <Link to="/fundraisers" className="nav-link">Browse Fundraisers</Link>
+                    <Link to="/donate" className="nav-link">Browse Donations</Link>
                     <span className="nav-link">Fundraise For</span>
                     <Link to="/how-it-works" className="nav-link">How It Works</Link>
                     {user && user.isSuperAdmin && <Link to="/admin" className="nav-link">Admin Panel</Link>}

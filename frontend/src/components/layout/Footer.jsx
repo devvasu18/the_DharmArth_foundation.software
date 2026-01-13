@@ -8,7 +8,7 @@ const Footer = () => {
             <div className="container">
                 <div className="footer-container">
                     <div className="footer-brand">
-                        <h2>Ketto</h2>
+                        <h2>Dharmarth</h2>
                         <div className="footer-social">
                             <span className="social-icon"><Facebook size={18} /></span>
                             <span className="social-icon"><Twitter size={18} /></span>
@@ -23,7 +23,7 @@ const Footer = () => {
 
                         <div style={{ marginTop: '2rem' }}>
                             <p>For any queries</p>
-                            <p><strong>Email: info@ketto.org</strong></p>
+                            <p><strong>Email: info@Dharmarth.org</strong></p>
                             <p><strong>Contact No: +91 9930088522</strong></p>
                         </div>
                     </div>
@@ -37,7 +37,7 @@ const Footer = () => {
                             <li><a href="#">Education Crowdfunding</a></li>
                             <li><a href="#">Sports Crowdfunding</a></li>
                             <li><a href="#">Child Welfare</a></li>
-                            <li><a href="#">Animal Fundraisers</a></li>
+                            <li><a href="#">Animal Donations</a></li>
                         </ul>
                     </div>
 
@@ -50,20 +50,20 @@ const Footer = () => {
                             <li><a href="#">What is Crowdfunding?</a></li>
                             <li><a href="#">Corporates</a></li>
                             <li><a href="#">Withdraw Funds</a></li>
-                            <li><a href="#">Browse Fundraiser</a></li>
+                            <li><a href="#">Browse Donation</a></li>
                         </ul>
                     </div>
 
                     <div className="footer-col">
                         <h3>About Us</h3>
                         <ul className="footer-links">
-                            <li><a href="#">Team Ketto</a></li>
+                            <li><a href="#">Team Dharmarth</a></li>
                             <li><a href="#">In The News</a></li>
                             <li><a href="#">Web Stories</a></li>
                             <li><a href="#">Careers</a></li>
-                            <li><a href="#">Ketto Blog</a></li>
+                            <li><a href="#">Dharmarth Blog</a></li>
                             <li><a href="#">Success Stories</a></li>
-                            <li><a href="#">Is Ketto Genuine?</a></li>
+                            <li><a href="#">Is Dharmarth Genuine?</a></li>
                         </ul>
                     </div>
 
@@ -72,8 +72,8 @@ const Footer = () => {
                         <ul className="footer-links">
                             <li><a href="#">Medical Finance</a></li>
                             <li><a href="#">FAQs & Help Center</a></li>
-                            <li><a href="#">Are Ketto Campaigns Genuine?</a></li>
-                            <li><a href="#">Fundraiser Video</a></li>
+                            <li><a href="#">Are Dharmarth Campaigns Genuine?</a></li>
+                            <li><a href="#">Donation Video</a></li>
                             <li><a href="#">Trust & Safety</a></li>
                             <li><a href="#">Plans & Pricing</a></li>
                             <li><a href="#">Contact Us</a></li>
@@ -90,7 +90,7 @@ const Footer = () => {
                         <span className="payment-icon">100% Secure</span>
                     </div>
                     <div className="copyright">
-                        Copyright © 2026 Ketto Online Ventures Pvt Ltd. All Rights Reserved.
+                        Copyright © 2026 Dharmarth Online Ventures Pvt Ltd. All Rights Reserved.
                     </div>
                 </div>
             </div>
