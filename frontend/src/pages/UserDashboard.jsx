@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import api from '../services/api';
-import { Wallet, Share2, TrendingUp, Clock, Copy, Check } from 'lucide-react';
+import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote } from 'lucide-react';
 import { motion } from 'framer-motion';
 import './UserDashboard.css';
 import PayoutModal from './PayoutModal';
@@ -64,8 +64,11 @@ const UserDashboard = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <div className="wallet-icon-bg">
-                                    <Wallet size={120} strokeWidth={1} />
+                                <div className="wallet-bg-pattern">
+                                    <Wallet className="wallet-float w-icon-1" strokeWidth={1} />
+                                    <Wallet className="wallet-float w-icon-2" strokeWidth={1} />
+                                    <Wallet className="wallet-float w-icon-3" strokeWidth={1} />
+                                    <Wallet className="wallet-float w-icon-4" strokeWidth={1} />
                                 </div>
 
                                 <div className="wallet-label">My Wallet Balance</div>
@@ -93,12 +96,30 @@ const UserDashboard = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, delay: 0.1 }}
                             >
+                                <div className="share-bg-pattern">
+                                    <svg className="rupee-icon icon-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect width="20" height="12" x="2" y="6" rx="2" />
+                                        <path d="M6 12h.01M18 12h.01" />
+                                        <text x="50%" y="58%" fontSize="8" textAnchor="middle" fill="currentColor" strokeWidth="0" fontWeight="bold" style={{ fontFamily: 'sans-serif' }}>₹</text>
+                                    </svg>
+                                    <svg className="rupee-icon icon-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect width="20" height="12" x="2" y="6" rx="2" />
+                                        <path d="M6 12h.01M18 12h.01" />
+                                        <text x="50%" y="58%" fontSize="8" textAnchor="middle" fill="currentColor" strokeWidth="0" fontWeight="bold" style={{ fontFamily: 'sans-serif' }}>₹</text>
+                                    </svg>
+                                    <svg className="rupee-icon icon-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect width="20" height="12" x="2" y="6" rx="2" />
+                                        <path d="M6 12h.01M18 12h.01" />
+                                        <text x="50%" y="58%" fontSize="8" textAnchor="middle" fill="currentColor" strokeWidth="0" fontWeight="bold" style={{ fontFamily: 'sans-serif' }}>₹</text>
+                                    </svg>
+                                </div>
+
                                 <div className="share-header">
                                     <Share2 size={24} color="#667eea" />
                                     <h3 className="share-title">Share & Earn</h3>
                                 </div>
 
-                                <p className="share-desc">
+                                <p className="share-desc ">
                                     Share this personalized link with your network. When someone donates using your link, you receive a <strong>10% commission</strong> instantly in your wallet!
                                 </p>
 
