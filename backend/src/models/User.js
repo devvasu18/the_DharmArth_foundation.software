@@ -40,6 +40,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: 'hi',
         enum: ['en', 'hi']
+    },
+    isSuspended: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true,

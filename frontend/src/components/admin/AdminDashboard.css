@@ -1,0 +1,226 @@
+.admin-dashboard {
+    font-family: 'work sans', sans-serif;
+    color: #343a40;
+}
+
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.dashboard-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #3e4b5b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dashboard-icon {
+    background: linear-gradient(to right, #da8cff, #9a55ff);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(154, 85, 255, 0.3);
+}
+
+/* --- Stats Cards --- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.stat-card {
+    border-radius: 1rem;
+    padding: 2rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 150px;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+    transform: skewX(-20deg) translateX(50%);
+}
+
+.stat-card-gradient-1 {
+    background: linear-gradient(to right, #ffbf96, #fe7096);
+}
+
+.stat-card-gradient-2 {
+    background: linear-gradient(to right, #90caf9, #047edf 99%);
+}
+
+.stat-card-gradient-3 {
+    background: linear-gradient(to right, #84d9d2, #07cdae);
+}
+
+.stat-content h4 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin: 0;
+    margin-bottom: 0.5rem;
+    opacity: 0.9;
+}
+
+.stat-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin: 0;
+    margin-bottom: 0.5rem;
+}
+
+.stat-subtext {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.stat-icon {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    opacity: 0.4;
+    transform: scale(1.2);
+}
+
+/* --- Charts Section --- */
+.charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+@media (max-width: 1024px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.chart-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #343a40;
+}
+
+/* --- Recent Donations Table --- */
+.recent-donations-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+}
+
+.custom-table th {
+    text-align: left;
+    color: #9a9a9a;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #ebedf2;
+}
+
+.custom-table td {
+    padding: 1rem;
+    vertical-align: middle;
+    background: white;
+    font-size: 0.95rem;
+    color: #3e4b5b;
+    border-top: 1px solid #f2f4f9;
+    border-bottom: 1px solid #f2f4f9;
+}
+
+.custom-table tr:hover td {
+    background-color: #fcfcfc;
+}
+
+.custom-table td:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-left: 1px solid #f2f4f9;
+}
+
+.custom-table td:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-right: 1px solid #f2f4f9;
+}
+
+.donor-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.donor-name {
+    font-weight: 600;
+    color: #3e4b5b;
+}
+
+.donor-meta {
+    font-size: 0.8rem;
+    color: #9c9fa6;
+}
+
+.amount-badge {
+    background: linear-gradient(to right, #84d9d2, #07cdae);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+.id-badge {
+    font-family: monospace;
+    background: #f2edf3;
+    color: #b66dff;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}

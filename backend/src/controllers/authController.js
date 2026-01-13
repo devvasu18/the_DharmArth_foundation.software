@@ -12,6 +12,10 @@ const loginUser = async (req, res) => {
         const user = await User.findOne({ mobile }).populate('roles');
 
         if (user && (await user.matchPassword(password))) {
+            if (user.isSuspended) {
+                return res.status(403).json({ message: 'Account suspended. Please contact Support Team.' });
+            }
+
             res.json({
                 _id: user._id,
                 name: user.name,

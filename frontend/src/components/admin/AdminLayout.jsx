@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Image, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown } from 'lucide-react';
 import './AdminLayout.css';
 
 const AdminLayout = () => {
@@ -35,7 +35,7 @@ const AdminLayout = () => {
                     onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                     style={{ cursor: 'pointer', title: 'Toggle Sidebar' }}
                 >
-                    {isSidebarCollapsed ? 'AP' : 'Admin Panel'}
+                    {isSidebarCollapsed ? <Menu size={24} /> : 'Dharmarth'}
                 </div>
                 <nav className="admin-nav">
                     <NavLink to="/admin" end className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
@@ -59,17 +59,49 @@ const AdminLayout = () => {
                         {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Staff & Roles</span>}
                     </NavLink>
 
-                    <div className="admin-link" onClick={handleLogout} style={{ marginTop: 'auto', cursor: 'pointer', borderTop: '1px solid #2d3748' }}>
+                    <div className="admin-link" onClick={handleLogout} style={{ marginTop: 'auto', cursor: 'pointer', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                         <LogOut size={20} title={isSidebarCollapsed ? "Logout" : ""} />
                         {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Logout</span>}
                     </div>
                 </nav>
             </div>
 
+            <div className="admin-main-wrapper">
+                <header className="admin-topbar">
+                    <div className="topbar-left">
+                        <button className="sidebar-toggle mobile-only" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
+                            <Menu size={20} />
+                        </button>
+                        <div className="search-container">
+                            <Search size={18} className="search-icon" />
+                            <input type="text" placeholder="Search projects..." className="search-input" />
+                        </div>
+                    </div>
 
-            <div className="admin-content">
+                    <div className="topbar-right">
+                        <div className="icon-btn">
+                            <Maximize size={20} />
+                        </div>
+                        <div className="icon-btn">
+                            <Bell size={20} />
+                            <span className="badge-dot"></span>
+                        </div>
+                        <div className="profile-dropdown">
+                            <div className="profile-info">
+                                <span className="profile-name">{user.name || 'Admin User'}</span>
+                                <span className="profile-role">{user.isSuperAdmin ? 'Super Admin' : 'Staff'}</span>
+                            </div>
+                            <div className="profile-avatar">
+                                {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
+                            </div>
+                            <ChevronDown size={14} style={{ opacity: 0.5 }} />
+                        </div>
+                    </div>
+                </header>
 
-                <Outlet />
+                <div className="admin-content">
+                    <Outlet />
+                </div>
             </div>
         </div>
     );

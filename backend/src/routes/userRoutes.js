@@ -36,6 +36,37 @@ router.get('/', protect, checkPermission('User Management', 'view'), async (req,
     }
 });
 
+// @desc    Get all staff members (users with roles or superadmin)
+// @route   GET /api/users/staff
+// @access  Private/SuperAdmin
+router.get('/staff', protect, async (req, res) => {
+    // Restrict to Super Admin or Users with Role Management view permission
+    if (!req.user.isSuperAdmin) {
+        // Check manually if middleware not used
+        const hasPerm = req.user.roles && req.user.roles.some(r =>
+            r.permissions && r.permissions.some(p => p.module === 'Role Management' && p.actions.includes('view'))
+        );
+        if (!hasPerm) {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+    }
+
+    try {
+        const staff = await User.find({
+            $or: [
+                { isSuperAdmin: true },
+                { roles: { $not: { $size: 0 } } }
+            ]
+        })
+            .select('-password')
+            .populate('roles');
+
+        res.json(staff);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @desc    Get user by ID
 // @route   GET /api/users/:id
 // @access  Private/Admin (with View User permission)
@@ -62,27 +93,28 @@ router.get('/:id', protect, checkPermission('User Management', 'view'), async (r
     }
 });
 
-// @desc    Get all staff members (users with roles or superadmin)
-// @route   GET /api/users/staff
-// @access  Private/SuperAdmin
-router.get('/staff', protect, async (req, res) => {
-    // Only Super Admin or those with Role Management can view staff? 
-    // Requirement says "Staff created exclusively by Super Admin". likely managed by Super Admin too.
-    if (!req.user.isSuperAdmin && !req.user.roles.some(r => r.permissions /* simplified check, ideally use middleware */)) {
-        // allowing consistent permission check if needed, but lets stick to logic:
-    }
-
+// @desc    Suspend/Unsuspend User
+// @route   PUT /api/users/:id/suspend
+// @access  Private/Admin (Edit User permission)
+router.put('/:id/suspend', protect, checkPermission('User Management', 'edit'), async (req, res) => {
     try {
-        const staff = await User.find({
-            $or: [
-                { isSuperAdmin: true },
-                { roles: { $not: { $size: 0 } } }
-            ]
-        })
-            .select('-password')
-            .populate('roles');
+        const user = await User.findById(req.params.id);
 
-        res.json(staff);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (user.isSuperAdmin) {
+            return res.status(400).json({ message: 'Cannot suspend Super Admin' });
+        }
+
+        user.isSuspended = !user.isSuspended;
+        await user.save();
+
+        res.json({
+            message: `User ${user.isSuspended ? 'suspended' : 'activated'}`,
+            isSuspended: user.isSuspended
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
