@@ -193,11 +193,27 @@
 /* Share Card - Creative & Rich */
 .share-card {
     background: #ffffff;
-    background-image: radial-gradient(#b2dfdb 2px, transparent 2px);
-    /* Darker and larger dots */
-    background-size: 24px 24px;
-    /* Slightly larger spacing */
+    /* background-image moved to pseudo-element for border masking */
     border: 1px solid #e0e0e0;
+    position: relative;
+    overflow: hidden;
+}
+
+.share-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(#b2dfdb 2px, transparent 2px);
+    background-size: 24px 24px;
+    pointer-events: none;
+    -webkit-mask-image:
+        linear-gradient(to right, black 48px, transparent 48px, transparent calc(100% - 48px), black calc(100% - 48px)),
+        linear-gradient(to bottom, black 48px, transparent 48px, transparent calc(100% - 48px), black calc(100% - 48px));
+    mask-image:
+        linear-gradient(to right, black 48px, transparent 48px, transparent calc(100% - 48px), black calc(100% - 48px)),
+        linear-gradient(to bottom, black 48px, transparent 48px, transparent calc(100% - 48px), black calc(100% - 48px));
+    -webkit-mask-composite: source-over;
+    mask-composite: add;
 }
 
 .share-header {
@@ -344,13 +360,51 @@
     border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
+.section-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-6);
+    padding-bottom: var(--spacing-4);
+    border-bottom: 2px solid #f0f2f5;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
 .section-title {
     font-size: var(--text-lg);
     font-weight: 700;
-    margin-bottom: var(--spacing-6);
     color: var(--text-main);
-    padding-bottom: var(--spacing-4);
-    border-bottom: 2px solid #f0f2f5;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.txn-filters {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.filter-select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    background-color: white;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.filter-select:hover {
+    border-color: #cbd5e0;
+}
+
+.filter-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 191, 165, 0.1);
 }
 
 .empty-state {

@@ -1,195 +1,377 @@
+/* Modern & Creative Donation Form Styles */
+
 .donation-container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
+    max-width: 650px;
+    margin: 2rem auto;
+    padding: 2.5rem;
+    background: #ffffff;
+    border-radius: var(--radius-xl);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Add a subtle top border/gradient for premium feel */
+.donation-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    justify-content: center;
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
 }
 
 .donation-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 2rem;
     color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
+/* Amount Selection */
 .amount-options {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .amount-btn {
-    flex: 1;
-    border: 1px solid #ddd;
-    padding: 0.75rem;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
+    position: relative;
+    padding: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: var(--radius-lg);
+    font-weight: 700;
+    font-size: 1.25rem;
     background: white;
     color: var(--text-main);
-    transition: all 0.2s;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.amount-btn:hover {
+    border-color: var(--primary);
+    background: rgba(0, 191, 165, 0.05);
+    transform: translateY(-2px);
 }
 
 .amount-btn.active {
-    border-color: var(--danger);
-    color: var(--danger);
-    background: #fff5f5;
+    border-color: var(--primary);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    box-shadow: 0 10px 15px -3px rgba(0, 191, 165, 0.3);
+    transform: translateY(-2px);
+    border: none;
 }
 
-.amount-btn.popular {
-    position: relative;
-    /* border-color: var(--danger); Removed to prevent red border when not active */
-    /* Optional: maybe popular always looks distinct? or only when active? */
-    /* Let's keep it simple. Popular tag shows up. */
-}
-
-.amount-btn.popular::after {
-    content: 'Popular';
+/* Popular Tag */
+.popular-tag {
     position: absolute;
-    top: -10px;
+    top: -12px;
     left: 50%;
     transform: translateX(-50%);
-    background: white;
-    color: var(--danger);
+    background: #f59e0b;
+    /* Amber/Gold for premium feel */
+    color: white;
     font-size: 0.7rem;
-    padding: 0 4px;
-    border: 1px solid #ffeeba;
-    /* Add a border around tag for visibility? */
-    border: 1px solid #ddd;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 10;
 }
 
+/* Custom Amount Input */
 .custom-amount {
     display: flex;
     align-items: center;
-    border: 1px solid #ddd;
-    border-radius: var(--radius-sm);
-    padding: 0.75rem;
+    border: 2px solid #e2e8f0;
+    border-radius: var(--radius-lg);
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    margin-bottom: 2rem;
+    transition: all 0.2s;
+}
+
+.custom-amount:focus-within {
+    border-color: var(--primary);
     background: white;
-    margin-bottom: 1.5rem;
+    box-shadow: 0 0 0 4px rgba(0, 191, 165, 0.1);
+}
+
+.currency-symbol {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-right: 0.75rem;
 }
 
 .custom-amount input {
     border: none;
     outline: none;
     width: 100%;
-    margin-left: 0.5rem;
-    font-size: 1rem;
-}
-
-.checkbox-wrap {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 500;
+    background: transparent;
     color: var(--text-main);
 }
 
-.checkbox-wrap.sm {
-    font-size: 0.8rem;
-    font-weight: 400;
-    margin-top: 0.5rem;
+.custom-amount input::placeholder {
+    color: #94a3b8;
 }
 
-.details-card {
-    background: white;
-    padding: 0;
-    margin-top: 2rem;
+/* Section Dividers */
+.form-section {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid #f1f5f9;
 }
 
-.card-title {
+.section-label {
     font-size: 1.1rem;
-    margin-bottom: 1.5rem;
     font-weight: 700;
-}
-
-.form-group {
-    margin-bottom: 1.25rem;
-}
-
-.form-group label {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin-bottom: 0.4rem;
-    color: #444;
-}
-
-.form-input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: var(--radius-sm);
-    font-size: 0.95rem;
-    background: #fff;
-}
-
-.form-input:focus {
-    border-color: var(--primary);
-    outline: none;
-}
-
-.form-input:disabled {
-    background: #eee;
-    cursor: not-allowed;
-}
-
-.phone-input {
-    display: flex;
-    border: 1px solid #ddd;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-}
-
-.phone-input .flag-icon {
-    background: #f9f9f9;
-    padding: 0.75rem;
-    border-right: 1px solid #ddd;
+    color: var(--text-main);
+    margin-bottom: 1.5rem;
     display: flex;
     align-items: center;
+    gap: 0.75rem;
+}
+
+/* Form Inputs */
+.input-group {
+    margin-bottom: 1.5rem;
+}
+
+.input-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 1rem;
+    color: #94a3b8;
+    pointer-events: none;
+    transition: color 0.2s;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.875rem 1rem 0.875rem 2.75rem;
+    /* Space for icon */
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    background: #ffffff;
+    color: var(--text-main);
     font-weight: 500;
 }
 
-.phone-input input {
-    border: none;
-    padding: 0.75rem;
-    flex: 1;
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(0, 191, 165, 0.1);
     outline: none;
 }
 
-small {
-    font-size: 0.75rem;
-    color: #888;
-    margin-top: 0.25rem;
-    display: block;
+.form-control:focus+.input-icon,
+.input-wrapper:focus-within .input-icon {
+    color: var(--primary);
 }
 
-.referral-section {
-    background: #f8f9fa;
+/* Phone Input Specifics */
+.phone-wrapper {
+    display: flex;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: all 0.2s;
+}
+
+.phone-wrapper:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(0, 191, 165, 0.1);
+}
+
+.flag-addon {
+    background: #f8fafc;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid #e2e8f0;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.phone-field {
+    border: none;
+    padding: 0.875rem 1rem;
+    width: 100%;
+    font-size: 0.95rem;
+    outline: none;
+    font-weight: 500;
+}
+
+/* Checkboxes */
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+    user-select: none;
+}
+
+.checkbox-item input[type="checkbox"] {
+    accent-color: var(--primary);
+    width: 1.1rem;
+    height: 1.1rem;
+    cursor: pointer;
+}
+
+/* Referral Section */
+.referral-box {
+    background: linear-gradient(to right bottom, #f0fdfa, #f8fafc);
+    border: 1px dashed var(--primary);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 2rem;
+}
+
+.or-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 1rem 0;
+}
+
+.or-divider::before,
+.or-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.or-divider::before {
+    margin-right: 1rem;
+}
+
+.or-divider::after {
+    margin-left: 1rem;
+}
+
+/* 80G Tax Section */
+.tax-benefits-box {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    border-radius: var(--radius-lg);
+    position: relative;
+}
+
+.tax-badge {
+    position: absolute;
+    top: -10px;
+    right: 20px;
+    background: #f59e0b;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+/* Submit Button */
+.donate-btn {
+    width: 100%;
     padding: 1rem;
-    border-radius: var(--radius-sm);
-    margin-bottom: 1.5rem;
-    border: 1px solid #eee;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px -1px rgba(0, 191, 165, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    position: relative;
+    overflow: hidden;
 }
 
-.success-text {
-    color: var(--success);
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
-    display: block;
+.donate-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(255, 255, 255, 0.2), transparent);
+    transform: translateY(-100%);
+    transition: transform 0.3s;
 }
 
-.tax-fields {
-    margin-top: 1rem;
-    padding-left: 1rem;
-    border-left: 2px solid var(--primary);
+.donate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 191, 165, 0.3);
 }
 
-.error-border {
-    border-color: #dc3545 !important;
+.donate-btn:hover::after {
+    transform: translateY(0);
 }
 
-.error-text {
-    color: #dc3545;
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
-    display: block;
+.donate-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .donation-container {
+        padding: 1.5rem;
+        margin: 1rem;
+        width: auto;
+    }
+
+    .amount-options {
+        gap: 0.75rem;
+    }
+
+    .amount-btn {
+        padding: 0.75rem;
+        font-size: 1.1rem;
+    }
 }

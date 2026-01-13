@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/layout/Navbar';
-import Footer from '../components/layout/Footer';
+import AuthFooter from '../components/auth/AuthFooter';
 import api from '../services/api';
 import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -14,23 +14,29 @@ const UserDashboard = () => {
     const [copied, setCopied] = useState(false);
     const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
 
+    // Filters (Default to current month/year)
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
     useEffect(() => {
-        // Only fetch wallet data for normal users
+        // Only fetch data for normal users
         if (user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
 
         const fetchData = async () => {
             try {
+                // Fetch wallet balance
                 const wRes = await api.get('/wallet/my');
                 setWallet(wRes.data);
 
-                const tRes = await api.get('/wallet/transactions');
+                // Fetch transactions with filters
+                const tRes = await api.get(`/wallet/transactions?month=${selectedMonth}&year=${selectedYear}`);
                 setTransactions(tRes.data);
             } catch (error) {
-                console.error("Error fetching wallet", error);
+                console.error("Error fetching dashboard data", error);
             }
         };
         fetchData();
-    }, [user]);
+    }, [user, selectedMonth, selectedYear]);
 
     const shareLink = `${window.location.origin}/donate?ref=${user?.mobile}`;
 
@@ -161,7 +167,32 @@ const UserDashboard = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3, delay: 0.2 }}
                         >
-                            <h3 className="section-title">Transaction History</h3>
+                            <div className="section-header-row">
+                                <h3 className="section-title">Transaction History</h3>
+                                <div className="txn-filters">
+                                    <select
+                                        className="filter-select"
+                                        value={selectedMonth}
+                                        onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                                    >
+                                        {Array.from({ length: 12 }, (_, i) => (
+                                            <option key={i + 1} value={i + 1}>
+                                                {new Date(0, i).toLocaleString('default', { month: 'long' })}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <select
+                                        className="filter-select"
+                                        value={selectedYear}
+                                        onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                    >
+                                        {Array.from({ length: 5 }, (_, i) => {
+                                            const year = new Date().getFullYear() - i;
+                                            return <option key={year} value={year}>{year}</option>;
+                                        })}
+                                    </select>
+                                </div>
+                            </div>
 
                             {transactions.length === 0 ? (
                                 <div className="empty-state">
@@ -182,8 +213,8 @@ const UserDashboard = () => {
                                         <tbody>
                                             {transactions.map(txn => (
                                                 <tr key={txn._id}>
-                                                    <td style={{ color: '#718096', fontSize: '0.9rem' }}>
-                                                        {new Date(txn.createdAt).toLocaleDateString()}
+                                                    <td style={{ color: 'var(--primary)', fontWeight: '600', fontSize: '0.9rem' }}>
+                                                        {new Date(txn.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                                                     </td>
                                                     <td>
                                                         <div style={{ fontWeight: 500 }}>{txn.description}</div>
@@ -212,7 +243,7 @@ const UserDashboard = () => {
                 )}
 
             </div>
-            <Footer />
+            <AuthFooter />
 
             <PayoutModal
                 isOpen={isPayoutModalOpen}

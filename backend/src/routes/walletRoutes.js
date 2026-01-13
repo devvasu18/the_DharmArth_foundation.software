@@ -26,7 +26,20 @@ router.get('/transactions', protect, async (req, res) => {
         const wallet = await Wallet.findOne({ user: req.user._id });
         if (!wallet) return res.json([]);
 
-        const transactions = await Transaction.find({ wallet: wallet._id })
+        const { month, year } = req.query;
+        let query = { wallet: wallet._id };
+
+        if (month && year) {
+            const start = new Date(year, month - 1, 1);
+            const end = new Date(year, month, 1); // First day of next month
+
+            query.createdAt = {
+                $gte: start,
+                $lt: end
+            };
+        }
+
+        const transactions = await Transaction.find(query)
             .sort({ createdAt: -1 }); // Newest first
 
         res.json(transactions);

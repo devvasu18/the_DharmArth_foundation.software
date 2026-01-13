@@ -188,131 +188,163 @@ const DonationForm = () => {
 
     return (
         <div className="donation-container">
-            <h2 className="donation-title">Donation amount</h2>
+            <h2 className="donation-title">
+                <CreditCard size={28} className="text-primary" />
+                Select Donation Amount
+            </h2>
 
             <div className="amount-options">
                 {donationConfig.plans.map((planAmount) => (
                     <button
                         key={planAmount}
-                        className={`amount-btn ${amount === planAmount ? 'active' : ''} ${donationConfig.popularAmount === planAmount ? 'popular' : ''}`}
+                        className={`amount-btn ${amount === planAmount ? 'active' : ''}`}
                         onClick={() => { setAmount(planAmount); setCustomAmount(''); }}
                     >
+                        {donationConfig.popularAmount === planAmount && (
+                            <span className="popular-tag">Popular</span>
+                        )}
                         ₹{planAmount.toLocaleString()}
                     </button>
                 ))}
             </div>
 
             <div className="custom-amount">
-                <span>₹</span>
+                <span className="currency-symbol">₹</span>
                 <input
                     type="number"
-                    placeholder="Other amount - ₹1000 or more"
+                    placeholder="Enter custom amount (Min ₹500)"
                     value={customAmount}
                     onChange={(e) => { setCustomAmount(e.target.value); setAmount(0); }}
                 />
             </div>
 
-            <div className="checkbox-wrap">
-                <input type="checkbox" defaultChecked /> I confirm that I am an Indian citizen
-            </div>
+            <label className="checkbox-item">
+                <input type="checkbox" defaultChecked />
+                <span>I confirm that I am an Indian citizen</span>
+            </label>
 
-            <div className="details-card">
-                <h3 className="card-title">Your Details</h3>
+            <div className="form-section">
+                <h3 className="section-label">
+                    <User size={20} />
+                    Personal Details
+                </h3>
 
-                <div className="form-group">
-                    <label>Full Name*</label>
-                    <input
-                        type="text"
-                        className="form-input"
-                        placeholder="eg. Raghu Kumar"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                    />
-                    <div className="checkbox-wrap sm">
-                        <input type="checkbox" /> Make my donation anonymous
+                <div className="input-group">
+                    <label className="input-label">Full Name*</label>
+                    <div className="input-wrapper">
+                        <User size={18} className="input-icon" />
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Ex. Raghu Kumar"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                        />
                     </div>
                 </div>
 
-                <div className="form-group">
-                    <label>Mobile Number*</label>
-                    <div className="phone-input">
-                        <span className="flag-icon">🇮🇳 +91</span>
+                <div className="input-group">
+                    <label className="input-label">Mobile Number*</label>
+                    <div className="phone-wrapper">
+                        <div className="flag-addon">🇮🇳 +91</div>
                         <input
-                            type="text"
-                            className="form-input"
+                            type="tel"
+                            className="phone-field"
+                            placeholder="9876543210"
                             value={mobile}
                             onChange={(e) => {
                                 const val = e.target.value;
                                 if (/^\d*$/.test(val) && val.length <= 10) setMobile(val);
                             }}
+                            maxLength={10}
                         />
                     </div>
-                    <small>Payment updates will be sent on this number</small>
+                    <small className="mt-1 text-muted">We'll send payment updates via WhatsApp</small>
                 </div>
 
-                <div className="form-group">
-                    <label>Email (Optional)</label>
-                    <input
-                        type="email"
-                        className="form-input"
-                        placeholder="eg. email@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                </div>
-
-                {/* Referral Logic */}
-                <div className="referral-section">
-                    <div className="form-group">
-                        <label>Motivated By (Mobile Number)</label>
+                <div className="input-group">
+                    <label className="input-label">Email Address (Optional)</label>
+                    <div className="input-wrapper">
+                        <Mail size={18} className="input-icon" />
                         <input
-                            type="text"
-                            className={`form-input ${errors.motivator ? 'error-border' : ''}`}
-                            placeholder="Enter 10 digit mobile"
-                            value={motivatorMobile}
-                            onChange={(e) => {
-                                const val = e.target.value;
-                                if (/^\d*$/.test(val) && val.length <= 10) setMotivatorMobile(val);
-                            }}
-                            disabled={!!referralSource}
+                            type="email"
+                            className="form-control"
+                            placeholder="mail@example.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                         />
-                        {motivatorName && <span className="success-text">Motivated by: {motivatorName}</span>}
-                        {errors.motivator && <small className="error-text" style={{ color: 'red' }}>{errors.motivator}</small>}
-                    </div>
-
-                    <div className="text-center text-muted" style={{ textAlign: 'center', margin: '10px 0' }}>OR</div>
-
-                    <div className="form-group">
-                        <label>Referred Via</label>
-                        <select
-                            className="form-input"
-                            value={referralSource}
-                            onChange={(e) => setReferralSource(e.target.value)}
-                            disabled={!!motivatorMobile}
-                        >
-                            <option value="">Select Option</option>
-                            <option value="Instagram">Instagram</option>
-                            <option value="Facebook">Facebook</option>
-                            <option value="WhatsApp">WhatsApp</option>
-                            <option value="Website">Website</option>
-                            <option value="Friend">Friend</option>
-                            <option value="Other">Other</option>
-                        </select>
                     </div>
                 </div>
+            </div>
 
-                <div className="checkbox-wrap">
+            <div className="form-section">
+                <h3 className="section-label">
+                    <Smartphone size={20} />
+                    Motivational Source
+                </h3>
+
+                <div className="referral-box">
+                    <div className="input-group mb-0">
+                        <label className="input-label">Motivated By (Mobile Number)</label>
+                        <div className="phone-wrapper">
+                            <div className="flag-addon">
+                                <Smartphone size={16} />
+                            </div>
+                            <input
+                                type="tel"
+                                className={`phone-field ${(errors.motivator) ? 'error-border' : ''}`}
+                                placeholder="Enter 10-digit mobile number"
+                                value={motivatorMobile}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (/^\d*$/.test(val) && val.length <= 10) setMotivatorMobile(val);
+                                }}
+                                disabled={!!referralSource}
+                                maxLength={10}
+                            />
+                        </div>
+                        {motivatorName && <span className="success-text">Verified Motivator: <strong>{motivatorName}</strong></span>}
+                        {errors.motivator && <small className="error-text">{errors.motivator}</small>}
+                    </div>
+
+                    <div className="or-divider">OR Select Source</div>
+
+                    <div className="input-group mb-0">
+                        <div className="input-wrapper">
+                            <MapPin size={18} className="input-icon" />
+                            <select
+                                className="form-control"
+                                value={referralSource}
+                                onChange={(e) => setReferralSource(e.target.value)}
+                                disabled={!!motivatorMobile}
+                            >
+                                <option value="">Select Referral Source</option>
+                                <option value="Instagram">Instagram</option>
+                                <option value="Facebook">Facebook</option>
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="Website">Website</option>
+                                <option value="Friend">Friend</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="tax-section">
+                <label className="checkbox-item" style={{ fontWeight: 600 }}>
                     <input type="checkbox" checked={need80G} onChange={(e) => setNeed80G(e.target.checked)} />
-                    Need 80G Certificate for Tax Exemption?
-                </div>
+                    <span>Need 80G Certificate for Tax Exemption?</span>
+                </label>
 
                 {need80G && (
-                    <div className="tax-fields">
-                        <div className="form-group">
-                            <label>PAN Number*</label>
+                    <div className="tax-benefits-box">
+                        <span className="tax-badge">Save Tax</span>
+                        <div className="input-group">
+                            <label className="input-label">PAN Number*</label>
                             <input
                                 type="text"
-                                className={`form-input ${errors.pan ? 'error-border' : ''}`}
+                                className={`form-control ${errors.pan ? 'error-border' : ''}`}
                                 placeholder="ABCDE1234F"
                                 value={pan}
                                 onChange={(e) => {
@@ -321,13 +353,14 @@ const DonationForm = () => {
                                 }}
                                 maxLength={10}
                             />
-                            {errors.pan && <small className="error-text" style={{ color: 'red' }}>{errors.pan}</small>}
+                            {errors.pan && <small className="error-text">{errors.pan}</small>}
                         </div>
-                        <div className="form-group">
-                            <label>Aadhaar Number (Optional)</label>
+                        <div className="input-group mb-0">
+                            <label className="input-label">Aadhaar Number (Optional)</label>
                             <input
                                 type="text"
-                                className={`form-input ${errors.aadhaar ? 'error-border' : ''}`}
+                                className={`form-control ${errors.aadhaar ? 'error-border' : ''}`}
+                                placeholder="1234 5678 9012"
                                 value={aadhaar}
                                 onChange={(e) => {
                                     const val = e.target.value;
@@ -336,25 +369,26 @@ const DonationForm = () => {
                                         if (errors.aadhaar) setErrors({ ...errors, aadhaar: null });
                                     }
                                 }}
+                                maxLength={12}
                             />
-                            {errors.aadhaar && <small className="error-text" style={{ color: 'red' }}>{errors.aadhaar}</small>}
+                            {errors.aadhaar && <small className="error-text">{errors.aadhaar}</small>}
                         </div>
                     </div>
                 )}
+            </div>
 
-                <div className="checkbox-wrap mt-4" style={{ marginTop: '1rem' }}>
-                    <input type="checkbox" defaultChecked /> Send me updates and notifications via WhatsApp/SMS
-                </div>
+            <button
+                className="donate-btn"
+                onClick={handleDonate}
+                disabled={loading}
+            >
+                {loading ? 'Processing Secure Payment...' : `Donate ₹${(customAmount ? Number(customAmount) : amount).toLocaleString()}`}
+            </button>
 
-                <button
-                    className="btn bg-primary text-white full-width mt-4"
-                    style={{ padding: '1rem', marginTop: '1rem', opacity: loading ? 0.7 : 1 }}
-                    onClick={handleDonate}
-                    disabled={loading}
-                >
-                    {loading ? 'Processing...' : 'Proceed to Pay'}
-                </button>
-
+            <div className="text-center mt-3">
+                <small className="text-muted" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                    <CreditCard size={12} /> 100% Secure Payment
+                </small>
             </div>
         </div>
     );
