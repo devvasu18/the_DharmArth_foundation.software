@@ -126,9 +126,8 @@ const DonationForm = () => {
             if (!validatePAN(pan)) {
                 newErrors.pan = "Invalid PAN Number format (e.g. ABCDE1234F)";
             }
-            // Aadhaar is optional in the UI "Aadhaar Number (Optional)", but if entered, must be valid
-            if (aadhaar && !validateAadhaar(aadhaar)) {
-                newErrors.aadhaar = "Invalid Aadhaar Number (Check for typos)";
+            if (!validateAadhaar(aadhaar)) {
+                newErrors.aadhaar = "Invalid Aadhaar Number";
             }
         }
 
@@ -139,20 +138,17 @@ const DonationForm = () => {
         setErrors({});
 
         // Referral/Motivator Validation Logic
-        if (referralSource) {
-            // Valid because referral source is selected
-        } else {
-            // Must have a valid motivator
-            if (!motivatorMobile) {
-                await showAlert("Please let us know what motivated you to donate (Motivator Mobile or Referral Source).");
-                return;
-            }
-            // Check for specific errors set during validation
+        if (!referralSource && !motivatorMobile) {
+            await showAlert("Please let us know what motivated you to donate (Motivator Mobile or Referral Source).");
+            return;
+        }
+
+        // Validate motivator if entered - independant check
+        if (motivatorMobile) {
             if (errors.motivator) {
                 await showAlert(errors.motivator);
                 return;
             }
-            // Check if user is trying to submit an invalid/unverified motivator
             if (!motivatorName) {
                 await showAlert("Please enter a valid motivator number.");
                 return;
@@ -299,7 +295,6 @@ const DonationForm = () => {
                                     const val = e.target.value;
                                     if (/^\d*$/.test(val) && val.length <= 10) setMotivatorMobile(val);
                                 }}
-                                disabled={!!referralSource}
                                 maxLength={10}
                             />
                         </div>
@@ -307,7 +302,7 @@ const DonationForm = () => {
                         {errors.motivator && <small className="error-text">{errors.motivator}</small>}
                     </div>
 
-                    <div className="or-divider">OR Select Source</div>
+                    <div style={{ margin: '1rem 0' }}></div>
 
                     <div className="input-group mb-0">
                         <div className="input-wrapper">
@@ -316,7 +311,6 @@ const DonationForm = () => {
                                 className="form-control"
                                 value={referralSource}
                                 onChange={(e) => setReferralSource(e.target.value)}
-                                disabled={!!motivatorMobile}
                             >
                                 <option value="">Select Referral Source</option>
                                 <option value="Instagram">Instagram</option>
@@ -356,7 +350,7 @@ const DonationForm = () => {
                             {errors.pan && <small className="error-text">{errors.pan}</small>}
                         </div>
                         <div className="input-group mb-0">
-                            <label className="input-label">Aadhaar Number (Optional)</label>
+                            <label className="input-label">Aadhaar Number*</label>
                             <input
                                 type="text"
                                 className={`form-control ${errors.aadhaar ? 'error-border' : ''}`}

@@ -204,14 +204,14 @@
     position: absolute;
     inset: 0;
     background-image: radial-gradient(#b2dfdb 2px, transparent 2px);
-    background-size: 24px 24px;
+    background-size: 18px 18px;
     pointer-events: none;
     -webkit-mask-image:
-        linear-gradient(to right, black 48px, transparent 48px, transparent calc(100% - 48px), black calc(100% - 48px)),
-        linear-gradient(to bottom, black 48px, transparent 48px, transparent calc(100% - 48px), black calc(100% - 48px));
+        linear-gradient(to right, black 36px, transparent 36px, transparent calc(100% - 36px), black calc(100% - 36px)),
+        linear-gradient(to bottom, black 36px, transparent 36px, transparent calc(100% - 36px), black calc(100% - 36px));
     mask-image:
-        linear-gradient(to right, black 48px, transparent 48px, transparent calc(100% - 48px), black calc(100% - 48px)),
-        linear-gradient(to bottom, black 48px, transparent 48px, transparent calc(100% - 48px), black calc(100% - 48px));
+        linear-gradient(to right, black 36px, transparent 36px, transparent calc(100% - 36px), black calc(100% - 36px)),
+        linear-gradient(to bottom, black 36px, transparent 36px, transparent calc(100% - 36px), black calc(100% - 36px));
     -webkit-mask-composite: source-over;
     mask-composite: add;
 }

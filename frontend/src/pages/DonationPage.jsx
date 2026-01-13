@@ -1,14 +1,14 @@
 import React from 'react';
 import Navbar from '../components/layout/Navbar';
 import DonationForm from '../components/donation/DonationForm';
-import Footer from '../components/layout/Footer';
+import AuthFooter from '../components/auth/AuthFooter';
 
 const DonationPage = () => {
     return (
-        <div style={{ minHeight: '100vh', background: 'var(--bg-light)' }}>
+        <div style={{ minHeight: '100vh', background: '#f0fdfa', paddingBottom: '2rem' }}>
             <Navbar />
             <DonationForm />
-            <Footer />
+            <AuthFooter />
         </div>
     );
 };
