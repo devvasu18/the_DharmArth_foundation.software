@@ -88,8 +88,8 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                     <button className="modal-close" onClick={onClose}><X size={24} /></button>
 
                     <div className="modal-header">
-                        <h2>Request Payout</h2>
-                        <p>Complete these milestones to unlock your payout</p>
+                        <h2>Withdrow Now</h2>
+                        <p>Complete these milestones to unlock your rewards</p>
                     </div>
 
                     <div className="conditions-container">
@@ -100,7 +100,7 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                             </div>
                             <div className="condition-content">
                                 <div className="condition-title-row">
-                                    <h3>Lock-in Period ({LOCK_IN_DAYS} Days)</h3>
+                                    <h3>Lock-in Period (3 Months)</h3>
                                     <span className="status-tag">{isTimeUnlocked ? 'Completed' : 'In Progress'}</span>
                                 </div>
 

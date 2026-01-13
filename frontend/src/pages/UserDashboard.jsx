@@ -82,7 +82,7 @@ const UserDashboard = () => {
                                     className="payout-btn"
                                     onClick={() => setIsPayoutModalOpen(true)}
                                 >
-                                    Request Payout
+                                    Withdrow Now
                                 </button>
                             </motion.div>
 
