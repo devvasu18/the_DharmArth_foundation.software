@@ -37,6 +37,17 @@ router.put('/sliders/:id', protect, checkPermission('Content Management', 'edit'
     }
 });
 
+// Admin: Delete Slider
+router.delete('/sliders/:id', protect, checkPermission('Content Management', 'delete'), async (req, res) => {
+    try {
+        const slider = await Slider.findByIdAndDelete(req.params.id);
+        if (!slider) return res.status(404).json({ message: 'Slider not found' });
+        res.json({ message: 'Slider deleted' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // --- SETTINGS ---
 
 // Get Public Settings (Filtered) or All?

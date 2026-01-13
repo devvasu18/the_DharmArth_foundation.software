@@ -8,6 +8,7 @@ const AdminSliders = () => {
     const [activeTab, setActiveTab] = useState('image'); // 'image' or 'text'
 
     const [editingId, setEditingId] = useState(null);
+    const [deleteConfirmation, setDeleteConfirmation] = useState(null); // ID of item to delete
 
     // Form State
     const [formData, setFormData] = useState({
@@ -95,6 +96,24 @@ const AdminSliders = () => {
             fetchSliders(); // Refresh
         } catch (error) {
             alert(error.response?.data?.message || 'Failed to save slider');
+        }
+    };
+
+    const handleDelete = (id) => {
+        setDeleteConfirmation(id);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteConfirmation) return;
+        try {
+            await api.delete(`/content/sliders/${deleteConfirmation}`);
+            alert("Item deleted!");
+            fetchSliders();
+        } catch (error) {
+            console.error("Delete failed", error);
+            alert("Failed to delete item");
+        } finally {
+            setDeleteConfirmation(null);
         }
     };
 
@@ -226,19 +245,44 @@ const AdminSliders = () => {
                                     </>
                                 )}
                                 <td>
-                                    <button
-                                        className="btn btn-outline"
-                                        style={{ padding: '5px 10px', fontSize: '0.8rem' }}
-                                        onClick={() => handleEdit(slider)}
-                                    >
-                                        Edit
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button
+                                            className="btn btn-outline"
+                                            style={{ padding: '5px 10px', fontSize: '0.8rem' }}
+                                            onClick={() => handleEdit(slider)}
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            className="btn btn-outline"
+                                            style={{ padding: '5px 10px', fontSize: '0.8rem', borderColor: '#ef4444', color: '#ef4444' }}
+                                            onClick={() => handleDelete(slider._id)}
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+            {deleteConfirmation && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', minWidth: '400px', textAlign: 'center' }}>
+                        <h4 style={{ marginBottom: '1rem', color: '#1a202c' }}>Confirm Delete</h4>
+                        <p style={{ marginBottom: '1.5rem', color: '#4a5568' }}>Are you sure you want to delete this item? This action cannot be undone.</p>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+                            <button className="btn btn-outline" onClick={() => setDeleteConfirmation(null)}>Cancel</button>
+                            <button className="btn bg-primary text-white" style={{ background: '#ef4444' }} onClick={confirmDelete}>Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -11,7 +11,8 @@ router.get('/', protect, checkPermission('User Management', 'view'), async (req,
     try {
         const users = await User.find({})
             .select('-password')
-            .populate('roles'); // Populate roles if needed
+            .populate('roles')
+            .populate('referredBy', 'name mobile'); // Populate referrer info
 
         // Fetch all wallets
         const wallets = await Wallet.find({});

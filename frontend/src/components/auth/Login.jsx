@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Key, Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Navbar from '../layout/Navbar';
@@ -157,7 +157,7 @@ const Login = () => {
                             {/* ERROR MESSAGE */}
                             {error && <div style={{ color: 'red', marginBottom: '10px', fontSize: '0.9rem' }}>{error}</div>}
 
-                            <label className="input-label" style={{ color: '#d9534f' }}>
+                            <label className="input-label">
                                 {loginMethod === 'otp' ? 'Email / Mobile Number *' : 'Mobile Number *'}
                             </label>
 
@@ -176,7 +176,7 @@ const Login = () => {
 
                             {loginMethod === 'password' && (
                                 <>
-                                    <label className="input-label" style={{ color: '#d9534f', marginTop: '1rem' }}>
+                                    <label className="input-label" style={{ marginTop: '1rem' }}>
                                         Password *
                                     </label>
                                     <div style={{ position: 'relative' }}>
@@ -233,16 +233,42 @@ const Login = () => {
                             )}
 
                             {/* TOGGLE LOGIN METHOD */}
-                            <div className="justify-center flex mt-4" style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                                <span
-                                    className="link-text"
+                            <div className="justify-center flex mt-4" style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                                <button
+                                    type="button"
                                     onClick={() => setLoginMethod(loginMethod === 'otp' ? 'password' : 'otp')}
+                                    style={{
+                                        background: 'transparent',
+                                        border: '2px solid var(--primary)',
+                                        borderRadius: 'var(--radius-md)',
+                                        padding: '0.5rem 1rem',
+                                        color: 'var(--primary)',
+                                        fontWeight: '600',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        width: '100%',
+                                        justifyContent: 'center'
+                                    }}
+                                    className="login-method-toggle"
                                 >
-                                    {loginMethod === 'otp' ? 'Login via Password' : 'Login via OTP'}
-                                </span>
+                                    {loginMethod === 'otp' ? (
+                                        <>
+                                            <Key size={18} />
+                                            <span>Login via Password</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Smartphone size={18} />
+                                            <span>Login via OTP</span>
+                                        </>
+                                    )}
+                                </button>
 
                                 <span style={{ fontSize: '0.9rem', color: '#666' }}>
-                                    Don't have an account? <Link to="/signup" className="link-text">Sign Up</Link>
+                                    Don't have an account? <Link to="/signup" className="link-text" style={{ marginLeft: '4px' }}>Sign Up</Link>
                                 </span>
                             </div>
 
@@ -251,20 +277,7 @@ const Login = () => {
 
                         </div>
 
-                        {/* DIVIDER */}
-                        <div className="auth-divider">
-                            <span>OR</span>
-                        </div>
 
-                        {/* RIGHT SIDE (GOOGLE) */}
-                        <div className="auth-right" style={{ display: 'flex', alignItems: 'center' }}>
-                            <button className="btn btn-google full-width" onClick={handleGoogleLogin}>
-                                <span style={{ background: 'white', borderRadius: '2px', padding: '2px', display: 'flex' }}>
-                                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="G" width={18} />
-                                </span>
-                                <span style={{ flex: 1 }}>Sign in</span>
-                            </button>
-                        </div>
                     </div>
                     <p style={{ fontSize: '0.75rem', textAlign: 'center', marginTop: '1rem', color: '#999' }}>
                         By continuing you agree to our<br />

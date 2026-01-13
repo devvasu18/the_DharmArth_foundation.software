@@ -73,6 +73,7 @@ const AdminUsers = () => {
                         <th>Name</th>
                         <th>Mobile</th>
                         <th>Wallet</th>
+                        <th>Referred By</th>
                         <th>Email</th>
                         <th>Roles</th>
                         <th>Actions</th>
@@ -84,6 +85,7 @@ const AdminUsers = () => {
                             <td>{user.name}</td>
                             <td>{user.mobile}</td>
                             <td style={{ fontWeight: 'bold', color: '#2d3748' }}>₹{user.walletBalance?.toLocaleString() || 0}</td>
+                            <td>{user.referredBy ? `${user.referredBy.name} (${user.referredBy.mobile})` : '-'}</td>
                             <td>{user.email || '-'}</td>
                             <td>
                                 {user.isSuperAdmin ? <span className="badge badge-red">Super Admin</span> :

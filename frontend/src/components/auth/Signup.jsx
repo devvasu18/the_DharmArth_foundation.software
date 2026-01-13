@@ -10,6 +10,7 @@ const Signup = () => {
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [referralCode, setReferralCode] = useState('');
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -25,7 +26,7 @@ const Signup = () => {
         setError('');
         setLoading(true);
         try {
-            const { data } = await api.post('/auth/register', { name, mobile, email, password });
+            const { data } = await api.post('/auth/register', { name, mobile, email, password, referralCode });
 
             // Automatically login or redirect
             // For now, let's login (save token) and redirect
@@ -111,6 +112,17 @@ const Signup = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                             />
 
+                            <label className="input-label" style={{ color: '#d9534f', marginTop: '1rem' }}>
+                                Referral Code (Optional)
+                            </label>
+                            <input
+                                type="text"
+                                className="input-field"
+                                placeholder="Enter Referrer Mobile"
+                                value={referralCode}
+                                onChange={(e) => setReferralCode(e.target.value)}
+                            />
+
                             {/* ACTION BUTTON */}
                             <button
                                 className="btn bg-primary text-white full-width"
@@ -130,20 +142,7 @@ const Signup = () => {
                             </div>
                         </div>
 
-                        {/* DIVIDER */}
-                        <div className="auth-divider">
-                            <span>OR</span>
-                        </div>
 
-                        {/* RIGHT SIDE (GOOGLE) */}
-                        <div className="auth-right" style={{ display: 'flex', alignItems: 'center' }}>
-                            <button className="btn btn-google full-width" onClick={handleGoogleSignup}>
-                                <span style={{ background: 'white', borderRadius: '2px', padding: '2px', display: 'flex' }}>
-                                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="G" width={18} />
-                                </span>
-                                <span style={{ flex: 1 }}>Sign up with Google</span>
-                            </button>
-                        </div>
                     </div>
 
                     <p style={{ fontSize: '0.75rem', textAlign: 'center', marginTop: '1rem', color: '#999' }}>

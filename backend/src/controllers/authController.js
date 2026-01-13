@@ -44,11 +44,20 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
+        let referredBy = null;
+        if (req.body.referralCode) {
+            const referrer = await User.findOne({ mobile: req.body.referralCode });
+            if (referrer) {
+                referredBy = referrer._id;
+            }
+        }
+
         const user = await User.create({
             name,
             mobile,
             email,
-            password
+            password,
+            referredBy
         });
 
         if (user) {
