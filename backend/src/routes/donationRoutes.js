@@ -9,7 +9,20 @@ const { processDonationCommission } = require('../services/commissionService');
 router.get('/', async (req, res) => {
     // Ideally check permission
     try {
-        const donations = await Donation.find({}).sort({ createdAt: -1 });
+        const { month, year } = req.query;
+        let filter = {};
+
+        if (month && year) {
+            // month is 1-indexed in query, but 0-indexed in JS Date
+            const startDate = new Date(year, month - 1, 1);
+            const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+            filter.createdAt = {
+                $gte: startDate,
+                $lte: endDate
+            };
+        }
+
+        const donations = await Donation.find(filter).sort({ createdAt: -1 });
         res.json(donations);
     } catch (error) {
         res.status(500).json({ message: error.message });

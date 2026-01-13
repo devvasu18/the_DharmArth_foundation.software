@@ -8,6 +8,8 @@ const AdminLayout = () => {
     const user = JSON.parse(localStorage.getItem('user'));
     const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
 
+    const [isProfileDropdownOpen, setIsProfileDropdownOpen] = React.useState(false);
+
     useEffect(() => {
         // Basic protection check
         // In real app, verify token validity with backend
@@ -58,11 +60,6 @@ const AdminLayout = () => {
                         <Users size={20} title={isSidebarCollapsed ? "Staff & Roles" : ""} />
                         {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Staff & Roles</span>}
                     </NavLink>
-
-                    <div className="admin-link" onClick={handleLogout} style={{ marginTop: 'auto', cursor: 'pointer', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                        <LogOut size={20} title={isSidebarCollapsed ? "Logout" : ""} />
-                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Logout</span>}
-                    </div>
                 </nav>
             </div>
 
@@ -72,10 +69,7 @@ const AdminLayout = () => {
                         <button className="sidebar-toggle mobile-only" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
                             <Menu size={20} />
                         </button>
-                        <div className="search-container">
-                            <Search size={18} className="search-icon" />
-                            <input type="text" placeholder="Search projects..." className="search-input" />
-                        </div>
+                        {isSidebarCollapsed && <span className="header-brand">Dharmarth</span>}
                     </div>
 
                     <div className="topbar-right">
@@ -86,7 +80,10 @@ const AdminLayout = () => {
                             <Bell size={20} />
                             <span className="badge-dot"></span>
                         </div>
-                        <div className="profile-dropdown">
+                        <div
+                            className="profile-dropdown"
+                            onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                        >
                             <div className="profile-info">
                                 <span className="profile-name">{user.name || 'Admin User'}</span>
                                 <span className="profile-role">{user.isSuperAdmin ? 'Super Admin' : 'Staff'}</span>
@@ -95,6 +92,15 @@ const AdminLayout = () => {
                                 {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
                             </div>
                             <ChevronDown size={14} style={{ opacity: 0.5 }} />
+
+                            {isProfileDropdownOpen && (
+                                <div className="dropdown-menu">
+                                    <div className="dropdown-item" onClick={(e) => { e.stopPropagation(); handleLogout(); }}>
+                                        <LogOut size={16} />
+                                        <span>Logout</span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </header>

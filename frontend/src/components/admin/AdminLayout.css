@@ -1,8 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --primary-color: #b66dff;
-    --secondary-color: #d8d8d8;
+    --primary-color: #00bfa5;
+    /* Teal Default Theme */
+    --secondary-color: #005f56;
     --success-color: #1bcfb4;
     --warning-color: #fed713;
     --danger-color: #fe7c96;
@@ -23,23 +24,25 @@ body {
 
 .admin-container {
     display: flex;
-    min-height: 100vh;
+    height: 100vh;
+    /* Fixed viewport height */
+    overflow: hidden;
+    /* Prevent body scroll */
     background-color: var(--light-color);
-    overflow-x: hidden;
 }
 
 /* --- Sidebar --- */
 .admin-sidebar {
     width: var(--sidebar-width);
     background-color: #ffffff;
-    min-height: 100vh;
+    height: 100%;
+    /* Full height of container */
     display: flex;
     flex-direction: column;
     transition: width 0.3s ease, transform 0.3s ease;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
     z-index: 1000;
     flex-shrink: 0;
-    /* Prevent shrinking */
 }
 
 .admin-sidebar.collapsed {
@@ -55,6 +58,7 @@ body {
     font-weight: 700;
     color: var(--primary-color);
     border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    flex-shrink: 0;
 }
 
 .admin-brand:hover {
@@ -67,6 +71,8 @@ body {
     flex-direction: column;
     gap: 0.5rem;
     overflow-y: auto;
+    /* Internal scroll for sidebar items */
+    flex: 1;
 }
 
 .admin-link {
@@ -87,9 +93,10 @@ body {
 }
 
 .admin-link.active {
-    color: var(--primary-color);
-    background-color: #fcfcfc;
-    border-left-color: var(--primary-color);
+    color: #ffffff;
+    background-color: var(--primary-color);
+    border-left-color: var(--secondary-color);
+    box-shadow: 0 4px 10px rgba(0, 191, 165, 0.3);
 }
 
 .admin-link svg {
@@ -97,9 +104,13 @@ body {
     transition: color 0.3s ease;
 }
 
-.admin-link:hover svg,
-.admin-link.active svg {
+.admin-link:hover svg {
     color: var(--primary-color);
+}
+
+.admin-link.active svg {
+    color: #ffffff;
+    /* White icon for active state */
 }
 
 .admin-sidebar.collapsed .admin-link {
@@ -117,8 +128,12 @@ body {
     display: flex;
     flex-direction: column;
     width: calc(100% - var(--sidebar-width));
-    /* Ensure it takes remaining space */
     transition: width 0.3s ease;
+    height: 100%;
+    /* Full height */
+    overflow-y: auto;
+    /* Scroll independently */
+    overflow-x: hidden;
 }
 
 .admin-sidebar.collapsed+.admin-main-wrapper {
@@ -127,15 +142,17 @@ body {
 
 .admin-topbar {
     height: var(--topbar-height);
-    background-color: #ffffff;
+    background-color: var(--primary-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 2rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 0;
     z-index: 900;
+    color: white;
+    flex-shrink: 0;
 }
 
 .topbar-left {
@@ -148,14 +165,14 @@ body {
 .search-container {
     display: flex;
     align-items: center;
-    background-color: transparent;
+    background-color: rgba(255, 255, 255, 0.15);
     padding: 0.5rem 1rem;
     border-radius: 4px;
     width: 300px;
 }
 
 .search-icon {
-    color: #9c9fa6;
+    color: rgba(255, 255, 255, 0.8);
     margin-right: 10px;
 }
 
@@ -165,11 +182,11 @@ body {
     outline: none;
     font-size: 0.9rem;
     width: 100%;
-    color: #3e4b5b;
+    color: #ffffff;
 }
 
 .search-input::placeholder {
-    color: #c9c8c8;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .topbar-right {
@@ -181,7 +198,7 @@ body {
 .icon-btn {
     position: relative;
     cursor: pointer;
-    color: #9c9fa6;
+    color: rgba(255, 255, 255, 0.8);
     transition: color 0.3s;
     display: flex;
     align-items: center;
@@ -189,7 +206,7 @@ body {
 }
 
 .icon-btn:hover {
-    color: var(--primary-color);
+    color: #ffffff;
 }
 
 .badge-dot {
@@ -198,9 +215,9 @@ body {
     right: 0;
     width: 8px;
     height: 8px;
-    background-color: var(--success-color);
+    background-color: var(--warning-color);
     border-radius: 50%;
-    border: 2px solid white;
+    border: 2px solid var(--primary-color);
 }
 
 .profile-dropdown {
@@ -209,7 +226,46 @@ body {
     gap: 1rem;
     cursor: pointer;
     padding-left: 1.5rem;
-    border-left: 1px solid #f2f4f9;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 10px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 150px;
+    z-index: 1000;
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    color: #3e4b5b;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: var(--danger-color);
+}
+
+.dropdown-item svg {
+    color: #9c9fa6;
+}
+
+.dropdown-item:hover svg {
+    color: var(--danger-color);
 }
 
 .profile-info {
@@ -221,20 +277,19 @@ body {
 .profile-name {
     font-size: 0.9rem;
     font-weight: 600;
-    color: #3e4b5b;
+    color: #ffffff;
 }
 
 .profile-role {
     font-size: 0.75rem;
-    color: #9c9fa6;
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .profile-avatar {
     width: 35px;
     height: 35px;
-    background-color: #e6fffa;
-    /* Light teal default */
-    color: var(--success-color);
+    background-color: #ffffff;
+    color: var(--primary-color);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -259,7 +314,7 @@ body {
     background: none;
     border: none;
     cursor: pointer;
-    color: #9c9fa6;
+    color: rgba(255, 255, 255, 0.8);
     display: none;
     /* Hidden on desktop by default as we have collapsbile logic */
 }
@@ -267,7 +322,6 @@ body {
 /* --- Content --- */
 .admin-content {
     padding: 2.5rem;
-    overflow-y: auto;
     flex: 1;
 }
 
@@ -407,7 +461,7 @@ body {
 }
 
 .bg-primary:hover {
-    background-color: #a356fc;
+    background-color: var(--secondary-color);
 }
 
 .btn-outline {
@@ -460,4 +514,26 @@ body {
     border-color: var(--primary-color);
     outline: none;
     background-color: #fff;
+}
+
+.header-brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    /* White text on Teal background */
+    margin-left: 1rem;
+    letter-spacing: 0.5px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
