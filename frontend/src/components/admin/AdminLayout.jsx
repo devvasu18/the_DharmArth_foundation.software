@@ -68,12 +68,7 @@ const AdminLayout = () => {
 
 
             <div className="admin-content">
-                <div className="admin-header">
-                    <h2>Welcome, {user.name}</h2>
-                    <div>
-                        <span className="badge badge-green">Super Admin</span>
-                    </div>
-                </div>
+
                 <Outlet />
             </div>
         </div>

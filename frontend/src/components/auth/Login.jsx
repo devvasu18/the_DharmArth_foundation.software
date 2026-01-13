@@ -59,7 +59,7 @@ const Login = () => {
             if (data.isSuperAdmin) {
                 toast.success('Welcome back, Super Admin!');
                 // navigate('/admin/dashboard'); // Future
-                navigate('/');
+                navigate('/admin');
             } else {
                 toast.success('Welcome back!');
                 navigate('/');

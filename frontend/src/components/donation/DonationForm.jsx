@@ -28,6 +28,10 @@ const DonationForm = () => {
 
     const [loading, setLoading] = useState(false);
 
+    const [showPanModal, setShowPanModal] = useState(false);
+    const [confirmPan, setConfirmPan] = useState('');
+    const [confirmError, setConfirmError] = useState('');
+
     useEffect(() => {
         const fetchSettings = async () => {
             try {
@@ -113,6 +117,36 @@ const DonationForm = () => {
         return () => clearTimeout(timer);
     }, [motivatorMobile, mobile]);
 
+    const submitDonation = async () => {
+        setLoading(true);
+        const finalAmount = customAmount ? Number(customAmount) : amount;
+
+        try {
+            const payload = {
+                amount: finalAmount,
+                donorName: fullName,
+                donorMobile: mobile,
+                donorEmail: email,
+                motivatorMobile: motivatorMobile || null,
+                referralSource: referralSource || null,
+                panNumber: need80G ? pan : null,
+                aadhaarNumber: need80G ? aadhaar : null
+            };
+
+            const { data } = await api.post('/donate', payload);
+            await showAlert(`Payment Successful! Donation ID: ${data.donationId}`);
+            // Reset form or redirect
+            navigate('/');
+
+        } catch (error) {
+            console.error("Donation failed:", error);
+            await showAlert("Donation failed. Please try again.");
+        } finally {
+            setLoading(false);
+            setShowPanModal(false);
+        }
+    };
+
     const handleDonate = async () => {
         const finalAmount = customAmount ? Number(customAmount) : amount;
 
@@ -155,31 +189,22 @@ const DonationForm = () => {
             }
         }
 
-        setLoading(true);
-
-        try {
-            const payload = {
-                amount: finalAmount,
-                donorName: fullName,
-                donorMobile: mobile,
-                donorEmail: email,
-                motivatorMobile: motivatorMobile || null,
-                referralSource: referralSource || null,
-                panNumber: need80G ? pan : null,
-                aadhaarNumber: need80G ? aadhaar : null
-            };
-
-            const { data } = await api.post('/donate', payload);
-            await showAlert(`Payment Successful! Donation ID: ${data.donationId}`);
-            // Reset form or redirect
-            navigate('/');
-
-        } catch (error) {
-            console.error("Donation failed:", error);
-            await showAlert("Donation failed. Please try again.");
-        } finally {
-            setLoading(false);
+        if (need80G) {
+            setConfirmPan('');
+            setConfirmError('');
+            setShowPanModal(true);
+        } else {
+            submitDonation();
         }
+    };
+
+    const handlePanConfirm = () => {
+        if (confirmPan.toUpperCase() !== pan.toUpperCase()) {
+            setConfirmError("PAN numbers do not match.");
+            return;
+        }
+        setConfirmError('');
+        submitDonation();
     };
 
     return (
@@ -242,7 +267,7 @@ const DonationForm = () => {
                 <div className="input-group">
                     <label className="input-label">Mobile Number*</label>
                     <div className="phone-wrapper">
-                        <div className="flag-addon">🇮🇳 +91</div>
+                        <div className="flag-addon"> +91</div>
                         <input
                             type="tel"
                             className="phone-field"
@@ -384,6 +409,51 @@ const DonationForm = () => {
                     <CreditCard size={12} /> 100% Secure Payment
                 </small>
             </div>
+
+            {showPanModal && (
+                <div className="pan-modal-overlay">
+                    <div className="pan-modal-content">
+                        <div className="pan-modal-header">
+                            <p className="pan-modal-title">Secure Confirmation</p>
+                            <p className="pan-modal-subtitle">Verify details for 80G Tax Exemption</p>
+                        </div>
+
+                        <div className="pan-user-details">
+                            <div className="pan-detail-row">
+                                <span className="pan-detail-label">Donor Name:</span>
+                                <span className="pan-detail-value">{fullName}</span>
+                            </div>
+                            <div className="pan-detail-row" style={{ marginTop: '0.5rem' }}>
+                                <span className="pan-detail-label">Mobile:</span>
+                                <span className="pan-detail-value">+91 {mobile}</span>
+                            </div>
+                        </div>
+
+                        <div className="input-group mb-0">
+                            <label className="input-label">Confirm PAN Number*</label>
+                            <input
+                                type="text"
+                                className={`form-control ${confirmError ? 'error-border' : ''}`}
+                                placeholder="Re-enter PAN Number"
+                                value={confirmPan}
+                                onChange={(e) => {
+                                    setConfirmPan(e.target.value.toUpperCase());
+                                    setConfirmError('');
+                                }}
+                                maxLength={10}
+                            />
+                            {confirmError && <small className="error-text">{confirmError}</small>}
+                        </div>
+
+                        <div className="pan-modal-actions">
+                            <button className="btn-secondary" onClick={() => setShowPanModal(false)}>Cancel</button>
+                            <button className="btn-confirm" onClick={handlePanConfirm} disabled={loading}>
+                                {loading ? 'Processing...' : 'Confirm & Donate'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

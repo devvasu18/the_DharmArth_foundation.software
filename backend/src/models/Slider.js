@@ -8,6 +8,7 @@ const sliderSchema = new mongoose.Schema({
     subtitle_hi: { type: String }, // Hindi Subtitle
     imageUrl: { type: String }, // Required only for type='image' logically
     ctaText: { type: String, default: 'Donate' },
+    ctaText_hi: { type: String }, // Hindi CTA Text
     ctaLink: { type: String, default: '/donate' }, // Internal route or external link
     order: { type: Number, default: 0 },
     isVisible: { type: Boolean, default: true }

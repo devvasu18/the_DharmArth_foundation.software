@@ -10,9 +10,11 @@ const AdminSliders = () => {
     const [editingId, setEditingId] = useState(null);
     const [deleteConfirmation, setDeleteConfirmation] = useState(null); // ID of item to delete
 
+    const [activeLang, setActiveLang] = useState('en'); // 'en' or 'hi'
+
     // Form State
     const [formData, setFormData] = useState({
-        title: '', title_hi: '', subtitle: '', subtitle_hi: '', imageUrl: '', order: 0, ctaLink: '', ctaText: 'Donate', type: 'image'
+        title: '', title_hi: '', subtitle: '', subtitle_hi: '', imageUrl: '', order: 0, ctaLink: '', ctaText: 'Donate', ctaText_hi: '', type: 'image'
     });
 
     useEffect(() => {
@@ -63,6 +65,7 @@ const AdminSliders = () => {
             order: slider.order || 0,
             ctaLink: slider.ctaLink || '',
             ctaText: slider.ctaText || 'Donate',
+            ctaText_hi: slider.ctaText_hi || '',
             type: slider.type || 'image'
         });
         setActiveTab(slider.type === 'text' ? 'text' : 'image');
@@ -73,7 +76,7 @@ const AdminSliders = () => {
 
     const resetForm = () => {
         setFormData({
-            title: '', title_hi: '', subtitle: '', subtitle_hi: '', imageUrl: '', order: 0, ctaLink: '', ctaText: 'Donate',
+            title: '', title_hi: '', subtitle: '', subtitle_hi: '', imageUrl: '', order: 0, ctaLink: '', ctaText: 'Donate', ctaText_hi: '',
             type: activeTab
         });
         setEditingId(null);
@@ -173,47 +176,145 @@ const AdminSliders = () => {
             {isAdding && (
                 <div className="admin-card" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
                     <h4>{editingId ? 'Edit Item' : `Add New ${activeTab === 'image' ? 'Image' : 'Text Content'}`}</h4>
-                    <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                    <form onSubmit={handleSubmit} style={{ marginTop: '2rem' }}>
 
                         {activeTab === 'text' && (
-                            <>
-                                <input className="form-input" placeholder="Title (En)" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} required />
-                                <input className="form-input" placeholder="Title (Hi)" value={formData.title_hi} onChange={e => setFormData({ ...formData, title_hi: e.target.value })} />
-
-                                <input className="form-input" placeholder="Subtitle (En)" value={formData.subtitle} onChange={e => setFormData({ ...formData, subtitle: e.target.value })} />
-                                <input className="form-input" placeholder="Subtitle (Hi)" value={formData.subtitle_hi} onChange={e => setFormData({ ...formData, subtitle_hi: e.target.value })} />
-
-                                <input className="form-input" placeholder="CTA Text (e.g. Donate)" value={formData.ctaText} onChange={e => setFormData({ ...formData, ctaText: e.target.value })} />
-                                <input className="form-input" placeholder="CTA Link (e.g. /donate)" value={formData.ctaLink} onChange={e => setFormData({ ...formData, ctaLink: e.target.value })} />
-                            </>
-                        )}
-
-                        {activeTab === 'image' && (
-                            <div style={{ gridColumn: 'span 2' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Slider Image</label>
-                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleFileChange}
-                                        className="form-input"
-                                    />
-                                    {uploading && <span>Uploading...</span>}
-                                </div>
-                                {formData.imageUrl && (
-                                    <div style={{ marginTop: '0.5rem' }}>
-                                        <p style={{ fontSize: '0.8rem', color: 'green' }}>Image Uploaded!</p>
-                                        <img src={formData.imageUrl} alt="Preview" style={{ height: '80px', borderRadius: '4px', objectFit: 'cover' }} />
+                            <div style={{ marginBottom: '2rem' }}>
+                                {/* Language Toggle */}
+                                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+                                    <div style={{ background: '#e2e8f0', borderRadius: '999px', padding: '4px', display: 'flex' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveLang('en')}
+                                            style={{
+                                                padding: '0.5rem 2rem',
+                                                borderRadius: '999px',
+                                                border: 'none',
+                                                background: activeLang === 'en' ? 'white' : 'transparent',
+                                                color: activeLang === 'en' ? '#008080' : '#64748b',
+                                                fontWeight: activeLang === 'en' ? '600' : '500',
+                                                boxShadow: activeLang === 'en' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s',
+                                                fontSize: '0.9rem'
+                                            }}
+                                        >
+                                            English
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveLang('hi')}
+                                            style={{
+                                                padding: '0.5rem 2rem',
+                                                borderRadius: '999px',
+                                                border: 'none',
+                                                background: activeLang === 'hi' ? 'white' : 'transparent',
+                                                color: activeLang === 'hi' ? '#008080' : '#64748b',
+                                                fontWeight: activeLang === 'hi' ? '600' : '500',
+                                                boxShadow: activeLang === 'hi' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s',
+                                                fontSize: '0.9rem'
+                                            }}
+                                        >
+                                            Hindi
+                                        </button>
                                     </div>
-                                )}
+                                </div>
+
+                                <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                                    {activeLang === 'en' ? (
+                                        <>
+                                            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                                                <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>Title (English)</label>
+                                                <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="Enter title in English" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} required />
+                                            </div>
+                                            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                                                <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>Subtitle (English)</label>
+                                                <textarea className="form-input" style={{ width: '100%', padding: '0.75rem', minHeight: '80px' }} placeholder="Enter subtitle description" value={formData.subtitle} onChange={e => setFormData({ ...formData, subtitle: e.target.value })} />
+                                            </div>
+                                            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                                                <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>CTA Button Text</label>
+                                                <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. Donate Now" value={formData.ctaText} onChange={e => setFormData({ ...formData, ctaText: e.target.value })} />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                                                <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>Title (Hindi)</label>
+                                                <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="Enter title in Hindi" value={formData.title_hi} onChange={e => setFormData({ ...formData, title_hi: e.target.value })} />
+                                            </div>
+                                            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                                                <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>Subtitle (Hindi)</label>
+                                                <textarea className="form-input" style={{ width: '100%', padding: '0.75rem', minHeight: '80px' }} placeholder="Enter subtitle description in Hindi" value={formData.subtitle_hi} onChange={e => setFormData({ ...formData, subtitle_hi: e.target.value })} />
+                                            </div>
+                                            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                                                <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>CTA Button Text (Hindi)</label>
+                                                <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. दान करें" value={formData.ctaText_hi} onChange={e => setFormData({ ...formData, ctaText_hi: e.target.value })} />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                                        <div className="form-group">
+                                            <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>CTA Link Route</label>
+                                            <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. /donate" value={formData.ctaLink} onChange={e => setFormData({ ...formData, ctaLink: e.target.value })} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>Display Order</label>
+                                            <input type="number" className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. 1" value={formData.order} onChange={e => setFormData({ ...formData, order: e.target.value })} />
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
+                                        <button type="button" className="btn btn-outline" onClick={() => setIsAdding(false)}>Cancel</button>
+                                        <button type="submit" className="btn bg-primary text-white" disabled={uploading} style={{ paddingLeft: '2rem', paddingRight: '2rem' }}>
+                                            {editingId ? 'Update Content' : 'Save Content'}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         )}
 
-                        <input type="number" className="form-input" placeholder="Order (e.g. 1)" value={formData.order} onChange={e => setFormData({ ...formData, order: e.target.value })} />
+                        {activeTab === 'image' && (
+                            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+                                <div className="form-group" style={{ marginBottom: '2rem' }}>
+                                    <label className="form-label" style={{ display: 'block', marginBottom: '1rem', fontWeight: '600', color: '#334155' }}>Upload Slider Image</label>
+                                    <div style={{ border: '2px dashed #cbd5e1', borderRadius: '12px', padding: '2rem', textAlign: 'center', background: '#f8fafc' }}>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleFileChange}
+                                            style={{ display: 'none' }}
+                                            id="slider-upload"
+                                        />
+                                        <label htmlFor="slider-upload" style={{ cursor: 'pointer', display: 'block' }}>
+                                            {formData.imageUrl ? (
+                                                <img src={formData.imageUrl} alt="Preview" style={{ maxHeight: '200px', maxWidth: '100%', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
+                                            ) : (
+                                                <div style={{ padding: '2rem' }}>
+                                                    <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem' }}>🖼️</span>
+                                                    <span style={{ color: '#64748b', fontWeight: '500' }}>Click to Browse Image</span>
+                                                </div>
+                                            )}
+                                        </label>
+                                        {uploading && <p style={{ marginTop: '1rem', color: '#008080' }}>Uploading...</p>}
+                                    </div>
+                                </div>
 
-                        <button type="submit" className="btn bg-primary text-white" disabled={uploading}>
-                            {editingId ? 'Update' : 'Save'}
-                        </button>
+                                <div className="form-group" style={{ marginBottom: '2rem' }}>
+                                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>Display Order</label>
+                                    <input type="number" className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. 1" value={formData.order} onChange={e => setFormData({ ...formData, order: e.target.value })} />
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
+                                    <button type="button" className="btn btn-outline" onClick={() => setIsAdding(false)}>Cancel</button>
+                                    <button type="submit" className="btn bg-primary text-white" disabled={uploading || !formData.imageUrl} style={{ paddingLeft: '2rem', paddingRight: '2rem' }}>
+                                        {editingId ? 'Update Image' : 'Save Image'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </form>
                 </div>
             )}
