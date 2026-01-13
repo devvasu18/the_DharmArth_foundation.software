@@ -1,30 +1,109 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck } from 'lucide-react';
+import { io } from "socket.io-client";
+import toast from 'react-hot-toast';
+import axios from 'axios';
 import './AdminLayout.css';
+
+// Simple notification sound
+const NOTIFICATION_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
 
 const AdminLayout = () => {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user'));
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
+    const [user, setUser] = useState(null);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
-    const [isProfileDropdownOpen, setIsProfileDropdownOpen] = React.useState(false);
+    // Notification State
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const socketRef = useRef(null);
+    const audioRef = useRef(new Audio(NOTIFICATION_SOUND));
 
     useEffect(() => {
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        setUser(storedUser);
+
         // Basic protection check
-        // In real app, verify token validity with backend
-        if (!user || !user.token) {
+        if (!storedUser || !storedUser.token) {
             navigate('/login');
-        } else if (!user.isSuperAdmin && (!user.roles || user.roles.length === 0)) {
-            // If not super admin and no roles (basic check)
+            return;
+        } else if (!storedUser.isSuperAdmin && (!storedUser.roles || storedUser.roles.length === 0)) {
             alert("Access Denied: Admins Only");
             navigate('/');
+            return;
         }
-    }, [user, navigate]);
+
+        // Initialize Socket
+        socketRef.current = io('http://localhost:5000', {
+            withCredentials: true
+        });
+
+        socketRef.current.emit('join_admin_notifications');
+
+        socketRef.current.on('new_donation', (newNotification) => {
+            // Play Sound
+            audioRef.current.play().catch(e => console.log('Audio play failed', e));
+
+            // Show Toast
+            toast.success(
+                <div onClick={() => setIsNotificationsOpen(true)} style={{ cursor: 'pointer' }}>
+                    <b>New Donation!</b>
+                    <p style={{ margin: 0, fontSize: '0.9rem' }}>{newNotification.message}</p>
+                </div>,
+                { duration: 5000 }
+            );
+
+            // Update State
+            setNotifications(prev => [newNotification, ...prev]);
+            setUnreadCount(prev => prev + 1);
+        });
+
+        fetchNotifications();
+
+        return () => {
+            if (socketRef.current) socketRef.current.disconnect();
+        };
+    }, [navigate]); // Only run on mount (and if navigate changes, which is stable)
+
+    const fetchNotifications = async () => {
+        try {
+            const res = await axios.get('http://localhost:5000/api/notifications');
+            setNotifications(res.data.notifications);
+            setUnreadCount(res.data.unreadCount);
+        } catch (err) {
+            console.error("Failed to fetch notifications", err);
+        }
+    };
+
+    const handleMarkAllRead = async () => {
+        try {
+            await axios.put('http://localhost:5000/api/notifications/read-all');
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            setUnreadCount(0);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const handleLogout = () => {
+        if (socketRef.current) socketRef.current.disconnect();
         localStorage.removeItem('user');
         navigate('/login');
+    };
+
+    const handleFullScreen = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch((err) => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
     };
 
     if (!user) return null;
@@ -73,13 +152,46 @@ const AdminLayout = () => {
                     </div>
 
                     <div className="topbar-right">
-                        <div className="icon-btn">
+                        <div className="icon-btn" onClick={handleFullScreen} title="Toggle Fullscreen">
                             <Maximize size={20} />
                         </div>
-                        <div className="icon-btn">
+
+                        {/* Notification Bell */}
+                        <div className="icon-btn" onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}>
                             <Bell size={20} />
-                            <span className="badge-dot"></span>
+                            {unreadCount > 0 && <span className="badge-dot" title={`${unreadCount} unread`}></span>}
+
+                            {isNotificationsOpen && (
+                                <div className="notification-dropdown" onClick={(e) => e.stopPropagation()}>
+                                    <div className="notification-header">
+                                        <span>Notifications</span>
+                                        {unreadCount > 0 && (
+                                            <button className="text-btn-small" onClick={handleMarkAllRead}>
+                                                Mark all read
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="notification-list">
+                                        {notifications.length === 0 ? (
+                                            <div className="no-notif">No new notifications</div>
+                                        ) : (
+                                            notifications.map((notif, idx) => (
+                                                <div key={idx} className={`notif-item ${!notif.isRead ? 'unread' : ''}`}>
+                                                    <div className="notif-icon">
+                                                        {notif.type === 'DONATION' ? '💰' : '📢'}
+                                                    </div>
+                                                    <div className="notif-content">
+                                                        <p className="notif-msg">{notif.message}</p>
+                                                        <span className="notif-time">{new Date(notif.createdAt).toLocaleTimeString()}</span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
+
                         <div
                             className="profile-dropdown"
                             onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}

@@ -107,6 +107,20 @@ const AdminDashboard = () => {
                     }
                 });
                 setChartData(processedChartData);
+
+                // Fetch Traffic Source Data
+                try {
+                    const trafficRes = await api.get('/donate/analytics/traffic-sources');
+                    if (trafficRes.data && trafficRes.data.data) {
+                        setPieData(trafficRes.data.data);
+                        // Store total if needed, or calculate on fly
+                        // For simplicity, we just use the data. 
+                        // Note: backend calculates total, but we can also sum it here if `data.total` is missing
+                    }
+                } catch (err) {
+                    console.error("Traffic stats error", err);
+                }
+
             } catch (error) {
                 console.error("Dashboard global fetch error", error);
             } finally {
@@ -134,14 +148,13 @@ const AdminDashboard = () => {
         fetchFilteredDonations();
     }, [selectedMonth, selectedYear]);
 
-    // Mock data for Pie Chart
-    const pieData = [
-        { name: 'Direct', value: 400 },
-        { name: 'Referral', value: 300 },
-        { name: 'Social', value: 300 },
-        { name: 'Organic', value: 200 },
-    ];
-    const COLORS = ['#b66dff', '#00cbdc', '#fe7096', '#fdb901'];
+    // Traffic Source State
+    const [pieData, setPieData] = useState([
+        { name: 'No Data', value: 1 } // Default placeholder
+    ]);
+
+    // Bright, distinct colors for charts
+    const COLORS = ['#00bfa5', '#36a2eb', '#ff6384', '#ffcd56', '#4bc0c0', '#9966ff'];
 
     const months = [
         { val: 1, name: 'January' }, { val: 2, name: 'February' }, { val: 3, name: 'March' },
@@ -284,7 +297,35 @@ const AdminDashboard = () => {
                                     ))}
                                 </Pie>
                                 <Tooltip />
-                                <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                                <Legend
+                                    layout="vertical"
+                                    verticalAlign="middle"
+                                    align="right"
+                                    iconType="circle"
+                                    content={({ payload }) => (
+                                        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                                            {payload.map((entry, index) => {
+                                                const total = pieData.reduce((acc, curr) => acc + curr.value, 0);
+                                                const percent = total > 0 ? ((entry.payload.value / total) * 100).toFixed(0) : 0;
+
+                                                return (
+                                                    <li key={`item-${index}`} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', color: '#555', fontSize: '0.9rem' }}>
+                                                        <span style={{
+                                                            display: 'inline-block',
+                                                            width: '10px',
+                                                            height: '10px',
+                                                            backgroundColor: entry.color,
+                                                            borderRadius: '50%',
+                                                            marginRight: '8px'
+                                                        }}></span>
+                                                        <span style={{ flex: 1 }}>{entry.value}</span>
+                                                        <span style={{ fontWeight: '600', marginLeft: '10px' }}>{percent}%</span>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    )}
+                                />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
