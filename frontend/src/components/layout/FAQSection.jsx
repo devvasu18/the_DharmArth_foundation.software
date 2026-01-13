@@ -4,24 +4,24 @@ import { ChevronDown } from 'lucide-react';
 
 const faqs = [
     {
-        question: "How do I start a fundraiser on The Dharmarth Foundation?",
-        answer: "Starting a fundraiser is easy and free! Simply click on the 'Start a Fundraiser' button, sign up or log in, fill in the details of the cause, upload a picture, and submit. Your campaign will be live in minutes."
+        question: "How do I make a donation on The Dharmarth Foundation?",
+        answer: "Making a contribution is simple and secure. Click on the 'Donate' button, select the cause you wish to support, enter the amount, and complete the payment using your preferred method. Your support reaches those in need instantly."
     },
     {
-        question: "Is there a fee for raising funds?",
-        answer: "We strive to keep costs low. We charge a minimal platform fee of 0% on widespread donation campaigns for natural disasters, but for personal campaigns, a standard transaction processing fee may apply to cover payment gateway costs."
+        question: "Is there a fee for donating?",
+        answer: "We strive to ensure maximum impact. We do not charge any platform fee from donors. A small standard transaction processing fee may apply from the payment gateway provider, which is standard across all online payments."
     },
     {
-        question: "How can I withdraw the raised funds?",
-        answer: "You can request a withdrawal at any time from your personalized dashboard. Once your documents are verified, the funds are transferred directly to your secure bank account within 2-5 business days."
+        question: "Do I get tax benefits for my donation?",
+        answer: "Yes, all donations made to The Dharmarth Foundation are eligible for tax exemption under Section 80G of the Income Tax Act. You will receive a tax receipt instantly via email after your donation."
     },
     {
         question: "Is my donation safe?",
-        answer: "Absolutely. We use industry-standard encryption and secure payment gateways to ensure your transaction is safe. We also verify the authenticity of every fundraiser to ensure your money reaches the right cause."
+        answer: "Absolutely. We use industry-standard encryption and secure payment gateways to ensure your transaction is safe. We also verify the authenticity of every cause to ensure your money reaches the right beneficiaries."
     },
     {
-        question: "Can I raise funds for a friend or relative?",
-        answer: "Yes, you can start a fundraiser for yourself, a friend, a relative, or even a complete stranger in need. Just ensure you have the beneficiary's consent and necessary documents for verification."
+        question: " Can I donate to a specific person or cause?",
+        answer: "Yes, you can browse through our verified list of active cases and choose to support a specific individual, medical case, or social cause that resonates with you. Every contribution makes a difference."
     },
     {
         question: "Does The Dharmarth Foundation support international currencies?",

@@ -1,8 +1,8 @@
 import React from 'react';
 import './CrowdfundingSection.css';
-import hospitalWardImg from '../../assets/hospital_ward.png';
-import handsHeartImg from '../../assets/hands_holding_heart.png';
-import mobileAppImg from '../../assets/mobile_app_dashboard.png';
+import hospitalWardImg from '../../assets/medical_bill_burden.png';
+import handsHeartImg from '../../assets/community_support_circle.png';
+import mobileAppImg from '../../assets/phone_donation_screen.png';
 
 const CrowdfundingSection = () => {
     return (
@@ -27,10 +27,10 @@ const CrowdfundingSection = () => {
                 <div className="crowd-row reverse">
                     <div className="crowd-content">
                         <h2 className="crowd-title">
-                            Try Medical Crowdfunding
+                            Support Medical Crowdfunding
                         </h2>
                         <p className="crowd-text">
-                            Stop worrying about rising medical bills, or debts and start a medical fundraising campaign with The Dharmarth Foundation. We are a Crowdfunding Platform dedicated to helping those in need. Crowdfunding is the easiest way to avail support from friends, family and numerous individuals who are waiting to contribute funds.
+                            Stop worrying about the helpless, and start supporting them with The Dharmarth Foundation. We are a Donation Platform dedicated to helping those in need. Crowdfunding is the easiest way to pool support from friends, family and compassionate individuals who are waiting to contribute funds.
                         </p>
                     </div>
                     <div className="crowd-image-wrapper">
@@ -42,14 +42,14 @@ const CrowdfundingSection = () => {
                 <div className="crowd-row">
                     <div className="crowd-content">
                         <h2 className="crowd-title">
-                            Start a Medical Fundraiser for Yourself or a Loved One
+                            Contribute to Medical Aid for those in Need
                         </h2>
                         <p className="crowd-text">
-                            With The Dharmarth Foundation, you can start a free, easy fundraiser in minutes to cover medical bills and healthcare costs. You can also take on the role of spreading the word and bring in funds when a close friend is diagnosed with unexpected illnesses. Medical fundraising campaigns can give your well-wishers a way to express support when needed.
+                            With The Dharmarth Foundation, you can make a quick, secure donation in minutes to support medical bills and healthcare costs for the underprivileged. You can also take on the role of spreading the word and bringing in support. Your contributions give hope to patients and families during their most difficult times.
                         </p>
                     </div>
                     <div className="crowd-image-wrapper">
-                        <img src={mobileAppImg} alt="Medical Fundraiser App" className="crowd-image" />
+                        <img src={mobileAppImg} alt="Medical Donation App" className="crowd-image" />
                     </div>
                 </div>
             </div>

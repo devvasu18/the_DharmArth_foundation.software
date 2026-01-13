@@ -138,15 +138,16 @@ router.get('/analytics/traffic-sources', async (req, res) => {
             // 1. If Motivator exists -> Referral
             // 2. Else check Referral Source
 
-            if (d.motivatorMobile && d.motivatorMobile.length >= 10) {
+            const source = (d.referralSource || '').toLowerCase();
+
+            if (source.includes('instagram')) stats.instagram++;
+            else if (source.includes('facebook')) stats.facebook++;
+            else if (source.includes('whatsapp')) stats.whatsapp++;
+            else if (source.includes('website')) stats.website++;
+            else if (d.motivatorMobile && d.motivatorMobile.length >= 10) {
                 stats.referral++;
             } else {
-                const source = (d.referralSource || '').toLowerCase();
-                if (source.includes('instagram')) stats.instagram++;
-                else if (source.includes('facebook')) stats.facebook++;
-                else if (source.includes('whatsapp')) stats.whatsapp++;
-                else if (source.includes('website')) stats.website++;
-                else stats.other++; // Direct/Other
+                stats.other++; // Direct/Other
             }
         });
 

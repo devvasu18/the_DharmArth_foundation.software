@@ -14,7 +14,7 @@ import {
 const features = [
     {
         icon: <Trophy size={48} strokeWidth={1.5} />,
-        text: "Industry's best fundraising success rate"
+        text: "100% Transparent Donation Process"
     },
     {
         icon: <Users size={48} strokeWidth={1.5} />,

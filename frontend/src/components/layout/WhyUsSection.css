@@ -1,12 +1,15 @@
 .why-us-section {
     padding: var(--spacing-12) 0;
-    background-color: var(--bg-white);
+    background-color: #658a85;
+    /* Lighter than secondary (#005f56), but still deep enough for white text */
     text-align: center;
+    color: #fff;
 }
 
 .why-us-title {
     font-size: var(--text-3xl);
-    color: var(--text-main);
+    color: #fff;
+    /* White text */
     margin-bottom: var(--spacing-12);
     font-weight: 700;
 }
@@ -27,8 +30,8 @@
 }
 
 .why-us-icon-wrapper {
-    color: var(--primary);
-    /* Teal color from theme */
+    color: #fff;
+    /* White icons for contrast on dark green */
     margin-bottom: var(--spacing-2);
     display: flex;
     justify-content: center;
@@ -39,13 +42,14 @@
     width: 40px;
     height: 3px;
     background-color: #FFC107;
-    /* The specific yellow from the reference */
+    /* Keep the yellow separator, it pops nicely on green */
     border-radius: 2px;
 }
 
 .why-us-text {
     font-size: var(--text-base);
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.9);
+    /* Slight transparency for visual hierarchy */
     line-height: 1.4;
     font-weight: 500;
     max-width: 200px;

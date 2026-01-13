@@ -5,6 +5,7 @@ import CrowdfundingSection from '../components/layout/CrowdfundingSection';
 import AppDownloadSection from '../components/layout/AppDownloadSection';
 import WhyUsSection from '../components/layout/WhyUsSection';
 import FAQSection from '../components/layout/FAQSection';
+import MonthlyGivingSection from '../components/layout/MonthlyGivingSection';
 import Footer from '../components/layout/Footer';
 
 const Home = () => {
@@ -20,6 +21,7 @@ const Home = () => {
             <AppDownloadSection />
             <WhyUsSection />
             <FAQSection />
+            <MonthlyGivingSection />
             <Footer />
         </div>
     );

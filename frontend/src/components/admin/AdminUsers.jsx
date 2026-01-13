@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import UserDetailModal from './UserDetailModal';
+import AdminTransactions from './AdminTransactions';
 import ConfirmationModal from './ConfirmationModal';
 import AlertModal from './AlertModal';
-import { Eye, Ban, CheckCircle } from 'lucide-react';
+import { Eye, Ban, CheckCircle, Network } from 'lucide-react';
 
 const AdminUsers = () => {
     const [users, setUsers] = useState([]);
@@ -11,6 +12,7 @@ const AdminUsers = () => {
 
     // View User State
     const [viewingUser, setViewingUser] = useState(null);
+    const [exploreUser, setExploreUser] = useState(null);
     const [canViewDetails, setCanViewDetails] = useState(false);
     const [canSuspend, setCanSuspend] = useState(false);
 
@@ -171,6 +173,20 @@ const AdminUsers = () => {
                                                 <Eye size={18} />
                                             </button>
                                         )}
+                                        {canViewDetails && (
+                                            <button
+                                                className="btn-icon"
+                                                style={{
+                                                    background: '#f3e8ff', color: '#9333ea', border: 'none',
+                                                    padding: '8px', borderRadius: '4px', cursor: 'pointer',
+                                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
+                                                }}
+                                                onClick={() => setExploreUser(user)}
+                                                title="Explore Network"
+                                            >
+                                                <Network size={18} />
+                                            </button>
+                                        )}
                                         {canSuspend && (
                                             <button
                                                 className="btn-icon"
@@ -200,6 +216,34 @@ const AdminUsers = () => {
                     user={viewingUser}
                     onClose={() => setViewingUser(null)}
                 />
+            )}
+
+            {exploreUser && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 1100,
+                    backdropFilter: 'blur(5px)',
+                    animation: 'fadeIn 0.2s ease-out'
+                }} onClick={() => setExploreUser(null)}>
+                    <div style={{
+                        width: '95%',
+                        maxWidth: '1400px',
+                        height: '92vh',
+                        background: '#f8fafc',
+                        borderRadius: '24px',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                    }} onClick={e => e.stopPropagation()}>
+                        <AdminTransactions
+                            initialUser={exploreUser}
+                            isModal={true}
+                            onClose={() => setExploreUser(null)}
+                        />
+                    </div>
+                </div>
             )}
 
             <ConfirmationModal

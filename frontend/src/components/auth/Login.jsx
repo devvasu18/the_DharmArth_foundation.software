@@ -258,7 +258,7 @@ const Login = () => {
                                     {loginMethod === 'otp' ? (
                                         <>
                                             <Key size={18} />
-                                            <span>Login via Password</span>
+                                            <span style={{ color: 'black' }}>Login via Password</span>
                                         </>
                                     ) : (
                                         <>

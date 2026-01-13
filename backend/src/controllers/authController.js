@@ -9,7 +9,7 @@ const loginUser = async (req, res) => {
     const { mobile, password } = req.body;
 
     try {
-        const user = await User.findOne({ mobile }).populate('roles');
+        const user = await User.findOne({ mobile }).populate('roles').populate('referredBy', 'name mobile');
 
         if (user && (await user.matchPassword(password))) {
             if (user.isSuspended) {
@@ -23,6 +23,10 @@ const loginUser = async (req, res) => {
                 mobile: user.mobile,
                 isSuperAdmin: user.isSuperAdmin,
                 roles: user.roles,
+                referredBy: user.referredBy ? {
+                    name: user.referredBy.name,
+                    mobile: user.referredBy.mobile
+                } : null,
                 language: user.language,
                 token: generateToken(user._id),
             });
@@ -59,7 +63,7 @@ const registerUser = async (req, res) => {
         const user = await User.create({
             name,
             mobile,
-            email,
+            email: email || undefined,
             password,
             referredBy
         });
@@ -69,6 +73,10 @@ const registerUser = async (req, res) => {
                 _id: user._id,
                 name: user.name,
                 mobile: user.mobile,
+                referredBy: referredBy ? {
+                    name: (await User.findById(referredBy)).name,
+                    mobile: (await User.findById(referredBy)).mobile
+                } : null,
                 token: generateToken(user._id)
             });
         } else {
@@ -79,4 +87,26 @@ const registerUser = async (req, res) => {
     }
 };
 
-module.exports = { loginUser, registerUser };
+// @desc    Check referral code (mobile) and return name
+// @route   POST /api/auth/check-referral
+// @access  Public
+const checkReferral = async (req, res) => {
+    const { referralCode } = req.body;
+
+    try {
+        const user = await User.findOne({ mobile: referralCode });
+
+        if (user) {
+            res.json({
+                isValid: true,
+                name: user.name
+            });
+        } else { // Corrected: Using else block for 404 response
+            res.status(404).json({ message: 'Referral code not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { loginUser, registerUser, checkReferral };

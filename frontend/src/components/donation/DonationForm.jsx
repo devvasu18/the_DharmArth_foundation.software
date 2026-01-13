@@ -17,6 +17,7 @@ const DonationForm = () => {
     const [referralSource, setReferralSource] = useState('');
     const [motivatorName, setMotivatorName] = useState('');
     const [need80G, setNeed80G] = useState(false);
+    const [isMotivatorLocked, setIsMotivatorLocked] = useState(false);
 
     // Form States
     const [fullName, setFullName] = useState('');
@@ -60,6 +61,11 @@ const DonationForm = () => {
                 setFullName(user.name || '');
                 setMobile(user.mobile || '');
                 setEmail(user.email || '');
+                if (user.referredBy) {
+                    setMotivatorMobile(user.referredBy.mobile);
+                    setMotivatorName(user.referredBy.name);
+                    setIsMotivatorLocked(true);
+                }
             } catch (e) {
                 console.error("Error parsing user from localstorage");
             }
@@ -78,6 +84,9 @@ const DonationForm = () => {
     // Debounce motivator check
     useEffect(() => {
         const checkMotivator = async () => {
+            // Skip if locked (loaded from user profile)
+            if (isMotivatorLocked) return;
+
             // Prevent self-referral
             if (motivatorMobile && mobile && motivatorMobile === mobile) {
                 setMotivatorName("");
@@ -115,7 +124,7 @@ const DonationForm = () => {
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [motivatorMobile, mobile]);
+    }, [motivatorMobile, mobile, isMotivatorLocked]);
 
     const submitDonation = async () => {
         setLoading(true);
@@ -306,25 +315,35 @@ const DonationForm = () => {
 
                 <div className="referral-box">
                     <div className="input-group mb-0">
-                        <label className="input-label">Motivated By (Mobile Number)</label>
-                        <div className="phone-wrapper">
-                            <div className="flag-addon">
-                                <Smartphone size={16} />
+                        <label className="input-label">Motivated By {isMotivatorLocked ? '' : '(Mobile Number)'}</label>
+                        {isMotivatorLocked ? (
+                            <div className="locked-motivator-display" style={{ padding: '12px', background: '#e8f5e9', borderRadius: '8px', border: '1px solid #c8e6c9', marginTop: '5px', display: 'flex', alignItems: 'center' }}>
+                                <Smartphone size={18} className="text-primary" style={{ marginRight: '8px' }} />
+                                <span style={{ fontWeight: 600, color: '#2e7d32' }}>{motivatorName}</span>
+                                <span style={{ color: '#666', marginLeft: '5px' }}>({motivatorMobile})</span>
                             </div>
-                            <input
-                                type="tel"
-                                className={`phone-field ${(errors.motivator) ? 'error-border' : ''}`}
-                                placeholder="Enter 10-digit mobile number"
-                                value={motivatorMobile}
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    if (/^\d*$/.test(val) && val.length <= 10) setMotivatorMobile(val);
-                                }}
-                                maxLength={10}
-                            />
-                        </div>
-                        {motivatorName && <span className="success-text">Verified Motivator: <strong>{motivatorName}</strong></span>}
-                        {errors.motivator && <small className="error-text">{errors.motivator}</small>}
+                        ) : (
+                            <>
+                                <div className="phone-wrapper">
+                                    <div className="flag-addon">
+                                        <Smartphone size={16} />
+                                    </div>
+                                    <input
+                                        type="tel"
+                                        className={`phone-field ${(errors.motivator) ? 'error-border' : ''}`}
+                                        placeholder="Enter 10-digit mobile number"
+                                        value={motivatorMobile}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (/^\d*$/.test(val) && val.length <= 10) setMotivatorMobile(val);
+                                        }}
+                                        maxLength={10}
+                                    />
+                                </div>
+                                {motivatorName && <span className="success-text">Verified Motivator: <strong>{motivatorName}</strong></span>}
+                                {errors.motivator && <small className="error-text">{errors.motivator}</small>}
+                            </>
+                        )}
                     </div>
 
                     <div style={{ margin: '1rem 0' }}></div>

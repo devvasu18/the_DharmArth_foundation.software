@@ -4,6 +4,8 @@ import AuthFooter from './AuthFooter';
 import api from '../../services/api';
 import { useNavigate, Link } from 'react-router-dom';
 import './Auth.css';
+import { Eye, EyeOff } from 'lucide-react';
+import SuccessModal from './SuccessModal';
 
 const Signup = () => {
     // Form States
@@ -11,10 +13,17 @@ const Signup = () => {
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [referralCode, setReferralCode] = useState('');
+    const [referrerName, setReferrerName] = useState('');
+    const [referralError, setReferralError] = useState('');
+    const [verifyingReferral, setVerifyingReferral] = useState(false);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // Modal State
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     const navigate = useNavigate();
 
@@ -30,17 +39,22 @@ const Signup = () => {
             const { data } = await api.post('/auth/register', { name, mobile, email, password, referralCode });
 
             // Automatically login or redirect
-            // For now, let's login (save token) and redirect
+            // For now, let's login (save token)
             localStorage.setItem('user', JSON.stringify(data));
 
-            alert('Registration Successful!');
-            navigate('/');
+            // Show Success Modal instead of alert
+            setShowSuccessModal(true);
 
         } catch (err) {
             setError(err.response?.data?.message || 'Registration failed');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleCloseSuccessModal = () => {
+        setShowSuccessModal(false);
+        navigate('/');
     };
 
     const handleGoogleSignup = () => {
@@ -51,6 +65,31 @@ const Signup = () => {
         const val = e.target.value;
         if (/^\d*$/.test(val) && val.length <= 10) {
             setMobile(val);
+        }
+    };
+
+    const handleReferralChange = async (e) => {
+        const val = e.target.value;
+        if (/^\d*$/.test(val) && val.length <= 10) {
+            setReferralCode(val);
+            setReferrerName('');
+            setReferralError('');
+
+            if (val.length === 10) {
+                setVerifyingReferral(true);
+                try {
+                    const { data } = await api.post('/auth/check-referral', { referralCode: val });
+                    if (data.isValid) {
+                        setReferrerName(data.name);
+                        setReferralError('');
+                    }
+                } catch (err) {
+                    setReferralError('Referral code invalid or user not found');
+                    setReferrerName('');
+                } finally {
+                    setVerifyingReferral(false);
+                }
+            }
         }
     };
 
@@ -105,13 +144,32 @@ const Signup = () => {
                             <label className="input-label" style={{ color: '#d9534f', marginTop: '1rem' }}>
                                 Password *
                             </label>
-                            <input
-                                type="password"
-                                className="input-field"
-                                placeholder="Create Password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    className="input-field"
+                                    placeholder="Create Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    style={{ paddingRight: '40px' }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '10px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        color: '#666'
+                                    }}
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
 
                             <label className="input-label" style={{ color: '#d9534f', marginTop: '1rem' }}>
                                 Referral Code (Optional)
@@ -121,8 +179,11 @@ const Signup = () => {
                                 className="input-field"
                                 placeholder="Enter Referrer Mobile"
                                 value={referralCode}
-                                onChange={(e) => setReferralCode(e.target.value)}
+                                onChange={handleReferralChange}
                             />
+                            {verifyingReferral && <div style={{ color: '#666', fontSize: '0.8rem', marginTop: '-15px', marginBottom: '10px' }}>Verifying...</div>}
+                            {referrerName && <span className="success-text">Referred by : <strong>{referrerName}</strong></span>}
+                            {referralError && <span className="error-text">{referralError}</span>}
 
                             {/* ACTION BUTTON */}
                             <button
@@ -149,6 +210,14 @@ const Signup = () => {
                 </div>
             </div>
             <AuthFooter />
+
+            <SuccessModal
+                isOpen={showSuccessModal}
+                onClose={handleCloseSuccessModal}
+                title="Registration Successful!"
+                message={`Welcome ${name}! Your account has been successfully created. You can now start donating or fundraising.`}
+                buttonText="Go to Dashboard"
+            />
         </>
     );
 };

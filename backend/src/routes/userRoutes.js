@@ -131,7 +131,12 @@ router.post('/staff', protect, async (req, res) => {
     const { name, mobile, email, password, roleId } = req.body;
 
     try {
-        const userExists = await User.findOne({ $or: [{ mobile }, { email }] });
+        const checkQuery = { $or: [{ mobile }] };
+        if (email && email.trim() !== '') {
+            checkQuery.$or.push({ email });
+        }
+
+        const userExists = await User.findOne(checkQuery);
         if (userExists) {
             return res.status(400).json({ message: 'User with this mobile or email already exists' });
         }
@@ -139,7 +144,7 @@ router.post('/staff', protect, async (req, res) => {
         const user = await User.create({
             name,
             mobile,
-            email,
+            email: email || undefined,
             password,
             roles: [roleId]
         });

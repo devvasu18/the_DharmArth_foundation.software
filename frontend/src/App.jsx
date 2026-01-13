@@ -15,6 +15,7 @@ import AdminUsers from './components/admin/AdminUsers';
 import AdminSliders from './components/admin/AdminSliders';
 import AdminSettings from './components/admin/AdminSettings';
 import AdminRoles from './components/admin/AdminRoles';
+import AdminTransactions from './components/admin/AdminTransactions';
 
 import { ConfirmProvider } from './context/ConfirmContext';
 
@@ -39,6 +40,10 @@ function App() {
             <Route path="sliders" element={<AdminSliders />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="roles" element={<AdminRoles />} />
+          </Route>
+
+          <Route path="/admin-user-explorer" element={<AdminLayout />}>
+            <Route path="transactions" element={<AdminTransactions />} />
           </Route>
 
           {/* Catch all - 404 */}

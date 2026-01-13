@@ -186,3 +186,19 @@
     color: rgba(255, 255, 255, 0.6);
     font-size: 0.8rem;
 }
+
+.success-text {
+    color: var(--success, #28a745);
+    font-size: 0.9rem;
+    margin-top: -10px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.error-text {
+    color: var(--danger, #d9534f);
+    font-size: 0.9rem;
+    margin-top: -10px;
+    margin-bottom: 10px;
+    display: block;
+}
