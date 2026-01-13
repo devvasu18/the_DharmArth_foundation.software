@@ -51,27 +51,25 @@
     transform: translateY(-5px);
 }
 
+/* Removed wired skew effect */
 .stat-card::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 150px;
-    height: 100%;
-    background: linear-gradient(to right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
-    transform: skewX(-20deg) translateX(50%);
+    display: none;
 }
 
+/* Premium Gradients matching the theme */
 .stat-card-gradient-1 {
-    background: linear-gradient(to right, #ffbf96, #fe7096);
+    /* Total Donations - Wealth/Growth (Emerald/Teal) */
+    background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
 }
 
 .stat-card-gradient-2 {
-    background: linear-gradient(to right, #90caf9, #047edf 99%);
+    /* Total Users - Trust/Community (Blue) */
+    background: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
 }
 
 .stat-card-gradient-3 {
-    background: linear-gradient(to right, #84d9d2, #07cdae);
+    /* Active Campaigns - Energy/Action (Amber/Orange) */
+    background: linear-gradient(135deg, #f57f17 0%, #ffb74d 100%);
 }
 
 .stat-content h4 {

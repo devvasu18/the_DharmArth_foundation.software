@@ -2,6 +2,9 @@ import React from 'react';
 import Navbar from '../components/layout/Navbar';
 import HeroSlider from '../components/layout/HeroSlider';
 import CrowdfundingSection from '../components/layout/CrowdfundingSection';
+import AppDownloadSection from '../components/layout/AppDownloadSection';
+import WhyUsSection from '../components/layout/WhyUsSection';
+import FAQSection from '../components/layout/FAQSection';
 import Footer from '../components/layout/Footer';
 
 const Home = () => {
@@ -14,6 +17,9 @@ const Home = () => {
                 <p style={{ color: 'var(--text-muted)', fontSize: '1.25rem' }}>Empowering change through your generous contributions.</p>
             </div>
             <CrowdfundingSection />
+            <AppDownloadSection />
+            <WhyUsSection />
+            <FAQSection />
             <Footer />
         </div>
     );
