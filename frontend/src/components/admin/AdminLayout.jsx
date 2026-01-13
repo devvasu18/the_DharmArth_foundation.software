@@ -55,8 +55,8 @@ const AdminLayout = () => {
                         {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Site Settings</span>}
                     </NavLink>
                     <NavLink to="/admin/roles" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
-                        <Users size={20} title={isSidebarCollapsed ? "Roles & Permissions" : ""} />
-                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Roles & Permissions</span>}
+                        <Users size={20} title={isSidebarCollapsed ? "Staff & Roles" : ""} />
+                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Staff & Roles</span>}
                     </NavLink>
 
                     <div className="admin-link" onClick={handleLogout} style={{ marginTop: 'auto', cursor: 'pointer', borderTop: '1px solid #2d3748' }}>

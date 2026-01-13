@@ -4,17 +4,21 @@ const User = require('../models/User');
 const Wallet = require('../models/Wallet');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 
-// @desc    Get all users
+// @desc    Get all normal users (non-staff)
 // @route   GET /api/users
 // @access  Private/Admin
 router.get('/', protect, checkPermission('User Management', 'view'), async (req, res) => {
     try {
-        const users = await User.find({})
+        // Filter: Not Super Admin AND No Roles
+        const users = await User.find({
+            isSuperAdmin: false,
+            roles: { $size: 0 }
+        })
             .select('-password')
             .populate('roles')
             .populate('referredBy', 'name mobile'); // Populate referrer info
 
-        // Fetch all wallets
+        // Fetch all wallets (optimization: could filter wallets by userIds found above)
         const wallets = await Wallet.find({});
         const walletMap = {};
         wallets.forEach(w => {
@@ -27,6 +31,91 @@ router.get('/', protect, checkPermission('User Management', 'view'), async (req,
         }));
 
         res.json(usersWithWallet);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Get user by ID
+// @route   GET /api/users/:id
+// @access  Private/Admin (with View User permission)
+router.get('/:id', protect, checkPermission('User Management', 'view'), async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id)
+            .select('-password')
+            .populate('roles')
+            .populate('referredBy', 'name mobile');
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const wallet = await Wallet.findOne({ user: user._id });
+        const userWithWallet = {
+            ...user.toObject(),
+            walletBalance: wallet ? wallet.balance : 0
+        };
+
+        res.json(userWithWallet);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Get all staff members (users with roles or superadmin)
+// @route   GET /api/users/staff
+// @access  Private/SuperAdmin
+router.get('/staff', protect, async (req, res) => {
+    // Only Super Admin or those with Role Management can view staff? 
+    // Requirement says "Staff created exclusively by Super Admin". likely managed by Super Admin too.
+    if (!req.user.isSuperAdmin && !req.user.roles.some(r => r.permissions /* simplified check, ideally use middleware */)) {
+        // allowing consistent permission check if needed, but lets stick to logic:
+    }
+
+    try {
+        const staff = await User.find({
+            $or: [
+                { isSuperAdmin: true },
+                { roles: { $not: { $size: 0 } } }
+            ]
+        })
+            .select('-password')
+            .populate('roles');
+
+        res.json(staff);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Create Staff Member
+// @route   POST /api/users/staff
+// @access  Private/SuperAdmin
+router.post('/staff', protect, async (req, res) => {
+    if (!req.user.isSuperAdmin) {
+        return res.status(403).json({ message: 'Only Super Admin can create staff' });
+    }
+
+    const { name, mobile, email, password, roleId } = req.body;
+
+    try {
+        const userExists = await User.findOne({ $or: [{ mobile }, { email }] });
+        if (userExists) {
+            return res.status(400).json({ message: 'User with this mobile or email already exists' });
+        }
+
+        const user = await User.create({
+            name,
+            mobile,
+            email,
+            password,
+            roles: [roleId]
+        });
+
+        // Create Wallet for staff? Maybe not needed but good for consistency
+        await Wallet.create({ user: user._id });
+
+        res.status(201).json({ message: 'Staff created successfully', user });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

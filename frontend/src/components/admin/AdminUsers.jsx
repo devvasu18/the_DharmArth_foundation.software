@@ -1,17 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import UserDetailModal from './UserDetailModal';
+import { Eye } from 'lucide-react';
 
 const AdminUsers = () => {
     const [users, setUsers] = useState([]);
-    const [availableRoles, setAvailableRoles] = useState([]);
-    const [editingUser, setEditingUser] = useState(null);
-    const [selectedRoleIds, setSelectedRoleIds] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // View User State
+    const [viewingUser, setViewingUser] = useState(null);
+    const [canViewDetails, setCanViewDetails] = useState(false);
+
     useEffect(() => {
+        checkPermissions();
         fetchUsers();
-        fetchRoles();
     }, []);
+
+    const checkPermissions = () => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            if (user.isSuperAdmin) {
+                setCanViewDetails(true);
+            } else {
+                // Check if user has 'User Management' -> 'view' permission
+                // Note: The structure is user.roles -> role.permissions -> [{ module: '...', actions: [...] }]
+                const hasPerm = user.roles?.some(role =>
+                    role.permissions?.some(p =>
+                        p.module === 'User Management' && p.actions.includes('view')
+                    )
+                );
+                setCanViewDetails(!!hasPerm);
+            }
+        }
+    };
 
     const fetchUsers = async () => {
         try {
@@ -24,41 +45,13 @@ const AdminUsers = () => {
         }
     };
 
-    const fetchRoles = async () => {
+    const handleViewUser = async (userId) => {
         try {
-            const { data } = await api.get('/roles');
-            setAvailableRoles(data);
+            // Fetch fresh details for the single user
+            const { data } = await api.get(`/users/${userId}`);
+            setViewingUser(data);
         } catch (error) {
-            console.error("Failed to fetch roles", error);
-        }
-    };
-
-    const handleEditClick = (user) => {
-        if (user.isSuperAdmin) {
-            alert("Cannot edit roles for Super Admin via this panel.");
-            return;
-        }
-        setEditingUser(user);
-        setSelectedRoleIds(user.roles ? user.roles.map(r => r._id) : []);
-    };
-
-    const handleRoleToggle = (roleId) => {
-        if (selectedRoleIds.includes(roleId)) {
-            setSelectedRoleIds(selectedRoleIds.filter(id => id !== roleId));
-        } else {
-            setSelectedRoleIds([...selectedRoleIds, roleId]);
-        }
-    };
-
-    const handleSaveRoles = async () => {
-        if (!editingUser) return;
-        try {
-            await api.put(`/users/${editingUser._id}/roles`, { roleIds: selectedRoleIds });
-            alert("User roles updated successfully!");
-            setEditingUser(null);
-            fetchUsers(); // Refresh list
-        } catch (error) {
-            alert(error.response?.data?.message || "Failed to update roles");
+            alert("Failed to load user details: " + (error.response?.data?.message || error.message));
         }
     };
 
@@ -75,8 +68,7 @@ const AdminUsers = () => {
                         <th>Wallet</th>
                         <th>Referred By</th>
                         <th>Email</th>
-                        <th>Roles</th>
-                        <th>Actions</th>
+                        {canViewDetails && <th style={{ width: '100px', textAlign: 'center' }}>Actions</th>}
                     </tr>
                 </thead>
                 <tbody>
@@ -87,61 +79,32 @@ const AdminUsers = () => {
                             <td style={{ fontWeight: 'bold', color: '#2d3748' }}>₹{user.walletBalance?.toLocaleString() || 0}</td>
                             <td>{user.referredBy ? `${user.referredBy.name} (${user.referredBy.mobile})` : '-'}</td>
                             <td>{user.email || '-'}</td>
-                            <td>
-                                {user.isSuperAdmin ? <span className="badge badge-red">Super Admin</span> :
-                                    user.roles && user.roles.length > 0 ? user.roles.map(r => r.name).join(', ') :
-                                        <span style={{ color: '#aaa' }}>User</span>}
-                            </td>
-                            <td>
-                                <button
-                                    className="btn btn-outline"
-                                    style={{
-                                        padding: '5px 10px',
-                                        fontSize: '0.8rem',
-                                        opacity: user.isSuperAdmin ? 0.5 : 1,
-                                        cursor: user.isSuperAdmin ? 'not-allowed' : 'pointer',
-                                        borderColor: user.isSuperAdmin ? '#ccc' : '',
-                                        color: user.isSuperAdmin ? '#999' : ''
-                                    }}
-                                    onClick={() => handleEditClick(user)}
-                                    disabled={user.isSuperAdmin}
-                                    title={user.isSuperAdmin ? "Super Admin roles cannot be edited" : "Edit User Roles"}
-                                >
-                                    {user.isSuperAdmin ? 'Locked' : 'Edit Role'}
-                                </button>
-                            </td>
+                            {canViewDetails && (
+                                <td style={{ textAlign: 'center' }}>
+                                    <button
+                                        className="btn-icon"
+                                        style={{
+                                            background: '#ebf8ff', color: '#3182ce', border: 'none',
+                                            padding: '8px', borderRadius: '4px', cursor: 'pointer',
+                                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
+                                        }}
+                                        onClick={() => handleViewUser(user._id)}
+                                        title="View Full Details"
+                                    >
+                                        <Eye size={18} />
+                                    </button>
+                                </td>
+                            )}
                         </tr>
                     ))}
                 </tbody>
             </table>
 
-            {editingUser && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    zIndex: 1000
-                }}>
-                    <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', minWidth: '400px' }}>
-                        <h4>Assign Roles to {editingUser.name}</h4>
-                        <div style={{ margin: '1rem 0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            {availableRoles.length === 0 && <p>No roles defined yet.</p>}
-                            {availableRoles.map(role => (
-                                <label key={role._id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedRoleIds.includes(role._id)}
-                                        onChange={() => handleRoleToggle(role._id)}
-                                    />
-                                    {role.name}
-                                </label>
-                            ))}
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
-                            <button className="btn btn-outline" onClick={() => setEditingUser(null)}>Cancel</button>
-                            <button className="btn bg-primary text-white" onClick={handleSaveRoles}>Save Changes</button>
-                        </div>
-                    </div>
-                </div>
+            {viewingUser && (
+                <UserDetailModal
+                    user={viewingUser}
+                    onClose={() => setViewingUser(null)}
+                />
             )}
         </div>
     );

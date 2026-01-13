@@ -9,6 +9,7 @@ const AdminSliders = () => {
 
     const [editingId, setEditingId] = useState(null);
     const [deleteConfirmation, setDeleteConfirmation] = useState(null); // ID of item to delete
+    const [previewImage, setPreviewImage] = useState(null);
 
     const [activeLang, setActiveLang] = useState('en'); // 'en' or 'hi'
 
@@ -280,7 +281,7 @@ const AdminSliders = () => {
                             <div style={{ maxWidth: '600px', margin: '0 auto' }}>
                                 <div className="form-group" style={{ marginBottom: '2rem' }}>
                                     <label className="form-label" style={{ display: 'block', marginBottom: '1rem', fontWeight: '600', color: '#334155' }}>Upload Slider Image</label>
-                                    <div style={{ border: '2px dashed #cbd5e1', borderRadius: '12px', padding: '2rem', textAlign: 'center', background: '#f8fafc' }}>
+                                    <div style={{ border: '1px solid #cbd5e1', borderRadius: '12px', padding: '2rem', textAlign: 'center', background: '#ffffff', minHeight: '300px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -288,11 +289,13 @@ const AdminSliders = () => {
                                             style={{ display: 'none' }}
                                             id="slider-upload"
                                         />
-                                        <label htmlFor="slider-upload" style={{ cursor: 'pointer', display: 'block' }}>
+                                        <label htmlFor="slider-upload" style={{ cursor: 'pointer', display: 'block', width: '100%' }}>
                                             {formData.imageUrl ? (
-                                                <img src={formData.imageUrl} alt="Preview" style={{ maxHeight: '200px', maxWidth: '100%', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
+                                                <div style={{ padding: '1rem', background: '#f1f5f9', borderRadius: '8px', display: 'inline-block' }}>
+                                                    <img src={formData.imageUrl} alt="Preview" style={{ maxHeight: '250px', maxWidth: '100%', borderRadius: '4px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
+                                                </div>
                                             ) : (
-                                                <div style={{ padding: '2rem' }}>
+                                                <div style={{ padding: '2rem', border: '2px dashed #cbd5e1', borderRadius: '8px', background: '#f8fafc' }}>
                                                     <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem' }}>🖼️</span>
                                                     <span style={{ color: '#64748b', fontWeight: '500' }}>Click to Browse Image</span>
                                                 </div>
@@ -337,7 +340,25 @@ const AdminSliders = () => {
                             <tr key={slider._id}>
                                 <td style={{ width: '50px', textAlign: 'center' }}>{slider.order}</td>
                                 {activeTab === 'image' && (
-                                    <td><img src={slider.imageUrl} alt="prev" style={{ width: '60px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} /></td>
+                                    <td>
+                                        <div style={{ position: 'relative', width: '60px', height: '40px', cursor: 'pointer' }} onClick={() => setPreviewImage(slider.imageUrl)}>
+                                            <img
+                                                src={slider.imageUrl}
+                                                alt="prev"
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }}
+                                            />
+                                            <div style={{
+                                                position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.1)',
+                                                borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                opacity: 0, transition: 'opacity 0.2s'
+                                            }}
+                                                onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                                                onMouseLeave={e => e.currentTarget.style.opacity = 0}
+                                            >
+                                                <span style={{ color: 'white', fontSize: '10px' }}>🔍</span>
+                                            </div>
+                                        </div>
+                                    </td>
                                 )}
                                 {activeTab === 'text' && (
                                     <>
@@ -381,6 +402,46 @@ const AdminSliders = () => {
                             <button className="btn btn-outline" onClick={() => setDeleteConfirmation(null)}>Cancel</button>
                             <button className="btn bg-primary text-white" style={{ background: '#ef4444' }} onClick={confirmDelete}>Delete</button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Image Preview Modal */}
+            {previewImage && (
+                <div
+                    style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.85)',
+                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                        zIndex: 2000,
+                        backdropFilter: 'blur(5px)',
+                        cursor: 'pointer'
+                    }}
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <div style={{ position: 'relative', maxWidth: '90%', maxHeight: '90%' }}>
+                        <button
+                            onClick={() => setPreviewImage(null)}
+                            style={{
+                                position: 'absolute', top: '-40px', right: 0,
+                                background: 'transparent', border: 'none', color: 'white',
+                                fontSize: '2rem', cursor: 'pointer'
+                            }}
+                        >
+                            &times;
+                        </button>
+                        <img
+                            src={previewImage}
+                            alt="Full Preview"
+                            style={{
+                                maxWidth: '100%',
+                                maxHeight: '90vh',
+                                border: '4px solid white',
+                                borderRadius: '8px',
+                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                        />
                     </div>
                 </div>
             )}
