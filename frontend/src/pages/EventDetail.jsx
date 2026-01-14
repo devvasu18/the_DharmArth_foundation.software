@@ -30,13 +30,24 @@ const EventDetail = () => {
 
     useEffect(() => {
         if (event && event.blocks.some(b => b.type === 'instagram')) {
+            // Function to process Instagram embeds
+            const processInstagram = () => {
+                if (window.instgrm) {
+                    // Small delay to ensure DOM is updated
+                    setTimeout(() => {
+                        window.instgrm.Embeds.process();
+                    }, 500);
+                }
+            };
+
             if (!window.instgrm) {
                 const script = document.createElement('script');
                 script.src = "//www.instagram.com/embed.js";
                 script.async = true;
+                script.onload = processInstagram; // Process after load
                 document.body.appendChild(script);
             } else {
-                window.instgrm.Embeds.process();
+                processInstagram(); // Process if already loaded
             }
         }
     }, [event]);
@@ -60,7 +71,6 @@ const EventDetail = () => {
             case 'text':
                 return (
                     <div key={index} className="content-block-render text-block">
-                        {/* Using dangerouslySetInnerHTML for flexibility, ensure content is sanitized on backend if needed, or trust admin */}
                         <div dangerouslySetInnerHTML={{ __html: block.content.html }} />
                     </div>
                 );
@@ -83,16 +93,22 @@ const EventDetail = () => {
                     </div>
                 );
             case 'youtube':
-                // Extract video ID safely
+                // robust youtube id extraction
                 let videoId = '';
                 try {
-                    const url = new URL(block.content.url);
-                    if (url.hostname.includes('youtube.com')) {
-                        videoId = url.searchParams.get('v');
-                    } else if (url.hostname.includes('youtu.be')) {
-                        videoId = url.pathname.slice(1);
+                    const url = block.content.url;
+                    if (!url) return null;
+
+                    // Regex for various youtube formats (standard, short, embed, mobile)
+                    const regExp = /^(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})(?:[?&].*)?$/;
+                    const match = url.match(regExp);
+
+                    if (match && match[1]) {
+                        videoId = match[1];
                     }
-                } catch (e) { }
+                } catch (e) {
+                    console.error("Youtube parsing error", e);
+                }
 
                 if (!videoId) return null;
 
@@ -116,9 +132,25 @@ const EventDetail = () => {
                             className="instagram-media"
                             data-instgrm-permalink={block.content.url}
                             data-instgrm-version="14"
-                            style={{ background: '#FFF', border: 0, borderRadius: 3, boxShadow: '0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15)', margin: 1, maxWidth: 540, minWidth: 326, padding: 0, width: '99.375%', width: '-webkit-calc(100% - 2px)', width: 'calc(100% - 2px)' }}
+                            style={{
+                                background: '#FFF',
+                                border: 0,
+                                borderRadius: 3,
+                                boxShadow: '0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15)',
+                                margin: '0 auto', // Center it
+                                maxWidth: 540,
+                                minWidth: 326,
+                                padding: 0,
+                                width: '99.375%',
+                                width: '-webkit-calc(100% - 2px)',
+                                width: 'calc(100% - 2px)'
+                            }}
                         >
-                            <div style={{ padding: 16 }}> <a href={block.content.url} style={{ background: '#FFFFFF', lineHeight: 0, padding: '0 0', textAlign: 'center', textDecoration: 'none', width: '100%' }} target="_blank" rel="noreferrer"> View this post on Instagram </a></div>
+                            <div style={{ padding: 16 }}>
+                                <a href={block.content.url} style={{ background: '#FFFFFF', lineHeight: 0, padding: '0 0', textAlign: 'center', textDecoration: 'none', width: '100%' }} target="_blank" rel="noreferrer">
+                                    View this post on Instagram
+                                </a>
+                            </div>
                         </blockquote>
                     </div>
                 );
