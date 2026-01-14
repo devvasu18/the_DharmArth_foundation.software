@@ -6,7 +6,7 @@ import api from '../../services/api';
 import './Navbar.css';
 
 const Navbar = () => {
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [user, setUser] = useState(null);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -33,22 +33,22 @@ const Navbar = () => {
         <nav className="navbar">
             <div className="container navbar-container">
                 <Link to="/" className="navbar-logo">
-                    <span className="logo-text">Dharmarth</span>
+                    <span className="logo-text">{t('navbar.brand')}</span>
                 </Link>
 
                 {/* Desktop Menu */}
                 <div className="navbar-links hidden-mobile">
-                    <Link to="/donate" className="nav-link">Browse Donations</Link>
+                    <Link to="/donate" className="nav-link">{t('navbar.browseDonations')}</Link>
                     <div className="nav-dropdown">
-                        <span className="nav-link">Fundraise For <ChevronDown size={14} /></span>
+                        <span className="nav-link">{t('navbar.fundraiseFor')} <ChevronDown size={14} /></span>
                     </div>
-                    <Link to="/how-it-works" className="nav-link">How It Works</Link>
+                    <Link to="/how-it-works" className="nav-link">{t('navbar.howItWorks')}</Link>
                     <div className="nav-search">
                         <Search size={16} />
-                        <span>Search</span>
+                        <span>{t('navbar.search')}</span>
                     </div>
                     {user?.isSuperAdmin && (
-                        <Link to="/admin" className="nav-link" style={{ color: 'var(--primary)', fontWeight: 'bold' }}>Admin Panel</Link>
+                        <Link to="/admin" className="nav-link" style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{t('navbar.admin')}</Link>
                     )}
                 </div>
 
@@ -78,7 +78,7 @@ const Navbar = () => {
                         <span style={{
                             color: (i18n.language && i18n.language.startsWith('hi')) ? 'var(--primary)' : '#888',
                             fontWeight: (i18n.language && i18n.language.startsWith('hi')) ? '800' : '400'
-                        }}>HI</span>
+                        }}>हिंदी</span>
 
                         <span style={{ margin: '0 6px', color: '#ccc' }}>|</span>
 
@@ -88,7 +88,7 @@ const Navbar = () => {
                         }}>EN</span>
                     </div>
 
-                    <Link to="/donate" className="btn btn-outline">Donate</Link>
+                    <Link to="/donate" className="btn btn-outline">{t('navbar.donate')}</Link>
                     {user ? (
                         <div className="nav-dropdown" style={{ cursor: 'pointer', position: 'relative' }}>
                             <span
@@ -106,14 +106,14 @@ const Navbar = () => {
                                     borderRadius: '4px', minWidth: '150px', zIndex: 1000
                                 }}>
                                     {!user.isSuperAdmin && (
-                                        <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333' }} onClick={() => setIsProfileOpen(false)}>Wallet</Link>
+                                        <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.wallet')}</Link>
                                     )}
-                                    <div onClick={handleLogout} style={{ display: 'block', padding: '8px', color: 'red', cursor: 'pointer' }}>Logout</div>
+                                    <div onClick={handleLogout} style={{ display: 'block', padding: '8px', color: 'red', cursor: 'pointer' }}>{t('navbar.logout')}</div>
                                 </div>
                             )}
                         </div>
                     ) : (
-                        <Link to="/login" className="btn-link">Sign In</Link>
+                        <Link to="/login" className="btn-link">{t('navbar.signIn')}</Link>
                     )}
                 </div>
 
@@ -126,19 +126,19 @@ const Navbar = () => {
             {/* Mobile Menu */}
             {isOpen && (
                 <div className="mobile-menu">
-                    <Link to="/donate" className="nav-link">Browse Donations</Link>
-                    <span className="nav-link">Fundraise For</span>
-                    <Link to="/how-it-works" className="nav-link">How It Works</Link>
-                    {user && user.isSuperAdmin && <Link to="/admin" className="nav-link">Admin Panel</Link>}
-                    {user && !user.isSuperAdmin && <Link to="/dashboard" className="nav-link">User Dashboard</Link>}
+                    <Link to="/donate" className="nav-link">{t('navbar.browseDonations')}</Link>
+                    <span className="nav-link">{t('navbar.fundraiseFor')}</span>
+                    <Link to="/how-it-works" className="nav-link">{t('navbar.howItWorks')}</Link>
+                    {user && user.isSuperAdmin && <Link to="/admin" className="nav-link">{t('navbar.admin')}</Link>}
+                    {user && !user.isSuperAdmin && <Link to="/dashboard" className="nav-link">{t('navbar.userDashboard')}</Link>}
 
                     {!user ? (
-                        <Link to="/login" className="nav-link">Sign In</Link>
+                        <Link to="/login" className="nav-link">{t('navbar.signIn')}</Link>
                     ) : (
-                        <span className="nav-link" onClick={handleLogout} style={{ color: 'red' }}>Logout</span>
+                        <span className="nav-link" onClick={handleLogout} style={{ color: 'red' }}>{t('navbar.logout')}</span>
                     )}
 
-                    <Link to="/donate" className="btn btn-outline" style={{ width: '100%', textAlign: 'center' }}>Donate</Link>
+                    <Link to="/donate" className="btn btn-outline" style={{ width: '100%', textAlign: 'center' }}>{t('navbar.donate')}</Link>
                 </div>
             )}
         </nav>

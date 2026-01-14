@@ -190,7 +190,7 @@ const Signup = () => {
                                     <div className="motivator-info">
                                         <span className="motivator-name">{referrerName}</span>
                                         <span className="motivator-status">
-                                            <BadgeCheck size={16} fill="currentColor" color="white" className="text-primary" /> Verified Referrer
+                                            <BadgeCheck size={16} fill="var(--primary)" color="white" /> Verified Referrer
                                         </span>
                                     </div>
                                 </div>

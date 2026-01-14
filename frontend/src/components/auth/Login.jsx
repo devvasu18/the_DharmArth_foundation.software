@@ -263,7 +263,7 @@ const Login = () => {
                                     ) : (
                                         <>
                                             <Smartphone size={18} />
-                                            <span>Login via OTP</span>
+                                            <span style={{ color: 'black' }}>Login via OTP</span>
                                         </>
                                     )}
                                 </button>

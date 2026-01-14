@@ -23,19 +23,37 @@ i18n
                         "signup": "Signup",
                         "dashboard": "Dashboard",
                         "admin": "Admin Panel",
-                        "logout": "Logout"
+                        "logout": "Logout",
+                        "brand": "Dharmarth",
+                        "browseDonations": "Browse Donations",
+                        "fundraiseFor": "Fundraise For",
+                        "howItWorks": "How It Works",
+                        "search": "Search",
+                        "signIn": "Sign In",
+                        "donate": "Donate",
+                        "wallet": "Wallet",
+                        "userDashboard": "User Dashboard"
                     }
                 }
             },
             hi: {
                 translation: {
                     "navbar": {
-                        "home": "होम", // Home
-                        "login": "लॉगिन", // Login
-                        "signup": "साइन अप", // Signup (transliterated usually or account create)
-                        "dashboard": "डैशबोर्ड", // Dashboard
-                        "admin": "एडमिन पैनल", // Admin Panel
-                        "logout": "लॉग आउट" // Logout
+                        "home": "होम",
+                        "login": "लॉगिन",
+                        "signup": "साइन अप",
+                        "dashboard": "डैशबोर्ड",
+                        "admin": "एडमिन पैनल",
+                        "logout": "लॉग आउट",
+                        "brand": "धर्मार्थ",
+                        "browseDonations": "दान के अवसर",
+                        "fundraiseFor": "फंडरेज़",
+                        "howItWorks": "यह कैसे काम करता है",
+                        "search": "खोजें",
+                        "signIn": "साइन इन",
+                        "donate": "दान करें",
+                        "wallet": "वॉलेट",
+                        "userDashboard": "यूज़र डैशबोर्ड"
                     }
                 }
             }

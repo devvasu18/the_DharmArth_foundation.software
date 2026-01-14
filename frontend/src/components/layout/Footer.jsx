@@ -18,13 +18,13 @@ const Footer = () => {
                             <span className="social-icon"><Phone size={18} /></span>
                         </div>
                         <div className="footer-stats">
-                            <div className="stat-item"><span className="stat-val">2.5M+</span> Followers</div>
+                            <div ><span className="stat-val">2.5M+</span> Followers</div>
                         </div>
 
                         <div style={{ marginTop: '2rem' }}>
                             <p>For any queries</p>
                             <p><strong>Email: info@Dharmarth.org</strong></p>
-                            <p><strong>Contact No: +91 9930088522</strong></p>
+                            <p><strong>Contact No: +91 9900000000</strong></p>
                         </div>
                     </div>
 

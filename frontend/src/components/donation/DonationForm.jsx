@@ -324,7 +324,7 @@ const DonationForm = () => {
                                 <div className="motivator-info">
                                     <span className="motivator-name">{motivatorName}</span>
                                     <span className="motivator-status">
-                                        <BadgeCheck size={14} fill="currentColor" strokeWidth={2.5} className="text-primary" /> Verified Motivator
+                                        <BadgeCheck size={14} fill="var(--primary)" color="white" strokeWidth={2.5} /> Verified Motivator
                                     </span>
                                 </div>
                             </div>
@@ -354,7 +354,7 @@ const DonationForm = () => {
                                         <div className="motivator-info">
                                             <span className="motivator-name">{motivatorName}</span>
                                             <span className="motivator-status">
-                                                <BadgeCheck size={16} fill="currentColor" className="text-primary" /> Verified Motivator
+                                                <BadgeCheck size={16} fill="var(--primary)" color="white" /> Verified Motivator
                                             </span>
                                         </div>
                                     </div>
