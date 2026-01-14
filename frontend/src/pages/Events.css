@@ -1,40 +1,185 @@
+/* Events.css */
 .events-page-container {
-    background-color: var(--background);
     min-height: 100vh;
+    background-color: #f9fafb;
+    padding-bottom: 60px;
 }
 
-.events-header {
-    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+/* Header Slider */
+.events-header-slider {
+    position: relative;
+    height: 700px;
+    /* Increased Height */
+    background: #1a202c;
+    overflow: hidden;
+}
+
+.slider-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.slider-item {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background-size: cover;
     background-position: center;
-    padding: 80px 20px;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    display: flex;
+    padding: 0 5%;
+    z-index: 1;
+}
+
+.slider-item.active {
+    opacity: 1;
+    z-index: 2;
+}
+
+/* Positioning Logic - Using flex on slider-item */
+.slider-item.pos-center {
+    align-items: center;
+    justify-content: center;
     text-align: center;
+}
+
+.slider-item.pos-left {
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.slider-item.pos-right {
+    align-items: center;
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.slider-item.pos-top-left {
+    align-items: flex-start;
+    justify-content: flex-start;
+    text-align: left;
+    padding-top: 100px;
+    /* Offset from top */
+}
+
+.slider-item.pos-top-right {
+    align-items: flex-start;
+    justify-content: flex-end;
+    text-align: right;
+    padding-top: 100px;
+    /* Offset from top */
+}
+
+.slider-video-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+}
+
+.slider-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.7));
+    z-index: 1;
+}
+
+.slider-content {
+    position: relative;
+    z-index: 3;
     color: white;
+    max-width: 800px;
+    margin: 0 !important;
+    /* Force no auto margins */
+    padding: 20px;
 }
 
-.events-header h1 {
-    font-size: 3rem;
+.slider-content h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
     margin-bottom: 10px;
+    line-height: 1.1;
 }
 
-.events-header p {
-    font-size: 1.2rem;
+.slider-content h3 {
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin-bottom: 20px;
     opacity: 0.9;
 }
 
+.slider-content p {
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+    opacity: 0.9;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.header-loader {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+/* Animations */
+.animate-up {
+    transform: translateY(30px);
+    opacity: 0;
+    animation: slideUp 0.8s forwards;
+}
+
+.delay-1 {
+    animation-delay: 0.2s;
+}
+
+.delay-2 {
+    animation-delay: 0.4s;
+}
+
+.delay-3 {
+    animation-delay: 0.6s;
+}
+
+@keyframes slideUp {
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Filters */
 .events-filters {
-    padding: 30px 20px;
     background: white;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    padding: 20px 0;
+    border-bottom: 1px solid #e5e7eb;
     position: sticky;
-    top: 70px;
-    /* Adjust based on navbar height */
-    z-index: 10;
+    top: 0;
+    /* Or Navbar height if needed */
+    z-index: 100;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .filter-wrapper {
     max-width: 1200px;
     margin: 0 auto;
+    padding: 0 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -50,11 +195,16 @@
 .filter-tab {
     padding: 8px 16px;
     border-radius: 20px;
-    border: 1px solid #ddd;
+    border: 1px solid #e5e7eb;
     background: white;
+    color: #6b7280;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-weight: 500;
     transition: all 0.2s;
+}
+
+.filter-tab:hover {
+    background: #f3f4f6;
 }
 
 .filter-tab.active {
@@ -70,22 +220,28 @@
 
 .search-input {
     width: 100%;
-    padding: 10px 15px;
-    padding-right: 40px;
-    border: 1px solid #ddd;
+    padding: 10px 40px 10px 15px;
+    border: 1px solid #e5e7eb;
     border-radius: 20px;
     outline: none;
+    transition: border-color 0.2s;
 }
 
+.search-input:focus {
+    border-color: var(--primary);
+}
+
+/* Grid */
 .events-grid-section {
-    padding: 60px 20px;
     max-width: 1200px;
-    margin: 0 auto;
+    margin: 40px auto;
+    padding: 0 20px;
+    min-height: 400px;
 }
 
 .events-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 30px;
 }
 
@@ -93,22 +249,21 @@
     background: white;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
     display: flex;
     flex-direction: column;
 }
 
 .event-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 .event-card-image {
     height: 200px;
-    background-color: #eee;
-    overflow: hidden;
     position: relative;
+    overflow: hidden;
 }
 
 .event-card-image img {
@@ -126,62 +281,67 @@
     position: absolute;
     top: 15px;
     right: 15px;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
-    background: rgba(255, 255, 255, 0.9);
-    color: #333;
 }
 
 .event-status-tag.upcoming {
-    color: #1976d2;
+    background: #3b82f6;
 }
 
+/* Blue */
 .event-status-tag.ongoing {
-    color: #2e7d32;
+    background: #10b981;
 }
 
+/* Green */
 .event-status-tag.completed {
-    color: #757575;
+    background: #6b7280;
 }
+
+/* Gray */
 
 .event-card-content {
     padding: 20px;
+    flex: 1;
+    /* Pushes footer down */
     display: flex;
     flex-direction: column;
-    flex: 1;
 }
 
 .event-date {
-    color: var(--primary);
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
+    color: #ef4444;
+    /* Red accent */
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 10px;
 }
 
 .event-title {
     font-size: 1.25rem;
     margin-bottom: 10px;
-    color: #1f2937;
     line-height: 1.4;
+    color: #111;
 }
 
 .event-desc {
-    color: #6b7280;
     font-size: 0.95rem;
-    line-height: 1.5;
+    color: #666;
     margin-bottom: 20px;
+    line-height: 1.6;
     flex: 1;
 }
 
 .event-card-footer {
-    border-top: 1px solid #f3f4f6;
     padding-top: 15px;
+    border-top: 1px solid #f3f4f6;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -189,20 +349,30 @@
 
 .view-details-btn {
     color: var(--primary);
-    font-weight: 600;
     text-decoration: none;
-    display: inline-flex;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
+    transition: gap 0.2s;
 }
 
 .view-details-btn:hover {
-    text-decoration: underline;
+    gap: 8px;
 }
 
 @media (max-width: 768px) {
-    .events-header h1 {
-        font-size: 2rem;
+    .slider-content h1 {
+        font-size: 2.2rem;
+    }
+
+    .slider-content h3 {
+        font-size: 1.1rem;
+    }
+
+    .events-header-slider {
+        height: 400px;
     }
 
     .filter-wrapper {
@@ -211,5 +381,16 @@
 
     .search-box {
         width: 100%;
+        margin-top: 10px;
+    }
+
+    .filter-tabs {
+        overflow-x: auto;
+        padding-bottom: 5px;
+        width: 100%;
+    }
+
+    .filter-tab {
+        white-space: nowrap;
     }
 }

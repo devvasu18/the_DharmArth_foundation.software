@@ -26,7 +26,9 @@ const walletRoutes = require('./routes/walletRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
+
 const eventRoutes = require('./routes/eventRoutes');
+const eventHeaderRoutes = require('./routes/eventHeaderRoutes');
 
 app.get('/', (req, res) => {
     res.send('API is running...');
@@ -41,7 +43,9 @@ app.use('/api/roles', roleRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/transactions', transactionRoutes);
+
 app.use('/api/events', eventRoutes);
+app.use('/api/event-headers', eventHeaderRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

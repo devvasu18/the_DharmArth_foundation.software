@@ -11,10 +11,33 @@ const Events = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all'); // all, upcoming, past
     const [searchTerm, setSearchTerm] = useState('');
+    const [headerSlides, setHeaderSlides] = useState([]);
+    const [headerLoading, setHeaderLoading] = useState(true);
+    const [currentSlide, setCurrentSlide] = useState(0);
 
     useEffect(() => {
+        const fetchHeaders = async () => {
+            try {
+                const res = await axios.get('http://localhost:5000/api/event-headers');
+                setHeaderSlides(res.data);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setHeaderLoading(false);
+            }
+        };
+        fetchHeaders();
         fetchEvents();
     }, []);
+
+    // Slider Autoplay
+    useEffect(() => {
+        if (headerSlides.length <= 1) return;
+        const timer = setInterval(() => {
+            setCurrentSlide(prev => (prev + 1) % headerSlides.length);
+        }, 6000);
+        return () => clearInterval(timer);
+    }, [headerSlides]);
 
     const fetchEvents = async () => {
         try {
@@ -48,11 +71,44 @@ const Events = () => {
         <div className="events-page-container">
             <Navbar />
 
-            <header className="events-header">
-                <div className="container">
-                    <h1>Our Impact & Events</h1>
-                    <p>Join us in making a difference. Check out our upcoming drives and past activities.</p>
-                </div>
+            <header className="events-header-slider">
+                {headerLoading ? (
+                    <div className="header-loader"><Loader2 className="animate-spin" /></div>
+                ) : headerSlides.length > 0 ? (
+                    <div className="slider-container">
+                        {headerSlides.map((slide, index) => (
+                            <div
+                                key={slide._id}
+                                className={`slider-item ${index === currentSlide ? 'active' : ''} pos-${slide.textPosition || 'center'}`}
+                                style={{ backgroundImage: slide.type === 'image' ? `url(${slide.url})` : 'none' }}
+                            >
+                                {slide.type === 'video' && (
+                                    <video className="slider-video-bg" autoPlay muted loop playsInline>
+                                        <source src={slide.url} type="video/mp4" />
+                                    </video>
+                                )}
+                                <div className="slider-overlay"></div>
+                                <div className="slider-content">
+                                    <h1 className="animate-up">{slide.title || 'Our Impact & Events'}</h1>
+                                    {slide.subtitle && <h3 className="animate-up delay-1">{slide.subtitle}</h3>}
+                                    {slide.description && <p className="animate-up delay-2">{slide.description}</p>}
+                                    {slide.ctaLink && (
+                                        <Link to={slide.ctaLink} className="btn-primary animate-up delay-3">
+                                            {slide.ctaText || 'Learn More'}
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="static-header-fallback" style={{ background: 'linear-gradient(to right, #1a202c, #2d3748)', padding: '100px 0', color: 'white', textAlign: 'center' }}>
+                        <div className="container">
+                            <h1>Our Impact & Events</h1>
+                            <p>Join us in making a difference. Check out our upcoming drives and past activities.</p>
+                        </div>
+                    </div>
+                )}
             </header>
 
             <div className="events-filters">

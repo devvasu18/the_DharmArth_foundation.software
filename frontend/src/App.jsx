@@ -21,7 +21,9 @@ import AdminTransactions from './components/admin/AdminTransactions';
 
 import TransactionManagement from './components/admin/TransactionManagement';
 import AdminEvents from './components/admin/AdminEvents';
+
 import EventEditor from './components/admin/EventEditor';
+import AdminEventHeaders from './components/admin/AdminEventHeaders';
 
 import { ConfirmProvider } from './context/ConfirmContext';
 
@@ -50,7 +52,9 @@ function App() {
             <Route path="roles" element={<AdminRoles />} />
             <Route path="transaction-management" element={<TransactionManagement />} />
             <Route path="events" element={<AdminEvents />} />
+            <Route path="events-header" element={<AdminEventHeaders />} />
             <Route path="events/new" element={<EventEditor />} />
+
             <Route path="events/edit/:id" element={<EventEditor />} />
           </Route>
 

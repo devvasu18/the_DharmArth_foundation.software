@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet, Calendar } from 'lucide-react';
 import { io } from "socket.io-client";
 import toast from 'react-hot-toast';
@@ -11,6 +11,7 @@ const NOTIFICATION_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2869/286
 
 const AdminLayout = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [user, setUser] = useState(null);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -19,6 +20,7 @@ const AdminLayout = () => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [isEventsDropdownOpen, setEventsDropdownOpen] = useState(false);
     const socketRef = useRef(null);
     const audioRef = useRef(new Audio(NOTIFICATION_SOUND));
 
@@ -131,10 +133,31 @@ const AdminLayout = () => {
                         <Image size={20} title={isSidebarCollapsed ? "Hero Sliders" : ""} />
                         {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Hero Sliders</span>}
                     </NavLink>
-                    <NavLink to="/admin/events" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
-                        <Calendar size={20} title={isSidebarCollapsed ? "Events" : ""} />
-                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Events</span>}
-                    </NavLink>
+                    {/* Events Dropdown */}
+                    <div className="admin-link-dropdown-container">
+                        <div
+                            className={`admin-link ${location.pathname.includes('/admin/events') ? 'active' : ''}`}
+                            onClick={() => !isSidebarCollapsed && setEventsDropdownOpen(!isEventsDropdownOpen)}
+                            style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <Calendar size={20} title={isSidebarCollapsed ? "Events" : ""} />
+                                {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Events</span>}
+                            </div>
+                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isEventsDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
+                        </div>
+
+                        {!isSidebarCollapsed && isEventsDropdownOpen && (
+                            <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
+                                <NavLink to="/admin/events" end className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}>
+                                    Blog Pages
+                                </NavLink>
+                                <NavLink to="/admin/events-header" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}>
+                                    Events Header
+                                </NavLink>
+                            </div>
+                        )}
+                    </div>
                     <NavLink to="/admin-user-explorer/transactions" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
                         <TrendingUp size={20} title={isSidebarCollapsed ? "User Explorer" : ""} />
                         {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>User Explorer</span>}
