@@ -24,6 +24,12 @@ const TransactionManagement = () => {
         dateRange: { start: '', end: '' } // default this month?
     });
 
+    // Pending Filters for Manual Apply
+    const [pendingFilters, setPendingFilters] = useState({
+        levelFilter: 'ALL',
+        specificMotivatorIds: []
+    });
+
     const [activeDropdown, setActiveDropdown] = useState(null); // 'USER', 'LEVEL', 'DATE'
     const dropdownRef = useRef(null);
 
@@ -31,6 +37,7 @@ const TransactionManagement = () => {
     const [userSearchQuery, setUserSearchQuery] = useState('');
     const [userSearchResults, setUserSearchResults] = useState([]);
     const [isSearchingUser, setIsSearchingUser] = useState(false);
+    const [searchHistory, setSearchHistory] = useState([]);
 
     // --- Level Dropdown State ---
     const [levelData, setLevelData] = useState({ l1Users: [], l2Users: [] });
@@ -39,20 +46,12 @@ const TransactionManagement = () => {
     // --- Breakdown Modal State ---
     const [selectedTransaction, setSelectedTransaction] = useState(null);
 
-    // --- Initial Load ---
+    // Load History on Mount
     useEffect(() => {
-        fetchTransactions();
-    }, [page, filters.searchUser, filters.specificMotivatorIds, filters.is80G, filters.dateRange, filters.levelFilter]);
-
-    // Handle clicks outside dropdown
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setActiveDropdown(null);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        const storedHistory = localStorage.getItem('admin_transaction_search_history');
+        if (storedHistory) {
+            setSearchHistory(JSON.parse(storedHistory));
+        }
     }, []);
 
     // Fetch Transactions API
@@ -73,20 +72,24 @@ const TransactionManagement = () => {
                 if (filters.specificMotivatorIds.length > 0) {
                     params.specificMotivatorIds = filters.specificMotivatorIds.join(',');
                 } else {
-                    // Otherwise pass searchUserId and let backend handle logic based on levelFilter tab?
-                    // Actually, if TAB is 'L1' but no checkboxes, we want ALL L1s.
-                    // Front-end should calculate ALL L1 IDs and pass them? 
-                    // Or backend logic I built handles 'searchUserId'.
-                    // If TAB is 'L1' and NO checkboxes selected:
-                    // We should pass 'specificMotivatorIds' = all L1 IDs.
-                    // If TAB is 'ALL', we pass 'searchUserId'.
+                    // Filter by Level Tab if no specific checkboxes
+                    // Use a SAFE dummy ID (24 hex chars) if no users found, to avoid Backend Crash
+                    const DUMMY_ID = "000000000000000000000000";
 
-                    if (filters.levelFilter === 'L1' && levelData.l1Users.length > 0) {
-                        params.specificMotivatorIds = levelData.l1Users.map(u => u._id).join(',');
-                    } else if (filters.levelFilter === 'L2' && levelData.l2Users.length > 0) {
-                        params.specificMotivatorIds = levelData.l2Users.map(u => u._id).join(',');
+                    if (filters.levelFilter === 'L1') {
+                        // Level 1: "Direct Motivated by Me"
+                        // So I (the Search User) am the Motivator.
+                        params.specificMotivatorIds = filters.searchUser._id;
+                    } else if (filters.levelFilter === 'L2') {
+                        // Level 2: "Indirect Motivated by Me" (My Recruits are Motivators)
+                        // So My L1 Recruits are the Motivators.
+                        if (levelData.l1Users.length > 0) {
+                            params.specificMotivatorIds = levelData.l1Users.map(u => u._id).join(',');
+                        } else {
+                            params.specificMotivatorIds = DUMMY_ID;
+                        }
                     } else {
-                        // ALL or Default
+                        // ALL (Default): Search by Root User ID (Recursive search handled by Backend)
                         params.searchUserId = filters.searchUser._id;
                     }
                 }
@@ -127,6 +130,13 @@ const TransactionManagement = () => {
         setFilters(prev => ({ ...prev, searchUser: user, levelFilter: 'ALL', specificMotivatorIds: [] }));
         setActiveDropdown(null); // Close User dropdown
 
+        // Update History
+        const newHistory = searchHistory.filter(u => u._id !== user._id);
+        newHistory.unshift(user);
+        const limitedHistory = newHistory.slice(0, 10);
+        setSearchHistory(limitedHistory);
+        localStorage.setItem('admin_transaction_search_history', JSON.stringify(limitedHistory));
+
         // Fetch Level Data for this user immediately to enable Level Filter
         setLoadingLevels(true);
         try {
@@ -139,8 +149,6 @@ const TransactionManagement = () => {
                 });
             }
             setLevelData({ l1Users: l1, l2Users: l2 });
-
-            // Auto open Level Filter? Maybe too aggressive. Let user click it.
         } catch (err) {
             console.error(err);
         } finally {
@@ -148,17 +156,45 @@ const TransactionManagement = () => {
         }
     };
 
-    // Filters Handling
+    // --- Effects ---
+    // Initial Load & Refetch on filter change
+    useEffect(() => {
+        fetchTransactions();
+    }, [page, filters.searchUser, filters.specificMotivatorIds, filters.is80G, filters.dateRange, filters.levelFilter, levelData]);
+
+    // Handle clicks outside dropdown
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setActiveDropdown(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // --- Handlers ---
     const toggleFilter = (type) => {
-        setActiveDropdown(activeDropdown === type ? null : type);
+        if (activeDropdown === type) {
+            setActiveDropdown(null);
+        } else {
+            // When opening Level dropdown, sync pending state with current applied state
+            if (type === 'LEVEL') {
+                setPendingFilters({
+                    levelFilter: filters.levelFilter,
+                    specificMotivatorIds: filters.specificMotivatorIds
+                });
+            }
+            setActiveDropdown(type);
+        }
     };
 
     const handleLevelTab = (tab) => {
-        setFilters(prev => ({ ...prev, levelFilter: tab, specificMotivatorIds: [] }));
+        setPendingFilters(prev => ({ ...prev, levelFilter: tab, specificMotivatorIds: [] }));
     };
 
     const toggleMotivatorSelection = (id) => {
-        setFilters(prev => {
+        setPendingFilters(prev => {
             const current = prev.specificMotivatorIds;
             if (current.includes(id)) {
                 return { ...prev, specificMotivatorIds: current.filter(x => x !== id) };
@@ -166,6 +202,15 @@ const TransactionManagement = () => {
                 return { ...prev, specificMotivatorIds: [...current, id] };
             }
         });
+    };
+
+    const applyLevelFilters = () => {
+        setFilters(prev => ({
+            ...prev,
+            levelFilter: pendingFilters.levelFilter,
+            specificMotivatorIds: pendingFilters.specificMotivatorIds
+        }));
+        setActiveDropdown(null);
     };
 
     const removeFilter = (key) => {
@@ -177,7 +222,6 @@ const TransactionManagement = () => {
         if (key === 'date') setFilters(prev => ({ ...prev, dateRange: { start: '', end: '' } }));
     };
 
-    // Formatting
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
@@ -234,16 +278,31 @@ const TransactionManagement = () => {
                             </div>
                             <div className="dropdown-content">
                                 {isSearchingUser ? <div className="p-2 text-sm text-gray-400">Searching...</div> :
-                                    userSearchResults.length === 0 ? <div className="p-2 text-sm text-gray-400">No users found</div> :
-                                        userSearchResults.map(user => (
-                                            <div key={user._id} className="dropdown-item" onClick={() => selectUser(user)}>
-                                                <div className="item-avatar">{user.name.charAt(0)}</div>
-                                                <div className="item-info">
-                                                    <h4>{user.name}</h4>
-                                                    <p>{user.mobile}</p>
+                                    userSearchQuery.length < 2 ? (
+                                        <>
+                                            {searchHistory.length > 0 && <div className="p-2 text-xs font-semibold text-gray-400 bg-gray-50 uppercase tracking-wider">Recent Searches</div>}
+                                            {searchHistory.map(user => (
+                                                <div key={user._id} className="dropdown-item" onClick={() => selectUser(user)}>
+                                                    <div className="item-avatar bg-gray-100 text-gray-600">{user.name.charAt(0)}</div>
+                                                    <div className="item-info">
+                                                        <h4 className="text-gray-800">{user.name}</h4>
+                                                        <p className="text-xs text-gray-400">Recent</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))
+                                            ))}
+                                            {searchHistory.length === 0 && <div className="p-4 text-center text-sm text-gray-400 italic">Type to search users...</div>}
+                                        </>
+                                    ) :
+                                        userSearchResults.length === 0 ? <div className="p-4 text-center text-sm text-gray-400">No users found</div> :
+                                            userSearchResults.map(user => (
+                                                <div key={user._id} className="dropdown-item" onClick={() => selectUser(user)}>
+                                                    <div className="item-avatar">{user.name.charAt(0)}</div>
+                                                    <div className="item-info">
+                                                        <h4>{user.name}</h4>
+                                                        <p>{user.mobile}</p>
+                                                    </div>
+                                                </div>
+                                            ))
                                 }
                             </div>
                         </div>
@@ -264,11 +323,11 @@ const TransactionManagement = () => {
 
                         {activeDropdown === 'LEVEL' && (
                             <div className="dropdown-menu" style={{ width: '400px' }}>
-                                <div className="dropdown-header flex gap-2">
+                                <div className="level-tabs-header">
                                     {['ALL', 'L1', 'L2'].map(tab => (
                                         <button
                                             key={tab}
-                                            className={`px-3 py-1 text-xs rounded-full border ${filters.levelFilter === tab ? 'bg-blue-100 text-blue-600 border-blue-200' : 'bg-gray-50'}`}
+                                            className={`level-tab-btn ${pendingFilters.levelFilter === tab ? 'active' : ''}`}
                                             onClick={() => handleLevelTab(tab)}
                                         >
                                             {tab === 'ALL' ? 'All' : tab === 'L1' ? 'Level 1' : 'Level 2'}
@@ -278,15 +337,15 @@ const TransactionManagement = () => {
                                 <div className="dropdown-content">
                                     {loadingLevels ? <div className="p-4">Loading tree...</div> : (
                                         <>
-                                            {(filters.levelFilter === 'ALL' || filters.levelFilter === 'L1') && levelData.l1Users.map(u => (
+                                            {(pendingFilters.levelFilter === 'ALL' || pendingFilters.levelFilter === 'L1') && levelData.l1Users.map(u => (
                                                 <div
                                                     key={u._id}
-                                                    className={`dropdown-item ${filters.specificMotivatorIds.includes(u._id) ? 'selected' : ''}`}
+                                                    className={`dropdown-item ${pendingFilters.specificMotivatorIds.includes(u._id) ? 'selected' : ''}`}
                                                     onClick={() => toggleMotivatorSelection(u._id)}
                                                 >
                                                     <input
                                                         type="checkbox"
-                                                        checked={filters.specificMotivatorIds.includes(u._id)}
+                                                        checked={pendingFilters.specificMotivatorIds.includes(u._id)}
                                                         readOnly
                                                         className="mr-2"
                                                     />
@@ -296,15 +355,15 @@ const TransactionManagement = () => {
                                                     </div>
                                                 </div>
                                             ))}
-                                            {(filters.levelFilter === 'ALL' || filters.levelFilter === 'L2') && levelData.l2Users.map(u => (
+                                            {(pendingFilters.levelFilter === 'ALL' || pendingFilters.levelFilter === 'L2') && levelData.l2Users.map(u => (
                                                 <div
                                                     key={u._id}
-                                                    className={`dropdown-item ${filters.specificMotivatorIds.includes(u._id) ? 'selected' : ''}`}
+                                                    className={`dropdown-item ${pendingFilters.specificMotivatorIds.includes(u._id) ? 'selected' : ''}`}
                                                     onClick={() => toggleMotivatorSelection(u._id)}
                                                 >
                                                     <input
                                                         type="checkbox"
-                                                        checked={filters.specificMotivatorIds.includes(u._id)}
+                                                        checked={pendingFilters.specificMotivatorIds.includes(u._id)}
                                                         readOnly
                                                         className="mr-2"
                                                     />
@@ -318,7 +377,7 @@ const TransactionManagement = () => {
                                     )}
                                 </div>
                                 <div className="dropdown-footer">
-                                    <button className="apply-btn" onClick={() => setActiveDropdown(null)}>Apply Filter</button>
+                                    <button className="apply-btn" onClick={applyLevelFilters}>Apply Filter</button>
                                 </div>
                             </div>
                         )}

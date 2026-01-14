@@ -42,7 +42,22 @@ router.get('/dashboard', async (req, res) => {
         if (specificMotivatorIds) {
             // Checkbox selection: IDs are passed
             const ids = specificMotivatorIds.split(',');
-            query.level1UserId = { $in: ids };
+
+            // Fetch users to get mobiles for legacy matching
+            const selectedUsers = await User.find({ _id: { $in: ids } }).select('mobile');
+
+            const legacyMobileConditions = selectedUsers
+                .map(u => (u.mobile || '').replace(/\D/g, '').slice(-10))
+                .filter(m => m.length >= 10)
+                .map(m => ({ motivatorMobile: { $regex: new RegExp(m, 'i') } }));
+
+            andConditions.push({
+                $or: [
+                    { level1UserId: { $in: ids } },
+                    ...legacyMobileConditions
+                ]
+            });
+
         } else if (searchUserId) {
             // "Involved" User: Search by ID (New) OR Mobile (Legacy)
             const searchUser = await User.findById(searchUserId);
@@ -51,13 +66,23 @@ router.get('/dashboard', async (req, res) => {
                 const cleanMobile = (searchUser.mobile || '').replace(/\D/g, '').slice(-10);
                 const searchRegex = new RegExp(cleanMobile, 'i'); // Safe regex for mobile
 
-                andConditions.push({
-                    $or: [
-                        { level1UserId: searchUserId },
-                        { level2UserId: searchUserId },
-                        { motivatorMobile: { $regex: searchRegex } } // Legacy Match
-                    ]
-                });
+                // Fetch direct downline to find "Legacy L2 Transactions" (where Motivator is a Recruit)
+                const downlineUsers = await User.find({ referredBy: searchUserId }).select('mobile');
+                const downlineConditions = downlineUsers
+                    .map(u => (u.mobile || '').replace(/\D/g, '').slice(-10)) // clean downline mobile
+                    .filter(m => m.length >= 10)
+                    .map(m => ({ motivatorMobile: { $regex: new RegExp(m, 'i') } }));
+
+                const conditions = [
+                    { level1UserId: searchUserId },
+                    { level2UserId: searchUserId },
+                    { motivatorMobile: { $regex: searchRegex } } // Legacy Match L1
+                ];
+                if (downlineConditions.length > 0) {
+                    conditions.push(...downlineConditions); // Legacy Match L2 (Motivated by Downline)
+                }
+
+                andConditions.push({ $or: conditions });
             } else {
                 // If user somehow not found, fallback to just ID
                 andConditions.push({
@@ -73,15 +98,28 @@ router.get('/dashboard', async (req, res) => {
         // Fetch Data
         let donations = await Donation.find(query)
             .select('donorName donorMobile amount motivatorMobile createdAt is80G level1UserId level2UserId status panNumber')
-            .populate('level1UserId', 'name mobile') // Populate Motivator (New Data)
-            .populate('level2UserId', 'name mobile') // Populate L2 (New Data)
+            .populate({
+                path: 'level1UserId',
+                select: 'name mobile referredBy', // Fetch L2 Relation
+                populate: { path: 'referredBy', select: 'name mobile' } // Fetch L2 Details
+            })
+            .populate('level2UserId', 'name mobile') // Populate L2 if exists directly
             .sort({ createdAt: sort === 'oldest' ? 1 : -1 })
             .skip(skip)
             .limit(limit)
             .lean(); // Use lean for performance & modification
 
         // --- Post-Processing: Fill Missing Motivator Data & 80G ---
-        // Collect mobiles of donations that lack 'level1UserId' but have 'motivatorMobile'
+
+        // 1. First, Polyfill L2 from existing L1 (Hybrid Fix)
+        donations.forEach(d => {
+            if (d.level1UserId && !d.level2UserId && d.level1UserId.referredBy) {
+                // If L1 exists but L2 is missing, but L1 HAS a referrer... fill it!
+                d.level2UserId = d.level1UserId.referredBy;
+            }
+        });
+
+        // 2. Collect mobiles of donations that lack 'level1UserId' but have 'motivatorMobile' (Legacy Fix)
         const missingMotivatorMobiles = [...new Set(
             donations
                 .filter(d => !d.level1UserId && d.motivatorMobile)
