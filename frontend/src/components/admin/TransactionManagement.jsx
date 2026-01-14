@@ -439,7 +439,7 @@ const TransactionManagement = () => {
 
                 {/* 4. Date Filter */}
                 <div className="filter-group">
-                    <button className="filter-btn" onClick={() => toggleFilter('DATE')}>
+                    <button className={`filter-btn ${filters.dateRange.start ? 'active' : ''}`} onClick={() => toggleFilter('DATE')}>
                         <Calendar size={16} /> Date Range
                     </button>
                     {activeDropdown === 'DATE' && (
@@ -510,6 +510,7 @@ const TransactionManagement = () => {
                             <th>Date</th>
                             <th>Donor Name</th>
                             <th>Amount</th>
+                            <th>Level</th>
                             <th>Motivated By</th>
                             <th>L1 Comm (10%)</th>
                             <th>L2 Comm (3%)</th>
@@ -547,13 +548,13 @@ const TransactionManagement = () => {
                                         <td>{formatDate(txn.createdAt)}</td>
                                         <td><strong>{txn.donorName}</strong></td>
                                         <td><span className="col-amount">{formatCurrency(txn.amount)}</span></td>
+                                        <td>{levelLabel || <span className="text-gray-300">-</span>}</td>
                                         <td>
                                             {txn.level1UserId ? txn.level1UserId.name : (txn.motivatorMobile ? `(Mobile: ${txn.motivatorMobile})` : '-')}
-                                            {levelLabel}
                                         </td>
-                                        <td>{(txn.level1UserId || txn.motivatorMobile) ? formatCurrency(txn.amount * 0.10) : '-'}</td>
-                                        <td>{txn.level2UserId ? formatCurrency(txn.amount * 0.03) : '-'}</td>
-                                        <td>{txn.is80G ? <span className="status-badge badge-80g">Yes</span> : <span className="text-gray-400">-</span>}</td>
+                                        <td>{(txn.level1UserId || txn.motivatorMobile) ? formatCurrency(txn.amount * 0.10) : <span className="status-badge badge-neutral">No</span>}</td>
+                                        <td>{txn.level2UserId ? formatCurrency(txn.amount * 0.03) : <span className="status-badge badge-neutral">No</span>}</td>
+                                        <td>{txn.is80G ? <span className="status-badge badge-80g">Yes</span> : <span className="status-badge badge-80g-no">No</span>}</td>
                                         <td>
                                             <span className={`status-badge ${txn.status}`}>
                                                 {txn.status === 'success' ? 'Success' : 'Pending'}

@@ -226,7 +226,8 @@
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
+    overflow: auto;
+    max-height: calc(100vh - 250px);
     border: 1px solid #e2e8f0;
 }
 
@@ -247,6 +248,7 @@
     border-bottom: 1px solid #e2e8f0;
     position: sticky;
     top: 0;
+    z-index: 10;
 }
 
 .transaction-table td {
@@ -287,6 +289,18 @@
     background: #d1fae5;
     color: #065f46;
     border: 1px solid #a7f3d0;
+}
+
+.status-badge.badge-80g-no {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+}
+
+.status-badge.badge-neutral {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
 }
 
 /* Columns */
