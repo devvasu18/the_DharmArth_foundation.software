@@ -59,32 +59,55 @@ router.get('/dashboard', async (req, res) => {
             });
 
         } else if (searchUserId) {
-            // "Involved" User: Search by ID (New) OR Mobile (Legacy)
+            // "Involved" User: Search by Transaction Type
+            const { type } = req.query; // 'ALL', 'DONATION', 'COMMISSION'
             const searchUser = await User.findById(searchUserId);
-            if (searchUser) {
-                // Legacy Logic: Match strict mobile or match numeric part
-                const cleanMobile = (searchUser.mobile || '').replace(/\D/g, '').slice(-10);
-                const searchRegex = new RegExp(cleanMobile, 'i'); // Safe regex for mobile
 
-                // Fetch direct downline to find "Legacy L2 Transactions" (where Motivator is a Recruit)
+            if (searchUser) {
+                const cleanUserMobile = (searchUser.mobile || '').replace(/\D/g, '').slice(-10);
+                const userMobileRegex = new RegExp(cleanUserMobile, 'i');
+
+                // 1. Commission Conditions (User is Motivator or L2)
+                const commissionConditions = [];
+
+                // Direct L1/L2 ID Match
+                commissionConditions.push({ level1UserId: searchUserId });
+                commissionConditions.push({ level2UserId: searchUserId });
+
+                // Legacy L1 Match (Motivator Mobile = User Mobile)
+                commissionConditions.push({ motivatorMobile: { $regex: userMobileRegex } });
+
+                // Legacy L2 Match (Motivator is User's Downline)
                 const downlineUsers = await User.find({ referredBy: searchUserId }).select('mobile');
                 const downlineConditions = downlineUsers
-                    .map(u => (u.mobile || '').replace(/\D/g, '').slice(-10)) // clean downline mobile
+                    .map(u => (u.mobile || '').replace(/\D/g, '').slice(-10))
                     .filter(m => m.length >= 10)
                     .map(m => ({ motivatorMobile: { $regex: new RegExp(m, 'i') } }));
 
-                const conditions = [
-                    { level1UserId: searchUserId },
-                    { level2UserId: searchUserId },
-                    { motivatorMobile: { $regex: searchRegex } } // Legacy Match L1
-                ];
                 if (downlineConditions.length > 0) {
-                    conditions.push(...downlineConditions); // Legacy Match L2 (Motivated by Downline)
+                    commissionConditions.push(...downlineConditions);
                 }
 
-                andConditions.push({ $or: conditions });
+                // 2. Donation Conditions (User is Donor)
+                const donationConditions = [
+                    { donorMobile: { $regex: userMobileRegex } } // Match Donor Mobile
+                    // If we had donorId, we'd add { donorId: searchUserId }
+                ];
+
+                // 3. Combine based on Type
+                if (type === 'DONATION') {
+                    andConditions.push({ $or: donationConditions });
+                } else if (type === 'COMMISSION') {
+                    andConditions.push({ $or: commissionConditions });
+                } else {
+                    // ALL (Default) -> Either Commission OR Donation
+                    andConditions.push({
+                        $or: [...commissionConditions, ...donationConditions]
+                    });
+                }
+
             } else {
-                // If user somehow not found, fallback to just ID
+                // Fallback if user not found (shouldn't happen with valid ID)
                 andConditions.push({
                     $or: [{ level1UserId: searchUserId }, { level2UserId: searchUserId }]
                 });

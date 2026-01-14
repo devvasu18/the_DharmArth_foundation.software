@@ -20,6 +20,7 @@ const TransactionManagement = () => {
         searchUser: null, // The "Root" user for filtering
         levelFilter: 'ALL', // 'ALL', 'L1', 'L2' (Tabs)
         specificMotivatorIds: [], // Selected Checkboxes
+        transactionType: 'ALL', // 'ALL', 'DONATION', 'COMMISSION'
         is80G: false,
         dateRange: { start: '', end: '' } // default this month?
     });
@@ -27,7 +28,8 @@ const TransactionManagement = () => {
     // Pending Filters for Manual Apply
     const [pendingFilters, setPendingFilters] = useState({
         levelFilter: 'ALL',
-        specificMotivatorIds: []
+        specificMotivatorIds: [],
+        dateRange: { start: '', end: '' }
     });
 
     const [activeDropdown, setActiveDropdown] = useState(null); // 'USER', 'LEVEL', 'DATE'
@@ -68,6 +70,9 @@ const TransactionManagement = () => {
             };
 
             if (filters.searchUser) {
+                // Pass Transaction Type
+                params.type = filters.transactionType;
+
                 // If specific motivators selected (via Level checkboxes), use them
                 if (filters.specificMotivatorIds.length > 0) {
                     params.specificMotivatorIds = filters.specificMotivatorIds.join(',');
@@ -160,7 +165,7 @@ const TransactionManagement = () => {
     // Initial Load & Refetch on filter change
     useEffect(() => {
         fetchTransactions();
-    }, [page, filters.searchUser, filters.specificMotivatorIds, filters.is80G, filters.dateRange, filters.levelFilter, levelData]);
+    }, [page, filters.searchUser, filters.specificMotivatorIds, filters.is80G, filters.dateRange, filters.levelFilter, filters.transactionType, levelData]);
 
     // Handle clicks outside dropdown
     useEffect(() => {
@@ -180,10 +185,17 @@ const TransactionManagement = () => {
         } else {
             // When opening Level dropdown, sync pending state with current applied state
             if (type === 'LEVEL') {
-                setPendingFilters({
+                setPendingFilters(prev => ({
+                    ...prev,
                     levelFilter: filters.levelFilter,
                     specificMotivatorIds: filters.specificMotivatorIds
-                });
+                }));
+            }
+            if (type === 'DATE') {
+                setPendingFilters(prev => ({
+                    ...prev,
+                    dateRange: filters.dateRange
+                }));
             }
             setActiveDropdown(type);
         }
@@ -215,11 +227,13 @@ const TransactionManagement = () => {
 
     const removeFilter = (key) => {
         if (key === 'user') {
-            setFilters(prev => ({ ...prev, searchUser: null, levelFilter: 'ALL', specificMotivatorIds: [] }));
+            setFilters(prev => ({ ...prev, searchUser: null, levelFilter: 'ALL', transactionType: 'ALL', specificMotivatorIds: [] }));
             setLevelData({ l1Users: [], l2Users: [] });
         }
+        if (key === 'type') setFilters(prev => ({ ...prev, transactionType: 'ALL' }));
         if (key === '80g') setFilters(prev => ({ ...prev, is80G: false }));
         if (key === 'date') setFilters(prev => ({ ...prev, dateRange: { start: '', end: '' } }));
+        if (key === 'level') setFilters(prev => ({ ...prev, levelFilter: 'ALL', specificMotivatorIds: [] }));
     };
 
     const formatCurrency = (amount) => {
@@ -350,7 +364,7 @@ const TransactionManagement = () => {
                                                         className="mr-2"
                                                     />
                                                     <div className="item-info">
-                                                        <h4>{u.name} <span className="text-xs text-blue-500 font-normal">Level 1</span></h4>
+                                                        <h4>{u.name} <span className="badge-level-1">Level 1</span></h4>
                                                         <p>{u.mobile}</p>
                                                     </div>
                                                 </div>
@@ -368,7 +382,7 @@ const TransactionManagement = () => {
                                                         className="mr-2"
                                                     />
                                                     <div className="item-info">
-                                                        <h4>{u.name} <span className="text-xs text-purple-500 font-normal">Level 2</span></h4>
+                                                        <h4>{u.name} <span className="badge-level-2">Level 2</span></h4>
                                                         <p>{u.mobile}</p>
                                                     </div>
                                                 </div>
@@ -378,6 +392,35 @@ const TransactionManagement = () => {
                                 </div>
                                 <div className="dropdown-footer">
                                     <button className="apply-btn" onClick={applyLevelFilters}>Apply Filter</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+
+                {/* 2.5 Transaction Type Filter (New) */}
+                {filters.searchUser && (
+                    <div className="filter-group">
+                        <button
+                            className={`filter-btn ${filters.transactionType !== 'ALL' ? 'active' : ''}`}
+                            onClick={() => toggleFilter('TYPE')}
+                        >
+                            <FileText size={16} />
+                            {filters.transactionType === 'ALL' ? 'All Types' : filters.transactionType === 'DONATION' ? 'My Donations' : 'My Commissions'}
+                            <ChevronDown size={14} />
+                        </button>
+
+                        {activeDropdown === 'TYPE' && (
+                            <div className="dropdown-menu w-48 font-medium">
+                                <div className="dropdown-item" onClick={() => { setFilters(prev => ({ ...prev, transactionType: 'ALL' })); setActiveDropdown(null); }}>
+                                    All Types
+                                </div>
+                                <div className="dropdown-item" onClick={() => { setFilters(prev => ({ ...prev, transactionType: 'DONATION' })); setActiveDropdown(null); }}>
+                                    My Donations
+                                </div>
+                                <div className="dropdown-item" onClick={() => { setFilters(prev => ({ ...prev, transactionType: 'COMMISSION' })); setActiveDropdown(null); }}>
+                                    My Commissions
                                 </div>
                             </div>
                         )}
@@ -396,26 +439,59 @@ const TransactionManagement = () => {
 
                 {/* 4. Date Filter */}
                 <div className="filter-group">
-                    <button className="filter-btn" onClick={() => setActiveDropdown('DATE')}>
+                    <button className="filter-btn" onClick={() => toggleFilter('DATE')}>
                         <Calendar size={16} /> Date Range
                     </button>
                     {activeDropdown === 'DATE' && (
-                        <div className="dropdown-menu p-4 w-auto">
-                            <div className="flex gap-2 mb-2">
-                                <input type="date" className="border p-2 rounded" onChange={(e) => setFilters(p => ({ ...p, dateRange: { ...p.dateRange, start: e.target.value } }))} />
-                                <input type="date" className="border p-2 rounded" onChange={(e) => setFilters(p => ({ ...p, dateRange: { ...p.dateRange, end: e.target.value } }))} />
+                        <div className="dropdown-menu date-filter-dropdown">
+                            <div className="date-inputs-row">
+                                <div className="date-field">
+                                    <label>Start Date</label>
+                                    <input
+                                        type="date"
+                                        className="date-input"
+                                        value={pendingFilters.dateRange?.start || ''}
+                                        onChange={(e) => setPendingFilters(p => ({ ...p, dateRange: { ...p.dateRange, start: e.target.value } }))}
+                                    />
+                                </div>
+                                <div className="date-field">
+                                    <label>End Date</label>
+                                    <input
+                                        type="date"
+                                        className="date-input"
+                                        value={pendingFilters.dateRange?.end || ''}
+                                        onChange={(e) => setPendingFilters(p => ({ ...p, dateRange: { ...p.dateRange, end: e.target.value } }))}
+                                    />
+                                </div>
                             </div>
-                            <button className="apply-btn w-full" onClick={() => setActiveDropdown(null)}>Apply</button>
+                            <div className="dropdown-footer">
+                                <button className="apply-btn" onClick={() => {
+                                    setFilters(prev => ({ ...prev, dateRange: pendingFilters.dateRange }));
+                                    setActiveDropdown(null);
+                                }}>Apply Date Filter</button>
+                            </div>
                         </div>
                     )}
                 </div>
             </div>
 
             {/* Filter Chips */}
-            {(filters.searchUser || filters.is80G || filters.dateRange.start) && (
+            {(filters.searchUser || filters.is80G || filters.dateRange.start || filters.levelFilter !== 'ALL' || filters.specificMotivatorIds.length > 0) && (
                 <div className="filter-chips">
                     {filters.searchUser && (
                         <span className="chip">User: {filters.searchUser.name} <X size={12} className="chip-remove" onClick={() => removeFilter('user')} /></span>
+                    )}
+                    {filters.transactionType !== 'ALL' && (
+                        <span className="chip">Type: {filters.transactionType} <X size={12} className="chip-remove" onClick={() => removeFilter('type')} /></span>
+                    )}
+                    {(filters.levelFilter !== 'ALL' || filters.specificMotivatorIds.length > 0) && (
+                        <span className="chip">
+                            {filters.levelFilter === 'ALL'
+                                ? `Selected Users (${filters.specificMotivatorIds.length})`
+                                : `Level: ${filters.levelFilter === 'L1' ? 'Level 1' : 'Level 2'}${filters.specificMotivatorIds.length > 0 ? ` + ${filters.specificMotivatorIds.length} users` : ''}`
+                            }
+                            <X size={12} className="chip-remove" onClick={() => removeFilter('level')} />
+                        </span>
                     )}
                     {filters.is80G && (
                         <span className="chip">80G Only <X size={12} className="chip-remove" onClick={() => removeFilter('80g')} /></span>
@@ -447,22 +523,45 @@ const TransactionManagement = () => {
                         ) : transactions.length === 0 ? (
                             <tr><td colSpan="8" className="p-8 text-center text-gray-500">No transactions found</td></tr>
                         ) : (
-                            transactions.map((txn, idx) => (
-                                <tr key={idx} onClick={() => setSelectedTransaction(txn)}>
-                                    <td>{formatDate(txn.createdAt)}</td>
-                                    <td><strong>{txn.donorName}</strong></td>
-                                    <td><span className="col-amount">{formatCurrency(txn.amount)}</span></td>
-                                    <td>{txn.level1UserId ? txn.level1UserId.name : (txn.motivatorMobile ? `(Mobile: ${txn.motivatorMobile})` : '-')}</td>
-                                    <td>{(txn.level1UserId || txn.motivatorMobile) ? formatCurrency(txn.amount * 0.10) : '-'}</td>
-                                    <td>{txn.level2UserId ? formatCurrency(txn.amount * 0.03) : '-'}</td>
-                                    <td>{txn.is80G ? <span className="status-badge badge-80g">Yes</span> : <span className="text-gray-400">-</span>}</td>
-                                    <td>
-                                        <span className={`status-badge ${txn.status}`}>
-                                            {txn.status === 'success' ? 'Success' : 'Pending'}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))
+                            transactions.map((txn, idx) => {
+                                // Determine Level Label relative to Search User
+                                let levelLabel = null;
+                                if (filters.searchUser) {
+                                    const searchId = filters.searchUser?._id;
+                                    const searchMobile = filters.searchUser?.mobile ? filters.searchUser.mobile.slice(-10) : '';
+
+                                    // Case 1: Search User IS the Motivator (Level 1)
+                                    if (txn.level1UserId?._id === searchId ||
+                                        (!txn.level1UserId && txn.motivatorMobile && txn.motivatorMobile.includes(searchMobile))) {
+                                        levelLabel = <span className="badge-level-1">Level 1</span>;
+                                    }
+
+                                    // Case 2: Search User IS the Referrer (Level 2) - implies Motivator is their recruit
+                                    else if (txn.level2UserId?._id === searchId) {
+                                        levelLabel = <span className="badge-level-2">Level 2</span>;
+                                    }
+                                }
+
+                                return (
+                                    <tr key={idx} onClick={() => setSelectedTransaction(txn)}>
+                                        <td>{formatDate(txn.createdAt)}</td>
+                                        <td><strong>{txn.donorName}</strong></td>
+                                        <td><span className="col-amount">{formatCurrency(txn.amount)}</span></td>
+                                        <td>
+                                            {txn.level1UserId ? txn.level1UserId.name : (txn.motivatorMobile ? `(Mobile: ${txn.motivatorMobile})` : '-')}
+                                            {levelLabel}
+                                        </td>
+                                        <td>{(txn.level1UserId || txn.motivatorMobile) ? formatCurrency(txn.amount * 0.10) : '-'}</td>
+                                        <td>{txn.level2UserId ? formatCurrency(txn.amount * 0.03) : '-'}</td>
+                                        <td>{txn.is80G ? <span className="status-badge badge-80g">Yes</span> : <span className="text-gray-400">-</span>}</td>
+                                        <td>
+                                            <span className={`status-badge ${txn.status}`}>
+                                                {txn.status === 'success' ? 'Success' : 'Pending'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
                     </tbody>
                 </table>
@@ -496,10 +595,10 @@ const TransactionManagement = () => {
                             <h4 className="font-bold mb-4 text-slate-800">Commission Distribution</h4>
 
                             {/* Level 1 */}
-                            <div className="breakdown-card border-l-4 border-l-blue-500">
+                            <div className="breakdown-card level-1">
                                 <div className="commission-header">
                                     <span>Level 1 Commission</span>
-                                    <span className="text-blue-600">10%</span>
+                                    <span className="text-level-1">10%</span>
                                 </div>
                                 <div className="commission-user mb-2">
                                     <User size={16} />
@@ -519,10 +618,10 @@ const TransactionManagement = () => {
 
                             {/* Level 2 */}
                             {selectedTransaction.level2UserId && (
-                                <div className="breakdown-card border-l-4 border-l-purple-500">
+                                <div className="breakdown-card level-2">
                                     <div className="commission-header">
                                         <span>Level 2 Commission</span>
-                                        <span className="text-purple-600">3%</span>
+                                        <span className="text-level-2">3%</span>
                                     </div>
                                     <div className="commission-user mb-2">
                                         <User size={16} />
