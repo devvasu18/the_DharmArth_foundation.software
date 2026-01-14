@@ -4,7 +4,7 @@ import AuthFooter from './AuthFooter';
 import api from '../../services/api';
 import { useNavigate, Link } from 'react-router-dom';
 import './Auth.css';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, User, BadgeCheck } from 'lucide-react';
 import SuccessModal from './SuccessModal';
 
 const Signup = () => {
@@ -108,7 +108,7 @@ const Signup = () => {
                             {/* ERROR MESSAGE */}
                             {error && <div style={{ color: 'red', marginBottom: '10px', fontSize: '0.9rem' }}>{error}</div>}
 
-                            <label className="input-label" style={{ color: '#d9534f' }}>
+                            <label className="input-label" style={{ color: 'black' }}>
                                 Full Name *
                             </label>
                             <input
@@ -119,7 +119,7 @@ const Signup = () => {
                                 onChange={(e) => setName(e.target.value)}
                             />
 
-                            <label className="input-label" style={{ color: '#d9534f', marginTop: '1rem' }}>
+                            <label className="input-label" style={{ color: 'black', marginTop: '1rem' }}>
                                 Mobile Number *
                             </label>
                             <input
@@ -130,7 +130,7 @@ const Signup = () => {
                                 onChange={handleMobileChange}
                             />
 
-                            <label className="input-label" style={{ color: '#d9534f', marginTop: '1rem' }}>
+                            <label className="input-label" style={{ color: 'black', marginTop: '1rem' }}>
                                 Email Address (Optional)
                             </label>
                             <input
@@ -141,7 +141,7 @@ const Signup = () => {
                                 onChange={(e) => setEmail(e.target.value)}
                             />
 
-                            <label className="input-label" style={{ color: '#d9534f', marginTop: '1rem' }}>
+                            <label className="input-label" style={{ color: 'black', marginTop: '1rem' }}>
                                 Password *
                             </label>
                             <div style={{ position: 'relative' }}>
@@ -171,7 +171,7 @@ const Signup = () => {
                                 </button>
                             </div>
 
-                            <label className="input-label" style={{ color: '#d9534f', marginTop: '1rem' }}>
+                            <label className="input-label" style={{ color: 'black', marginTop: '1rem' }}>
                                 Referral Code (Optional)
                             </label>
                             <input
@@ -182,7 +182,19 @@ const Signup = () => {
                                 onChange={handleReferralChange}
                             />
                             {verifyingReferral && <div style={{ color: '#666', fontSize: '0.8rem', marginTop: '-15px', marginBottom: '10px' }}>Verifying...</div>}
-                            {referrerName && <span className="success-text">Referred by : <strong>{referrerName}</strong></span>}
+                            {referrerName && (
+                                <div className="motivator-profile-chip verified">
+                                    <div className="motivator-avatar">
+                                        <User size={24} />
+                                    </div>
+                                    <div className="motivator-info">
+                                        <span className="motivator-name">{referrerName}</span>
+                                        <span className="motivator-status">
+                                            <BadgeCheck size={16} fill="currentColor" color="white" className="text-primary" /> Verified Referrer
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
                             {referralError && <span className="error-text">{referralError}</span>}
 
                             {/* ACTION BUTTON */}

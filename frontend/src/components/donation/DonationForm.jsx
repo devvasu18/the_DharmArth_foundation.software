@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useConfirm } from '../../context/ConfirmContext';
-import { User, Smartphone, Mail, MapPin, CreditCard } from 'lucide-react';
+import { User, Smartphone, Mail, MapPin, CreditCard, BadgeCheck } from 'lucide-react';
 import api from '../../services/api';
 import './DonationForm.css';
 import { validatePAN, validateAadhaar } from '../../utils/validators';
@@ -317,10 +317,16 @@ const DonationForm = () => {
                     <div className="input-group mb-0">
                         <label className="input-label">Motivated By {isMotivatorLocked ? '' : '(Mobile Number)'}</label>
                         {isMotivatorLocked ? (
-                            <div className="locked-motivator-display" style={{ padding: '12px', background: '#e8f5e9', borderRadius: '8px', border: '1px solid #c8e6c9', marginTop: '5px', display: 'flex', alignItems: 'center' }}>
-                                <Smartphone size={18} className="text-primary" style={{ marginRight: '8px' }} />
-                                <span style={{ fontWeight: 600, color: '#2e7d32' }}>{motivatorName}</span>
-                                <span style={{ color: '#666', marginLeft: '5px' }}>({motivatorMobile})</span>
+                            <div className="motivator-profile-chip verified">
+                                <div className="motivator-avatar">
+                                    <User size={24} />
+                                </div>
+                                <div className="motivator-info">
+                                    <span className="motivator-name">{motivatorName}</span>
+                                    <span className="motivator-status">
+                                        <BadgeCheck size={14} fill="currentColor" strokeWidth={2.5} className="text-primary" /> Verified Motivator
+                                    </span>
+                                </div>
                             </div>
                         ) : (
                             <>
@@ -340,7 +346,19 @@ const DonationForm = () => {
                                         maxLength={10}
                                     />
                                 </div>
-                                {motivatorName && <span className="success-text">Verified Motivator: <strong>{motivatorName}</strong></span>}
+                                {motivatorName && (
+                                    <div className="motivator-profile-chip verified">
+                                        <div className="motivator-avatar">
+                                            <User size={24} />
+                                        </div>
+                                        <div className="motivator-info">
+                                            <span className="motivator-name">{motivatorName}</span>
+                                            <span className="motivator-status">
+                                                <BadgeCheck size={16} fill="currentColor" className="text-primary" /> Verified Motivator
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
                                 {errors.motivator && <small className="error-text">{errors.motivator}</small>}
                             </>
                         )}
