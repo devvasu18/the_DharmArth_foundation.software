@@ -151,7 +151,8 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
     // Date Filter State
     const [dateFilter, setDateFilter] = useState({
         start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-        end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]
+        end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0],
+        preset: 'MONTH'
     });
 
     // Sorted L1 Users for "Timeline" view
@@ -296,23 +297,62 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
 
             {/* Date Filters (Floating) */}
             <div className="tree-date-filter">
-                <div className="date-input-group">
-                    <label>From</label>
-                    <input
-                        type="date"
-                        value={dateFilter.start}
-                        onChange={(e) => handleDateChange(e, 'start')}
-                    />
+                <div className="presets">
+                    <button
+                        className={dateFilter.preset === 'TODAY' ? 'active' : ''}
+                        onClick={() => {
+                            const today = new Date().toISOString().split('T')[0];
+                            setDateFilter({ start: today, end: today, preset: 'TODAY' });
+                        }}
+                    >Today</button>
+                    <button
+                        className={dateFilter.preset === 'WEEK' ? 'active' : ''}
+                        onClick={() => {
+                            const today = new Date();
+                            const weekStart = new Date(today);
+                            weekStart.setDate(today.getDate() - 7);
+                            setDateFilter({
+                                start: weekStart.toISOString().split('T')[0],
+                                end: today.toISOString().split('T')[0],
+                                preset: 'WEEK'
+                            });
+                        }}
+                    >Week</button>
+                    <button
+                        className={dateFilter.preset === 'MONTH' ? 'active' : ''}
+                        onClick={() => {
+                            const today = new Date();
+                            const start = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                            const end = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+                            setDateFilter({ start, end, preset: 'MONTH' });
+                        }}
+                    >Month</button>
+                    <button
+                        className={!dateFilter.preset ? 'active' : ''}
+                        onClick={() => setDateFilter(prev => ({ ...prev, preset: null }))} // Custom
+                    >Custom</button>
                 </div>
-                <div className="filter-separator"></div>
-                <div className="date-input-group">
-                    <label>To</label>
-                    <input
-                        type="date"
-                        value={dateFilter.end}
-                        onChange={(e) => handleDateChange(e, 'end')}
-                    />
-                </div>
+                {(!dateFilter.preset) && (
+                    <div className="custom-dates">
+                        <div className="date-input-group">
+                            <label>From</label>
+                            <input
+                                type="date"
+                                value={dateFilter.start}
+                                onChange={(e) => handleDateChange(e, 'start')}
+                            />
+                        </div>
+                        <div className="filter-separator"></div>
+                        <div className="date-input-group">
+                            <label>To</label>
+                            <input
+                                type="date"
+                                value={dateFilter.end}
+                                onChange={(e) => handleDateChange(e, 'end')}
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Root User - FIXED */}

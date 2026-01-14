@@ -7,19 +7,67 @@ const { protect, checkPermission } = require('../middlewares/authMiddleware');
 // @desc    Get all normal users (non-staff)
 // @route   GET /api/users
 // @access  Private/Admin
+// @desc    Get all users with pagination and filtering
+// @route   GET /api/users
+// @access  Private/Admin
 router.get('/', protect, checkPermission('User Management', 'view'), async (req, res) => {
     try {
-        // Filter: Not Super Admin AND No Roles
-        const users = await User.find({
+        const { page = 1, limit = 20, search, startDate, endDate, specificUserId } = req.query;
+
+        // Build Match Query
+        const query = {
             isSuperAdmin: false,
             roles: { $size: 0 }
-        })
+        };
+
+        // Specific User ID (for exact selection)
+        if (specificUserId) {
+            query._id = specificUserId;
+        }
+
+        // Search Filter (Name, Mobile, Email)
+        if (search) {
+            const searchRegex = new RegExp(search, 'i'); // Case-insensitive
+            query.$or = [
+                { name: searchRegex },
+                { mobile: searchRegex },
+                { email: searchRegex }
+            ];
+        }
+
+        // Date Filter
+        if (startDate || endDate) {
+            query.createdAt = {};
+            if (startDate) {
+                query.createdAt.$gte = new Date(startDate);
+            }
+            if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                query.createdAt.$lte = end;
+            }
+        }
+
+        // Calculate Pagination
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const skip = (pageNum - 1) * limitNum;
+
+        // Execute Query
+        const totalUsers = await User.countDocuments(query);
+        const users = await User.find(query)
             .select('-password')
             .populate('roles')
-            .populate('referredBy', 'name mobile'); // Populate referrer info
+            .populate('referredBy', 'name mobile')
+            .sort({ createdAt: -1 }) // Newest first
+            .skip(skip)
+            .limit(limitNum);
 
-        // Fetch all wallets (optimization: could filter wallets by userIds found above)
-        const wallets = await Wallet.find({});
+        // Fetch user ids for wallet fetching
+        const userIds = users.map(u => u._id);
+
+        // Fetch wallets for these users only
+        const wallets = await Wallet.find({ user: { $in: userIds } });
         const walletMap = {};
         wallets.forEach(w => {
             if (w.user) walletMap[w.user.toString()] = w.balance;
@@ -30,7 +78,15 @@ router.get('/', protect, checkPermission('User Management', 'view'), async (req,
             walletBalance: walletMap[user._id.toString()] || 0
         }));
 
-        res.json(usersWithWallet);
+        res.json({
+            users: usersWithWallet,
+            pagination: {
+                totalUsers,
+                totalPages: Math.ceil(totalUsers / limitNum),
+                currentPage: pageNum,
+                limit: limitNum
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

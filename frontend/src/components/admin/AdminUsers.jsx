@@ -4,11 +4,22 @@ import UserDetailModal from './UserDetailModal';
 import AdminTransactions from './AdminTransactions';
 import ConfirmationModal from './ConfirmationModal';
 import AlertModal from './AlertModal';
-import { Eye, Ban, CheckCircle, Network } from 'lucide-react';
+import './TransactionManagement.css';
+import { Eye, Ban, CheckCircle, Network, Search, Calendar, Download, ChevronDown, Filter, FileText, ArrowRight, ArrowLeft, X } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const AdminUsers = () => {
     const [users, setUsers] = useState([]);
+    const [dropdownUsers, setDropdownUsers] = useState([]); // Separate state for dropdown search
     const [loading, setLoading] = useState(true);
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        totalPages: 1,
+        totalUsers: 0,
+        limit: 20
+    });
 
     // View User State
     const [viewingUser, setViewingUser] = useState(null);
@@ -36,6 +47,233 @@ const AdminUsers = () => {
         fetchUsers();
     }, []);
 
+    // --- SEARCH & FILTER STATE ---
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
+    const [pendingDateRange, setPendingDateRange] = useState({ start: '', end: '' });
+    const [activeDropdown, setActiveDropdown] = useState(null);
+    const [searchPage, setSearchPage] = useState(1);
+    const USERS_PER_PAGE_DROPDOWN = 20;
+
+    // Dropdown Pagination
+    const [dropdownPage, setDropdownPage] = useState(1);
+    const DROPDOWN_LIMIT = 20;
+
+    // Fetch Main Table Data (Replaces local filtering)
+    const fetchUsers = async (params = {}) => {
+        setLoading(true);
+        try {
+            const queryParams = {
+                page: params.page || pagination.currentPage,
+                limit: pagination.limit,
+                startDate: params.startDate !== undefined ? params.startDate : dateRange.start,
+                endDate: params.endDate !== undefined ? params.endDate : dateRange.end,
+                specificUserId: params.specificUserId || (selectedUser ? selectedUser._id : undefined)
+            };
+
+            const { data } = await api.get('/users', { params: queryParams });
+
+            if (data.users && data.pagination) {
+                setUsers(data.users);
+                setPagination(data.pagination);
+            } else {
+                setUsers(Array.isArray(data) ? data : []);
+            }
+        } catch (error) {
+            console.error("Failed to fetch users", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch Dropdown Data
+    const fetchDropdownUsers = async (query, page = 1) => {
+        if (!query) {
+            setDropdownUsers([]);
+            return;
+        }
+        try {
+            const { data } = await api.get('/users', {
+                params: { search: query, page: page, limit: DROPDOWN_LIMIT }
+            });
+            if (data.users) {
+                setDropdownUsers(data.users);
+            }
+        } catch (error) {
+            console.error("Failed to search users", error);
+        }
+    };
+
+    // Alias for JSX compatibility
+    const filteredUsers = users;
+    const displayedDropdownUsers = dropdownUsers;
+    const dropdownTotalPages = 1; // Simplified for now
+
+    // Search History State
+    const [searchHistory, setSearchHistory] = useState(() => {
+        const history = localStorage.getItem('adminUserSearchHistory');
+        return history ? JSON.parse(history) : [];
+    });
+
+    const addToSearchHistory = (user) => {
+        let newHistory = [user, ...searchHistory.filter(u => u._id !== user._id)];
+        if (newHistory.length > 10) {
+            newHistory = newHistory.slice(0, 10);
+        }
+        setSearchHistory(newHistory);
+        localStorage.setItem('adminUserSearchHistory', JSON.stringify(newHistory));
+    };
+
+    const clearSearchHistory = () => {
+        setSearchHistory([]);
+        localStorage.removeItem('adminUserSearchHistory');
+    };
+
+    // --- HANDLERS ---
+    const handleSearchInput = (e) => {
+        const val = e.target.value;
+        setSearchQuery(val);
+        setSelectedUser(null);
+
+        if (val) {
+            setActiveDropdown('USER');
+            fetchDropdownUsers(val, 1);
+        } else {
+            setActiveDropdown(null);
+            setDropdownUsers([]);
+            // User cleared search manually, reset table
+            fetchUsers({ specificUserId: null, page: 1 });
+        }
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= pagination.totalPages) {
+            fetchUsers({ page: newPage });
+        }
+    };
+
+    const selectUser = (user) => {
+        setSelectedUser(user);
+        setSearchQuery(user.name);
+        addToSearchHistory(user); // Add to history
+        setActiveDropdown(null);
+        fetchUsers({ specificUserId: user._id, page: 1 });
+    };
+
+    const clearUserFilter = () => {
+        setSelectedUser(null);
+        setSearchQuery('');
+        setDropdownUsers([]);
+        fetchUsers({ specificUserId: null, page: 1 });
+    };
+
+    const toggleDateDropdown = () => {
+        if (activeDropdown === 'DATE') {
+            setActiveDropdown(null);
+        } else {
+            setPendingDateRange(dateRange);
+            setActiveDropdown('DATE');
+        }
+    };
+
+    const handleDatePreset = (preset) => {
+        const today = new Date();
+        let start = '', end = '';
+
+        if (preset === 'TODAY') {
+            start = today.toISOString().split('T')[0];
+            end = today.toISOString().split('T')[0];
+        } else if (preset === 'WEEK') {
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - 7);
+            start = weekStart.toISOString().split('T')[0];
+            end = today.toISOString().split('T')[0];
+        } else if (preset === 'MONTH') { // This Month (1st to Today)
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            start = monthStart.toISOString().split('T')[0];
+            end = today.toISOString().split('T')[0];
+        }
+
+        setPendingDateRange({ start, end });
+    };
+
+    const applyDateFilter = () => {
+        setDateRange(pendingDateRange);
+        setActiveDropdown(null);
+        fetchUsers({ startDate: pendingDateRange.start, endDate: pendingDateRange.end, page: 1 });
+    };
+
+    const handleExport = (type) => {
+        const data = filteredUsers.map(u => ({
+            "Name": u.name,
+            "Mobile": u.mobile,
+            "Wallet Balance": u.walletBalance || 0,
+            "Referred By": u.referredBy ? `${u.referredBy.name} (${u.referredBy.mobile})` : 'Direct',
+            "Email": u.email || '-',
+            "Joined Date": new Date(u.createdAt).toLocaleDateString(),
+            "Status": u.isSuspended ? 'Suspended' : 'Active'
+        }));
+
+        const fileName = `Users_Report_${new Date().toISOString().split('T')[0]}`;
+
+        if (type === 'JSON') {
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${fileName}.json`;
+            link.click();
+        } else if (type === 'CSV') {
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
+            const blob = new Blob([csvOutput], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${fileName}.csv`;
+            link.click();
+        } else if (type === 'XLSX') {
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
+            XLSX.writeFile(workbook, `${fileName}.xlsx`);
+        } else if (type === 'PDF') {
+            const doc = new jsPDF();
+            doc.text("User Report", 14, 15);
+            doc.setFontSize(10);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
+
+            const tableColumn = ["Name", "Mobile", "Wallet", "Referred By", "Status"];
+            const tableRows = [];
+
+            data.forEach(item => {
+                const row = [
+                    item["Name"],
+                    item["Mobile"],
+                    item["Wallet Balance"],
+                    item["Referred By"],
+                    item["Status"]
+                ];
+                tableRows.push(row);
+            });
+
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 30,
+                theme: 'grid',
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [66, 66, 66] }
+            });
+
+            doc.save(`${fileName}.pdf`);
+        }
+
+        setActiveDropdown(null);
+    };
+
     const checkPermissions = () => {
         const user = JSON.parse(localStorage.getItem('user'));
         if (user) {
@@ -60,16 +298,7 @@ const AdminUsers = () => {
         }
     };
 
-    const fetchUsers = async () => {
-        try {
-            const { data } = await api.get('/users');
-            setUsers(data);
-        } catch (error) {
-            console.error("Failed to fetch users", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+
 
     const handleViewUser = async (userId) => {
         try {
@@ -121,130 +350,350 @@ const AdminUsers = () => {
 
     return (
         <div className="admin-card">
-            <h3 style={{ marginBottom: '1.5rem' }}>User Management</h3>
-            <table className="data-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Mobile</th>
-                        <th>Wallet</th>
-                        <th>Referred By</th>
-                        <th>Email</th>
-                        {(canViewDetails || canSuspend) && <th style={{ width: '120px', textAlign: 'center' }}>Actions</th>}
-                    </tr>
-                </thead>
-                <tbody>
-                    {users.map(user => (
-                        <tr key={user._id} style={{ opacity: user.isSuspended ? 0.6 : 1, background: user.isSuspended ? '#fff5f5' : 'inherit' }}>
-                            <td>
-                                {user.name}
-                                {user.isSuspended && <span style={{ marginLeft: '5px', fontSize: '0.7rem', color: 'red', fontWeight: 'bold' }}>(SUSPENDED)</span>}
-                            </td>
-                            <td>{user.mobile}</td>
-                            <td style={{ fontWeight: 'bold', color: '#2d3748' }}>₹{user.walletBalance?.toLocaleString() || 0}</td>
-                            <td>
-                                {user.referredBy ? (
-                                    <span>{user.referredBy.name} <small style={{ color: '#64748b' }}>({user.referredBy.mobile})</small></span>
-                                ) : (
-                                    <span style={{ color: '#059669', fontSize: '0.9rem', fontWeight: '500', background: '#ecfdf5', padding: '2px 8px', borderRadius: '4px' }}>Direct Joined</span>
-                                )}
-                            </td>
-                            <td>
-                                {user.email ? (
-                                    user.email
-                                ) : (
-                                    <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.9rem' }}>Not Provided</span>
-                                )}
-                            </td>
-                            {(canViewDetails || canSuspend) && (
-                                <td style={{ textAlign: 'center' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                                        {canViewDetails && (
-                                            <button
-                                                className="btn-icon"
-                                                style={{
-                                                    background: '#ebf8ff', color: '#3182ce', border: 'none',
-                                                    padding: '8px', borderRadius: '4px', cursor: 'pointer',
-                                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
-                                                }}
-                                                onClick={() => handleViewUser(user._id)}
-                                                title="View Full Details"
-                                            >
-                                                <Eye size={18} />
-                                            </button>
-                                        )}
-                                        {canViewDetails && (
-                                            <button
-                                                className="btn-icon"
-                                                style={{
-                                                    background: '#f3e8ff', color: '#9333ea', border: 'none',
-                                                    padding: '8px', borderRadius: '4px', cursor: 'pointer',
-                                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
-                                                }}
-                                                onClick={() => setExploreUser(user)}
-                                                title="Explore Network"
-                                            >
-                                                <Network size={18} />
-                                            </button>
-                                        )}
-                                        {canSuspend && (
-                                            <button
-                                                className="btn-icon"
-                                                style={{
-                                                    background: user.isSuspended ? '#f0fff4' : '#fff5f5',
-                                                    color: user.isSuspended ? '#38a169' : '#e53e3e',
-                                                    border: 'none',
-                                                    padding: '8px', borderRadius: '4px', cursor: 'pointer',
-                                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
-                                                }}
-                                                onClick={() => confirmSuspend(user._id, user.isSuspended)}
-                                                title={user.isSuspended ? "Activate User" : "Suspend User"}
-                                            >
-                                                {user.isSuspended ? <CheckCircle size={18} /> : <Ban size={18} />}
-                                            </button>
-                                        )}
-                                    </div>
-                                </td>
-                            )}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            <h3 style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                User Management
+                <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'normal' }}>
+                    Total Users: {pagination.totalUsers}
+                </span>
+            </h3>
 
-            {viewingUser && (
-                <UserDetailModal
-                    user={viewingUser}
-                    onClose={() => setViewingUser(null)}
-                />
-            )}
+            {/* --- FILTER BAR --- */}
+            <div className="filter-bar mb-6" style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
 
-            {exploreUser && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.85)',
-                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    zIndex: 1100,
-                    backdropFilter: 'blur(5px)',
-                    animation: 'fadeIn 0.2s ease-out'
-                }} onClick={() => setExploreUser(null)}>
-                    <div style={{
-                        width: '95%',
-                        maxWidth: '1400px',
-                        height: '92vh',
-                        background: '#f8fafc',
-                        borderRadius: '24px',
-                        overflow: 'hidden',
-                        position: 'relative',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-                    }} onClick={e => e.stopPropagation()}>
-                        <AdminTransactions
-                            initialUser={exploreUser}
-                            isModal={true}
-                            onClose={() => setExploreUser(null)}
+                {/* 1. Search User */}
+                <div className="filter-group" style={{ position: 'relative' }}>
+                    <div className={`filter-btn ${activeDropdown === 'USER' || searchQuery ? 'active' : ''}`} style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'text' }}>
+                        <Search size={16} className="text-gray-500" />
+                        <input
+                            type="text"
+                            placeholder="Search by name..."
+                            value={searchQuery}
+                            onChange={handleSearchInput}
+                            onFocus={() => setActiveDropdown('USER')}
+                            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '0.9rem', width: '150px' }}
                         />
+                        {/* Clear Button */}
+                        {searchQuery && (
+                            <X size={14} className="text-gray-400 cursor-pointer hover:text-red-500" onClick={clearUserFilter} />
+                        )}
                     </div>
+
+                    {/* Search Dropdown */}
+                    {activeDropdown === 'USER' && searchQuery && (
+                        <div className="dropdown-menu" style={{ position: 'absolute', top: '100%', left: 0, marginTop: '0.5rem', background: 'white', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', width: '320px', zIndex: 50 }}>
+                            <div className="dropdown-content" style={{ maxHeight: '300px', overflowY: 'auto', padding: '0.5rem' }}>
+                                {displayedDropdownUsers.length === 0 ? (
+                                    <div className="p-4 text-center text-sm text-gray-400">No users found</div>
+                                ) : (
+                                    displayedDropdownUsers.map(user => (
+                                        <div key={user._id} className="dropdown-item" onClick={() => selectUser(user)} style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', borderRadius: '6px', transition: 'background 0.2s' }}>
+                                            <div className="item-avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#e0e7ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600' }}>
+                                                {user.name.charAt(0)}
+                                            </div>
+                                            <div className="item-info">
+                                                <h4 style={{ margin: 0, fontSize: '0.875rem', color: '#1e293b' }}>{user.name}</h4>
+                                                <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>{user.mobile}</p>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            {/* Pagination inside Dropdown */}
+                            {dropdownTotalPages > 1 && (
+                                <div className="dropdown-footer" style={{ padding: '0.5rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <button
+                                        onClick={() => setSearchPage(p => Math.max(1, p - 1))}
+                                        disabled={searchPage === 1}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', opacity: searchPage === 1 ? 0.5 : 1 }}
+                                    >
+                                        <ArrowLeft size={14} />
+                                    </button>
+                                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{searchPage} / {dropdownTotalPages}</span>
+                                    <button
+                                        onClick={() => setSearchPage(p => Math.min(dropdownTotalPages, p + 1))}
+                                        disabled={searchPage === dropdownTotalPages}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', opacity: searchPage === dropdownTotalPages ? 0.5 : 1 }}
+                                    >
+                                        <ArrowRight size={14} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Search History Dropdown (When input is empty but focused) */}
+                    {activeDropdown === 'USER' && !searchQuery && searchHistory.length > 0 && (
+                        <div className="dropdown-menu" style={{ position: 'absolute', top: '100%', left: 0, marginTop: '0.5rem', background: 'white', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', width: '320px', zIndex: 50 }}>
+                            <div className="dropdown-header" style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>
+                                <span>RECENT SEARCHES</span>
+                                <span onClick={clearSearchHistory} style={{ cursor: 'pointer', color: '#ef4444', fontSize: '0.7rem' }}>Clear</span>
+                            </div>
+                            <div className="dropdown-content" style={{ maxHeight: '300px', overflowY: 'auto', padding: '0.5rem' }}>
+                                {searchHistory.map(user => (
+                                    <div key={user._id} className="dropdown-item" onClick={() => selectUser(user)} style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', borderRadius: '6px', transition: 'background 0.2s' }}>
+                                        <div className="item-avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#e2e8f0', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '0.8rem' }}>
+                                            <Search size={14} />
+                                        </div>
+                                        <div className="item-info">
+                                            <h4 style={{ margin: 0, fontSize: '0.875rem', color: '#1e293b' }}>{user.name}</h4>
+                                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>{user.mobile}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
-            )}
+
+                {/* 2. Date Filter */}
+                <div className="filter-group" style={{ position: 'relative' }}>
+                    <button className={`filter-btn ${dateRange.start ? 'active' : ''}`} onClick={toggleDateDropdown} style={{ padding: '0.625rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: dateRange.start ? '#eff6ff' : '#f1f5f9', border: dateRange.start ? '1px solid #bfdbfe' : '1px solid transparent', borderRadius: '8px', fontSize: '0.875rem', color: dateRange.start ? '#2563eb' : '#475569', cursor: 'pointer' }}>
+                        <Calendar size={16} /> {dateRange.start ? 'Date Active' : 'Date Range'} <ChevronDown size={14} />
+                    </button>
+
+                    {activeDropdown === 'DATE' && (
+                        <div className="dropdown-menu" style={{ position: 'absolute', top: '100%', left: 0, marginTop: '0.5rem', background: 'white', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', width: '320px', zIndex: 50, padding: '1rem' }}>
+                            <div className="presets" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                                <button onClick={() => handleDatePreset('TODAY')} className="preset-btn" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', borderRadius: '4px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }}>Today</button>
+                                <button onClick={() => handleDatePreset('WEEK')} className="preset-btn" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', borderRadius: '4px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }}>This Week</button>
+                                <button onClick={() => handleDatePreset('MONTH')} className="preset-btn" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', borderRadius: '4px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }}>This Month</button>
+                            </div>
+                            <div className="date-inputs" style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
+                                <div>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '0.25rem' }}>START DATE</label>
+                                    <input type="date" value={pendingDateRange.start} onChange={e => setPendingDateRange({ ...pendingDateRange, start: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '0.25rem' }}>END DATE</label>
+                                    <input type="date" value={pendingDateRange.end} onChange={e => setPendingDateRange({ ...pendingDateRange, end: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                                </div>
+                            </div>
+                            <div className="dropdown-footer" style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0' }}>
+                                <button onClick={applyDateFilter} style={{ background: '#2563eb', color: 'white', padding: '0.5rem 1rem', borderRadius: '6px', border: 'none', fontSize: '0.875rem', cursor: 'pointer' }}>Apply</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* 3. Export - Moved to Right */}
+                <div className="filter-group" style={{ marginLeft: 'auto', position: 'relative' }}>
+                    <button className={`filter-btn ${activeDropdown === 'EXPORT' ? 'active' : ''}`} onClick={() => setActiveDropdown(activeDropdown === 'EXPORT' ? null : 'EXPORT')} style={{ padding: '0.625rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f1f5f9', border: '1px solid transparent', borderRadius: '8px', fontSize: '0.875rem', color: '#475569', cursor: 'pointer' }}>
+                        <Download size={16} /> Export <ChevronDown size={14} />
+                    </button>
+                    {activeDropdown === 'EXPORT' && (
+                        <div className="dropdown-menu" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '0.5rem', background: 'white', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', width: '180px', zIndex: 50 }}>
+                            <div className="dropdown-item" onClick={() => handleExport('XLSX')} style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                <FileText size={16} className="text-green-600" style={{ color: '#16a34a' }} /> Excel (.xlsx)
+                            </div>
+                            <div className="dropdown-item" onClick={() => handleExport('CSV')} style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                <FileText size={16} className="text-blue-600" style={{ color: '#2563eb' }} /> CSV (.csv)
+                            </div>
+                            <div className="dropdown-item" onClick={() => handleExport('PDF')} style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                <FileText size={16} className="text-red-600" style={{ color: '#dc2626' }} /> PDF (.pdf)
+                            </div>
+                            <div className="dropdown-item" onClick={() => handleExport('JSON')} style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                <FileText size={16} className="text-yellow-600" style={{ color: '#ca8a04' }} /> JSON (.json)
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+
+
+            {/* --- ACTIVE FILTERS CHIPS --- */}
+
+
+            {/* --- ACTIVE FILTERS CHIPS --- */}
+            {
+                (selectedUser || dateRange.start) && (
+                    <div className="active-filters mb-4" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                        {selectedUser && (
+                            <div className="filter-chip" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0.75rem', background: '#eff6ff', color: '#1d4ed8', borderRadius: '16px', fontSize: '0.85rem', border: '1px solid #bfdbfe' }}>
+                                <span>User: {selectedUser.name}</span>
+                                <X size={14} style={{ cursor: 'pointer' }} onClick={clearUserFilter} />
+                            </div>
+                        )}
+                        {dateRange.start && (
+                            <div className="filter-chip" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0.75rem', background: '#eff6ff', color: '#1d4ed8', borderRadius: '16px', fontSize: '0.85rem', border: '1px solid #bfdbfe' }}>
+                                <span>Date: {new Date(dateRange.start).toLocaleDateString()} - {dateRange.end ? new Date(dateRange.end).toLocaleDateString() : 'Now'}</span>
+                                <X size={14} style={{ cursor: 'pointer' }} onClick={() => {
+                                    setDateRange({ start: '', end: '' });
+                                    setPendingDateRange({ start: '', end: '' });
+                                    fetchUsers({ startDate: '', endDate: '', page: 1 });
+                                }} />
+                            </div>
+                        )}
+                    </div>
+                )
+            }
+
+            <div className="user-table-wrapper">
+                <table className="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Mobile</th>
+                            <th>Wallet</th>
+                            <th>Referred By</th>
+                            <th>Email</th>
+                            {(canViewDetails || canSuspend) && <th style={{ width: '120px', textAlign: 'center' }}>Actions</th>}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredUsers.length === 0 ? (
+                            <tr><td colSpan="6" style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>No users found matching filters</td></tr>
+                        ) : (
+                            filteredUsers.map(user => (
+                                <tr key={user._id} style={{ opacity: user.isSuspended ? 0.6 : 1, background: user.isSuspended ? '#fff5f5' : 'inherit' }}>
+                                    <td>
+                                        {user.name}
+                                        {user.isSuspended && <span style={{ marginLeft: '5px', fontSize: '0.7rem', color: 'red', fontWeight: 'bold' }}>(SUSPENDED)</span>}
+                                    </td>
+                                    <td>{user.mobile}</td>
+                                    <td style={{ fontWeight: 'bold', color: '#2d3748' }}>₹{user.walletBalance?.toLocaleString() || 0}</td>
+                                    <td>
+                                        {user.referredBy ? (
+                                            <span>{user.referredBy.name} <small style={{ color: '#64748b' }}>({user.referredBy.mobile})</small></span>
+                                        ) : (
+                                            <span style={{ color: '#059669', fontSize: '0.9rem', fontWeight: '500', background: '#ecfdf5', padding: '2px 8px', borderRadius: '4px' }}>Direct Joined</span>
+                                        )}
+                                    </td>
+                                    <td>
+                                        {user.email ? (
+                                            user.email
+                                        ) : (
+                                            <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.9rem' }}>Not Provided</span>
+                                        )}
+                                    </td>
+                                    {(canViewDetails || canSuspend) && (
+                                        <td style={{ textAlign: 'center' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                                {canViewDetails && (
+                                                    <button
+                                                        className="btn-icon"
+                                                        style={{
+                                                            background: '#ebf8ff', color: '#3182ce', border: 'none',
+                                                            padding: '8px', borderRadius: '4px', cursor: 'pointer',
+                                                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
+                                                        }}
+                                                        onClick={() => handleViewUser(user._id)}
+                                                        title="View Full Details"
+                                                    >
+                                                        <Eye size={18} />
+                                                    </button>
+                                                )}
+                                                {canViewDetails && (
+                                                    <button
+                                                        className="btn-icon"
+                                                        style={{
+                                                            background: '#f3e8ff', color: '#9333ea', border: 'none',
+                                                            padding: '8px', borderRadius: '4px', cursor: 'pointer',
+                                                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
+                                                        }}
+                                                        onClick={() => setExploreUser(user)}
+                                                        title="Explore Network"
+                                                    >
+                                                        <Network size={18} />
+                                                    </button>
+                                                )}
+                                                {canSuspend && (
+                                                    <button
+                                                        className="btn-icon"
+                                                        style={{
+                                                            background: user.isSuspended ? '#f0fff4' : '#fff5f5',
+                                                            color: user.isSuspended ? '#38a169' : '#e53e3e',
+                                                            border: 'none',
+                                                            padding: '8px', borderRadius: '4px', cursor: 'pointer',
+                                                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
+                                                        }}
+                                                        onClick={() => confirmSuspend(user._id, user.isSuspended)}
+                                                        title={user.isSuspended ? "Activate User" : "Suspend User"}
+                                                    >
+                                                        {user.isSuspended ? <CheckCircle size={18} /> : <Ban size={18} />}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    )}
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Table Pagination */}
+            {
+                pagination.totalPages > 1 && (
+                    <div className="table-pagination" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '0.5rem' }}>
+                        <span style={{ fontSize: '0.875rem', color: '#64748b' }}>
+                            Showing {Math.min((pagination.currentPage - 1) * pagination.limit + 1, pagination.totalUsers)} to {Math.min(pagination.currentPage * pagination.limit, pagination.totalUsers)} of {pagination.totalUsers} users
+                        </span>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <button
+                                disabled={pagination.currentPage === 1}
+                                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                                style={{ padding: '0.4rem', border: '1px solid #e2e8f0', borderRadius: '6px', background: pagination.currentPage === 1 ? '#f8fafc' : 'white', cursor: pagination.currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                            >
+                                <ArrowLeft size={16} color={pagination.currentPage === 1 ? '#cbd5e1' : '#475569'} />
+                            </button>
+                            <span style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', fontWeight: '500', color: '#334155', minWidth: '80px', justifyContent: 'center' }}>
+                                Page {pagination.currentPage} of {pagination.totalPages}
+                            </span>
+                            <button
+                                disabled={pagination.currentPage === pagination.totalPages}
+                                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                                style={{ padding: '0.4rem', border: '1px solid #e2e8f0', borderRadius: '6px', background: pagination.currentPage === pagination.totalPages ? '#f8fafc' : 'white', cursor: pagination.currentPage === pagination.totalPages ? 'not-allowed' : 'pointer' }}
+                            >
+                                <ArrowRight size={16} color={pagination.currentPage === pagination.totalPages ? '#cbd5e1' : '#475569'} />
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
+
+
+
+            {
+                viewingUser && (
+                    <UserDetailModal
+                        user={viewingUser}
+                        onClose={() => setViewingUser(null)}
+                    />
+                )
+            }
+
+            {
+                exploreUser && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.85)',
+                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                        zIndex: 1100,
+                        backdropFilter: 'blur(5px)',
+                        animation: 'fadeIn 0.2s ease-out'
+                    }} onClick={() => setExploreUser(null)}>
+                        <div style={{
+                            width: '95%',
+                            maxWidth: '1400px',
+                            height: '92vh',
+                            background: '#f8fafc',
+                            borderRadius: '24px',
+                            overflow: 'hidden',
+                            position: 'relative',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                        }} onClick={e => e.stopPropagation()}>
+                            <AdminTransactions
+                                initialUser={exploreUser}
+                                isModal={true}
+                                onClose={() => setExploreUser(null)}
+                            />
+                        </div>
+                    </div>
+                )
+            }
 
             <ConfirmationModal
                 isOpen={confirmModal.isOpen}
@@ -263,7 +712,7 @@ const AdminUsers = () => {
                 message={alertModal.message}
                 type={alertModal.type}
             />
-        </div>
+        </div >
     );
 };
 

@@ -579,3 +579,23 @@
     color: #d97706 !important;
     /* amber-600 */
 }
+
+/* --- User Management Specific --- */
+.user-table-wrapper {
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.user-table-wrapper .data-table {
+    margin: 0;
+}
+
+.user-table-wrapper .data-table th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8f9fa;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}

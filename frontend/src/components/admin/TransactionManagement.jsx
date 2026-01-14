@@ -6,6 +6,9 @@ import {
 } from 'lucide-react';
 import './TransactionManagement.css';
 import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const TransactionManagement = () => {
     // --- Global State ---
@@ -22,7 +25,10 @@ const TransactionManagement = () => {
         specificMotivatorIds: [], // Selected Checkboxes
         transactionType: 'ALL', // 'ALL', 'DONATION', 'COMMISSION'
         is80G: false,
-        dateRange: { start: '', end: '' } // default this month?
+        dateRange: {
+            start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+            end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]
+        } // default this month
     });
 
     // Pending Filters for Manual Apply
@@ -250,23 +256,113 @@ const TransactionManagement = () => {
         });
     };
 
+    // --- Export Logic ---
+    const getExportData = () => {
+        return transactions.map(txn => {
+            // Re-calculate Level Label Logic for Export
+            let levelLabel = '-';
+            if (filters.searchUser) {
+                const searchId = filters.searchUser?._id;
+                const searchMobile = filters.searchUser?.mobile ? filters.searchUser.mobile.slice(-10) : '';
+                if (txn.level1UserId?._id === searchId || (!txn.level1UserId && txn.motivatorMobile && txn.motivatorMobile.includes(searchMobile))) {
+                    levelLabel = 'Level 1';
+                } else if (txn.level2UserId?._id === searchId) {
+                    levelLabel = 'Level 2';
+                }
+            }
+
+            return {
+                Date: formatDate(txn.createdAt),
+                "Donor Name": txn.donorName,
+                "Donor Mobile": txn.donorMobile,
+                Amount: txn.amount,
+                Level: levelLabel,
+                "Motivated By": txn.level1UserId ? txn.level1UserId.name : (txn.motivatorMobile ? `(Mobile: ${txn.motivatorMobile})` : '-'),
+                "L1 Commission": (txn.level1UserId || txn.motivatorMobile) ? (txn.amount * 0.10) : 'No',
+                "L2 Commission": txn.level2UserId ? (txn.amount * 0.03) : 'No',
+                "80G": txn.is80G ? 'Yes' : 'No',
+                Status: txn.status
+            };
+        });
+    };
+
+    const handleExport = (type) => {
+        const data = getExportData();
+        const fileName = `Transactions_Report_${new Date().toISOString().split('T')[0]}`;
+
+        if (type === 'JSON') {
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${fileName}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else if (type === 'CSV') {
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
+            const blob = new Blob([csvOutput], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${fileName}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else if (type === 'XLSX') {
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+            XLSX.writeFile(workbook, `${fileName}.xlsx`);
+        } else if (type === 'PDF') {
+            const doc = new jsPDF();
+            doc.text("Transaction Report", 14, 15);
+            doc.setFontSize(10);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
+
+            const tableColumn = ["Date", "Donor", "Amt", "Lvl", "Motivator", "L1 Comm", "L2 Comm", "80G"];
+            const tableRows = [];
+
+            data.forEach(item => {
+                const row = [
+                    item.Date,
+                    item["Donor Name"],
+                    item.Amount,
+                    item.Level,
+                    item["Motivated By"],
+                    item["L1 Commission"] === 'No' ? '-' : item["L1 Commission"],
+                    item["L2 Commission"] === 'No' ? '-' : item["L2 Commission"],
+                    item["80G"]
+                ];
+                tableRows.push(row);
+            });
+
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 30,
+                theme: 'grid',
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [66, 66, 66] }
+            });
+
+            doc.save(`${fileName}.pdf`);
+        }
+
+        setActiveDropdown(null);
+        toast.success(`${type} Export Downloaded`);
+    };
+
     // Render Logic
     return (
         <div className="transaction-dashboard">
-            <div className="dashboard-header">
-                <div className="dashboard-title">
-                    <h2><Wallet size={24} /> Transaction Management</h2>
-                    <p>Financial overview and donation breakdown</p>
-                </div>
-                <div className="header-actions">
-                    <button className="filter-btn" onClick={() => alert("Export pending...")}>
-                        <Download size={16} /> Export
-                    </button>
-                </div>
-            </div>
+            {/* Dashboard Header Removed - Actions moved to Filter Bar */}
 
             {/* Filter Bar */}
             <div className="filter-bar" ref={dropdownRef}>
+
                 {/* 1. Search User */}
                 <div className="filter-group">
                     <button
@@ -443,7 +539,25 @@ const TransactionManagement = () => {
                         <Calendar size={16} /> Date Range
                     </button>
                     {activeDropdown === 'DATE' && (
-                        <div className="dropdown-menu date-filter-dropdown">
+                        <div className="dropdown-menu date-filter-dropdown" style={{ width: '320px' }}>
+                            <div className="presets" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap', padding: '0 0.5rem' }}>
+                                <button className="preset-btn" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', borderRadius: '4px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }} onClick={() => {
+                                    const today = new Date().toISOString().split('T')[0];
+                                    setPendingFilters(p => ({ ...p, dateRange: { start: today, end: today } }));
+                                }}>Today</button>
+                                <button className="preset-btn" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', borderRadius: '4px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }} onClick={() => {
+                                    const today = new Date();
+                                    const weekStart = new Date(today);
+                                    weekStart.setDate(today.getDate() - 7);
+                                    setPendingFilters(p => ({ ...p, dateRange: { start: weekStart.toISOString().split('T')[0], end: today.toISOString().split('T')[0] } }));
+                                }}>This Week</button>
+                                <button className="preset-btn" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', borderRadius: '4px', background: '#f1f5f9', border: 'none', cursor: 'pointer' }} onClick={() => {
+                                    const today = new Date();
+                                    const start = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                                    const end = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+                                    setPendingFilters(p => ({ ...p, dateRange: { start, end } }));
+                                }}>This Month</button>
+                            </div>
                             <div className="date-inputs-row">
                                 <div className="date-field">
                                     <label>Start Date</label>
@@ -469,6 +583,28 @@ const TransactionManagement = () => {
                                     setFilters(prev => ({ ...prev, dateRange: pendingFilters.dateRange }));
                                     setActiveDropdown(null);
                                 }}>Apply Date Filter</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="header-actions" style={{ marginLeft: 'auto', position: 'relative' }}>
+                    <button className={`filter-btn ${activeDropdown === 'EXPORT' ? 'active' : ''}`} onClick={() => toggleFilter('EXPORT')}>
+                        <Download size={16} /> Export <ChevronDown size={14} />
+                    </button>
+                    {activeDropdown === 'EXPORT' && (
+                        <div className="dropdown-menu" style={{ right: 0, left: 'auto', width: '180px' }}>
+                            <div className="dropdown-item" onClick={() => handleExport('XLSX')}>
+                                <FileText size={16} className="text-green-600" /> Excel (.xlsx)
+                            </div>
+                            <div className="dropdown-item" onClick={() => handleExport('CSV')}>
+                                <FileText size={16} className="text-blue-600" /> CSV (.csv)
+                            </div>
+                            <div className="dropdown-item" onClick={() => handleExport('PDF')}>
+                                <FileText size={16} className="text-red-600" /> PDF (.pdf)
+                            </div>
+                            <div className="dropdown-item" onClick={() => handleExport('JSON')}>
+                                <FileText size={16} className="text-yellow-600" /> JSON (.json)
                             </div>
                         </div>
                     )}
