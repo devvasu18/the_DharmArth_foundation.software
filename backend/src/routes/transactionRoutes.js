@@ -18,6 +18,7 @@ router.get('/dashboard', async (req, res) => {
         const { searchUserId, specificMotivatorIds, is80G, startDate, endDate, sort } = req.query;
 
         const query = { status: 'success' };
+        const andConditions = [];
 
         // Date Filter
         if (startDate && endDate) {
@@ -29,7 +30,12 @@ router.get('/dashboard', async (req, res) => {
 
         // 80G Filter
         if (is80G === 'true') {
-            query.is80G = true;
+            andConditions.push({
+                $or: [
+                    { is80G: true },
+                    { panNumber: { $exists: true, $regex: /\S/ } }
+                ]
+            });
         }
 
         // --- User Filter Logic (Hybrid: New IDs + Legacy Mobile) ---
@@ -45,15 +51,23 @@ router.get('/dashboard', async (req, res) => {
                 const cleanMobile = (searchUser.mobile || '').replace(/\D/g, '').slice(-10);
                 const searchRegex = new RegExp(cleanMobile, 'i'); // Safe regex for mobile
 
-                query.$or = [
-                    { level1UserId: searchUserId },
-                    { level2UserId: searchUserId },
-                    { motivatorMobile: { $regex: searchRegex } } // Legacy Match
-                ];
+                andConditions.push({
+                    $or: [
+                        { level1UserId: searchUserId },
+                        { level2UserId: searchUserId },
+                        { motivatorMobile: { $regex: searchRegex } } // Legacy Match
+                    ]
+                });
             } else {
                 // If user somehow not found, fallback to just ID
-                query.$or = [{ level1UserId: searchUserId }, { level2UserId: searchUserId }];
+                andConditions.push({
+                    $or: [{ level1UserId: searchUserId }, { level2UserId: searchUserId }]
+                });
             }
+        }
+
+        if (andConditions.length > 0) {
+            query.$and = andConditions;
         }
 
         // Fetch Data
