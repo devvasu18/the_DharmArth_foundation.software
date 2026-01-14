@@ -5,6 +5,128 @@ const Donation = require('../models/Donation');
 const Transaction = require('../models/Transaction');
 const Wallet = require('../models/Wallet');
 
+// @desc    Get Transactions Dashboard Data (Donations)
+// @route   GET /api/transactions/dashboard
+// @desc    Get Transactions Dashboard Data (Donations)
+// @route   GET /api/transactions/dashboard
+router.get('/dashboard', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+
+        const { searchUserId, specificMotivatorIds, is80G, startDate, endDate, sort } = req.query;
+
+        const query = { status: 'success' };
+
+        // Date Filter
+        if (startDate && endDate) {
+            query.createdAt = {
+                $gte: new Date(startDate),
+                $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
+            };
+        }
+
+        // 80G Filter
+        if (is80G === 'true') {
+            query.is80G = true;
+        }
+
+        // --- User Filter Logic (Hybrid: New IDs + Legacy Mobile) ---
+        if (specificMotivatorIds) {
+            // Checkbox selection: IDs are passed
+            const ids = specificMotivatorIds.split(',');
+            query.level1UserId = { $in: ids };
+        } else if (searchUserId) {
+            // "Involved" User: Search by ID (New) OR Mobile (Legacy)
+            const searchUser = await User.findById(searchUserId);
+            if (searchUser) {
+                // Legacy Logic: Match strict mobile or match numeric part
+                const cleanMobile = (searchUser.mobile || '').replace(/\D/g, '').slice(-10);
+                const searchRegex = new RegExp(cleanMobile, 'i'); // Safe regex for mobile
+
+                query.$or = [
+                    { level1UserId: searchUserId },
+                    { level2UserId: searchUserId },
+                    { motivatorMobile: { $regex: searchRegex } } // Legacy Match
+                ];
+            } else {
+                // If user somehow not found, fallback to just ID
+                query.$or = [{ level1UserId: searchUserId }, { level2UserId: searchUserId }];
+            }
+        }
+
+        // Fetch Data
+        let donations = await Donation.find(query)
+            .select('donorName donorMobile amount motivatorMobile createdAt is80G level1UserId level2UserId status panNumber')
+            .populate('level1UserId', 'name mobile') // Populate Motivator (New Data)
+            .populate('level2UserId', 'name mobile') // Populate L2 (New Data)
+            .sort({ createdAt: sort === 'oldest' ? 1 : -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean(); // Use lean for performance & modification
+
+        // --- Post-Processing: Fill Missing Motivator Data & 80G ---
+        // Collect mobiles of donations that lack 'level1UserId' but have 'motivatorMobile'
+        const missingMotivatorMobiles = [...new Set(
+            donations
+                .filter(d => !d.level1UserId && d.motivatorMobile)
+                .map(d => d.motivatorMobile)
+        )];
+
+        if (missingMotivatorMobiles.length > 0) {
+            // Fetch users for these mobiles AND their referrers (L2)
+            const usersFound = await User.find({ mobile: { $in: missingMotivatorMobiles } })
+                .select('name mobile referredBy')
+                .populate('referredBy', 'name mobile'); // Get the L2 User
+
+            const userMap = {};
+            usersFound.forEach(u => {
+                userMap[u.mobile] = u;
+            });
+
+            // Patch the donations
+            donations = donations.map(d => {
+                // Polyfill L1 & L2
+                if (!d.level1UserId && d.motivatorMobile) {
+                    const foundUser = userMap[d.motivatorMobile];
+                    if (foundUser) {
+                        d.level1UserId = foundUser; // L1
+                        if (foundUser.referredBy) {
+                            d.level2UserId = foundUser.referredBy; // L2
+                        }
+                    }
+                }
+                return d;
+            });
+        }
+
+        // 80G Inference for Legacy Data (if PAN exists, treat as 80G)
+        // We do this purely for display if the field is missing/false but PAN is explicitly there.
+        // Assuming 'panNumber' was selected? Wait, we didn't select 'panNumber' in the query.
+        // We need to add 'panNumber' to the .select() above.
+        donations = donations.map(d => {
+            if (!d.is80G && d.panNumber && d.panNumber.trim() !== '') {
+                return { ...d, is80G: true }; // Infer 80G if PAN is present but flag is false
+            }
+            return d;
+        });
+
+
+        const total = await Donation.countDocuments(query);
+
+        res.json({
+            data: donations,
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            totalRecords: total
+        });
+    } catch (error) {
+        console.error('Dashboard Error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Get paginated users for "ALL" mode
 router.get('/users/paginated', async (req, res) => {
     try {

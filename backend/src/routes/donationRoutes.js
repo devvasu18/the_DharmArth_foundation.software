@@ -50,6 +50,21 @@ router.post('/', async (req, res) => {
     }
 
     try {
+
+        // Prepare Commission Fields
+        let level1UserId = null;
+        let level2UserId = null;
+
+        if (motivatorMobile) {
+            const motivator = await User.findOne({ mobile: motivatorMobile }).populate('referredBy');
+            if (motivator) {
+                level1UserId = motivator._id;
+                if (motivator.referredBy) {
+                    level2UserId = motivator.referredBy._id;
+                }
+            }
+        }
+
         // 1. Create Donation Record (Pending)
         const donation = await Donation.create({
             amount,
@@ -60,7 +75,10 @@ router.post('/', async (req, res) => {
             referralSource,
             panNumber,
             aadhaarNumber,
-            status: 'pending'
+            status: 'pending',
+            level1UserId,
+            level2UserId,
+            is80G: !!(panNumber && panNumber.trim().length > 0)
         });
 
 

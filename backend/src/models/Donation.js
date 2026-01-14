@@ -15,7 +15,13 @@ const donationSchema = new mongoose.Schema({
     panNumber: { type: String },
     aadhaarNumber: { type: String },
 
-    transactionId: { type: String } // Gateway ID
+    transactionId: { type: String }, // Gateway ID
+    is80G: { type: Boolean, default: false, index: true },
+
+    // Optimized Filtering Fields
+    level1UserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true }, // The Motivator
+    level2UserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true }, // The Motivator's Referrer
+
 }, {
     timestamps: true
 });

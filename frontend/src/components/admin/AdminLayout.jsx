@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet } from 'lucide-react';
 import { io } from "socket.io-client";
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -134,6 +134,10 @@ const AdminLayout = () => {
                     <NavLink to="/admin-user-explorer/transactions" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
                         <TrendingUp size={20} title={isSidebarCollapsed ? "User Explorer" : ""} />
                         {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>User Explorer</span>}
+                    </NavLink>
+                    <NavLink to="/admin/transaction-management" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
+                        <Wallet size={20} title={isSidebarCollapsed ? "Transactions" : ""} />
+                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Transactions</span>}
                     </NavLink>
                     <NavLink to="/admin/settings" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
                         <Settings size={20} title={isSidebarCollapsed ? "Site Settings" : ""} />
