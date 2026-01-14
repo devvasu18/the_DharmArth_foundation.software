@@ -948,19 +948,22 @@
     background: #f8fafc;
     border-radius: 24px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    overflow: auto;
-    /* Scrollable content */
-    display: block;
+    overflow: hidden;
+    /* Changed from auto to hidden to manage scroll internally */
+    display: flex;
+    /* Flexbox to manage height */
+    flex-direction: column;
     /* Use block to leverage text-align center from children if needed */
     text-align: center;
     position: relative;
-    padding: 4rem 2rem;
+    padding: 0;
+    /* Removing padding so children can fill space */
 }
 
 .close-modal-btn {
     position: absolute;
-    top: 2rem;
-    right: 2rem;
+    top: 1.5rem;
+    right: 1.5rem;
     background: white;
     border: none;
     border-radius: 50%;
@@ -986,10 +989,41 @@
 .tree-container.modal-tree {
     transform-origin: top center;
     animation: scaleIn 0.4s ease forwards;
-    padding-top: 2rem;
-    padding-bottom: 5rem;
-    min-width: fit-content;
-    /* Ensure wide trees don't squish */
+    padding-top: 0;
+    padding-bottom: 0;
+    min-width: 100%;
+    height: 100%;
+    /* Fill modal */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Fix for Sliding Layout inside Modal */
+.tree-container.modal-tree.sliding-layout {
+    min-width: 100% !important;
+    width: 100%;
+    height: 100%;
+    transform: none !important;
+    animation: none !important;
+    margin: 0;
+}
+
+/* Adjust Root wrapper in Modal to have spacing */
+.tree-container.modal-tree .sticky-root-wrapper {
+    padding-top: 4rem;
+    /* Compensate for removed modal padding */
+    padding-bottom: 2rem;
+    flex-shrink: 0;
+    /* Keep root fixed size */
+}
+
+/* Expand scrollable content in Modal to push scrollbar to bottom */
+.tree-container.modal-tree .scrollable-tree-content {
+    flex: 1;
+    /* Take remaining height */
+    height: 100%;
+    padding-bottom: 2rem;
+    /* Spacing from bottom scrollbar */
 }
 
 @keyframes scaleIn {
@@ -1300,4 +1334,155 @@
     .breakdown-panel.inline-breakdown::before {
         left: 1.5rem;
     }
+}
+
+/* ============ SLIDING TREE & DATE FILTER ============ */
+.tree-container.sliding-layout {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    margin-top: 0;
+}
+
+/* Fix for Modal: Ensure container doesn't expand beyond viewport width, 
+   allowing content to be centered properly */
+.tree-container.modal-tree.sliding-layout {
+    min-width: 100% !important;
+    width: 100%;
+    transform: none !important;
+    /* Remove transform to allow fixed/sticky to work reliably if needed, or rely on sticky */
+    animation: none !important;
+    /* Disable scale animation that creates stacking context issues or use a wrapper */
+}
+
+.sticky-root-wrapper {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 50;
+    display: flex;
+    justify-content: center;
+    background: #f8fafc;
+    /* Solid background */
+    padding-bottom: 2rem;
+    padding-top: 1rem;
+    pointer-events: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+}
+
+/* Re-enable pointer events for the root node itself so it can be clicked/hovered */
+.sticky-root-wrapper .tree-node {
+    pointer-events: auto;
+}
+
+.scrollable-tree-content {
+    overflow-x: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    /* Key: Align start to allow scrolling from left */
+    padding-bottom: 6rem;
+    /* Space for filter */
+    scroll-behavior: smooth;
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+/* Modify Level 1 to be a horizontal row */
+.level-nodes.sliding-mode {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 4rem;
+    padding: 2rem 50vw;
+    /* Center the first item initially if needed, or just padding */
+    width: max-content;
+}
+
+/* Update connector line for sliding mode */
+.level-nodes.sliding-mode::before {
+    left: 2rem;
+    right: 2rem;
+    top: 2rem;
+    /* Adjust if needed */
+}
+
+/* Level 2 Groups container in sliding mode */
+.level-groups.sliding-mode {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 4rem;
+    width: max-content;
+    padding: 0 50vw;
+    /* Match L1 padding for alignment */
+    margin-top: 2rem;
+}
+
+.tree-date-filter {
+    position: sticky;
+    /* Sticky ensures it stays in view */
+    top: 1.5rem;
+    left: 1.5rem;
+    /* For sticky, left/right acts as constraints/offsets if container scrolls? No, margins align. */
+    align-self: flex-start;
+    /* Align to left of flex container */
+    margin-left: 1.5rem;
+    margin-bottom: -50px;
+    /* Negative margin to pull it out of flow so it doesn't push content down */
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 0.75rem 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease;
+}
+
+.tree-date-filter:hover {
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.date-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.date-input-group label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.date-input-group input {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0.4rem 0.6rem;
+    font-family: inherit;
+    color: #1e293b;
+    font-size: 0.9rem;
+    background: #f8fafc;
+    cursor: pointer;
+}
+
+.date-input-group input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.filter-separator {
+    width: 1px;
+    height: 24px;
+    background: #cbd5e0;
+    margin: 0 0.5rem;
 }

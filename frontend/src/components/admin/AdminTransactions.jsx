@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, Users, ChevronRight, TrendingUp, Wallet, ArrowDownRight, ArrowUpRight, DollarSign, User, Network, Maximize2, Minimize2, X } from 'lucide-react';
 import axios from 'axios';
 import './AdminTransactions.css';
@@ -144,78 +144,299 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
         return networkData;
     };
 
+    // --- SLIDING TREE LOGIC ---
+    const treeScrollRef = useRef(null);
+    const isAutoScrolling = useRef(false);
+
+    // Date Filter State
+    const [dateFilter, setDateFilter] = useState({
+        start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+        end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]
+    });
+
+    // Sorted L1 Users for "Timeline" view
+    const sortedL1Users = useMemo(() => {
+        if (!referralTree?.level1Users) return [];
+        return [...referralTree.level1Users].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    }, [referralTree]);
+
+    // Handle User Scroll -> Update Date Filter
+    const handleTreeScroll = () => {
+        if (isAutoScrolling.current || !treeScrollRef.current) return;
+
+        const container = treeScrollRef.current;
+        const nodes = Array.from(container.querySelectorAll('.level-1-node'));
+        if (nodes.length === 0) return;
+
+        // Find center node
+        const containerRect = container.getBoundingClientRect();
+        const containerCenter = containerRect.left + containerRect.width / 2;
+
+        let closestNode = null;
+        let minDiff = Infinity;
+
+        nodes.forEach(node => {
+            const nodeRect = node.getBoundingClientRect();
+            const nodeCenter = nodeRect.left + nodeRect.width / 2;
+            const diff = Math.abs(containerCenter - nodeCenter);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closestNode = node;
+            }
+        });
+
+        if (closestNode) {
+            const dateStr = closestNode.getAttribute('data-date');
+            if (dateStr) {
+                const date = new Date(dateStr);
+                // Update filter to the month of the focused user
+                const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
+                const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().split('T')[0];
+
+                setDateFilter(prev => {
+                    if (prev.start === startOfMonth && prev.end === endOfMonth) return prev;
+                    return { start: startOfMonth, end: endOfMonth };
+                });
+            }
+        }
+    };
+
+    // Handle Filter Change -> Scroll to User
+    const handleDateChange = (e, type) => {
+        const newVal = e.target.value;
+        const newFilter = { ...dateFilter, [type]: newVal };
+        setDateFilter(newFilter);
+
+        // Scroll to first user in new range
+        if (sortedL1Users.length > 0 && treeScrollRef.current) {
+            const targetDate = new Date(type === 'start' ? newVal : newFilter.start);
+            const targetUser = sortedL1Users.find(u => new Date(u.createdAt) >= targetDate);
+
+            if (targetUser) {
+                const node = document.getElementById(`node-${targetUser._id}`);
+                if (node) {
+                    isAutoScrolling.current = true;
+                    node.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                    setTimeout(() => isAutoScrolling.current = false, 1000);
+                }
+            } else {
+                // If no user found after date, maybe scroll to end?
+            }
+        }
+    };
+
+    // Scroll to current month on mount/data load
+    useEffect(() => {
+        if (referralTree && treeScrollRef.current && sortedL1Users.length > 0) {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const targetUser = sortedL1Users.find(u => new Date(u.createdAt) >= startOfMonth);
+
+            if (targetUser) {
+                const node = document.getElementById(`node-${targetUser._id}`);
+                if (node) {
+                    isAutoScrolling.current = true;
+                    // A slight timeout to allow rendering
+                    setTimeout(() => {
+                        node.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                        setTimeout(() => isAutoScrolling.current = false, 1000);
+                    }, 500);
+                }
+            }
+        }
+    }, [referralTree, sortedL1Users]);
+
+
+    // --- DRAG TO SCROLL LOGIC ---
+    const isDragging = useRef(false);
+    const startX = useRef(0);
+    const scrollLeftRef = useRef(0);
+
+    const handleMouseDown = (e) => {
+        isDragging.current = true;
+        const slider = treeScrollRef.current;
+        if (!slider) return;
+
+        slider.style.cursor = 'grabbing';
+        slider.style.userSelect = 'none'; // Prevent selection while dragging
+
+        startX.current = e.pageX - slider.offsetLeft;
+        scrollLeftRef.current = slider.scrollLeft;
+    };
+
+    const handleMouseLeave = () => {
+        isDragging.current = false;
+        if (treeScrollRef.current) {
+            treeScrollRef.current.style.cursor = 'grab';
+            treeScrollRef.current.style.removeProperty('user-select');
+        }
+    };
+
+    const handleMouseUp = () => {
+        isDragging.current = false;
+        if (treeScrollRef.current) {
+            treeScrollRef.current.style.cursor = 'grab';
+            treeScrollRef.current.style.removeProperty('user-select');
+        }
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isDragging.current) return;
+        e.preventDefault();
+        const slider = treeScrollRef.current;
+        if (!slider) return;
+
+        const x = e.pageX - slider.offsetLeft;
+        const walk = (x - startX.current) * 1.5; // Scroll speed multiplier
+        slider.scrollLeft = scrollLeftRef.current - walk;
+    };
+
     const renderTreeContainer = (isModal = false) => (
-        <div className={`tree-container ${isModal ? 'modal-tree' : ''}`}>
-            {/* Root User */}
-            <div className="tree-node root-node">
-                <div className="node-content">
-                    <User size={24} />
-                    <div className="node-info">
-                        <h4>{referralTree.user.name}</h4>
-                        <p>{referralTree.user.mobile}</p>
-                        <span className="node-date">{formatDate(referralTree.user.createdAt)}</span>
-                    </div>
+        <div className={`tree-container sliding-layout ${isModal ? 'modal-tree' : ''}`}>
+
+            {/* Date Filters (Floating) */}
+            <div className="tree-date-filter">
+                <div className="date-input-group">
+                    <label>From</label>
+                    <input
+                        type="date"
+                        value={dateFilter.start}
+                        onChange={(e) => handleDateChange(e, 'start')}
+                    />
+                </div>
+                <div className="filter-separator"></div>
+                <div className="date-input-group">
+                    <label>To</label>
+                    <input
+                        type="date"
+                        value={dateFilter.end}
+                        onChange={(e) => handleDateChange(e, 'end')}
+                    />
                 </div>
             </div>
 
-            {/* Level 1 Users */}
-            {referralTree.level1Users.length > 0 && (
-                <div className="tree-level level-1">
-                    <div className="level-label">
-                        <span className="badge badge-l1">Level 1 (10%)</span>
-                        <span className="count">{referralTree.level1Users.length} users</span>
-                    </div>
-                    <div className="level-nodes">
-                        {referralTree.level1Users.map(l1User => (
-                            <div key={l1User._id} className="tree-node level-1-node">
-                                <div className="node-content">
-                                    <User size={20} />
-                                    <div className="node-info">
-                                        <h5>{l1User.name}</h5>
-                                        <p>{l1User.mobile}</p>
-                                        <span className="node-date">{formatDate(l1User.createdAt)}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+            {/* Root User - FIXED */}
+            <div className="sticky-root-wrapper" style={{ flexDirection: 'column', alignItems: 'center' }}>
+                <div className="tree-node root-node">
+                    <div className="node-content">
+                        <User size={24} />
+                        <div className="node-info">
+                            <h4>{referralTree.user.name}</h4>
+                            <p>{referralTree.user.mobile}</p>
+                            <span className="node-date">{formatDate(referralTree.user.createdAt)}</span>
+                        </div>
                     </div>
                 </div>
-            )}
 
-            {/* Level 2 Users */}
-            {referralTree.level2Data.some(item => item.level2Users.length > 0) && (
-                <div className="tree-level level-2">
-                    <div className="level-label">
-                        <span className="badge badge-l2">Level 2 (3%)</span>
-                        <span className="count">
-                            {referralTree.level2Data.reduce((sum, item) => sum + item.level2Users.length, 0)} users
-                        </span>
+                {/* Level 1 Label - Moved Sticky */}
+                {sortedL1Users.length > 0 && (
+                    <div className="level-label" style={{ marginTop: '1.5rem', marginBottom: '0.5rem', zIndex: 51 }}>
+                        <span className="badge badge-l1">Level 1 (10%)</span>
+                        <span className="count">{sortedL1Users.length} users</span>
                     </div>
-                    <div className="level-groups">
-                        {referralTree.level2Data.map((group, idx) => (
-                            group.level2Users.length > 0 && (
-                                <div key={idx} className="level-2-group">
-                                    <div className="group-header">
-                                        via {group.level1User.name}
+                )}
+            </div>
+
+            {/* Scrollable Levels - FAMILY COLUMN BASED */}
+            <div
+                className="scrollable-tree-content"
+                ref={treeScrollRef}
+                onScroll={handleTreeScroll}
+                onMouseDown={handleMouseDown}
+                onMouseLeave={handleMouseLeave}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+                style={{ cursor: 'grab' }}
+            >
+
+                {/* Family Tracks */}
+                <div className="family-track" style={{ display: 'flex', gap: '4rem', padding: '2rem 50vw 0', minWidth: 'max-content' }}>
+                    {sortedL1Users.map(l1User => {
+                        const l2Group = referralTree.level2Data.find(g => g.level1User._id === l1User._id);
+                        const hasL2 = l2Group && l2Group.level2Users.length > 0;
+
+                        return (
+                            <div key={l1User._id} className="family-column" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+
+                                {/* L1 NODE */}
+                                <div
+                                    id={`node-${l1User._id}`}
+                                    className="tree-node level-1-node"
+                                    data-date={l1User.createdAt}
+                                    style={{ marginBottom: hasL2 ? '4rem' : '0', position: 'relative' }} // Space for L2 connection
+                                >
+                                    <div className="node-content">
+                                        <User size={20} />
+                                        <div className="node-info">
+                                            <h5>{l1User.name}</h5>
+                                            <p>{l1User.mobile}</p>
+                                            <span className="node-date">{formatDate(l1User.createdAt)}</span>
+                                        </div>
                                     </div>
-                                    <div className="level-nodes">
-                                        {group.level2Users.map(l2User => (
-                                            <div key={l2User._id} className="tree-node level-2-node">
-                                                <div className="node-content">
-                                                    <User size={18} />
-                                                    <div className="node-info">
-                                                        <h6>{l2User.name}</h6>
-                                                        <p>{l2User.mobile}</p>
-                                                        <span className="node-date">{formatDate(l2User.createdAt)}</span>
+                                    {/* Connector Down if has L2 */}
+                                    {hasL2 && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            bottom: '-4rem',
+                                            left: '50%',
+                                            width: '2px',
+                                            height: '4rem',
+                                            background: '#cbd5e1'
+                                        }}></div>
+                                    )}
+                                </div>
+
+                                {/* L2 GROUP */}
+                                {hasL2 && (
+                                    <div className="level-2-group" style={{ marginTop: 0 }}>
+                                        {/* We define marginTop 0 because we handle spacing via L1 margin */}
+                                        <div className="group-header">
+                                            via {l1User.name}
+                                        </div>
+                                        <div className="level-nodes" style={{ flexWrap: 'nowrap', gap: '2rem' }}>
+                                            {l2Group.level2Users.map(l2User => (
+                                                <div key={l2User._id} className="tree-node level-2-node">
+                                                    <div className="node-content">
+                                                        <User size={18} />
+                                                        <div className="node-info">
+                                                            <h6>{l2User.name}</h6>
+                                                            <p>{l2User.mobile}</p>
+                                                            <span className="node-date">{formatDate(l2User.createdAt)}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            )
-                        ))}
-                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+                {/* End of family-track */}
+
+            </div>
+            {/* End of scrollable-tree-content */}
+
+            {/* Level 2 Label - Fixed at Bottom to prevent horizontal scrolling */}
+            {referralTree.level2Data.some(item => item.level2Users.length > 0) && (
+                <div className="level-label" style={{
+                    position: 'absolute',
+                    bottom: '2rem',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 60,
+                    pointerEvents: 'none',
+                    opacity: 0.9,
+                    background: 'rgba(255,255,255,0.8)',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '20px',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
+                }}>
+                    <span className="badge badge-l2">Level 2 (3%)</span>
+                    <span className="count">
+                        {referralTree.level2Data.reduce((sum, item) => sum + item.level2Users.length, 0)} total users
+                    </span>
                 </div>
             )}
         </div>
