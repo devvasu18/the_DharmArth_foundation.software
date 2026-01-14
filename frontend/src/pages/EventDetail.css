@@ -1,0 +1,145 @@
+.event-detail-container {
+    background-color: var(--background);
+    min-height: 100vh;
+}
+
+.event-hero {
+    height: 400px;
+    background-color: #f3f4f6;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+}
+
+.event-hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+}
+
+.event-hero-content {
+    position: relative;
+    z-index: 2;
+    color: white;
+    padding-bottom: 40px;
+    width: 100%;
+}
+
+.event-title-large {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    line-height: 1.1;
+}
+
+.event-meta-row {
+    display: flex;
+    gap: 20px;
+    font-size: 1.1rem;
+    align-items: center;
+    opacity: 0.9;
+}
+
+.event-detail-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 20px;
+}
+
+/* Blocks */
+.content-block-render {
+    margin-bottom: 40px;
+}
+
+.text-block p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #374151;
+    margin-bottom: 20px;
+}
+
+.text-block h2 {
+    font-size: 2rem;
+    margin-top: 40px;
+    margin-bottom: 20px;
+    color: #111;
+}
+
+.text-block h3 {
+    font-size: 1.5rem;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.text-block ul {
+    margin-left: 20px;
+    margin-bottom: 20px;
+}
+
+.text-block li {
+    margin-bottom: 10px;
+}
+
+.image-block figure {
+    margin: 0;
+}
+
+.image-block img {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.image-block figcaption {
+    text-align: center;
+    color: #6b7280;
+    margin-top: 10px;
+    font-style: italic;
+}
+
+.video-container {
+    position: relative;
+    padding-bottom: 56.25%;
+    /* 16:9 */
+    height: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+}
+
+.video-container iframe,
+.video-container video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.instagram-block {
+    display: flex;
+    justify-content: center;
+}
+
+.share-section {
+    border-top: 1px solid #e5e7eb;
+    margin-top: 60px;
+    padding-top: 30px;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .event-title-large {
+        font-size: 2.2rem;
+    }
+
+    .event-hero {
+        height: 300px;
+    }
+}

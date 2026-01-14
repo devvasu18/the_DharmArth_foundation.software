@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet } from 'lucide-react';
+import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet, Calendar } from 'lucide-react';
 import { io } from "socket.io-client";
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -130,6 +130,10 @@ const AdminLayout = () => {
                     <NavLink to="/admin/sliders" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
                         <Image size={20} title={isSidebarCollapsed ? "Hero Sliders" : ""} />
                         {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Hero Sliders</span>}
+                    </NavLink>
+                    <NavLink to="/admin/events" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
+                        <Calendar size={20} title={isSidebarCollapsed ? "Events" : ""} />
+                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Events</span>}
                     </NavLink>
                     <NavLink to="/admin-user-explorer/transactions" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
                         <TrendingUp size={20} title={isSidebarCollapsed ? "User Explorer" : ""} />

@@ -8,6 +8,8 @@ import DonationPage from './pages/DonationPage';
 import StartFundraiser from './pages/StartFundraiser';
 import UserDashboard from './pages/UserDashboard';
 import NotFound from './pages/NotFound';
+import Events from './pages/Events';
+import EventDetail from './pages/EventDetail';
 
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './components/admin/AdminDashboard';
@@ -16,7 +18,10 @@ import AdminSliders from './components/admin/AdminSliders';
 import AdminSettings from './components/admin/AdminSettings';
 import AdminRoles from './components/admin/AdminRoles';
 import AdminTransactions from './components/admin/AdminTransactions';
+
 import TransactionManagement from './components/admin/TransactionManagement';
+import AdminEvents from './components/admin/AdminEvents';
+import EventEditor from './components/admin/EventEditor';
 
 import { ConfirmProvider } from './context/ConfirmContext';
 
@@ -33,6 +38,8 @@ function App() {
           <Route path="/donate" element={<DonationPage />} />
           <Route path="/start-fundraiser" element={<StartFundraiser />} />
           <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/events/:slug" element={<EventDetail />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
@@ -42,6 +49,9 @@ function App() {
             <Route path="settings" element={<AdminSettings />} />
             <Route path="roles" element={<AdminRoles />} />
             <Route path="transaction-management" element={<TransactionManagement />} />
+            <Route path="events" element={<AdminEvents />} />
+            <Route path="events/new" element={<EventEditor />} />
+            <Route path="events/edit/:id" element={<EventEditor />} />
           </Route>
 
           <Route path="/admin-user-explorer" element={<AdminLayout />}>

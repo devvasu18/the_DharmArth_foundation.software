@@ -69,7 +69,7 @@ const AdminUsers = () => {
                 limit: pagination.limit,
                 startDate: params.startDate !== undefined ? params.startDate : dateRange.start,
                 endDate: params.endDate !== undefined ? params.endDate : dateRange.end,
-                specificUserId: params.specificUserId || (selectedUser ? selectedUser._id : undefined)
+                specificUserId: params.specificUserId !== undefined ? params.specificUserId : (selectedUser ? selectedUser._id : undefined)
             };
 
             const { data } = await api.get('/users', { params: queryParams });
