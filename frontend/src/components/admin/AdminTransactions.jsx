@@ -166,6 +166,20 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
         });
     };
 
+    const formatDateWithTime = (date) => {
+        if (!date) return '-';
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return '-';
+        return d.toLocaleString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
+
     const getFilteredNetworkData = () => {
         if (!Array.isArray(networkData)) return [];
         if (networkFilter === 'ALL') return networkData;
@@ -573,33 +587,18 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                         </div>
                     </div>
                 )}
-
                 {/* FLOATING TOGGLE BUTTON - Moves with Sidebar */}
                 {!isModal && (
-                    <div style={{
-                        position: 'absolute',
-                        top: '1.5rem',
-                        left: isSidebarCollapsed ? '0' : '320px',
-                        zIndex: 100,
-                        transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                    }}>
+                    <div
+                        className="sidebar-toggle-wrapper"
+                        style={{
+                            left: isSidebarCollapsed ? '0' : '320px',
+                        }}
+                    >
                         <button
+                            className="sidebar-toggle-btn"
                             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                             title={isSidebarCollapsed ? "Show Sidebar" : "Hide Sidebar"}
-                            style={{
-                                height: '40px',
-                                width: '24px',
-                                border: '1px solid #e2e8f0',
-                                borderLeft: 'none',
-                                borderRadius: '0 6px 6px 0',
-                                background: 'white',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: '#64748b',
-                                boxShadow: '2px 1px 4px rgba(0,0,0,0.05)'
-                            }}
                         >
                             {isSidebarCollapsed ? <ChevronRight size={16} /> : <Minimize2 size={16} style={{ transform: 'rotate(90deg)' }} />}
                         </button>
@@ -611,6 +610,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                     {selectedUser ? (
                         <>
                             <div className="panel-header selected-user-header">
+
                                 <div className="user-profile-left">
                                     <div className="user-avatar-large">
                                         {selectedUser.name.charAt(0).toUpperCase()}
@@ -679,8 +679,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                                 </button>
                                 {isModal && onClose && (
                                     <button
-                                        className="toggle-btn"
-                                        style={{ marginLeft: 'auto', background: '#fee2e2', color: '#ef4444' }}
+                                        className="toggle-btn btn-close"
                                         onClick={onClose}
                                     >
                                         <X size={18} />
@@ -740,7 +739,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                                                     </div>
                                                     <div className="net-amount">{formatCurrency(member.totalDonated)}</div>
                                                     <div className="net-earned">+{formatCurrency(member.totalEarnedFrom)}</div>
-                                                    <div className="net-date">{formatDate(member.joinedDate)}</div>
+                                                    <div className="net-date">{formatDateWithTime(member.joinedDate)}</div>
                                                 </div>
                                             ))
                                         )}
@@ -868,7 +867,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                         </div>
                     )}
                 </div>
-            </div>
+            </div >
             {/* Full Screen Tree Modal */}
             {
                 isTreeFullScreen && referralTree && (
