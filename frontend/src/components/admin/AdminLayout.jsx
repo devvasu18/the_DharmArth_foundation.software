@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet, Calendar } from 'lucide-react';
+import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet, Calendar, FileText } from 'lucide-react';
 import { io } from "socket.io-client";
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -21,6 +21,7 @@ const AdminLayout = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isEventsDropdownOpen, setEventsDropdownOpen] = useState(false);
+    const [isReportsDropdownOpen, setReportsDropdownOpen] = useState(false);
     const socketRef = useRef(null);
     const notificationRef = useRef(null);
     const audioRef = useRef(new Audio(NOTIFICATION_SOUND));
@@ -183,6 +184,29 @@ const AdminLayout = () => {
                                 </NavLink>
                                 <NavLink to="/admin/events-header" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}>
                                     Events Header
+                                </NavLink>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Reports Dropdown */}
+                    <div className="admin-link-dropdown-container">
+                        <div
+                            className={`admin-link ${location.pathname.includes('/admin/reports') ? 'active' : ''}`}
+                            onClick={() => !isSidebarCollapsed && setReportsDropdownOpen(!isReportsDropdownOpen)}
+                            style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <FileText size={20} title={isSidebarCollapsed ? "Reports" : ""} />
+                                {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Reports</span>}
+                            </div>
+                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isReportsDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
+                        </div>
+
+                        {!isSidebarCollapsed && isReportsDropdownOpen && (
+                            <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
+                                <NavLink to="/admin/reports/commission" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}>
+                                    Commission Reports
                                 </NavLink>
                             </div>
                         )}

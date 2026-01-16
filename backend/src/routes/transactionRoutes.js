@@ -542,4 +542,200 @@ router.get('/users/:userId/network-stats', async (req, res) => {
     }
 });
 
+// @desc    Get Commission Reports Data
+// @route   GET /api/transactions/commission-reports
+router.get('/commission-reports', async (req, res) => {
+    try {
+        const { startDate, endDate, period } = req.query; // period: 'day', 'month'
+
+        // Date Filter Construction
+        let dateQuery = {};
+        if (startDate && endDate) {
+            dateQuery = {
+                createdAt: {
+                    $gte: new Date(startDate),
+                    $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
+                }
+            };
+        }
+
+        // 1. Summary Cards Data
+        // Total Donations (Success)
+        const totalDonationsAgg = await Donation.aggregate([
+            { $match: { status: 'success', ...dateQuery } },
+            { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]);
+        const totalDonations = totalDonationsAgg[0]?.total || 0;
+
+        // Total Commissions Paid
+        const commissionAgg = await Transaction.aggregate([
+            {
+                $match: {
+                    reason: { $in: ['referral_commission_l1', 'referral_commission_l2'] },
+                    ...dateQuery
+                }
+            },
+            {
+                $group: {
+                    _id: '$reason',
+                    total: { $sum: '$amount' }
+                }
+            }
+        ]);
+
+        const l1Commission = commissionAgg.find(c => c._id === 'referral_commission_l1')?.total || 0;
+        const l2Commission = commissionAgg.find(c => c._id === 'referral_commission_l2')?.total || 0;
+        const totalCommissionPaid = l1Commission + l2Commission;
+        const platformBalance = totalDonations - totalCommissionPaid;
+
+        // Pending Commission (Estimate from Pending Donations)
+        const pendingDonationsAgg = await Donation.aggregate([
+            { $match: { status: 'pending', ...dateQuery } },
+            { $group: { _id: null, totalAmount: { $sum: '$amount' }, count: { $sum: 1 } } }
+        ]);
+        const totalPendingDonations = pendingDonationsAgg[0]?.totalAmount || 0;
+        const pendingCount = pendingDonationsAgg[0]?.count || 0;
+        const estimatedPendingCommission = (totalPendingDonations * 0.10) + (totalPendingDonations * 0.03);
+
+        // 2. Charts Data
+        // Distro Pie Chart handled by l1Commission/l2Commission
+
+        // Trend Chart (Monthly/Daily)
+        const trendFormat = period === 'year' ? '%Y-%m' : '%Y-%m-%d';
+        const trendAgg = await Transaction.aggregate([
+            {
+                $match: {
+                    reason: { $in: ['referral_commission_l1', 'referral_commission_l2'] },
+                    ...dateQuery
+                }
+            },
+            {
+                $group: {
+                    _id: { $dateToString: { format: trendFormat, date: "$createdAt" } },
+                    amount: { $sum: "$amount" }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        // 3. Top Performers
+        // Helper to populate user info
+        const getTopEarners = async (reason) => {
+            return await Transaction.aggregate([
+                { $match: { reason, ...dateQuery } },
+                { $group: { _id: '$wallet', total: { $sum: '$amount' } } },
+                { $sort: { total: -1 } },
+                { $limit: 5 },
+                { $lookup: { from: 'wallets', localField: '_id', foreignField: '_id', as: 'walletInfo' } },
+                { $unwind: '$walletInfo' },
+                { $lookup: { from: 'users', localField: 'walletInfo.user', foreignField: '_id', as: 'userInfo' } },
+                { $unwind: '$userInfo' },
+                { $project: { name: '$userInfo.name', mobile: '$userInfo.mobile', total: 1 } }
+            ]);
+        };
+
+        const topL1 = await getTopEarners('referral_commission_l1');
+        const topL2 = await getTopEarners('referral_commission_l2');
+
+        // Highest Donation Source (Top Motivators L1)
+        const topSource = await Donation.aggregate([
+            { $match: { status: 'success', ...dateQuery, level1UserId: { $exists: true } } },
+            { $group: { _id: '$level1UserId', totalDonated: { $sum: '$amount' } } },
+            { $sort: { totalDonated: -1 } },
+            { $limit: 5 },
+            { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'userInfo' } },
+            { $unwind: '$userInfo' },
+            { $project: { name: '$userInfo.name', mobile: '$userInfo.mobile', totalDonated: 1 } }
+        ]);
+
+        // 4. Growth Calculation (Previous Period)
+        const startD = new Date(startDate);
+        const endD = new Date(endDate);
+        const duration = endD.getTime() - startD.getTime();
+        const prevEndDate = new Date(startD.getTime() - 1);
+        const prevStartDate = new Date(prevEndDate.getTime() - duration);
+
+        const prevCommissionAgg = await Transaction.aggregate([
+            {
+                $match: {
+                    reason: { $in: ['referral_commission_l1', 'referral_commission_l2'] },
+                    createdAt: { $gte: prevStartDate, $lte: prevEndDate }
+                }
+            },
+            { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]);
+        const prevTotalCommission = prevCommissionAgg[0]?.total || 0;
+
+        let commissionGrowth = 0;
+        if (prevTotalCommission > 0) {
+            commissionGrowth = ((totalCommissionPaid - prevTotalCommission) / prevTotalCommission) * 100;
+        } else if (totalCommissionPaid > 0) {
+            commissionGrowth = 100;
+        }
+
+        // 5. Table Data (Paginated)
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+
+        const tableDonations = await Donation.find({ status: 'success', ...dateQuery })
+            .select('amount createdAt transactionId status level1UserId level2UserId')
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .lean();
+
+        // Calculate commissions for each donation in table
+        const detailedTable = tableDonations.map(d => {
+            const l1 = d.level1UserId ? d.amount * 0.10 : 0;
+            const l2 = d.level2UserId ? d.amount * 0.03 : 0;
+            const totalComm = l1 + l2;
+            return {
+                id: d._id,
+                date: d.createdAt,
+                transactionId: d.transactionId, // Payment Gateway ID
+                amount: d.amount,
+                l1Commission: l1,
+                l2Commission: l2,
+                totalCommission: totalComm,
+                platformBalance: d.amount - totalComm,
+                status: 'Paid' // since we filtered for success
+            };
+        });
+
+        const totalTableRecords = await Donation.countDocuments({ status: 'success', ...dateQuery });
+
+        res.json({
+            summary: {
+                totalDonations,
+                totalCommissionPaid,
+                l1Commission,
+                l2Commission,
+                platformBalance,
+                pendingAmount: estimatedPendingCommission,
+                pendingCount,
+                growthPercentage: commissionGrowth
+            },
+            charts: {
+                trend: trendAgg
+            },
+            insights: {
+                topL1,
+                topL2,
+                topSource
+            },
+            table: {
+                data: detailedTable,
+                totalPages: Math.ceil(totalTableRecords / limit),
+                totalRecords: totalTableRecords,
+                currentPage: page
+            }
+        });
+
+    } catch (error) {
+        console.error('Commission Report Error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 module.exports = router;

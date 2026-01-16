@@ -24,6 +24,7 @@ import AdminEvents from './components/admin/AdminEvents';
 
 import EventEditor from './components/admin/EventEditor';
 import AdminEventHeaders from './components/admin/AdminEventHeaders';
+import CommissionReports from './components/admin/reports/CommissionReports';
 
 import { ConfirmProvider } from './context/ConfirmContext';
 
@@ -56,6 +57,7 @@ function App() {
             <Route path="events/new" element={<EventEditor />} />
 
             <Route path="events/edit/:id" element={<EventEditor />} />
+            <Route path="reports/commission" element={<CommissionReports />} />
           </Route>
 
           <Route path="/admin-user-explorer" element={<AdminLayout />}>

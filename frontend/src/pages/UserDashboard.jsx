@@ -262,12 +262,12 @@ const UserDashboard = () => {
                                                     <td>
                                                         <div style={{ fontWeight: 500 }}>{txn.description}</div>
                                                     </td>
-                                                    <td className={txn.type === 'credit' ? 'amount-positive' : 'amount-negative'}>
-                                                        {txn.type === 'credit' ? '+' : '-'} ₹{txn.amount}
+                                                    <td className="amount-positive">
+                                                        {txn.type === 'credit' ? '+' : ''} ₹{txn.amount}
                                                     </td>
                                                     <td>
-                                                        <span className={`status-badge ${txn.type === 'credit' ? 'badge-credit' : 'badge-debit'}`}>
-                                                            {txn.isDonation ? 'Donation' : txn.type}
+                                                        <span className={`status-badge ${txn.type === 'credit' || txn.isDonation ? 'badge-credit' : 'badge-debit'}`}>
+                                                            {txn.type === 'credit' ? 'Commission' : (txn.isDonation ? 'Donation' : txn.type)}
                                                         </span>
                                                     </td>
                                                 </tr>

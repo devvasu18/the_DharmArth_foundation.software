@@ -4,6 +4,7 @@ const Donation = require('../models/Donation');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const { processDonationCommission } = require('../services/commissionService');
+const { protect } = require('../middlewares/authMiddleware');
 
 // @desc    Get All Donations (Admin)
 // @route   GET /api/donate
@@ -24,6 +25,17 @@ router.get('/', async (req, res) => {
         }
 
         const donations = await Donation.find(filter).sort({ createdAt: -1 });
+        res.json(donations);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Get My Donations (Logged in user by mobile)
+// @route   GET /api/donate/my-donations
+router.get('/my-donations', protect, async (req, res) => {
+    try {
+        const donations = await Donation.find({ donorMobile: req.user.mobile }).sort({ createdAt: -1 });
         res.json(donations);
     } catch (error) {
         res.status(500).json({ message: error.message });

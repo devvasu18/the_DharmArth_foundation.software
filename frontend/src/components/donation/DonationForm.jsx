@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useConfirm } from '../../context/ConfirmContext';
-import { User, Smartphone, Mail, MapPin, CreditCard, BadgeCheck } from 'lucide-react';
+import { User, Smartphone, Mail, MapPin, CreditCard, BadgeCheck, CheckCircle, Lock, ArrowRight } from 'lucide-react';
 import api from '../../services/api';
 import './DonationForm.css';
 import { validatePAN, validateAadhaar } from '../../utils/validators';
@@ -32,6 +32,12 @@ const DonationForm = () => {
     const [showPanModal, setShowPanModal] = useState(false);
     const [confirmPan, setConfirmPan] = useState('');
     const [confirmError, setConfirmError] = useState('');
+
+    // Success & Claim Account State
+    const [donationSuccess, setDonationSuccess] = useState(null);
+    const [registerPassword, setRegisterPassword] = useState('');
+    const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
+    const [isRegistering, setIsRegistering] = useState(false);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -144,8 +150,12 @@ const DonationForm = () => {
 
             const { data } = await api.post('/donate', payload);
             await showAlert(`Payment Successful! Donation ID: ${data.donationId}`);
-            // Reset form or redirect
-            navigate('/');
+            setDonationSuccess({
+                donationId: data.donationId,
+                amount: finalAmount
+            });
+            // Don't navigate, show Success View to allow registration
+            // navigate('/');
 
         } catch (error) {
             console.error("Donation failed:", error);
@@ -180,11 +190,11 @@ const DonationForm = () => {
         }
         setErrors({});
 
-        // Referral/Motivator Validation Logic
-        if (!referralSource && !motivatorMobile) {
-            await showAlert("Please let us know what motivated you to donate (Motivator Mobile or Referral Source).");
-            return;
-        }
+        // Referral/Motivator Validation Logic - OPTIONAL now
+        // if (!referralSource && !motivatorMobile) {
+        //     await showAlert("Please let us know what motivated you to donate (Motivator Mobile or Referral Source).");
+        //     return;
+        // }
 
         // Validate motivator if entered - independant check
         if (motivatorMobile) {
@@ -215,6 +225,134 @@ const DonationForm = () => {
         setConfirmError('');
         submitDonation();
     };
+
+    const handleRegister = async () => {
+        if (!registerPassword || registerPassword.length < 6) {
+            await showAlert("Password must be at least 6 characters");
+            return;
+        }
+        if (registerPassword !== registerConfirmPassword) {
+            await showAlert("Passwords do not match");
+            return;
+        }
+
+        try {
+            setIsRegistering(true);
+            const { data } = await api.post('/auth/register', {
+                name: fullName,
+                mobile: mobile,
+                email: email,
+                password: registerPassword
+            });
+
+            localStorage.setItem('user', JSON.stringify(data));
+            await showAlert("Account Created Successfully!");
+            navigate('/dashboard');
+        } catch (error) {
+            console.error("Registration failed:", error);
+            await showAlert(error.response?.data?.message || "Registration failed");
+        } finally {
+            setIsRegistering(false);
+        }
+    };
+
+    if (donationSuccess) {
+        const isLoggedIn = !!localStorage.getItem('user');
+
+        return (
+            <div className="donation-container" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+                    <div style={{
+                        width: '80px', height: '80px', borderRadius: '50%',
+                        background: 'rgba(34, 197, 94, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                        <CheckCircle size={48} color="#22c55e" strokeWidth={2.5} />
+                    </div>
+                </div>
+
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.5rem' }}>
+                    Thank You, {fullName.split(' ')[0]}!
+                </h2>
+                <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+                    Your donation of <strong>₹{donationSuccess.amount.toLocaleString()}</strong> was successful.
+                </p>
+
+                <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: 'var(--radius-lg)', marginBottom: '2rem', display: 'inline-block' }}>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b' }}>Transaction ID</p>
+                    <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-main)' }}>{donationSuccess.donationId}</p>
+                </div>
+
+                {!isLoggedIn && (
+                    <div style={{
+                        border: '1px solid #e2e8f0', borderRadius: 'var(--radius-lg)',
+                        padding: '2rem', marginTop: '1rem', background: '#fff',
+                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                    }}>
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--primary)' }}>
+                                Claim Your Account
+                            </h3>
+                            <p style={{ fontSize: '0.95rem', color: '#64748b' }}>
+                                Create a password to track this donation and access your <br />80G certificates anytime.
+                            </p>
+                        </div>
+
+                        <div style={{ textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>
+                            <div className="input-group" style={{ marginBottom: '1rem' }}>
+                                <label className="input-label">Create Password</label>
+                                <div className="input-wrapper">
+                                    <Lock size={18} className="input-icon" />
+                                    <input
+                                        type="password"
+                                        className="form-control"
+                                        placeholder="Min. 6 characters"
+                                        value={registerPassword}
+                                        onChange={(e) => setRegisterPassword(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="input-group" style={{ marginBottom: '1.5rem' }}>
+                                <label className="input-label">Confirm Password</label>
+                                <div className="input-wrapper">
+                                    <Lock size={18} className="input-icon" />
+                                    <input
+                                        type="password"
+                                        className="form-control"
+                                        placeholder="Re-enter password"
+                                        value={registerConfirmPassword}
+                                        onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                className="donate-btn"
+                                style={{ marginTop: 0 }}
+                                onClick={handleRegister}
+                                disabled={isRegistering}
+                            >
+                                {isRegistering ? 'Creating Account...' : 'Create Account & Track Donation'}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                <div style={{ marginTop: '2rem' }}>
+                    <button
+                        onClick={() => navigate(isLoggedIn ? '/dashboard' : '/')}
+                        style={{
+                            background: 'none', border: 'none', color: 'var(--primary)',
+                            fontWeight: 600, cursor: 'pointer', display: 'flex',
+                            alignItems: 'center', gap: '0.5rem', margin: '0 auto'
+                        }}
+                    >
+                        {isLoggedIn ? 'Go to Dashboard' : 'Skip & Go Home'} <ArrowRight size={18} />
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="donation-container">
