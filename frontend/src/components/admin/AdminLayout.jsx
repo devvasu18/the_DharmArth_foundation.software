@@ -22,6 +22,7 @@ const AdminLayout = () => {
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isEventsDropdownOpen, setEventsDropdownOpen] = useState(false);
     const socketRef = useRef(null);
+    const notificationRef = useRef(null);
     const audioRef = useRef(new Audio(NOTIFICATION_SOUND));
 
     useEffect(() => {
@@ -70,6 +71,23 @@ const AdminLayout = () => {
         };
     }, [navigate]); // Only run on mount (and if navigate changes, which is stable)
 
+    // Handle Click Outside Notification Panel
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+                setIsNotificationsOpen(false);
+            }
+        };
+
+        if (isNotificationsOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isNotificationsOpen]);
+
     const fetchNotifications = async () => {
         try {
             const res = await axios.get('http://localhost:5000/api/notifications');
@@ -105,6 +123,17 @@ const AdminLayout = () => {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             }
+        }
+    };
+
+    const handleNotificationClick = (notif) => {
+        setIsNotificationsOpen(false);
+        // Navigate to transactions and open the breakdown
+        // Use referenceId (which typically holds the donation/transaction ID)
+        if (notif.referenceId) {
+            navigate('/admin/transaction-management', {
+                state: { openTransactionId: notif.referenceId }
+            });
         }
     };
 
@@ -192,7 +221,7 @@ const AdminLayout = () => {
                         </div>
 
                         {/* Notification Bell */}
-                        <div className="icon-btn" onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}>
+                        <div className="icon-btn" ref={notificationRef} onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}>
                             <Bell size={20} />
                             {unreadCount > 0 && <span className="badge-dot" title={`${unreadCount} unread`}></span>}
 
@@ -211,7 +240,11 @@ const AdminLayout = () => {
                                             <div className="no-notif">No new notifications</div>
                                         ) : (
                                             notifications.map((notif, idx) => (
-                                                <div key={idx} className={`notif-item ${!notif.isRead ? 'unread' : ''}`}>
+                                                <div
+                                                    key={idx}
+                                                    className={`notif-item ${!notif.isRead ? 'unread' : ''}`}
+                                                    onClick={() => handleNotificationClick(notif)}
+                                                >
                                                     <div className="notif-icon">
                                                         {notif.type === 'DONATION' ? '💰' : '📢'}
                                                     </div>

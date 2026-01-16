@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Search, Users, ChevronRight, TrendingUp, Wallet, ArrowDownRight, ArrowUpRight, DollarSign, User, Network, Maximize2, Minimize2, X } from 'lucide-react';
 import axios from 'axios';
 import './AdminTransactions.css';
 
 const AdminTransactions = ({ initialUser, isModal, onClose }) => {
+    const location = useLocation();
     // Left Panel State
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [viewMode, setViewMode] = useState('ALL'); // 'ALL' or 'SEARCH'
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [allUsers, setAllUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
-    const [selectedUser, setSelectedUser] = useState(null);
+    const [selectedUser, setSelectedUser] = useState(initialUser || location.state?.selectedUser || null);
     const [referralTree, setReferralTree] = useState(null);
 
     // Right Panel State
@@ -484,124 +487,100 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
 
     return (
         <div className={`admin-transactions-container ${isModal ? 'modal-container' : ''}`}>
-            {/* Creative Background Elements */}
-            <div className="bg-shape shape-1"></div>
-            <div className="bg-shape shape-2"></div>
-            <div className="bg-shape shape-3"></div>
-
-
-
             <div className={`transactions-layout ${isModal ? 'modal-layout' : ''}`}>
-                {/* LEFT PANEL - User Selector */}
+
+                {/* 1. EXPLORER SIDEBAR (Was Left Panel) */}
                 {!isModal && (
-                    <div className="left-panel">
-                        <div className="panel-header">
-                            <h2><Users size={20} /> User Explorer</h2>
+                    <div className={`explorer-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+                        <div className="sidebar-header">
+                            <h2><Users size={18} /> User List</h2>
                         </div>
 
-                        {/* Mode Toggle */}
-                        <div className="mode-toggle">
-                            <button
-                                className={`mode-btn ${viewMode === 'ALL' ? 'active' : ''}`}
-                                onClick={() => setViewMode('ALL')}
-                            >
-                                All Users
-                            </button>
-                            <button
-                                className={`mode-btn ${viewMode === 'SEARCH' ? 'active' : ''}`}
-                                onClick={() => setViewMode('SEARCH')}
-                            >
-                                Search User
-                            </button>
+                        {/* 2. SEARCH BAR (Always Visible) */}
+                        <div className="search-input-wrapper" style={{ marginTop: '1rem' }}>
+                            <Search size={16} />
+                            <input
+                                type="text"
+                                placeholder="Search users..."
+                                value={searchQuery}
+                                onChange={(e) => handleSearch(e.target.value)}
+                            />
                         </div>
 
-                        {/* ALL Mode - Paginated List */}
-                        {viewMode === 'ALL' && (
-                            <div className="user-list-section">
-                                <div className="user-list">
-                                    {loading ? (
-                                        <div className="loading-state">Loading users...</div>
+                        {/* 3. UNIFIED LIST SECTION */}
+                        <div className="user-list-section">
+                            <div className="user-list">
+                                {loading ? (
+                                    <div className="loading-state">Loading...</div>
+                                ) : (
+                                    (searchQuery && searchQuery.trim().length >= 2 ? searchResults : allUsers).length === 0 ? (
+                                        <div className="empty-state" style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                                            No users found
+                                        </div>
                                     ) : (
-                                        allUsers.map(user => (
+                                        (searchQuery && searchQuery.trim().length >= 2 ? searchResults : allUsers).map(user => (
                                             <div
                                                 key={user._id}
                                                 className={`user-card ${selectedUser?._id === user._id ? 'selected' : ''}`}
                                                 onClick={() => handleUserSelect(user)}
                                             >
-                                                <div className="user-avatar">
-                                                    {user.name.charAt(0).toUpperCase()}
-                                                </div>
+                                                <div className="user-avatar">{user.name.charAt(0).toUpperCase()}</div>
                                                 <div className="user-info">
                                                     <h4>{user.name}</h4>
                                                     <p>{user.mobile}</p>
-                                                    <span className="user-date">Joined {formatDate(user.createdAt)}</span>
                                                 </div>
-                                                <ChevronRight size={18} className="user-arrow" />
                                             </div>
                                         ))
-                                    )}
-                                </div>
+                                    )
+                                )}
+                            </div>
 
-                                {/* Pagination */}
+                            {/* Pagination (Only show when NOT searching) */}
+                            {(!searchQuery || searchQuery.trim().length < 2) && (
                                 <div className="pagination">
-                                    <button
-                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                        disabled={currentPage === 1}
-                                    >
-                                        Previous
-                                    </button>
-                                    <span>Page {currentPage} of {totalPages}</span>
-                                    <button
-                                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                        disabled={currentPage === totalPages}
-                                    >
-                                        Next
-                                    </button>
+                                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Prev</button>
+                                    <span>{currentPage} / {totalPages}</span>
+                                    <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</button>
                                 </div>
-                            </div>
-                        )}
-
-                        {/* SEARCH Mode */}
-                        {viewMode === 'SEARCH' && (
-                            <div className="search-section">
-                                <div className="search-input-wrapper">
-                                    <Search size={18} />
-                                    <input
-                                        type="text"
-                                        placeholder="Search by name or mobile..."
-                                        value={searchQuery}
-                                        onChange={(e) => handleSearch(e.target.value)}
-                                    />
-                                </div>
-
-                                <div className="user-list">
-                                    {searchResults.map(user => (
-                                        <div
-                                            key={user._id}
-                                            className={`user-card ${selectedUser?._id === user._id ? 'selected' : ''}`}
-                                            onClick={() => handleUserSelect(user)}
-                                        >
-                                            <div className="user-avatar">
-                                                {user.name.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className="user-info">
-                                                <h4>{user.name}</h4>
-                                                <p>{user.mobile}</p>
-                                                <span className="user-date">Joined {formatDate(user.createdAt)}</span>
-                                            </div>
-                                            <ChevronRight size={18} className="user-arrow" />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-
+                            )}
+                        </div>
                     </div>
                 )}
 
-                {/* RIGHT PANEL - Toggle between Tree & Transactions */}
-                <div className="right-panel">
+                {/* FLOATING TOGGLE BUTTON - Moves with Sidebar */}
+                {!isModal && (
+                    <div style={{
+                        position: 'absolute',
+                        top: '1.5rem',
+                        left: isSidebarCollapsed ? '0' : '320px',
+                        zIndex: 100,
+                        transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}>
+                        <button
+                            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                            title={isSidebarCollapsed ? "Show Sidebar" : "Hide Sidebar"}
+                            style={{
+                                height: '40px',
+                                width: '24px',
+                                border: '1px solid #e2e8f0',
+                                borderLeft: 'none',
+                                borderRadius: '0 6px 6px 0',
+                                background: 'white',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#64748b',
+                                boxShadow: '2px 1px 4px rgba(0,0,0,0.05)'
+                            }}
+                        >
+                            {isSidebarCollapsed ? <ChevronRight size={16} /> : <Minimize2 size={16} style={{ transform: 'rotate(90deg)' }} />}
+                        </button>
+                    </div>
+                )}
+
+                {/* 2. MAIN CONTENT (Was Right Panel) */}
+                <div className="explorer-content">
                     {selectedUser ? (
                         <>
                             <div className="panel-header selected-user-header">
@@ -864,20 +843,22 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                 </div>
             </div>
             {/* Full Screen Tree Modal */}
-            {isTreeFullScreen && referralTree && (
-                <div className="tree-modal-overlay">
-                    <button
-                        className="close-modal-btn"
-                        onClick={() => setIsTreeFullScreen(false)}
-                    >
-                        <X size={24} />
-                    </button>
-                    <div className="tree-modal-content">
-                        {renderTreeContainer(true)}
+            {
+                isTreeFullScreen && referralTree && (
+                    <div className="tree-modal-overlay">
+                        <button
+                            className="close-modal-btn"
+                            onClick={() => setIsTreeFullScreen(false)}
+                        >
+                            <X size={24} />
+                        </button>
+                        <div className="tree-modal-content">
+                            {renderTreeContainer(true)}
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

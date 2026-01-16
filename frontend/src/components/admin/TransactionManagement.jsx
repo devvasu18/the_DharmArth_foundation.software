@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import {
     Search, Filter, Calendar, Download, ChevronDown, X,
@@ -25,6 +26,8 @@ const TransactionManagement = () => {
         specificMotivatorIds: [], // Selected Checkboxes
         transactionType: 'ALL', // 'ALL', 'DONATION', 'COMMISSION'
         is80G: false,
+        sort: 'desc', // 'desc' (newest) or 'asc' (oldest)
+        limit: 20,
         dateRange: {
             start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
             end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]
@@ -62,17 +65,42 @@ const TransactionManagement = () => {
         }
     }, []);
 
+    const location = useLocation();
+    // Handle redirect from Notification
+    useEffect(() => {
+        if (location.state?.openTransactionId) {
+            setLoading(true);
+            const txnId = location.state.openTransactionId;
+            // Fetch the specific transaction
+            axios.get('http://localhost:5000/api/transactions/dashboard', {
+                params: { _id: txnId }
+            })
+                .then(res => {
+                    if (res.data.data && res.data.data.length > 0) {
+                        setSelectedTransaction(res.data.data[0]);
+                    } else {
+                        toast.error("Transaction not found");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    toast.error("Failed to open transaction");
+                })
+                .finally(() => setLoading(false));
+        }
+    }, [location.state]);
+
     // Fetch Transactions API
     const fetchTransactions = async () => {
         setLoading(true);
         try {
             const params = {
                 page,
-                limit: 20,
+                limit: filters.limit,
                 is80G: filters.is80G,
                 startDate: filters.dateRange.start,
                 endDate: filters.dateRange.end,
-                sort: 'newest'
+                sort: filters.sort === 'asc' ? 'oldest' : 'newest'
             };
 
             if (filters.searchUser) {
@@ -171,7 +199,7 @@ const TransactionManagement = () => {
     // Initial Load & Refetch on filter change
     useEffect(() => {
         fetchTransactions();
-    }, [page, filters.searchUser, filters.specificMotivatorIds, filters.is80G, filters.dateRange, filters.levelFilter, filters.transactionType, levelData]);
+    }, [page, filters.searchUser, filters.specificMotivatorIds, filters.is80G, filters.dateRange, filters.levelFilter, filters.transactionType, filters.sort, filters.limit, levelData]);
 
     // Handle clicks outside dropdown
     useEffect(() => {
@@ -563,6 +591,7 @@ const TransactionManagement = () => {
                                     <label>Start Date</label>
                                     <input
                                         type="date"
+                                        max={new Date().toISOString().split('T')[0]}
                                         className="date-input"
                                         value={pendingFilters.dateRange?.start || ''}
                                         onChange={(e) => setPendingFilters(p => ({ ...p, dateRange: { ...p.dateRange, start: e.target.value } }))}
@@ -608,6 +637,79 @@ const TransactionManagement = () => {
                             </div>
                         </div>
                     )}
+
+                </div>
+
+                {/* 5. View Options (Sort & Limit) */}
+                <div className="filter-group" style={{ marginLeft: '1rem' }}>
+                    <button className={`filter-btn ${activeDropdown === 'VIEW' ? 'active' : ''}`} onClick={() => toggleFilter('VIEW')}>
+                        <Filter size={16} /> View <ChevronDown size={14} />
+                    </button>
+                    {activeDropdown === 'VIEW' && (
+                        <div className="dropdown-menu" style={{ right: 0, left: 'auto', width: '220px', padding: '1rem' }}>
+                            {/* Sorting */}
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', display: 'block', marginBottom: '0.5rem' }}>SORT BY</label>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
+                                        <input
+                                            type="radio"
+                                            checked={filters.sort === 'desc'}
+                                            onChange={() => {
+                                                setFilters(prev => ({ ...prev, sort: 'desc' }));
+                                                setActiveDropdown(null);
+                                                setPage(1);
+                                            }}
+                                        />
+                                        Newest First
+                                    </label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
+                                        <input
+                                            type="radio"
+                                            checked={filters.sort === 'asc'}
+                                            onChange={() => {
+                                                setFilters(prev => ({ ...prev, sort: 'asc' }));
+                                                setActiveDropdown(null);
+                                                setPage(1);
+                                            }}
+                                        />
+                                        Oldest First
+                                    </label>
+                                </div>
+                            </div>
+
+                            <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '0.5rem 0 1rem 0' }} />
+
+                            {/* Limit */}
+                            <div>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', display: 'block', marginBottom: '0.5rem' }}>ROWS PER PAGE</label>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    {[20, 50, 100].map(limit => (
+                                        <button
+                                            key={limit}
+                                            onClick={() => {
+                                                setFilters(prev => ({ ...prev, limit: limit }));
+                                                setActiveDropdown(null);
+                                                setPage(1);
+                                            }}
+                                            style={{
+                                                flex: 1,
+                                                padding: '0.4rem',
+                                                fontSize: '0.8rem',
+                                                borderRadius: '6px',
+                                                border: filters.limit === limit ? '1px solid #3b82f6' : '1px solid #e2e8f0',
+                                                background: filters.limit === limit ? '#eff6ff' : 'white',
+                                                color: filters.limit === limit ? '#2563eb' : '#475569',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            {limit}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -646,7 +748,7 @@ const TransactionManagement = () => {
                             <th>Date</th>
                             <th>Donor Name</th>
                             <th>Amount</th>
-                            <th>Level</th>
+                            {filters.searchUser && <th>Level</th>}
                             <th>Motivated By</th>
                             <th>L1 Comm (10%)</th>
                             <th>L2 Comm (3%)</th>
@@ -656,9 +758,9 @@ const TransactionManagement = () => {
                     </thead>
                     <tbody>
                         {loading && page === 1 ? (
-                            <tr><td colSpan="8" className="p-8 text-center">Loading transactions...</td></tr>
+                            <tr><td colSpan={filters.searchUser ? 9 : 8} className="p-8 text-center">Loading transactions...</td></tr>
                         ) : transactions.length === 0 ? (
-                            <tr><td colSpan="8" className="p-8 text-center text-gray-500">No transactions found</td></tr>
+                            <tr><td colSpan={filters.searchUser ? 9 : 8} className="p-8 text-center text-gray-500">No transactions found</td></tr>
                         ) : (
                             transactions.map((txn, idx) => {
                                 // Determine Level Label relative to Search User
@@ -684,7 +786,7 @@ const TransactionManagement = () => {
                                         <td>{formatDate(txn.createdAt)}</td>
                                         <td><strong>{txn.donorName}</strong></td>
                                         <td><span className="col-amount">{formatCurrency(txn.amount)}</span></td>
-                                        <td>{levelLabel || <span className="text-gray-300">-</span>}</td>
+                                        {filters.searchUser && <td>{levelLabel || <span className="text-gray-300">-</span>}</td>}
                                         <td>
                                             {txn.level1UserId ? txn.level1UserId.name : (txn.motivatorMobile ? `(Mobile: ${txn.motivatorMobile})` : '-')}
                                         </td>

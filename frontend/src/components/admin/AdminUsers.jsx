@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import UserDetailModal from './UserDetailModal';
 import AdminTransactions from './AdminTransactions';
@@ -11,6 +12,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const AdminUsers = () => {
+    const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [dropdownUsers, setDropdownUsers] = useState([]); // Separate state for dropdown search
     const [loading, setLoading] = useState(true);
@@ -59,6 +61,7 @@ const AdminUsers = () => {
     // Dropdown Pagination
     const [dropdownPage, setDropdownPage] = useState(1);
     const DROPDOWN_LIMIT = 20;
+    const [sortOrder, setSortOrder] = useState('desc'); // 'desc' or 'asc'
 
     // Fetch Main Table Data (Replaces local filtering)
     const fetchUsers = async (params = {}) => {
@@ -66,10 +69,11 @@ const AdminUsers = () => {
         try {
             const queryParams = {
                 page: params.page || pagination.currentPage,
-                limit: pagination.limit,
+                limit: params.limit || pagination.limit,
                 startDate: params.startDate !== undefined ? params.startDate : dateRange.start,
                 endDate: params.endDate !== undefined ? params.endDate : dateRange.end,
-                specificUserId: params.specificUserId !== undefined ? params.specificUserId : (selectedUser ? selectedUser._id : undefined)
+                specificUserId: params.specificUserId !== undefined ? params.specificUserId : (selectedUser ? selectedUser._id : undefined),
+                sort: params.sort || sortOrder
             };
 
             const { data } = await api.get('/users', { params: queryParams });
@@ -462,7 +466,7 @@ const AdminUsers = () => {
                             <div className="date-inputs" style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
                                 <div>
                                     <label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '0.25rem' }}>START DATE</label>
-                                    <input type="date" value={pendingDateRange.start} onChange={e => setPendingDateRange({ ...pendingDateRange, start: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                                    <input type="date" max={new Date().toISOString().split('T')[0]} value={pendingDateRange.start} onChange={e => setPendingDateRange({ ...pendingDateRange, start: e.target.value })} style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
                                 </div>
                                 <div>
                                     <label style={{ fontSize: '0.75rem', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '0.25rem' }}>END DATE</label>
@@ -494,6 +498,78 @@ const AdminUsers = () => {
                             </div>
                             <div className="dropdown-item" onClick={() => handleExport('JSON')} style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                                 <FileText size={16} className="text-yellow-600" style={{ color: '#ca8a04' }} /> JSON (.json)
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* 4. View Options (Sort & Limit) */}
+                <div className="filter-group" style={{ marginLeft: '1rem', position: 'relative' }}>
+                    <button className={`filter-btn ${activeDropdown === 'VIEW' ? 'active' : ''}`} onClick={() => setActiveDropdown(activeDropdown === 'VIEW' ? null : 'VIEW')} style={{ padding: '0.625rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f1f5f9', border: '1px solid transparent', borderRadius: '8px', fontSize: '0.875rem', color: '#475569', cursor: 'pointer' }}>
+                        <Filter size={16} /> View <ChevronDown size={14} />
+                    </button>
+                    {activeDropdown === 'VIEW' && (
+                        <div className="dropdown-menu" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '0.5rem', background: 'white', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', width: '220px', zIndex: 50, padding: '1rem' }}>
+
+                            {/* Sorting */}
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', display: 'block', marginBottom: '0.5rem' }}>SORT BY</label>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
+                                        <input
+                                            type="radio"
+                                            name="sortOrder"
+                                            checked={sortOrder === 'desc'}
+                                            onChange={() => {
+                                                setSortOrder('desc');
+                                                fetchUsers({ sort: 'desc', page: 1 });
+                                            }}
+                                        />
+                                        Newest First
+                                    </label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
+                                        <input
+                                            type="radio"
+                                            name="sortOrder"
+                                            checked={sortOrder === 'asc'}
+                                            onChange={() => {
+                                                setSortOrder('asc');
+                                                fetchUsers({ sort: 'asc', page: 1 });
+                                            }}
+                                        />
+                                        Oldest First
+                                    </label>
+                                </div>
+                            </div>
+
+                            <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '0.5rem 0 1rem 0' }} />
+
+                            {/* Limit */}
+                            <div>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', display: 'block', marginBottom: '0.5rem' }}>ROWS PER PAGE</label>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    {[20, 50, 100].map(limit => (
+                                        <button
+                                            key={limit}
+                                            onClick={() => {
+                                                fetchUsers({ limit: limit, page: 1 });
+                                                setActiveDropdown(null);
+                                            }}
+                                            style={{
+                                                flex: 1,
+                                                padding: '0.4rem',
+                                                fontSize: '0.8rem',
+                                                borderRadius: '6px',
+                                                border: pagination.limit === limit ? '1px solid #3b82f6' : '1px solid #e2e8f0',
+                                                background: pagination.limit === limit ? '#eff6ff' : 'white',
+                                                color: pagination.limit === limit ? '#2563eb' : '#475569',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            {limit}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -538,12 +614,13 @@ const AdminUsers = () => {
                             <th>Wallet</th>
                             <th>Referred By</th>
                             <th>Email</th>
+                            <th>Joined Date</th>
                             {(canViewDetails || canSuspend) && <th style={{ width: '120px', textAlign: 'center' }}>Actions</th>}
                         </tr>
                     </thead>
                     <tbody>
                         {filteredUsers.length === 0 ? (
-                            <tr><td colSpan="6" style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>No users found matching filters</td></tr>
+                            <tr><td colSpan="7" style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>No users found matching filters</td></tr>
                         ) : (
                             filteredUsers.map(user => (
                                 <tr key={user._id} style={{ opacity: user.isSuspended ? 0.6 : 1, background: user.isSuspended ? '#fff5f5' : 'inherit' }}>
@@ -566,6 +643,11 @@ const AdminUsers = () => {
                                         ) : (
                                             <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.9rem' }}>Not Provided</span>
                                         )}
+                                    </td>
+                                    <td>
+                                        <span style={{ color: '#64748b', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                                            {new Date(user.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} {new Date(user.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }).toLowerCase()}
+                                        </span>
                                     </td>
                                     {(canViewDetails || canSuspend) && (
                                         <td style={{ textAlign: 'center' }}>
@@ -592,7 +674,7 @@ const AdminUsers = () => {
                                                             padding: '8px', borderRadius: '4px', cursor: 'pointer',
                                                             display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
                                                         }}
-                                                        onClick={() => setExploreUser(user)}
+                                                        onClick={() => navigate('/admin-user-explorer/transactions', { state: { selectedUser: user } })}
                                                         title="Explore Network"
                                                     >
                                                         <Network size={18} />
@@ -662,36 +744,6 @@ const AdminUsers = () => {
                         user={viewingUser}
                         onClose={() => setViewingUser(null)}
                     />
-                )
-            }
-
-            {
-                exploreUser && (
-                    <div style={{
-                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                        backgroundColor: 'rgba(0,0,0,0.85)',
-                        display: 'flex', justifyContent: 'center', alignItems: 'center',
-                        zIndex: 1100,
-                        backdropFilter: 'blur(5px)',
-                        animation: 'fadeIn 0.2s ease-out'
-                    }} onClick={() => setExploreUser(null)}>
-                        <div style={{
-                            width: '95%',
-                            maxWidth: '1400px',
-                            height: '92vh',
-                            background: '#f8fafc',
-                            borderRadius: '24px',
-                            overflow: 'hidden',
-                            position: 'relative',
-                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-                        }} onClick={e => e.stopPropagation()}>
-                            <AdminTransactions
-                                initialUser={exploreUser}
-                                isModal={true}
-                                onClose={() => setExploreUser(null)}
-                            />
-                        </div>
-                    </div>
                 )
             }
 

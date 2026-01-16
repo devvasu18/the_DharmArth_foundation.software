@@ -59,7 +59,7 @@ router.get('/', protect, checkPermission('User Management', 'view'), async (req,
             .select('-password')
             .populate('roles')
             .populate('referredBy', 'name mobile')
-            .sort({ createdAt: -1 }) // Newest first
+            .sort({ createdAt: req.query.sort === 'asc' ? 1 : -1 }) // Dynamic sort
             .skip(skip)
             .limit(limitNum);
 

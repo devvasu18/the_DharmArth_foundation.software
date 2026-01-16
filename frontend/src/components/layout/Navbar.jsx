@@ -38,10 +38,10 @@ const Navbar = () => {
 
                 {/* Desktop Menu */}
                 <div className="navbar-links hidden-mobile">
-                    <Link to="/donate" className="nav-link">{t('navbar.browseDonations')}</Link>
-                    <div className="nav-dropdown">
-                        <span className="nav-link">{t('navbar.fundraiseFor')} <ChevronDown size={14} /></span>
-                    </div>
+                    <Link to="/donate" className="nav-link">{t('Store')}</Link>
+
+                    <Link to="/events" className="nav-link">{t('Events')}</Link>
+
                     <Link to="/how-it-works" className="nav-link">{t('navbar.howItWorks')}</Link>
                     <div className="nav-search">
                         <Search size={16} />

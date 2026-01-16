@@ -43,7 +43,8 @@ const AdminDashboard = () => {
                 ]);
 
                 const donationList = donationsRes.data;
-                const userList = usersRes.data;
+                const userList = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data.users || []);
+                const totalUserCount = usersRes.data.pagination?.totalUsers || userList.length;
 
                 // --- Calculate Real Stats over Time ---
                 const now = new Date();
@@ -94,7 +95,7 @@ const AdminDashboard = () => {
                 })).slice(-7);
 
                 setStats({
-                    userCount: userList.length,
+                    userCount: totalUserCount,
                     totalDonations: totalAmount,
                     activeCampaigns: 5,
                     donationGrowth: {
@@ -393,13 +394,13 @@ const AdminDashboard = () => {
                                         <td>
                                             <span className="amount-badge">₹{d.amount}</span>
                                         </td>
-                                        <td style={{ color: '#6c757d' }}>
+                                        <td>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                                 <Calendar size={14} />
                                                 {new Date(d.createdAt).toLocaleDateString()}
                                             </div>
                                         </td>
-                                        <td style={{ color: '#6c757d' }}>
+                                        <td>
                                             {d.motivatorMobile || <span style={{ opacity: 0.5 }}>Direct</span>}
                                         </td>
                                         <td>

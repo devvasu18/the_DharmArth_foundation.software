@@ -154,8 +154,9 @@
 
 .custom-table th {
     text-align: left;
-    color: #9a9a9a;
-    font-weight: 600;
+    color: #444;
+    /* Darker header */
+    font-weight: 700;
     font-size: 0.85rem;
     padding: 1rem;
     text-transform: uppercase;
@@ -168,9 +169,11 @@
     vertical-align: middle;
     background: white;
     font-size: 0.95rem;
-    color: #3e4b5b;
+    color: #111;
+    /* Much darker text */
     border-top: 1px solid #f2f4f9;
     border-bottom: 1px solid #f2f4f9;
+    font-weight: 500;
 }
 
 .custom-table tr:hover td {
@@ -196,17 +199,19 @@
 
 .donor-name {
     font-weight: 600;
-    color: #3e4b5b;
+    color: #000;
 }
 
 .donor-meta {
-    font-size: 0.8rem;
-    color: #9c9fa6;
+    font-size: 0.85rem;
+    color: #444;
+    /* Darker meta text */
+    font-weight: 500;
 }
 
 .amount-badge {
     background: linear-gradient(to right, #84d9d2, #07cdae);
-    color: white;
+
     padding: 0.3rem 0.8rem;
     border-radius: 20px;
     font-weight: 600;

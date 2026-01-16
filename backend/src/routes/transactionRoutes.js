@@ -15,9 +15,12 @@ router.get('/dashboard', async (req, res) => {
         const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
 
-        const { searchUserId, specificMotivatorIds, is80G, startDate, endDate, sort } = req.query;
+        const { searchUserId, specificMotivatorIds, is80G, startDate, endDate, sort, _id } = req.query;
 
         const query = { status: 'success' };
+        if (_id) {
+            query._id = _id;
+        }
         const andConditions = [];
 
         // Date Filter
@@ -127,7 +130,7 @@ router.get('/dashboard', async (req, res) => {
                 populate: { path: 'referredBy', select: 'name mobile' } // Fetch L2 Details
             })
             .populate('level2UserId', 'name mobile') // Populate L2 if exists directly
-            .sort({ createdAt: sort === 'oldest' ? 1 : -1 })
+            .sort({ createdAt: (sort === 'asc' || sort === 'oldest') ? 1 : -1 })
             .skip(skip)
             .limit(limit)
             .lean(); // Use lean for performance & modification
