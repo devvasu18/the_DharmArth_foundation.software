@@ -215,7 +215,7 @@ body {
     right: 0;
     width: 8px;
     height: 8px;
-    background-color: var(--warning-color);
+    background-color: var(--danger-color);
     border-radius: 50%;
     border: 2px solid var(--primary-color);
 }
@@ -605,8 +605,8 @@ body {
 }
 
 .notif-item.unread {
-    background-color: #f0fdff;
-    /* Light teal tint */
+    background-color: #fff0f0;
+    /* Light red tint */
 }
 
 .notif-icon {

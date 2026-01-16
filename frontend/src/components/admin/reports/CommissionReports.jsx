@@ -149,7 +149,7 @@ const CommissionReports = () => {
     if (!data && loading) return <div className="p-8">Loading Report Data...</div>;
     if (!data) return <div className="p-8">No data available</div>;
 
-    const { summary, charts, table, insights } = data;
+    const { summary, charts, insights } = data;
 
     // Pie Data
     const pieData = [
@@ -394,68 +394,7 @@ const CommissionReports = () => {
                 </div>
             </div>
 
-            {/* Detailed Table */}
-            <div className="table-container">
-                <div className="table-wrapper">
-                    <table className="finance-table">
-                        <thead className="sticky-header">
-                            <tr>
-                                <th>Date & Time</th>
-                                <th>Transaction ID</th>
-                                <th>Donation</th>
-                                <th>L1 Comm.</th>
-                                <th>L2 Comm.</th>
-                                <th>Total Comm.</th>
-                                <th>Platform Bal.</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {table.data.map((row) => (
-                                <tr key={row.id}>
-                                    <td>{new Date(row.date).toLocaleString('en-IN')}</td>
-                                    <td className="text-neutral">{row.transactionId || '-'}</td>
-                                    <td className="amount-cell">{formatCurrency(row.amount)}</td>
-                                    <td className="amount-cell text-danger">-{formatCurrency(row.l1Commission)}</td>
-                                    <td className="amount-cell text-danger">-{formatCurrency(row.l2Commission)}</td>
-                                    <td className="amount-cell text-danger">-{formatCurrency(row.totalCommission)}</td>
-                                    <td className="amount-cell text-positive">+{formatCurrency(row.platformBalance)}</td>
-                                    <td><span className="status-badge status-paid">Paid</span></td>
-                                </tr>
-                            ))}
-                            {table.data.length === 0 && (
-                                <tr>
-                                    <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No records found for this period</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
 
-                {/* Pagination */}
-                <div className="pagination-container">
-                    <span className="page-info">Showing {table.data.length} of {table.totalRecords} records</span>
-                    <div className="pagination-controls">
-                        <button
-                            className="page-btn"
-                            disabled={currentPage === 1}
-                            onClick={() => setCurrentPage(p => p - 1)}
-                        >
-                            <ChevronLeft size={16} />
-                        </button>
-                        <span style={{ display: 'flex', alignItems: 'center', padding: '0 0.5rem', fontSize: '0.9rem' }}>
-                            Page {currentPage} of {table.totalPages}
-                        </span>
-                        <button
-                            className="page-btn"
-                            disabled={currentPage === table.totalPages}
-                            onClick={() => setCurrentPage(p => p + 1)}
-                        >
-                            <ChevronRight size={16} />
-                        </button>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 };
