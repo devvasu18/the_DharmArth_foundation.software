@@ -127,8 +127,10 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
         if (initialUser) {
             handleUserSelect(initialUser);
         } else if (location.state?.selectedUser) {
-            // Already handled in initial state, but if we want to ensure it triggers side effects:
-            handleUserSelect(location.state.selectedUser);
+            const user = location.state.selectedUser;
+            handleUserSelect(user);
+            setSearchQuery(user.name);
+            setSearchResults([user]);
         } else if (location.state?.searchQuery) {
             // Perform explicit search and auto-select logic for navigation
             const query = location.state.searchQuery;
@@ -554,12 +556,12 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                                 {loading ? (
                                     <div className="loading-state">Loading...</div>
                                 ) : (
-                                    (searchQuery && searchQuery.trim().length >= 2 ? searchResults : allUsers).length === 0 ? (
+                                    (searchQuery && (searchQuery.trim().length >= 2 || searchResults.length > 0) ? searchResults : allUsers).length === 0 ? (
                                         <div className="empty-state" style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
                                             No users found
                                         </div>
                                     ) : (
-                                        (searchQuery && searchQuery.trim().length >= 2 ? searchResults : allUsers).map(user => (
+                                        (searchQuery && (searchQuery.trim().length >= 2 || searchResults.length > 0) ? searchResults : allUsers).map(user => (
                                             <div
                                                 key={user._id}
                                                 className={`user-card ${selectedUser?._id === user._id ? 'selected' : ''}`}
@@ -577,7 +579,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                             </div>
 
                             {/* Pagination (Only show when NOT searching) */}
-                            {(!searchQuery || searchQuery.trim().length < 2) && (
+                            {(!searchQuery || (searchQuery.trim().length < 2 && searchResults.length === 0)) && (
                                 <div className="pagination">
                                     <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Prev</button>
                                     <span>{currentPage} / {totalPages}</span>

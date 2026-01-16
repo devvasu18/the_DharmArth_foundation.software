@@ -18,6 +18,10 @@ const UserDashboard = () => {
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
+    // New Filters
+    const [txnTypeFilter, setTxnTypeFilter] = useState('All');
+    const [commissionLevelFilter, setCommissionLevelFilter] = useState('All');
+
     useEffect(() => {
         // Only fetch data for normal users
         if (user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
@@ -172,6 +176,31 @@ const UserDashboard = () => {
                                 <div className="txn-filters">
                                     <select
                                         className="filter-select"
+                                        value={txnTypeFilter}
+                                        onChange={(e) => {
+                                            setTxnTypeFilter(e.target.value);
+                                            setCommissionLevelFilter('All');
+                                        }}
+                                    >
+                                        <option value="All">All Transactions</option>
+                                        <option value="Donation">Donation by Me</option>
+                                        <option value="Commission">Commission</option>
+                                    </select>
+
+                                    {txnTypeFilter === 'Commission' && (
+                                        <select
+                                            className="filter-select"
+                                            value={commissionLevelFilter}
+                                            onChange={(e) => setCommissionLevelFilter(e.target.value)}
+                                        >
+                                            <option value="All">All Commissions</option>
+                                            <option value="Direct">Direct (L1)</option>
+                                            <option value="Indirect">Indirect (L2)</option>
+                                        </select>
+                                    )}
+
+                                    <select
+                                        className="filter-select"
                                         value={selectedMonth}
                                         onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
                                     >
@@ -200,7 +229,7 @@ const UserDashboard = () => {
                                     <p>No transactions yet.</p>
                                 </div>
                             ) : (
-                                <div style={{ overflowX: 'auto' }}>
+                                <div className="txn-table-container">
                                     <table className="txn-table">
                                         <thead>
                                             <tr>
@@ -211,10 +240,24 @@ const UserDashboard = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {transactions.map(txn => (
+                                            {transactions.filter(txn => {
+                                                if (txnTypeFilter === 'Donation') return txn.isDonation;
+                                                if (txnTypeFilter === 'Commission') {
+                                                    if (txn.type !== 'credit') return false;
+                                                    if (commissionLevelFilter === 'Direct') return !txn.description?.toLowerCase().includes('l2');
+                                                    if (commissionLevelFilter === 'Indirect') return txn.description?.toLowerCase().includes('l2');
+                                                    return true;
+                                                }
+                                                return true;
+                                            }).map(txn => (
                                                 <tr key={txn._id}>
                                                     <td style={{ color: 'var(--primary)', fontWeight: '600', fontSize: '0.9rem' }}>
-                                                        {new Date(txn.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                            <span>{new Date(txn.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                                                            <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '500' }}>
+                                                                {new Date(txn.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                                            </span>
+                                                        </div>
                                                     </td>
                                                     <td>
                                                         <div style={{ fontWeight: 500 }}>{txn.description}</div>
@@ -224,7 +267,7 @@ const UserDashboard = () => {
                                                     </td>
                                                     <td>
                                                         <span className={`status-badge ${txn.type === 'credit' ? 'badge-credit' : 'badge-debit'}`}>
-                                                            {txn.type}
+                                                            {txn.isDonation ? 'Donation' : txn.type}
                                                         </span>
                                                     </td>
                                                 </tr>

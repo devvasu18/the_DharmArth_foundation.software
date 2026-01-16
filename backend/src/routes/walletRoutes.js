@@ -27,23 +27,43 @@ router.get('/transactions', protect, async (req, res) => {
         if (!wallet) return res.json([]);
 
         const { month, year } = req.query;
-        let query = { wallet: wallet._id };
+        let txnQuery = { wallet: wallet._id };
+        let donationQuery = { donorMobile: req.user.mobile, status: 'success' };
 
         if (month && year) {
             const start = new Date(year, month - 1, 1);
             const end = new Date(year, month, 1); // First day of next month
 
-            query.createdAt = {
-                $gte: start,
-                $lt: end
-            };
+            txnQuery.createdAt = { $gte: start, $lt: end };
+            donationQuery.createdAt = { $gte: start, $lt: end };
         }
 
-        const transactions = await Transaction.find(query)
-            .sort({ createdAt: -1 }); // Newest first
+        // 1. Fetch Wallet Transactions (Commissions, Payouts)
+        const walletTxns = await Transaction.find(txnQuery).lean();
 
-        res.json(transactions);
+        // 2. Fetch User Donations (Donation by Me)
+        const Donation = require('../models/Donation');
+        const donations = await Donation.find(donationQuery).lean();
+
+        // 3. Format Donations to mimic Transactions
+        const formattedDonations = donations.map(d => ({
+            _id: d._id,
+            description: `Donation to Platform`,
+            amount: d.amount,
+            type: 'debit', // Treat as debit
+            status: 'success',
+            createdAt: d.createdAt,
+            isDonation: true
+        }));
+
+        // 4. Merge and Sort
+        const allTransactions = [...walletTxns, ...formattedDonations].sort((a, b) =>
+            new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
+        res.json(allTransactions);
     } catch (error) {
+        console.error("Txn Fetch Error:", error);
         res.status(500).json({ message: error.message });
     }
 });
