@@ -89,6 +89,16 @@ const AdminLayout = () => {
         };
     }, [isNotificationsOpen]);
 
+    // Auto-expand Events Dropdown if active
+    useEffect(() => {
+        if (location.pathname === '/admin/events' ||
+            location.pathname.includes('/admin/events-header') ||
+            location.pathname.includes('/admin/event-videos') ||
+            location.pathname.includes('/admin/galleries')) {
+            setEventsDropdownOpen(true);
+        }
+    }, [location.pathname]);
+
     const fetchNotifications = async () => {
         try {
             const res = await axios.get('http://localhost:5000/api/notifications');
@@ -166,7 +176,12 @@ const AdminLayout = () => {
                     {/* Events Dropdown */}
                     <div className="admin-link-dropdown-container">
                         <div
-                            className={`admin-link ${location.pathname.includes('/admin/events') ? 'active' : ''}`}
+                            className={`admin-link ${location.pathname === '/admin/events' ||
+                                location.pathname.includes('/admin/events-header') ||
+                                location.pathname.includes('/admin/event-videos') ||
+                                location.pathname.includes('/admin/galleries')
+                                ? 'active' : ''
+                                }`}
                             onClick={() => !isSidebarCollapsed && setEventsDropdownOpen(!isEventsDropdownOpen)}
                             style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                         >
@@ -184,6 +199,12 @@ const AdminLayout = () => {
                                 </NavLink>
                                 <NavLink to="/admin/events-header" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}>
                                     Events Header
+                                </NavLink>
+                                <NavLink to="/admin/event-videos" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}>
+                                    YouTube Videos
+                                </NavLink>
+                                <NavLink to="/admin/galleries" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}>
+                                    Galleries
                                 </NavLink>
                             </div>
                         )}

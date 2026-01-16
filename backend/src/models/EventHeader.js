@@ -12,6 +12,8 @@ const eventHeaderSchema = new mongoose.Schema({
     ctaText: { type: String, default: 'Learn More' },
     ctaText_hi: { type: String }, // Hindi
     ctaLink: { type: String },
+    titleColor: { type: String, default: '#ffffff' },
+    descriptionColor: { type: String, default: '#ffffff' },
     textPosition: {
         type: String,
         enum: ['center', 'left', 'right', 'top-left', 'top-right'],

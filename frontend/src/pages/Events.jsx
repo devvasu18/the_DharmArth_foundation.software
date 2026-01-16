@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { Search, Calendar, MapPin, ArrowRight, Loader2 } from 'lucide-react';
+import { Search, Calendar, MapPin, ArrowRight, Loader2, Mail, Heart, Users, CheckCircle, Smartphone, PlayCircle, Eye, Image } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import './Events.css';
@@ -12,6 +12,7 @@ const Events = () => {
     const [filter, setFilter] = useState('all'); // all, upcoming, past
     const [searchTerm, setSearchTerm] = useState('');
     const [headerSlides, setHeaderSlides] = useState([]);
+    const [eventVideos, setEventVideos] = useState([]);
     const [headerLoading, setHeaderLoading] = useState(true);
     const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -26,7 +27,18 @@ const Events = () => {
                 setHeaderLoading(false);
             }
         };
+
+        const fetchVideos = async () => {
+            try {
+                const res = await axios.get('http://localhost:5000/api/event-videos');
+                setEventVideos(res.data);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
         fetchHeaders();
+        fetchVideos();
         fetchEvents();
     }, []);
 
@@ -89,9 +101,9 @@ const Events = () => {
                                 )}
                                 <div className="slider-overlay"></div>
                                 <div className="slider-content">
-                                    <h1 className="animate-up">{slide.title || 'Our Impact & Events'}</h1>
+                                    <h1 className="animate-up" style={{ color: slide.titleColor || '#ffffff' }}>{slide.title || 'Our Impact & Events'}</h1>
                                     {slide.subtitle && <h3 className="animate-up delay-1">{slide.subtitle}</h3>}
-                                    {slide.description && <p className="animate-up delay-2">{slide.description}</p>}
+                                    {slide.description && <p className="animate-up delay-2" style={{ color: slide.descriptionColor || '#ffffff' }}>{slide.description}</p>}
                                     {slide.ctaLink && (
                                         <Link to={slide.ctaLink} className="btn-primary animate-up delay-3">
                                             {slide.ctaText || 'Learn More'}
@@ -126,6 +138,9 @@ const Events = () => {
                             className={`filter-tab ${filter === 'past' ? 'active' : ''}`}
                             onClick={() => setFilter('past')}
                         >Past Events</button>
+                        <Link to="/gallery" className="filter-tab gallery-link" style={{ marginLeft: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <Image size={16} /> Gallery
+                        </Link>
                     </div>
 
                     <div className="search-box">
@@ -158,39 +173,158 @@ const Events = () => {
                                     {event.coverImage ? (
                                         <img src={event.coverImage} alt={event.title} />
                                     ) : (
-                                        <div style={{ width: '100%', height: '100%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <div className="placeholder-image">
                                             <Calendar size={40} color="#ccc" />
                                         </div>
                                     )}
-                                    <span className={`event-status-tag ${event.status}`}>{event.status}</span>
+                                    <span className={`event-status-tag ${event.status}`}>
+                                        {event.status === 'upcoming' ? 'Upcoming' : event.status === 'ongoing' ? 'Happening Now' : 'Completed'}
+                                    </span>
                                 </Link>
                                 <div className="event-card-content">
-                                    <div className="event-date">
-                                        <Calendar size={14} />
-                                        {event.date ? new Date(event.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBA'}
-                                    </div>
+                                    <span className="event-meta-row">
+                                        <span className="meta-item timestamp">
+                                            {event.date ? new Date(event.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : 'TBA'}
+                                        </span>
+                                        <span className="meta-dot">•</span>
+                                        <span className="meta-item location">
+                                            {event.location || 'Online'}
+                                        </span>
+                                    </span>
+
                                     <h3 className="event-title">
-                                        <Link to={`/events/${event.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                                        <Link to={`/events/${event.slug}`}>
                                             {event.title}
                                         </Link>
                                     </h3>
+
                                     <p className="event-desc">
-                                        {event.shortDescription || 'No description available.'}
+                                        {event.shortDescription ?
+                                            (event.shortDescription.length > 100 ? event.shortDescription.substring(0, 100) + '...' : event.shortDescription)
+                                            : 'Join us for this special event.'}
                                     </p>
-                                    <div className="event-card-footer">
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#666', fontSize: '0.85rem' }}>
-                                            <MapPin size={14} /> {event.location || 'Online'}
-                                        </span>
-                                        <Link to={`/events/${event.slug}`} className="view-details-btn">
-                                            Read More <ArrowRight size={14} />
-                                        </Link>
-                                    </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
             </main>
+
+            {/* Engagement & Newsletter Section */}
+            <section className="events-engagement-section">
+                <div className="container">
+                    <div className="engagement-header">
+                        <h2>Be The Change You Want To See</h2>
+                        <p>Events are just the beginning. Become a permanent part of our journey.</p>
+                    </div>
+
+                    <div className="cta-cards-container">
+                        <div className="cta-card volunteer">
+                            <div className="card-icon-wrapper">
+                                <Heart size={32} />
+                            </div>
+                            <h3>Become a Volunteer</h3>
+                            <p>Join our on-ground team and experience the joy of giving firsthand.</p>
+                            <ul className="cta-benefits">
+                                <li><CheckCircle size={16} /> Certificate of Appreciation</li>
+                                <li><CheckCircle size={16} /> Networking Opportunities</li>
+                                <li><CheckCircle size={16} /> Skill Development</li>
+                            </ul>
+                            <Link to="/volunteer" className="cta-btn primary">
+                                Join Now <ArrowRight size={16} />
+                            </Link>
+                        </div>
+
+                        <div className="cta-card partner">
+                            <div className="card-icon-wrapper secondary">
+                                <Users size={32} />
+                            </div>
+                            <h3>Partner With Us</h3>
+                            <p>Collaborate with us to amplify our impact and reach more lives.</p>
+                            <ul className="cta-benefits">
+                                <li><CheckCircle size={16} /> CSR Opportunities</li>
+                                <li><CheckCircle size={16} /> Brand Visibility</li>
+                                <li><CheckCircle size={16} /> Joint Impact Reports</li>
+                            </ul>
+                            <Link to="/contact" className="cta-btn secondary">
+                                Contact Us <ArrowRight size={16} />
+                            </Link>
+                        </div>
+                    </div>
+
+
+                    <div className="newsletter-wrapper">
+                        <div className="newsletter-content">
+                            <div className="icon-box">
+                                <Smartphone size={24} />
+                            </div>
+                            <div className="text-box">
+                                <h3>Don't Miss an Update</h3>
+                                <p>Get the latest event news and impact stories via SMS/WhatsApp.</p>
+                            </div>
+                        </div>
+                        <div className="newsletter-form">
+                            <input type="tel" placeholder="Enter your mobile number" />
+                            <button className="subscribe-btn">Subscribe</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Event Videos Section */}
+            <section className="events-video-section">
+                <div className="container">
+                    <div className="video-section-header">
+                        <h2>Our Impact in Motion</h2>
+                        <a href="https://www.youtube.com/@TheDharmarthFoundation" target="_blank" rel="noreferrer" className="view-channel-link">
+                            View Channel <ArrowRight size={16} />
+                        </a>
+                    </div>
+
+                    <div className={`video-asymmetric-grid ${eventVideos.length === 1 ? 'single' : ''}`}>
+                        {/* Main Featured Video (First one) */}
+                        {eventVideos.length > 0 && (
+                            <div className="video-main-feature">
+                                <div className="video-wrapper">
+                                    <iframe
+                                        src={`https://www.youtube.com/embed/${eventVideos[0].videoId}`}
+                                        title={eventVideos[0].title}
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    ></iframe>
+                                </div>
+                                <div className="video-main-content">
+                                    <h3>{eventVideos[0].title}</h3>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Side List (Next 3) */}
+                        <div className="video-side-list">
+                            {eventVideos.slice(1, 4).map(video => (
+                                <div key={video._id} className="video-side-item">
+                                    <div className="side-video-thumb">
+                                        <img src={video.thumbnail} alt={video.title} />
+                                        <div className="play-overlay">
+                                            <PlayCircle size={32} />
+                                        </div>
+                                        <a
+                                            href={video.videoUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="video-click-area"
+                                        > </a>
+                                    </div>
+                                    <div className="side-video-info">
+                                        <h4>{video.title}</h4>
+                                        <span className="watch-now-txt">Watch Now</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <Footer />
         </div>

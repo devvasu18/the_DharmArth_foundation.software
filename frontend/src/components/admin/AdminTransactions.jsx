@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { Search, Users, ChevronRight, TrendingUp, Wallet, ArrowDownRight, ArrowUpRight, DollarSign, User, Network, Maximize2, Minimize2, X } from 'lucide-react';
 import axios from 'axios';
@@ -872,7 +873,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
             </div >
             {/* Full Screen Tree Modal */}
             {
-                isTreeFullScreen && referralTree && (
+                isTreeFullScreen && referralTree && createPortal(
                     <div className="tree-modal-overlay">
                         <button
                             className="close-modal-btn"
@@ -883,7 +884,8 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                         <div className="tree-modal-content">
                             {renderTreeContainer(true)}
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )
             }
         </div >

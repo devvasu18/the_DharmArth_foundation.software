@@ -20,6 +20,7 @@ const EventEditor = () => {
         title: '',
         slug: '',
         coverImage: '',
+        heroImages: [],
         date: '',
         location: '',
         shortDescription: '',
@@ -116,6 +117,15 @@ const EventEditor = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (formData.status === 'completed' && formData.date) {
+            const selectedDate = new Date(formData.date).toISOString().slice(0, 10);
+            const today = new Date().toLocaleDateString('en-CA');
+            if (selectedDate > today) {
+                return toast.error('Future dates are not allowed for completed events');
+            }
+        }
+
         setSaving(true);
         try {
             const user = JSON.parse(localStorage.getItem('user'));
@@ -222,8 +232,9 @@ const EventEditor = () => {
                         <div className="form-group">
                             <label>Event Date</label>
                             <input
-                                type="datetime-local" name="date" className="form-control"
-                                value={formData.date ? new Date(formData.date).toISOString().slice(0, 16) : ''} onChange={handleInputChange}
+                                type="date" name="date" className="form-control"
+                                max={formData.status === 'completed' ? new Date().toLocaleDateString('en-CA') : undefined}
+                                value={formData.date ? new Date(formData.date).toISOString().slice(0, 10) : ''} onChange={handleInputChange}
                             />
                         </div>
                         <div className="form-group">
@@ -243,6 +254,44 @@ const EventEditor = () => {
                                 <input type="file" onChange={(e) => handleFileUpload(e, 'coverImage')} style={{ width: 100 }} />
                             </div>
                             {formData.coverImage && <img src={formData.coverImage} className="preview-img" alt="Cover" />}
+                        </div>
+                        <div className="form-group full-width">
+                            <label>Hero Slider Images (Optional - overrides Cover Image on page)</label>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 10 }}>
+                                {formData.heroImages && formData.heroImages.map((img, idx) => (
+                                    <div key={idx} style={{ position: 'relative', width: 100, height: 60 }}>
+                                        <img src={img} alt="Hero" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4 }} />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newImages = formData.heroImages.filter((_, i) => i !== idx);
+                                                setFormData({ ...formData, heroImages: newImages });
+                                            }}
+                                            style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', borderRadius: '50%', width: 18, height: 18, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}
+                                        >X</button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                <input type="file" multiple onChange={async (e) => {
+                                    const files = Array.from(e.target.files);
+                                    for (const file of files) {
+                                        const uploadData = new FormData();
+                                        uploadData.append('image', file);
+                                        try {
+                                            const res = await axios.post('http://localhost:5000/api/upload', uploadData, {
+                                                headers: { 'Content-Type': 'multipart/form-data' }
+                                            });
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                heroImages: [...(prev.heroImages || []), res.data.imageUrl]
+                                            }));
+                                        } catch (err) {
+                                            toast.error('Failed to upload an image');
+                                        }
+                                    }
+                                }} />
+                            </div>
                         </div>
                         <div className="form-group full-width">
                             <label>Short Description</label>

@@ -24,7 +24,11 @@ import AdminEvents from './components/admin/AdminEvents';
 
 import EventEditor from './components/admin/EventEditor';
 import AdminEventHeaders from './components/admin/AdminEventHeaders';
+import AdminEventVideos from './components/admin/AdminEventVideos';
+import AdminGalleries from './components/admin/AdminGalleries';
 import CommissionReports from './components/admin/reports/CommissionReports';
+import Gallery from './pages/Gallery';
+import GalleryDetail from './pages/GalleryDetail';
 
 import { ConfirmProvider } from './context/ConfirmContext';
 
@@ -43,6 +47,8 @@ function App() {
           <Route path="/dashboard" element={<UserDashboard />} />
           <Route path="/events" element={<Events />} />
           <Route path="/events/:slug" element={<EventDetail />} />
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/gallery/:id" element={<GalleryDetail />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
@@ -54,6 +60,8 @@ function App() {
             <Route path="transaction-management" element={<TransactionManagement />} />
             <Route path="events" element={<AdminEvents />} />
             <Route path="events-header" element={<AdminEventHeaders />} />
+            <Route path="event-videos" element={<AdminEventVideos />} />
+            <Route path="galleries" element={<AdminGalleries />} />
             <Route path="events/new" element={<EventEditor />} />
 
             <Route path="events/edit/:id" element={<EventEditor />} />

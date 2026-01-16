@@ -400,7 +400,7 @@ const DonationForm = () => {
                 <div className="input-group">
                     <label className="input-label">Full Name*</label>
                     <div className="input-wrapper">
-                        <User size={18} className="input-icon" />
+
                         <input
                             type="text"
                             className="form-control"
@@ -433,7 +433,7 @@ const DonationForm = () => {
                 <div className="input-group">
                     <label className="input-label">Email Address (Optional)</label>
                     <div className="input-wrapper">
-                        <Mail size={18} className="input-icon" />
+
                         <input
                             type="email"
                             className="form-control"
@@ -506,7 +506,7 @@ const DonationForm = () => {
 
                     <div className="input-group mb-0">
                         <div className="input-wrapper">
-                            <MapPin size={18} className="input-icon" />
+
                             <select
                                 className="form-control"
                                 value={referralSource}

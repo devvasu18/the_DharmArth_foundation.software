@@ -659,3 +659,20 @@ body {
 .badge-red {
     background-color: var(--danger-color);
 }
+
+.admin-sublink {
+    display: block;
+    padding-left: 10px;
+    transition: all 0.2s;
+}
+
+.admin-sublink:hover {
+    color: var(--primary-color) !important;
+    transform: translateX(5px);
+}
+
+.active-sub {
+    color: var(--primary-color) !important;
+    font-weight: 600;
+    border-right: 3px solid var(--primary-color);
+}

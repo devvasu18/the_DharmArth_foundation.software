@@ -20,6 +20,7 @@ const eventSchema = new mongoose.Schema({
     title: { type: String, required: true },
     slug: { type: String, unique: true, required: true },
     coverImage: { type: String }, // URL
+    heroImages: [{ type: String }], // Array of URLs for hero slider
     date: { type: Date },
     location: { type: String },
     shortDescription: { type: String },

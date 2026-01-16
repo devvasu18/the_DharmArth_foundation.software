@@ -20,6 +20,8 @@ const AdminEventHeaders = () => {
         description: '', description_hi: '',
         ctaText: 'Learn More', ctaText_hi: '',
         ctaLink: '',
+        titleColor: '#ffffff',
+        descriptionColor: '#ffffff',
         textPosition: 'center',
         isActive: true,
         order: 0
@@ -116,7 +118,8 @@ const AdminEventHeaders = () => {
         setFormData({
             _id: null, type: 'image', url: '', title: '', title_hi: '',
             subtitle: '', subtitle_hi: '', description: '', description_hi: '',
-            ctaText: 'Learn More', ctaText_hi: '', ctaLink: '', textPosition: 'center', isActive: true, order: 0
+            ctaText: 'Learn More', ctaText_hi: '', ctaLink: '', textPosition: 'center', isActive: true, order: 0,
+            titleColor: '#ffffff', descriptionColor: '#ffffff'
         });
         setIsEditing(false);
     };
@@ -174,6 +177,25 @@ const AdminEventHeaders = () => {
                                 {formData.type === 'image' && formData.url && (
                                     <img src={formData.url} alt="Preview" style={{ height: 100, marginTop: 10, borderRadius: 4 }} />
                                 )}
+                            </div>
+
+
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, gridColumn: 'span 2' }}>
+                                <div className="form-group">
+                                    <label style={{ display: 'block', marginBottom: 5 }}>Title Color</label>
+                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                        <input type="color" value={formData.titleColor} onChange={e => setFormData({ ...formData, titleColor: e.target.value })} style={{ height: 40, width: 60, padding: 0, border: 'none' }} />
+                                        <input type="text" className="form-control" value={formData.titleColor} onChange={e => setFormData({ ...formData, titleColor: e.target.value })} style={{ flex: 1, padding: 8 }} />
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label style={{ display: 'block', marginBottom: 5 }}>Description Color</label>
+                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                        <input type="color" value={formData.descriptionColor} onChange={e => setFormData({ ...formData, descriptionColor: e.target.value })} style={{ height: 40, width: 60, padding: 0, border: 'none' }} />
+                                        <input type="text" className="form-control" value={formData.descriptionColor} onChange={e => setFormData({ ...formData, descriptionColor: e.target.value })} style={{ flex: 1, padding: 8 }} />
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Language Switcher */}
@@ -265,7 +287,7 @@ const AdminEventHeaders = () => {
                             </button>
                         </div>
                     </form>
-                </div>
+                </div >
             )}
 
             <div className="admin-card" style={{ background: 'white', borderRadius: 8, overflow: 'hidden', border: '1px solid #ddd' }}>
@@ -308,7 +330,7 @@ const AdminEventHeaders = () => {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </div >
     );
 };
 

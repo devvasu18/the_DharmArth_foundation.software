@@ -46,6 +46,8 @@ app.use('/api/transactions', transactionRoutes);
 
 app.use('/api/events', eventRoutes);
 app.use('/api/event-headers', eventHeaderRoutes);
+app.use('/api/event-videos', require('../routes/eventVideoRoutes'));
+app.use('/api/galleries', require('../routes/galleryRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
