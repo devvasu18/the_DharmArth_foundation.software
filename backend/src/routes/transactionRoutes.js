@@ -123,7 +123,7 @@ router.get('/dashboard', async (req, res) => {
 
         // Fetch Data
         let donations = await Donation.find(query)
-            .select('donorName donorMobile amount motivatorMobile createdAt is80G level1UserId level2UserId status panNumber')
+            .select('donorName donorMobile amount motivatorMobile createdAt is80G level1UserId level2UserId status panNumber aadhaarNumber')
             .populate({
                 path: 'level1UserId',
                 select: 'name mobile referredBy', // Fetch L2 Relation

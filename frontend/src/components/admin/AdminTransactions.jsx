@@ -79,7 +79,12 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
 
         try {
             const res = await axios.get(`http://localhost:5000/api/transactions/users/${user._id}/referral-tree`);
-            setReferralTree(res.data);
+            const treeData = res.data || {};
+            setReferralTree({
+                ...treeData,
+                level1Users: treeData.level1Users || [],
+                level2Data: treeData.level2Data || []
+            });
 
             // Also fetch transactions and stats
             const txnRes = await axios.get(`http://localhost:5000/api/transactions/users/${user._id}/transactions`);
@@ -93,7 +98,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
 
             // Fetch Network Stats
             const netRes = await axios.get(`http://localhost:5000/api/transactions/users/${user._id}/network-stats`);
-            setNetworkData(netRes.data.network);
+            setNetworkData(netRes.data.network || []);
 
         } catch (error) {
             console.error('Error fetching referral tree:', error);
@@ -117,14 +122,32 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
         }
     };
 
-    // Auto-select user if provided via props (Modal Mode)
+    // Auto-select user if provided via props (Modal Mode) or Navigation State
     useEffect(() => {
         if (initialUser) {
             handleUserSelect(initialUser);
+        } else if (location.state?.selectedUser) {
+            // Already handled in initial state, but if we want to ensure it triggers side effects:
+            handleUserSelect(location.state.selectedUser);
+        } else if (location.state?.searchQuery) {
+            // Perform explicit search and auto-select logic for navigation
+            const query = location.state.searchQuery;
+            setSearchQuery(query);
+            axios.get(`http://localhost:5000/api/transactions/users/search?query=${query}`)
+                .then(res => {
+                    const users = res.data.users;
+                    setSearchResults(users);
+                    // If we have results, auto-select the first one (most likely match for mobile)
+                    if (users.length > 0) {
+                        handleUserSelect(users[0]);
+                    }
+                })
+                .catch(err => console.error(err));
         }
-    }, [initialUser]);
+    }, [initialUser, location.state]);
 
     const formatCurrency = (amount) => {
+        if (amount === undefined || amount === null || isNaN(amount)) return '₹0';
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR',
@@ -133,7 +156,10 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
     };
 
     const formatDate = (date) => {
-        return new Date(date).toLocaleDateString('en-IN', {
+        if (!date) return '-';
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return '-';
+        return d.toLocaleDateString('en-IN', {
             day: 'numeric',
             month: 'short',
             year: 'numeric'
@@ -141,6 +167,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
     };
 
     const getFilteredNetworkData = () => {
+        if (!Array.isArray(networkData)) return [];
         if (networkFilter === 'ALL') return networkData;
         if (networkFilter === 'DIRECT') return networkData.filter(d => d.level === 'Level 1');
         if (networkFilter === 'INDIRECT') return networkData.filter(d => d.level === 'Level 2');
@@ -700,7 +727,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                                             getFilteredNetworkData().map(member => (
                                                 <div key={member._id} className="network-row">
                                                     <div className="net-user">
-                                                        <div className="net-avatar">{member.avatar}</div>
+                                                        <div className="net-avatar">{member.avatar || member.name?.charAt(0).toUpperCase()}</div>
                                                         <div className="net-meta">
                                                             <h4>{member.name}</h4>
                                                             <p>{member.mobile}</p>
@@ -721,7 +748,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                                 </div>
                             )}
 
-                            {rightPanelMode === 'TREE' && referralTree && (
+                            {rightPanelMode === 'TREE' && referralTree?.user && (
                                 <div className="tree-view">
                                     {/* Tree Controls */}
                                     <div className="tree-controls">

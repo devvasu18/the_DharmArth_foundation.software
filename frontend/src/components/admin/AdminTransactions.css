@@ -369,7 +369,7 @@
     display: inline-flex;
     min-width: 100%;
     flex-direction: column;
-    alignItems: center;
+    align-items: center;
     padding-bottom: 2rem;
     text-align: left;
 }
@@ -520,7 +520,7 @@
 .family-column {
     display: flex;
     flex-direction: column;
-    alignItems: center;
+    align-items: center;
 }
 
 /* Refined Badge Styles */
@@ -1149,4 +1149,177 @@
     height: 24px;
     background: #cbd5e0;
     margin: 0 0.5rem;
+}
+
+/* ============ NETWORK VIEW ADJUSTMENTS ============ */
+.network-view {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    background: #fff;
+    min-height: 100%;
+}
+
+/* Filter Buttons Container */
+.network-filters {
+    display: flex;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    flex-wrap: wrap;
+    /* Safety for smaller screens */
+}
+
+/* Filter Button Style */
+.filter-btn {
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #64748b;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #334155;
+    transform: translateY(-1px);
+}
+
+.filter-btn.active {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #3b82f6;
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1);
+}
+
+/* Network List - Table Wrapper */
+.network-list {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    /* For rounded corners */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    background: white;
+}
+
+/* Header Row */
+.network-header-row {
+    display: grid;
+    grid-template-columns: 2.5fr 1fr 1.2fr 1.2fr 1.2fr;
+    padding: 1rem 1.5rem;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    font-weight: 700;
+    color: #64748b;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    align-items: center;
+}
+
+/* Data Row */
+.network-row {
+    display: grid;
+    grid-template-columns: 2.5fr 1fr 1.2fr 1.2fr 1.2fr;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.network-row:last-child {
+    border-bottom: none;
+}
+
+.network-row:hover {
+    background: #f8fafc;
+}
+
+/* User Column */
+.net-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.net-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #e0e7ff;
+    color: #4f46e5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.net-meta {
+    display: flex;
+    flex-direction: column;
+}
+
+.net-meta h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: normal;
+}
+
+.net-meta p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    line-height: normal;
+}
+
+/* Level Badge Column */
+.net-level {
+    display: flex;
+    align-items: center;
+}
+
+/* Reuse default badges but refine if needed */
+
+/* Stats Columns */
+.net-amount {
+    font-weight: 600;
+    color: #334155;
+    font-size: 0.95rem;
+}
+
+.net-earned {
+    color: #10b981;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.net-date {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+/* Empty State */
+.empty-network {
+    padding: 4rem;
+    text-align: center;
+    color: #94a3b8;
+    background: #f8fafc;
+    font-size: 0.95rem;
 }

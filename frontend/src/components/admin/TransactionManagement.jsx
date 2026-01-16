@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
     Search, Filter, Calendar, Download, ChevronDown, X,
@@ -66,6 +66,17 @@ const TransactionManagement = () => {
     }, []);
 
     const location = useLocation();
+    const navigate = useNavigate();
+
+    const handleOpenExplorer = (data) => {
+        if (!data) return;
+        if (typeof data === 'object' && data._id) {
+            navigate('/admin-user-explorer/transactions', { state: { selectedUser: data } });
+        } else if (typeof data === 'string') {
+            navigate('/admin-user-explorer/transactions', { state: { searchQuery: data } });
+        }
+    };
+
     // Handle redirect from Notification
     useEffect(() => {
         if (location.state?.openTransactionId) {
@@ -279,8 +290,9 @@ const TransactionManagement = () => {
     };
 
     const formatDate = (date) => {
-        return new Date(date).toLocaleDateString('en-IN', {
-            day: 'numeric', month: 'short', year: 'numeric'
+        return new Date(date).toLocaleString('en-IN', {
+            day: 'numeric', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
         });
     };
 
@@ -745,6 +757,7 @@ const TransactionManagement = () => {
                 <table className="transaction-table">
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>Date</th>
                             <th>Donor Name</th>
                             <th>Amount</th>
@@ -758,9 +771,9 @@ const TransactionManagement = () => {
                     </thead>
                     <tbody>
                         {loading && page === 1 ? (
-                            <tr><td colSpan={filters.searchUser ? 9 : 8} className="p-8 text-center">Loading transactions...</td></tr>
+                            <tr><td colSpan={filters.searchUser ? 10 : 9} className="p-8 text-center">Loading transactions...</td></tr>
                         ) : transactions.length === 0 ? (
-                            <tr><td colSpan={filters.searchUser ? 9 : 8} className="p-8 text-center text-gray-500">No transactions found</td></tr>
+                            <tr><td colSpan={filters.searchUser ? 10 : 9} className="p-8 text-center text-gray-500">No transactions found</td></tr>
                         ) : (
                             transactions.map((txn, idx) => {
                                 // Determine Level Label relative to Search User
@@ -783,6 +796,7 @@ const TransactionManagement = () => {
 
                                 return (
                                     <tr key={idx} onClick={() => setSelectedTransaction(txn)}>
+                                        <td className="text-xs text-gray-500 font-mono">{txn._id}</td>
                                         <td>{formatDate(txn.createdAt)}</td>
                                         <td><strong>{txn.donorName}</strong></td>
                                         <td><span className="col-amount">{formatCurrency(txn.amount)}</span></td>
@@ -826,56 +840,90 @@ const TransactionManagement = () => {
                         <div className="panel-content">
                             <div className="breakdown-card">
                                 <div className="breakdown-row"><span>Donation Amount</span> <strong>{formatCurrency(selectedTransaction.amount)}</strong></div>
-                                <div className="breakdown-row"><span>Donor Name</span> <strong>{selectedTransaction.donorName}</strong></div>
-                                <div className="breakdown-row"><span>Date</span> <strong>{formatDate(selectedTransaction.createdAt)}</strong></div>
-                                <div className="breakdown-row"><span>Mobile</span> <strong>{selectedTransaction.donorMobile}</strong></div>
-                            </div>
-
-                            <h4 className="font-bold mb-4 text-slate-800">Commission Distribution</h4>
-
-                            {/* Level 1 */}
-                            <div className="breakdown-card level-1">
-                                <div className="commission-header">
-                                    <span>Level 1 Commission</span>
-                                    <span className="text-level-1">10%</span>
-                                </div>
-                                <div className="commission-user mb-2">
-                                    <User size={16} />
-                                    <strong>
-                                        {selectedTransaction.level1UserId
-                                            ? selectedTransaction.level1UserId.name
-                                            : (selectedTransaction.motivatorMobile ? `Agent: ${selectedTransaction.motivatorMobile}` : 'Direct Donation (No Agent)')
-                                        }
+                                <div className="breakdown-row">
+                                    <span>Donor Name</span>
+                                    <strong
+                                        className="cursor-pointer hover:text-blue-600 hover:underline"
+                                        onClick={() => handleOpenExplorer(selectedTransaction.userId || selectedTransaction.donorMobile)}
+                                        title="View Account"
+                                    >
+                                        {selectedTransaction.donorName}
                                     </strong>
                                 </div>
-                                {(selectedTransaction.level1UserId || selectedTransaction.motivatorMobile) && (
-                                    <div className="text-xl font-bold text-slate-900 mt-2">
-                                        {formatCurrency(selectedTransaction.amount * 0.10)}
-                                    </div>
+                                <div className="breakdown-row"><span>Date</span> <strong>{formatDate(selectedTransaction.createdAt)}</strong></div>
+                                <div className="breakdown-row"><span>Mobile</span> <strong>{selectedTransaction.donorMobile}</strong></div>
+                                {selectedTransaction.is80G && (
+                                    <>
+                                        <div className="breakdown-row pt-2 border-t border-slate-100 mt-2"><span className="text-green-600 font-bold flex items-center gap-1"><CheckCircle size={14} /> 80G Benefit</span> <strong className="text-green-600">Applied</strong></div>
+                                        {selectedTransaction.panNumber && <div className="breakdown-row"><span>PAN Number</span> <strong>{selectedTransaction.panNumber}</strong></div>}
+                                        {selectedTransaction.aadhaarNumber && <div className="breakdown-row"><span>Adhar Number</span> <strong>{selectedTransaction.aadhaarNumber}</strong></div>}
+                                    </>
                                 )}
                             </div>
 
-                            {/* Level 2 */}
-                            {selectedTransaction.level2UserId && (
-                                <div className="breakdown-card level-2">
-                                    <div className="commission-header">
-                                        <span>Level 2 Commission</span>
-                                        <span className="text-level-2">3%</span>
-                                    </div>
-                                    <div className="commission-user mb-2">
-                                        <User size={16} />
-                                        <strong>{selectedTransaction.level2UserId.name || 'L2 Agent'}</strong>
-                                    </div>
-                                    <div className="text-xl font-bold text-slate-900 mt-2">
-                                        {formatCurrency(selectedTransaction.amount * 0.03)}
-                                    </div>
-                                </div>
-                            )}
+                            {(selectedTransaction.level1UserId || selectedTransaction.motivatorMobile) ? (
+                                <>
+                                    <h4 className="font-bold mb-4 text-slate-800">Commission Distribution</h4>
 
-                            {/* N/A for L2 */}
-                            {!selectedTransaction.level2UserId && (selectedTransaction.level1UserId || selectedTransaction.motivatorMobile) && (
-                                <div className="text-center text-sm text-gray-400 italic">
-                                    No Level 2 Commission (Agent has no referrer)
+                                    {/* Level 1 */}
+                                    <div className="breakdown-card level-1">
+                                        <div className="commission-header">
+                                            <span>Level 1 Commission</span>
+                                            <span className="text-level-1">10%</span>
+                                        </div>
+                                        <div
+                                            className="commission-user mb-2 cursor-pointer hover:opacity-80"
+                                            onClick={() => handleOpenExplorer(selectedTransaction.level1UserId)}
+                                            title="View Level 1 Agent"
+                                        >
+                                            <User size={16} />
+                                            <strong className="hover:text-blue-600 hover:underline">
+                                                {selectedTransaction.level1UserId
+                                                    ? selectedTransaction.level1UserId.name
+                                                    : (selectedTransaction.motivatorMobile ? `Agent: ${selectedTransaction.motivatorMobile}` : 'Unknown Agent')
+                                                }
+                                            </strong>
+                                        </div>
+                                        <div className="text-xl font-bold text-slate-900 mt-2">
+                                            {formatCurrency(selectedTransaction.amount * 0.10)}
+                                        </div>
+                                    </div>
+
+                                    {/* Level 2 */}
+                                    {selectedTransaction.level2UserId && (
+                                        <div className="breakdown-card level-2">
+                                            <div className="commission-header">
+                                                <span>Level 2 Commission</span>
+                                                <span className="text-level-2">3%</span>
+                                            </div>
+                                            <div
+                                                className="commission-user mb-2 cursor-pointer hover:opacity-80"
+                                                onClick={() => handleOpenExplorer(selectedTransaction.level2UserId)}
+                                                title="View Level 2 Agent"
+                                            >
+                                                <User size={16} />
+                                                <strong className="hover:text-blue-600 hover:underline">{selectedTransaction.level2UserId.name || 'L2 Agent'}</strong>
+                                            </div>
+                                            <div className="text-xl font-bold text-slate-900 mt-2">
+                                                {formatCurrency(selectedTransaction.amount * 0.03)}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* N/A for L2 */}
+                                    {!selectedTransaction.level2UserId && (
+                                        <div className="text-center text-sm text-gray-400 italic">
+                                            No Level 2 Commission (Agent has no referrer)
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="breakdown-card bg-green-50 border-green-200 mt-4">
+                                    <div className="flex items-center gap-2 text-green-700 font-bold mb-2">
+                                        <CheckCircle size={20} />
+                                        <span>Direct Donation</span>
+                                    </div>
+                                    <p className="text-sm text-green-700">This donation was made directly without any agent referral. The full amount goes to the foundation.</p>
                                 </div>
                             )}
 
