@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Calendar, MapPin, Share2, ArrowLeft, Loader2, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { Calendar, MapPin, Share2, ArrowLeft, Loader2, ChevronLeft, ChevronRight, Clock, Tag, ArrowRight } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import './EventDetail.css';
@@ -9,11 +9,14 @@ import './EventDetail.css';
 const EventDetail = () => {
     const { slug } = useParams();
     const [event, setEvent] = useState(null);
+    const [recentEvents, setRecentEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
 
     useEffect(() => {
+        window.scrollTo(0, 0);
         fetchEvent();
+        fetchRecentEvents();
     }, [slug]);
 
     useEffect(() => {
@@ -36,6 +39,18 @@ const EventDetail = () => {
             setLoading(false);
         }
     };
+
+    const fetchRecentEvents = async () => {
+        try {
+            const res = await axios.get('http://localhost:5000/api/events');
+            if (res.data.events) {
+                // Get 3 events that are NOT the current one
+                setRecentEvents(res.data.events.filter(e => e.slug !== slug).slice(0, 3));
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
 
     // Instagram Embed Script
     useEffect(() => {
@@ -103,6 +118,7 @@ const EventDetail = () => {
             case 'video':
                 return (
                     <div key={index} className="detail-block video-block animate-up">
+                        <div className="block-label">Video Feature</div>
                         <div className="video-card-premium">
                             <video src={block.content.url} controls poster={block.content.thumbnail}></video>
                         </div>
@@ -110,7 +126,6 @@ const EventDetail = () => {
                     </div>
                 );
             case 'youtube':
-                // simple ID extraction
                 let videoId = '';
                 try {
                     const url = block.content.url;
@@ -123,6 +138,7 @@ const EventDetail = () => {
 
                 return (
                     <div key={index} className="detail-block youtube-block animate-up">
+                        <div className="block-label">Watch Highlight</div>
                         <div className="youtube-card-premium">
                             <iframe
                                 src={`https://www.youtube.com/embed/${videoId}`}
@@ -137,6 +153,7 @@ const EventDetail = () => {
             case 'instagram':
                 return (
                     <div key={index} className="detail-block instagram-block animate-up">
+                        <div className="block-label instagram-label">Instagram Feature</div>
                         <div className="instagram-card-premium">
                             <blockquote
                                 className="instagram-media"
@@ -176,7 +193,7 @@ const EventDetail = () => {
                     <div className="hero-text-content">
                         <div className="hero-tags">
                             {event.status && <span className={`status-pill ${event.status}`}>{event.status}</span>}
-                            {event.date && <span className="date-pill"><Calendar size={14} /> {new Date(event.date).toLocaleDateString()}</span>}
+                            {event.date && <span className="date-pill"><Calendar size={14} /> {new Date(event.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>}
                         </div>
                         <h1 className="hero-title">{event.title}</h1>
                         {event.location && <p className="hero-location"><MapPin size={18} /> {event.location}</p>}
@@ -198,19 +215,10 @@ const EventDetail = () => {
             </header>
 
             <main className="premium-body-content">
-                <div className="content-container">
+                <div className="content-layout-grid container">
 
-                    {/* Share Bar Sticky */}
-                    <div className="sticky-share-bar">
-                        <button className="share-btn" onClick={() => {
-                            navigator.clipboard.writeText(window.location.href);
-                            alert('Link copied to clipboard!');
-                        }}>
-                            <Share2 size={20} />
-                        </button>
-                    </div>
-
-                    <div className="article-wrapper">
+                    {/* LEFT COLUMN: Main Articles */}
+                    <article className="main-article-column">
                         {/* Intro / Lead */}
                         {event.shortDescription && (
                             <div className="article-lead">
@@ -223,10 +231,64 @@ const EventDetail = () => {
                         </div>
 
                         <div className="article-footer">
-                            <p>Published by <strong>Dharmarth Foundation</strong></p>
-                            <p className="publish-date"><Clock size={14} /> {new Date(event.createdAt).toLocaleDateString()}</p>
+                            <div className="author-info">
+                                <span className="label">Published By</span>
+                                <span className="value">The Dharmarth Foundation</span>
+                            </div>
+                            <div className="publish-info">
+                                <Clock size={16} />
+                                <span>{new Date(event.createdAt).toLocaleDateString()}</span>
+                            </div>
+
+                            <button className="share-btn-large" onClick={() => {
+                                navigator.clipboard.writeText(window.location.href);
+                                alert('Link copied to clipboard!');
+                            }}>
+                                <Share2 size={18} /> Share Event
+                            </button>
                         </div>
-                    </div>
+                    </article>
+
+                    {/* RIGHT COLUMN: Sidebar */}
+                    <aside className="sidebar-column">
+                        <div className="sidebar-widget">
+                            <h3>Upcoming Events</h3>
+                            <div className="widget-content">
+                                {recentEvents.length > 0 ? (
+                                    <div className="sidebar-events-list">
+                                        {recentEvents.map(re => (
+                                            <Link to={`/events/${re.slug}`} key={re._id} className="sidebar-event-item">
+                                                <div className="sidebar-event-thumb">
+                                                    <img src={re.coverImage || '/placeholder.jpg'} alt={re.title} />
+                                                </div>
+                                                <div className="sidebar-event-info">
+                                                    <h4>{re.title}</h4>
+                                                    <span className="date">{new Date(re.date).toLocaleDateString()}</span>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="empty-widget">No other events at the moment.</p>
+                                )}
+                                <Link to="/events" className="widget-link">View All <ArrowRight size={14} /></Link>
+                            </div>
+                        </div>
+
+                        <div className="sidebar-widget highlight">
+                            <h3>Support Our Cause</h3>
+                            <p>Your contribution can bring a smile to someone's face today.</p>
+                            <Link to="/donate" className="sidebar-donate-btn">Donate Now</Link>
+                        </div>
+
+                        <div className="sidebar-widget">
+                            <h3>Share This</h3>
+                            <div className="sidebar-share-row">
+                                <button className="side-share-icon fb"><Share2 size={18} /></button>
+                                {/* Add real share links if needed */}
+                            </div>
+                        </div>
+                    </aside>
 
                 </div>
             </main>

@@ -101,11 +101,11 @@ const Events = () => {
                                 )}
                                 <div className="slider-overlay"></div>
                                 <div className="slider-content">
-                                    <h1 className="animate-up" style={{ color: slide.titleColor || '#ffffff' }}>{slide.title || 'Our Impact & Events'}</h1>
-                                    {slide.subtitle && <h3 className="animate-up delay-1">{slide.subtitle}</h3>}
-                                    {slide.description && <p className="animate-up delay-2" style={{ color: slide.descriptionColor || '#ffffff' }}>{slide.description}</p>}
+                                    <h1 className="event-slide-up" style={{ color: slide.titleColor || '#ffffff' }}>{slide.title || 'Our Impact & Events'}</h1>
+                                    {slide.subtitle && <h3 className="event-slide-up delay-1">{slide.subtitle}</h3>}
+                                    {slide.description && <p className="event-slide-up delay-2" style={{ color: slide.descriptionColor || '#ffffff' }}>{slide.description}</p>}
                                     {slide.ctaLink && (
-                                        <Link to={slide.ctaLink} className="btn-primary animate-up delay-3">
+                                        <Link to={slide.ctaLink} className="btn-primary event-slide-up delay-3">
                                             {slide.ctaText || 'Learn More'}
                                         </Link>
                                     )}
