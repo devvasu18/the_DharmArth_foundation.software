@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Facebook, Twitter, Linkedin, Youtube, Instagram, Phone, Mail } from 'lucide-react';
 import './Footer.css';
 
 const Footer = () => {
+    const { t } = useTranslation();
     return (
         <footer className="footer">
             <div className="container">
@@ -22,14 +24,14 @@ const Footer = () => {
                         </div>
 
                         <div style={{ marginTop: '2rem' }}>
-                            <p>For any queries</p>
+                            <p>{t('footer.queries')}</p>
                             <p><strong>Email: info@Dharmarth.org</strong></p>
                             <p><strong>Contact No: +91 9900000000</strong></p>
                         </div>
                     </div>
 
                     <div className="footer-col">
-                        <h3>Causes</h3>
+                        <h3>{t('footer.causes')}</h3>
                         <ul className="footer-links">
                             <li><a href="#">Medical Crowdfunding</a></li>
                             <li><a href="#">Cancer Crowdfunding</a></li>
@@ -42,7 +44,7 @@ const Footer = () => {
                     </div>
 
                     <div className="footer-col">
-                        <h3>How it works?</h3>
+                        <h3>{t('footer.howItWorks')}</h3>
                         <ul className="footer-links">
                             <li><a href="#">Fundraising for NGOs</a></li>
                             <li><a href="#">Sponsor A Child</a></li>
@@ -55,7 +57,7 @@ const Footer = () => {
                     </div>
 
                     <div className="footer-col">
-                        <h3>About Us</h3>
+                        <h3>{t('footer.aboutUs')}</h3>
                         <ul className="footer-links">
                             <li><a href="#">Team Dharmarth</a></li>
                             <li><a href="#">In The News</a></li>
@@ -68,7 +70,7 @@ const Footer = () => {
                     </div>
 
                     <div className="footer-col">
-                        <h3>Support</h3>
+                        <h3>{t('footer.support')}</h3>
                         <ul className="footer-links">
                             <li><a href="#">Medical Finance</a></li>
                             <li><a href="#">FAQs & Help Center</a></li>
@@ -90,7 +92,7 @@ const Footer = () => {
                         <span className="payment-icon">100% Secure</span>
                     </div>
                     <div className="copyright">
-                        Copyright © 2026 Dharmarth Online Ventures Pvt Ltd. All Rights Reserved.
+                        {t('footer.copyright')}
                     </div>
                 </div>
             </div>

@@ -5,6 +5,8 @@ import {
     Save, ArrowLeft, Image as ImageIcon, Video, Type, Youtube, Instagram,
     Trash2, ArrowUp, ArrowDown, Move, Loader2
 } from 'lucide-react';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import toast from 'react-hot-toast';
 import './EventEditor.css';
 
@@ -15,6 +17,7 @@ const EventEditor = () => {
 
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [blockTabs, setBlockTabs] = useState({}); // To track active language tab for each block
 
     const [formData, setFormData] = useState({
         title: '',
@@ -79,7 +82,7 @@ const EventEditor = () => {
         switch (type) {
             case 'image': return { url: '', title: '', layout: 'default' };
             case 'video': return { url: '', caption: '' };
-            case 'text': return { html: '' };
+            case 'text': return { html: '', htmlHi: '' };
             case 'youtube': return { url: '', caption: '' };
             case 'instagram': return { url: '' };
             default: return {};
@@ -345,13 +348,52 @@ const EventEditor = () => {
 
                                     {block.type === 'text' && (
                                         <div className="form-group">
-                                            <label>Content (HTML/Markdown)</label>
-                                            <textarea
-                                                className="form-control" rows="5"
-                                                value={block.content.html}
-                                                onChange={(e) => updateBlock(index, 'html', e.target.value)}
-                                                placeholder="Write your text here..."
-                                            ></textarea>
+                                            <div className="language-tabs" style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+                                                <button
+                                                    type="button"
+                                                    className={`btn-tab ${!blockTabs[block.id] || blockTabs[block.id] === 'en' ? 'active' : ''}`}
+                                                    onClick={() => setBlockTabs({ ...blockTabs, [block.id]: 'en' })}
+                                                    style={{ padding: '5px 10px', cursor: 'pointer', background: (!blockTabs[block.id] || blockTabs[block.id] === 'en') ? '#007bff' : '#eee', color: (!blockTabs[block.id] || blockTabs[block.id] === 'en') ? '#fff' : '#333', border: 'none', borderRadius: 4 }}
+                                                >
+                                                    English
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={`btn-tab ${blockTabs[block.id] === 'hi' ? 'active' : ''}`}
+                                                    onClick={() => setBlockTabs({ ...blockTabs, [block.id]: 'hi' })}
+                                                    style={{ padding: '5px 10px', cursor: 'pointer', background: blockTabs[block.id] === 'hi' ? '#007bff' : '#eee', color: blockTabs[block.id] === 'hi' ? '#fff' : '#333', border: 'none', borderRadius: 4 }}
+                                                >
+                                                    Hindi
+                                                </button>
+                                            </div>
+
+                                            {(!blockTabs[block.id] || blockTabs[block.id] === 'en') && (
+                                                <>
+                                                    <label>Content (English)</label>
+                                                    <CKEditor
+                                                        editor={ClassicEditor}
+                                                        data={block.content.html || ''}
+                                                        onChange={(event, editor) => {
+                                                            const data = editor.getData();
+                                                            updateBlock(index, 'html', data);
+                                                        }}
+                                                    />
+                                                </>
+                                            )}
+
+                                            {blockTabs[block.id] === 'hi' && (
+                                                <>
+                                                    <label>Content (Hindi)</label>
+                                                    <CKEditor
+                                                        editor={ClassicEditor}
+                                                        data={block.content.htmlHi || ''}
+                                                        onChange={(event, editor) => {
+                                                            const data = editor.getData();
+                                                            updateBlock(index, 'htmlHi', data);
+                                                        }}
+                                                    />
+                                                </>
+                                            )}
                                         </div>
                                     )}
 

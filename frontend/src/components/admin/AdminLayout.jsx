@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet, Calendar, FileText } from 'lucide-react';
+import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet, Calendar, FileText, MessageSquare } from 'lucide-react';
 import { io } from "socket.io-client";
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -168,6 +168,10 @@ const AdminLayout = () => {
                     <NavLink to="/admin/users" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
                         <Users size={20} title={isSidebarCollapsed ? "User Management" : ""} />
                         {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>User Management</span>}
+                    </NavLink>
+                    <NavLink to="/admin/leads" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
+                        <MessageSquare size={20} title={isSidebarCollapsed ? "Auto Chat Leads" : ""} />
+                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Chat Leads</span>}
                     </NavLink>
                     <NavLink to="/admin/sliders" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
                         <Image size={20} title={isSidebarCollapsed ? "Hero Sliders" : ""} />

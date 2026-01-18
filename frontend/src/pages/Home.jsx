@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Navbar from '../components/layout/Navbar';
 import HeroSlider from '../components/layout/HeroSlider';
 import CrowdfundingSection from '../components/layout/CrowdfundingSection';
@@ -9,13 +10,14 @@ import MonthlyGivingSection from '../components/layout/MonthlyGivingSection';
 import Footer from '../components/layout/Footer';
 
 const Home = () => {
+    const { t } = useTranslation();
     return (
         <div>
             <Navbar />
             <HeroSlider />
             <div className="container" style={{ padding: '4rem 1rem', textAlign: 'center' }}>
-                <h2 style={{ fontSize: 'var(--text-4xl)', marginBottom: 'var(--spacing-4)', color: 'var(--secondary)' }}>Welcome to The Dharmarth Foundation</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.25rem' }}>Empowering change through your generous contributions.</p>
+                <h2 style={{ fontSize: 'var(--text-4xl)', marginBottom: 'var(--spacing-4)', color: 'var(--secondary)' }}>{t('home.welcomeTitle')}</h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.25rem' }}>{t('home.welcomeSubtitle')}</p>
             </div>
             <CrowdfundingSection />
             <AppDownloadSection />
@@ -23,7 +25,7 @@ const Home = () => {
             <FAQSection />
             <MonthlyGivingSection />
             <Footer />
-        </div>
+        </div >
     );
 };
 export default Home;

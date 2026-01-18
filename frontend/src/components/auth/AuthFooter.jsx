@@ -1,17 +1,19 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 const AuthFooter = () => {
+    const { t } = useTranslation();
     return (
         <div className="auth-footer">
             <div className="auth-footer-links">
-                <Link to="/privacy-policy" className="auth-footer-link">Privacy Policy</Link>
+                <Link to="/privacy-policy" className="auth-footer-link">{t('authFooter.privacy')}</Link>
                 <span className="divider">•</span>
-                <Link to="/terms-conditions" className="auth-footer-link">Terms & Conditions</Link>
+                <Link to="/terms-conditions" className="auth-footer-link">{t('authFooter.terms')}</Link>
                 <span className="divider">•</span>
-                <Link to="/support" className="auth-footer-link">Support</Link>
+                <Link to="/support" className="auth-footer-link">{t('authFooter.support')}</Link>
             </div>
-            <p className="auth-footer-copy">© {new Date().getFullYear()} The Dharmarth Foundation. All rights reserved.</p>
+            <p className="auth-footer-copy">© {new Date().getFullYear()} {t('navbar.brand')} Foundation. {t('authFooter.rights')}</p>
         </div>
     );
 };

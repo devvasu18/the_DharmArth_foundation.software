@@ -1,40 +1,42 @@
-/* Modern & Creative Donation Form Styles */
+/* Modern & Professional Donation Form Styles */
 
 .donation-container {
-    max-width: 650px;
+    max-width: 600px;
     margin: 2rem auto;
-    padding: 2.5rem;
+    padding: 3rem;
     background: #ffffff;
-    border-radius: var(--radius-xl);
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+    border-radius: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    /* Softer, layered shadow */
     position: relative;
-    overflow: hidden;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid #f0f0f0;
 }
 
-/* Add a subtle top border/gradient for premium feel */
+/* Premium Top Accent */
 .donation-container::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
-    justify-content: center;
     width: 100%;
-    height: 6px;
-    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), #2dd4bf);
+    /* Teal/Cyan gradient */
+    border-radius: 24px 24px 0 0;
 }
 
 .donation-title {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     font-weight: 800;
-    margin-bottom: 2rem;
-    color: var(--text-main);
+    margin-bottom: 2.5rem;
+    color: #1e293b;
+    letter-spacing: -0.025em;
     display: flex;
     align-items: center;
     gap: 0.75rem;
 }
 
-/* Amount Selection */
+/* Amount Selection Grid */
 .amount-options {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -44,34 +46,41 @@
 
 .amount-btn {
     position: relative;
-    padding: 1rem;
-    border: 2px solid #e2e8f0;
-    border-radius: var(--radius-lg);
-    font-weight: 700;
-    font-size: 1.25rem;
-    background: white;
-    color: var(--text-main);
+    padding: 1.25rem 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background: #ffffff;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s ease-in-out;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    font-family: inherit;
+    color: #475569;
 }
 
 .amount-btn:hover {
     border-color: var(--primary);
-    background: rgba(0, 191, 165, 0.05);
+    background: #f0fdfa;
     transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .amount-btn.active {
     border-color: var(--primary);
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    color: white;
-    box-shadow: 0 10px 15px -3px rgba(0, 191, 165, 0.3);
+    background: var(--primary);
+    /* Solid primary color */
+    color: #ffffff;
+    box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.25);
+    /* Colored shadow assuming green primary */
     transform: translateY(-2px);
-    border: none;
+    font-weight: 600;
+}
+
+/* Text inside amount button */
+.amount-btn span {
+    font-weight: 700;
 }
 
 /* Popular Tag */
@@ -81,40 +90,38 @@
     left: 50%;
     transform: translateX(-50%);
     background: #f59e0b;
-    /* Amber/Gold for premium feel */
     color: white;
-    font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding: 4px 12px;
     border-radius: 999px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    z-index: 10;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+    z-index: 10
 }
 
 /* Custom Amount Input */
 .custom-amount {
     display: flex;
     align-items: center;
-    border: 2px solid #e2e8f0;
-    border-radius: var(--radius-lg);
-    padding: 0.75rem 1rem;
-    background: #f8fafc;
-    margin-bottom: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    background-color: #f8fafc;
+    margin-bottom: 2rem;
     transition: all 0.2s;
 }
 
 .custom-amount:focus-within {
     border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 4px rgba(0, 191, 165, 0.1);
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
 }
 
 .currency-symbol {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--text-muted);
+    color: #64748b;
     margin-right: 0.75rem;
 }
 
@@ -122,44 +129,49 @@
     border: none;
     outline: none;
     width: 100%;
-    font-size: 1.1rem;
+    font-size: 1.125rem;
     font-weight: 500;
     background: transparent;
-    color: var(--text-main);
+    color: #1e293b;
 }
 
 .custom-amount input::placeholder {
     color: #94a3b8;
 }
 
-/* Section Dividers */
+/* Sections */
 .form-section {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #f1f5f9;
+    margin-top: 2.5rem;
+    padding-top: 0;
 }
 
 .section-label {
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--text-main);
-    margin-bottom: 1rem;
+    color: #334155;
+    margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.6rem;
 }
 
-/* Form Inputs */
-.input-group {
-    margin-bottom: 2rem;
+.section-label svg {
+    color: var(--primary);
+}
+
+/* Form Inputs - Professional Look */
+.donation-input-group {
+    margin-bottom: 1.75rem;
+    display: block;
+    /* Ensure stacking context */
 }
 
 .input-label {
     display: block;
-    font-size: 0.95rem;
+    font-size: 0.875rem;
     font-weight: 600;
-    margin-bottom: 0.6rem;
-    color: var(--text-main);
+    margin-bottom: 0.5rem;
+    color: #475569;
 }
 
 .input-wrapper {
@@ -174,24 +186,32 @@
     color: #94a3b8;
     pointer-events: none;
     transition: color 0.2s;
+    width: 20px;
+    height: 20px;
 }
 
 .form-control {
     width: 100%;
-    padding: 0.875rem 1rem 0.875rem 2.75rem;
-    /* Space for icon */
-    border: 1px solid #e2e8f0;
-    border-radius: var(--radius-md);
-    font-size: 0.95rem;
-    transition: all 0.2s;
+    /* Height roughly 50px */
+    padding: 0.875rem 1rem 0.875rem 2.8rem;
+    /* Padding left for icon */
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    font-size: 1rem;
+    line-height: 1.5;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     background: #ffffff;
-    color: var(--text-main);
+    color: #1e293b;
     font-weight: 500;
+}
+
+.form-control:hover {
+    border-color: #94a3b8;
 }
 
 .form-control:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(0, 191, 165, 0.1);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
     outline: none;
 }
 
@@ -200,40 +220,48 @@
     color: var(--primary);
 }
 
-/* Phone Input Specifics */
+/* Phone Input Specialized Styling */
 .phone-wrapper {
     display: flex;
-    border: 1px solid #e2e8f0;
-    border-radius: var(--radius-md);
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
     overflow: hidden;
     transition: all 0.2s;
+    background: #fff;
+}
+
+.phone-wrapper:hover {
+    border-color: #94a3b8;
 }
 
 .phone-wrapper:focus-within {
     border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(0, 191, 165, 0.1);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
 }
 
 .flag-addon {
-    background: #f1f5f9;
-    padding: 0 1.25rem;
+    background: #f8fafc;
+    padding: 0 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
     border-right: 1px solid #e2e8f0;
-    font-weight: 700;
-    color: var(--text-main);
-    font-size: 1rem;
-    min-width: 80px;
+    font-weight: 600;
+    color: #475569;
+    font-size: 0.95rem;
+    min-width: 60px;
+    user-select: none;
 }
 
 .phone-field {
     border: none;
     padding: 0.875rem 1rem;
     width: 100%;
-    font-size: 0.95rem;
+    font-size: 1rem;
     outline: none;
+    color: #1e293b;
     font-weight: 500;
+    background: transparent;
 }
 
 /* Checkboxes */
@@ -243,178 +271,179 @@
     gap: 0.75rem;
     cursor: pointer;
     font-size: 0.95rem;
-    color: var(--text-secondary);
-    margin-top: 0.5rem;
+    color: #475569;
+    margin-top: 0.75rem;
     user-select: none;
 }
 
 .checkbox-item input[type="checkbox"] {
     accent-color: var(--primary);
-    width: 1.1rem;
-    height: 1.1rem;
+    width: 1.125rem;
+    height: 1.125rem;
     cursor: pointer;
+    border-radius: 4px;
+    /* Note: Accent color overrides, but keeping standard */
 }
 
-/* Referral Section */
+/* Referral / Motivator Box */
 .referral-box {
-    background: linear-gradient(to right bottom, #f0fdfa, #f8fafc);
-    border: 1px dashed var(--primary);
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
     padding: 1.5rem;
-    border-radius: var(--radius-lg);
+    border-radius: 16px;
     margin-bottom: 2rem;
 }
 
-.or-divider {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    color: #94a3b8;
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin: 1rem 0;
+/* Tax / 80G Section */
+.tax-section {
+    margin-top: 2rem;
 }
 
-.or-divider::before,
-.or-divider::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.or-divider::before {
-    margin-right: 1rem;
-}
-
-.or-divider::after {
-    margin-left: 1rem;
-}
-
-/* 80G Tax Section */
 .tax-benefits-box {
-    margin-top: 1.5rem;
+    margin-top: 1rem;
     padding: 1.5rem;
     background: #fffbeb;
     border: 1px solid #fcd34d;
-    border-radius: var(--radius-lg);
+    border-radius: 16px;
     position: relative;
+    box-shadow: 0 4px 6px -2px rgba(251, 191, 36, 0.1);
 }
 
 .tax-badge {
     position: absolute;
-    top: -10px;
+    top: -12px;
     right: 20px;
     background: #f59e0b;
     color: white;
     font-size: 0.7rem;
-    padding: 2px 8px;
-    border-radius: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
     font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
-/* Submit Button */
+/* Large Donate Button */
 .donate-btn {
     width: 100%;
-    padding: 1rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    padding: 1.125rem;
+    background: var(--primary);
     color: white;
     border: none;
-    border-radius: var(--radius-lg);
-    font-size: 1.1rem;
+    border-radius: 16px;
+    font-size: 1.125rem;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 4px 6px -1px rgba(0, 191, 165, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    margin-top: 2rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.donate-btn::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(rgba(255, 255, 255, 0.2), transparent);
-    transform: translateY(-100%);
-    transition: transform 0.3s;
+    gap: 0.6rem;
+    margin-top: 2.5rem;
 }
 
 .donate-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 191, 165, 0.3);
-}
-
-.donate-btn:hover::after {
-    transform: translateY(0);
+    box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.4);
+    filter: brightness(1.05);
 }
 
 .donate-btn:disabled {
     opacity: 0.7;
     cursor: not-allowed;
     transform: none;
+    filter: grayscale(0.5);
+}
+
+/* Error/Success Texts */
+.donation-container .error-text {
+    color: #ef4444;
+    font-size: 0.85rem;
+    margin-top: 0.4rem;
+    font-weight: 500;
+}
+
+/* Motivator Results */
+.motivator-profile-chip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-top: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.motivator-profile-chip.verified {
+    border-color: var(--primary);
+    background: #f0fdfa;
+}
+
+.motivator-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    border: 2px solid white;
+}
+
+.motivator-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #1e293b;
+    line-height: 1.3;
+}
+
+.motivator-status {
+    font-size: 0.8rem;
+    color: var(--primary);
+    font-weight: 600;
 }
 
 /* Responsive */
 @media (max-width: 640px) {
     .donation-container {
         padding: 1.5rem;
+        border-radius: 16px;
         margin: 1rem;
-        width: auto;
-    }
-
-    .amount-options {
-        gap: 0.75rem;
     }
 
     .amount-btn {
-        padding: 0.75rem;
-        font-size: 1.1rem;
+        padding: 1rem 0.25rem;
+    }
+
+    .donation-title {
+        font-size: 1.5rem;
     }
 }
 
-/* PAN Confirmation Modal */
+/* Modal Styling Placeholder - kept simpler */
 .pan-modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    padding: 1rem;
+    z-index: 9999;
     backdrop-filter: blur(4px);
 }
 
 .pan-modal-content {
     background: white;
-    width: 90%;
-    max-width: 450px;
+    width: 100%;
+    max-width: 420px;
     padding: 2rem;
-    border-radius: var(--radius-xl);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes modalSlideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.96);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+    border-radius: 20px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .pan-modal-header {
@@ -425,21 +454,20 @@
 .pan-modal-title {
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--text-main);
-    margin-bottom: 0.5rem;
+    color: #1e293b;
 }
 
 .pan-modal-subtitle {
+    color: #64748b;
     font-size: 0.9rem;
-    color: var(--text-secondary);
 }
 
 .pan-user-details {
     background: #f8fafc;
-    border-radius: var(--radius-lg);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
     padding: 1rem;
     margin-bottom: 1.5rem;
-    border: 1px solid #e2e8f0;
 }
 
 .pan-detail-row {
@@ -449,151 +477,37 @@
     font-size: 0.9rem;
 }
 
-.pan-detail-row:last-child {
-    margin-bottom: 0;
-}
-
 .pan-detail-label {
-    color: var(--text-secondary);
-    font-weight: 500;
+    color: #64748b;
 }
 
 .pan-detail-value {
-    color: var(--text-main);
     font-weight: 600;
+    color: #1e293b;
 }
 
 .pan-modal-actions {
     display: flex;
     gap: 1rem;
-    margin-top: 2rem;
+    margin-top: 1.5rem;
+}
+
+.btn-secondary,
+.btn-confirm {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
 }
 
 .btn-secondary {
     background: #f1f5f9;
     color: #64748b;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--radius-lg);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    flex: 1;
-}
-
-.btn-secondary:hover {
-    background: #e2e8f0;
-    color: #334155;
 }
 
 .btn-confirm {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: var(--primary);
     color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--radius-lg);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    flex: 2;
-    box-shadow: 0 4px 6px -1px rgba(0, 191, 165, 0.2);
-}
-
-.btn-confirm:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 15px -3px rgba(0, 191, 165, 0.3);
-}
-
-/* Fix for overlapping text */
-.donation-container .success-text,
-.donation-container .error-text {
-    margin-top: 0.5rem;
-    margin-bottom: 0;
-    display: block;
-}
-
-.donation-container .success-text {
-    color: var(--success, #28a745);
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.donation-container .error-text {
-    color: var(--danger, #ef4444);
-    font-size: 0.85rem;
-}
-
-/* Motivator Profile Chip */
-.motivator-profile-chip {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: var(--radius-lg);
-    padding: 12px 16px;
-    margin-top: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-    animation: chipSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.motivator-profile-chip.verified {
-    border-color: rgba(0, 191, 165, 0.3);
-    /* Primary color low opacity */
-    background: linear-gradient(to right, rgba(0, 191, 165, 0.05), #ffffff);
-}
-
-.motivator-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #64748b;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    flex-shrink: 0;
-}
-
-.motivator-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.motivator-name {
-    font-weight: 700;
-    font-size: 1.05rem;
-    color: var(--text-main);
-    line-height: 1.2;
-    text-transform: capitalize;
-}
-
-.motivator-status {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.85rem;
-    color: var(--primary);
-    font-weight: 600;
-    margin-top: 2px;
-}
-
-.motivator-status svg {
-    width: 14px;
-    height: 14px;
-}
-
-@keyframes chipSlideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-8px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }

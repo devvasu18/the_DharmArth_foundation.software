@@ -1,10 +1,12 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import './AppDownloadSection.css';
 import appMockup from '../../assets/app_dashboard_mockup.png';
 // Using Lucide icons for features
 import { LayoutDashboard, Wallet, Heart, Clock, Play, Apple } from 'lucide-react';
 
 const AppDownloadSection = () => {
+    const { t } = useTranslation();
     return (
         <section className="app-download-section">
             <div className="container">
@@ -16,39 +18,39 @@ const AppDownloadSection = () => {
 
                     {/* Right: Content */}
                     <div className="app-content">
-                        <h2 className="app-title">Manage your donation on our APP</h2>
+                        <h2 className="app-title">{t('app.title')}</h2>
 
                         <div className="features-grid">
                             <div className="feature-item">
                                 <div className="feature-icon-wrapper">
                                     <LayoutDashboard size={32} strokeWidth={1.5} />
                                 </div>
-                                <h4 className="feature-title">Access a personalized dashboard</h4>
-                                <p className="feature-desc">Manage earnings, referrals, and payouts.</p>
+                                <h4 className="feature-title">{t('app.f1.title')}</h4>
+                                <p className="feature-desc">{t('app.f1.desc')}</p>
                             </div>
 
                             <div className="feature-item">
                                 <div className="feature-icon-wrapper">
                                     <Wallet size={32} strokeWidth={1.5} />
                                 </div>
-                                <h4 className="feature-title">Withdraw your referrals faster</h4>
-                                <p className="feature-desc">Easy withdrawal requests directly to your bank.</p>
+                                <h4 className="feature-title">{t('app.f2.title')}</h4>
+                                <p className="feature-desc">{t('app.f2.desc')}</p>
                             </div>
 
                             <div className="feature-item">
                                 <div className="feature-icon-wrapper">
                                     <Clock size={32} strokeWidth={1.5} />
                                 </div>
-                                <h4 className="feature-title">Keep track of contributions</h4>
-                                <p className="feature-desc">View real-time donation history and stats.</p>
+                                <h4 className="feature-title">{t('app.f3.title')}</h4>
+                                <p className="feature-desc">{t('app.f3.desc')}</p>
                             </div>
 
                             <div className="feature-item">
                                 <div className="feature-icon-wrapper">
                                     <Heart size={32} strokeWidth={1.5} />
                                 </div>
-                                <h4 className="feature-title">Start Donations instantly</h4>
-                                <p className="feature-desc"> start supporting poors in seconds.</p>
+                                <h4 className="feature-title">{t('app.f4.title')}</h4>
+                                <p className="feature-desc">{t('app.f4.desc')}</p>
                             </div>
                         </div>
 

@@ -6,7 +6,7 @@ import api from '../../services/api';
 import './HeroSlider.css';
 
 const HeroSlider = () => {
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [slides, setSlides] = useState([]);
     const [textSlides, setTextSlides] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -193,25 +193,25 @@ const HeroSlider = () => {
                             transition={{ duration: 0.5, delay: 0.1 }}
                             className="hero-text-wrapper"
                         >
-                            <h1 className="hero-title">
+                            <h1 className="hero-title black">
                                 {i18n.language === 'hi' && activeTextSlide.title_hi ? activeTextSlide.title_hi : activeTextSlide.title}
                             </h1>
 
                             <div className="hero-stats">
                                 {/* Hardcoded stats for visual matching or dynamic if available */}
                                 <div className="stat-item">
-                                    <h3>0%</h3>
-                                    <p>PLATFORM FEE</p>
+                                    <h3>{t('hero.feePercent')}</h3>
+                                    <p>{t('hero.feeLabel')}</p>
                                 </div>
                                 <div className="stat-item">
                                     <h3>72 Lakh+</h3>
-                                    <p>CONTRIBUTORS</p>
+                                    <p>{t('hero.contributorsLabel')}</p>
                                 </div>
 
                             </div>
 
                             <p className="hero-description">
-                                {i18n.language === 'hi' && activeTextSlide.subtitle_hi ? activeTextSlide.subtitle_hi : (activeTextSlide.subtitle || "Every contribution brings us closer to a better world. Join our mission today.")}
+                                {i18n.language === 'hi' && activeTextSlide.subtitle_hi ? activeTextSlide.subtitle_hi : (activeTextSlide.subtitle || t('hero.defaultSubtitle'))}
                             </p>
 
                             <Link to={activeTextSlide.ctaLink} className="hero-cta-btn">

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Calendar, MapPin, Share2, ArrowLeft, Loader2, ChevronLeft, ChevronRight, Clock, Tag, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import './EventDetail.css';
@@ -12,6 +13,7 @@ const EventDetail = () => {
     const [recentEvents, setRecentEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
+    const { i18n } = useTranslation();
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -44,8 +46,8 @@ const EventDetail = () => {
         try {
             const res = await axios.get('http://localhost:5000/api/events');
             if (res.data.events) {
-                // Get 3 events that are NOT the current one
-                setRecentEvents(res.data.events.filter(e => e.slug !== slug).slice(0, 3));
+                // Get 6 events: 3 for sidebar, 3 for related grid
+                setRecentEvents(res.data.events.filter(e => e.slug !== slug).slice(0, 6));
             }
         } catch (err) {
             console.error(err);
@@ -101,9 +103,10 @@ const EventDetail = () => {
     const renderBlock = (block, index) => {
         switch (block.type) {
             case 'text':
+                const htmlContent = (i18n.language === 'hi' && block.content.htmlHi) ? block.content.htmlHi : block.content.html;
                 return (
                     <div key={index} className="detail-block text-block animate-up">
-                        <div dangerouslySetInnerHTML={{ __html: block.content.html }} />
+                        <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
                     </div>
                 );
             case 'image':
@@ -256,7 +259,7 @@ const EventDetail = () => {
                             <div className="widget-content">
                                 {recentEvents.length > 0 ? (
                                     <div className="sidebar-events-list">
-                                        {recentEvents.map(re => (
+                                        {recentEvents.slice(0, 3).map(re => (
                                             <Link to={`/events/${re.slug}`} key={re._id} className="sidebar-event-item">
                                                 <div className="sidebar-event-thumb">
                                                     <img src={re.coverImage || '/placeholder.jpg'} alt={re.title} />
@@ -291,6 +294,46 @@ const EventDetail = () => {
                     </aside>
 
                 </div>
+
+                {/* --- NEW SECTION: Related Stories --- */}
+                {recentEvents.length > 3 && (
+                    <section className="related-stories-section container">
+                        <div className="section-header-center">
+                            <h2>More Stories of Change</h2>
+                            <div className="title-underline"></div>
+                        </div>
+                        <div className="related-grid">
+                            {recentEvents.slice(3, 6).map(evt => (
+                                <Link to={`/events/${evt.slug}`} key={evt._id} className="related-card">
+                                    <div className="related-thumb">
+                                        <img src={evt.coverImage || '/placeholder.jpg'} alt={evt.title} />
+                                        <span className="related-tag">{evt.status}</span>
+                                    </div>
+                                    <div className="related-content">
+                                        <div className="related-date"><Calendar size={14} /> {new Date(evt.date).toLocaleDateString()}</div>
+                                        <h3>{evt.title}</h3>
+                                        <span className="read-more-link">Read Story <ArrowRight size={14} /></span>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {/* --- NEW SECTION: CTA Banner --- */}
+                <section className="detail-cta-banner">
+                    <div className="cta-banner-content container">
+                        <div className="cta-text">
+                            <h2>Inspired by what you read?</h2>
+                            <p>Join our mission. Whether you contribute your time or money, every bit helps us bring change.</p>
+                        </div>
+                        <div className="cta-actions">
+                            <Link to="/donate" className="btn-banner primary">Donate Now</Link>
+                            <Link to="/volunteer" className="btn-banner outline">Become a Volunteer</Link>
+                        </div>
+                    </div>
+                </section>
+
             </main>
 
             <Footer />

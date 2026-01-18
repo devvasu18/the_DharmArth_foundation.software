@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useConfirm } from '../../context/ConfirmContext';
 import { User, Smartphone, Mail, MapPin, CreditCard, BadgeCheck, CheckCircle, Lock, ArrowRight } from 'lucide-react';
@@ -7,6 +8,7 @@ import './DonationForm.css';
 import { validatePAN, validateAadhaar } from '../../utils/validators';
 
 const DonationForm = () => {
+    const { t } = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
     const { showAlert } = useConfirm();
@@ -271,14 +273,14 @@ const DonationForm = () => {
                 </div>
 
                 <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.5rem' }}>
-                    Thank You, {fullName.split(' ')[0]}!
+                    {t('donatePage.thankYou')}, {fullName.split(' ')[0]}!
                 </h2>
                 <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                    Your donation of <strong>₹{donationSuccess.amount.toLocaleString()}</strong> was successful.
+                    {t('donatePage.successMessage')} <strong>₹{donationSuccess.amount.toLocaleString()}</strong> {t('donatePage.wasSuccessful')}
                 </p>
 
                 <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: 'var(--radius-lg)', marginBottom: '2rem', display: 'inline-block' }}>
-                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b' }}>Transaction ID</p>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b' }}>{t('donatePage.transactionId')}</p>
                     <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-main)' }}>{donationSuccess.donationId}</p>
                 </div>
 
@@ -290,16 +292,14 @@ const DonationForm = () => {
                     }}>
                         <div style={{ marginBottom: '1.5rem' }}>
                             <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--primary)' }}>
-                                Claim Your Account
+                                {t('donatePage.claimAccount')}
                             </h3>
-                            <p style={{ fontSize: '0.95rem', color: '#64748b' }}>
-                                Create a password to track this donation and access your <br />80G certificates anytime.
-                            </p>
+                            <p style={{ fontSize: '0.95rem', color: '#64748b' }} dangerouslySetInnerHTML={{ __html: t('donatePage.claimDesc') }}></p>
                         </div>
 
                         <div style={{ textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>
-                            <div className="input-group" style={{ marginBottom: '1rem' }}>
-                                <label className="input-label">Create Password</label>
+                            <div className="donation-input-group" style={{ marginBottom: '1rem' }}>
+                                <label className="input-label">{t('donatePage.createPassword')}</label>
                                 <div className="input-wrapper">
                                     <Lock size={18} className="input-icon" />
                                     <input
@@ -312,8 +312,8 @@ const DonationForm = () => {
                                 </div>
                             </div>
 
-                            <div className="input-group" style={{ marginBottom: '1.5rem' }}>
-                                <label className="input-label">Confirm Password</label>
+                            <div className="donation-input-group" style={{ marginBottom: '1.5rem' }}>
+                                <label className="input-label">{t('donatePage.confirmPassword')}</label>
                                 <div className="input-wrapper">
                                     <Lock size={18} className="input-icon" />
                                     <input
@@ -332,7 +332,7 @@ const DonationForm = () => {
                                 onClick={handleRegister}
                                 disabled={isRegistering}
                             >
-                                {isRegistering ? 'Creating Account...' : 'Create Account & Track Donation'}
+                                {isRegistering ? t('donatePage.creatingAccount') : t('donatePage.createAccountBtn')}
                             </button>
                         </div>
                     </div>
@@ -358,7 +358,7 @@ const DonationForm = () => {
         <div className="donation-container">
             <h2 className="donation-title">
                 <CreditCard size={28} className="text-primary" />
-                Select Donation Amount
+                {t('donatePage.title')}
             </h2>
 
             <div className="amount-options">
@@ -369,7 +369,7 @@ const DonationForm = () => {
                         onClick={() => { setAmount(planAmount); setCustomAmount(''); }}
                     >
                         {donationConfig.popularAmount === planAmount && (
-                            <span className="popular-tag">Popular</span>
+                            <span className="popular-tag">{t('donatePage.popular')}</span>
                         )}
                         ₹{planAmount.toLocaleString()}
                     </button>
@@ -380,7 +380,7 @@ const DonationForm = () => {
                 <span className="currency-symbol">₹</span>
                 <input
                     type="number"
-                    placeholder="Enter custom amount (Min ₹500)"
+                    placeholder={t('donatePage.customPlaceholder')}
                     value={customAmount}
                     onChange={(e) => { setCustomAmount(e.target.value); setAmount(0); }}
                 />
@@ -388,31 +388,29 @@ const DonationForm = () => {
 
             <label className="checkbox-item">
                 <input type="checkbox" defaultChecked />
-                <span>I confirm that I am an Indian citizen</span>
+                <span>{t('donatePage.citizenConfirm')}</span>
             </label>
 
             <div className="form-section">
                 <h3 className="section-label">
                     <User size={20} />
-                    Personal Details
+                    {t('donatePage.personalDetails')}
                 </h3>
 
-                <div className="input-group">
-                    <label className="input-label">Full Name*</label>
-                    <div className="input-wrapper">
+                <label className="input-label">{t('donatePage.fullName')}</label>
+                <div className="input-group-wrapper">
 
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Ex. Raghu Kumar"
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
-                        />
-                    </div>
+                    <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Ex. Raghu Kumar"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                    />
                 </div>
 
-                <div className="input-group">
-                    <label className="input-label">Mobile Number*</label>
+                <div className="donation-input-group">
+                    <label className="input-label">{t('donatePage.mobile')}</label>
                     <div className="phone-wrapper">
                         <div className="flag-addon"> +91</div>
                         <input
@@ -427,12 +425,12 @@ const DonationForm = () => {
                             maxLength={10}
                         />
                     </div>
-                    <small className="mt-1 text-muted">We'll send payment updates via WhatsApp</small>
+                    <small className="mt-1 text-muted">{t('donatePage.whatsappNote')}</small>
                 </div>
 
-                <div className="input-group">
-                    <label className="input-label">Email Address (Optional)</label>
-                    <div className="input-wrapper">
+                <div className="donation-input-group">
+                    <label className="input-label">{t('donatePage.email')}</label>
+                    <div className="input-group-wrapper">
 
                         <input
                             type="email"
@@ -448,12 +446,12 @@ const DonationForm = () => {
             <div className="form-section">
                 <h3 className="section-label">
                     <Smartphone size={20} />
-                    Motivational Source
+                    {t('donatePage.motivatorTitle')}
                 </h3>
 
                 <div className="referral-box">
-                    <div className="input-group mb-0">
-                        <label className="input-label">Motivated By {isMotivatorLocked ? '' : '(Mobile Number)'}</label>
+                    <div className="donation-input-group mb-0">
+                        <label className="input-label">{t('donatePage.motivatedBy')} {isMotivatorLocked ? '' : '(Mobile Number)'}</label>
                         {isMotivatorLocked ? (
                             <div className="motivator-profile-chip verified">
                                 <div className="motivator-avatar">
@@ -504,15 +502,15 @@ const DonationForm = () => {
 
                     <div style={{ margin: '1rem 0' }}></div>
 
-                    <div className="input-group mb-0">
-                        <div className="input-wrapper">
+                    <div className="donation-input-group mb-0">
+                        <div className="input-group-wrapper">
 
                             <select
                                 className="form-control"
                                 value={referralSource}
                                 onChange={(e) => setReferralSource(e.target.value)}
                             >
-                                <option value="">Select Referral Source</option>
+                                <option value="">{t('donatePage.referralPlaceholder')}</option>
                                 <option value="Instagram">Instagram</option>
                                 <option value="Facebook">Facebook</option>
                                 <option value="WhatsApp">WhatsApp</option>
@@ -528,43 +526,53 @@ const DonationForm = () => {
             <div className="tax-section">
                 <label className="checkbox-item" style={{ fontWeight: 600 }}>
                     <input type="checkbox" checked={need80G} onChange={(e) => setNeed80G(e.target.checked)} />
-                    <span>Need 80G Certificate for Tax Exemption?</span>
+                    <span>{t('donatePage.need80G')}</span>
                 </label>
 
                 {need80G && (
                     <div className="tax-benefits-box">
-                        <span className="tax-badge">Save Tax</span>
-                        <div className="input-group">
+                        <span className="tax-badge">{t('donatePage.saveTax')}</span>
+                        <div className="donation-input-group">
                             <label className="input-label">PAN Number*</label>
-                            <input
-                                type="text"
-                                className={`form-control ${errors.pan ? 'error-border' : ''}`}
-                                placeholder="ABCDE1234F"
-                                value={pan}
-                                onChange={(e) => {
-                                    setPan(e.target.value.toUpperCase());
-                                    if (errors.pan) setErrors({ ...errors, pan: null });
-                                }}
-                                maxLength={10}
-                            />
+                            <div className="input-group-wrapper">
+                                <div className="input-addon">
+                                    <CreditCard size={20} />
+                                </div>
+                                <input
+                                    type="text"
+                                    className={`form-control ${errors.pan ? 'error-border' : ''}`}
+                                    placeholder="ABCDE1234F"
+                                    value={pan}
+                                    onChange={(e) => {
+                                        setPan(e.target.value.toUpperCase());
+                                        if (errors.pan) setErrors({ ...errors, pan: null });
+                                    }}
+                                    maxLength={10}
+                                />
+                            </div>
                             {errors.pan && <small className="error-text">{errors.pan}</small>}
                         </div>
-                        <div className="input-group mb-0">
-                            <label className="input-label">Aadhaar Number*</label>
-                            <input
-                                type="text"
-                                className={`form-control ${errors.aadhaar ? 'error-border' : ''}`}
-                                placeholder="1234 5678 9012"
-                                value={aadhaar}
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    if (/^\d*$/.test(val) && val.length <= 12) {
-                                        setAadhaar(val);
-                                        if (errors.aadhaar) setErrors({ ...errors, aadhaar: null });
-                                    }
-                                }}
-                                maxLength={12}
-                            />
+                        <div className="donation-input-group mb-0">
+                            <label className="input-label">{t('donatePage.aadhaar')}</label>
+                            <div className="input-group-wrapper">
+                                <div className="input-addon">
+                                    <CreditCard size={20} />
+                                </div>
+                                <input
+                                    type="text"
+                                    className={`form-control ${errors.aadhaar ? 'error-border' : ''}`}
+                                    placeholder="1234 5678 9012"
+                                    value={aadhaar}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        if (/^\d*$/.test(val) && val.length <= 12) {
+                                            setAadhaar(val);
+                                            if (errors.aadhaar) setErrors({ ...errors, aadhaar: null });
+                                        }
+                                    }}
+                                    maxLength={12}
+                                />
+                            </div>
                             {errors.aadhaar && <small className="error-text">{errors.aadhaar}</small>}
                         </div>
                     </div>
@@ -576,12 +584,12 @@ const DonationForm = () => {
                 onClick={handleDonate}
                 disabled={loading}
             >
-                {loading ? 'Processing Secure Payment...' : `Donate ₹${(customAmount ? Number(customAmount) : amount).toLocaleString()}`}
+                {loading ? t('donatePage.processing') : `${t('donatePage.donateBtn')} ₹${(customAmount ? Number(customAmount) : amount).toLocaleString()}`}
             </button>
 
             <div className="text-center mt-3">
                 <small className="text-muted" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
-                    <CreditCard size={12} /> 100% Secure Payment
+                    <CreditCard size={12} /> {t('donatePage.securePayment')}
                 </small>
             </div>
 
@@ -589,13 +597,13 @@ const DonationForm = () => {
                 <div className="pan-modal-overlay">
                     <div className="pan-modal-content">
                         <div className="pan-modal-header">
-                            <p className="pan-modal-title">Secure Confirmation</p>
-                            <p className="pan-modal-subtitle">Verify details for 80G Tax Exemption</p>
+                            <p className="pan-modal-title">{t('donatePage.secureConfirm')}</p>
+                            <p className="pan-modal-subtitle">{t('donatePage.verifyDetails')}</p>
                         </div>
 
                         <div className="pan-user-details">
                             <div className="pan-detail-row">
-                                <span className="pan-detail-label">Donor Name:</span>
+                                <span className="pan-detail-label">{t('donatePage.donorName')}</span>
                                 <span className="pan-detail-value">{fullName}</span>
                             </div>
                             <div className="pan-detail-row" style={{ marginTop: '0.5rem' }}>
@@ -604,8 +612,8 @@ const DonationForm = () => {
                             </div>
                         </div>
 
-                        <div className="input-group mb-0">
-                            <label className="input-label">Confirm PAN Number*</label>
+                        <div className="donation-input-group mb-0">
+                            <label className="input-label">{t('donatePage.confirmPan')}</label>
                             <input
                                 type="text"
                                 className={`form-control ${confirmError ? 'error-border' : ''}`}
@@ -621,9 +629,9 @@ const DonationForm = () => {
                         </div>
 
                         <div className="pan-modal-actions">
-                            <button className="btn-secondary" onClick={() => setShowPanModal(false)}>Cancel</button>
+                            <button className="btn-secondary" onClick={() => setShowPanModal(false)}>{t('donatePage.cancel')}</button>
                             <button className="btn-confirm" onClick={handlePanConfirm} disabled={loading}>
-                                {loading ? 'Processing...' : 'Confirm & Donate'}
+                                {loading ? t('donatePage.processingShort', 'Processing...') : t('donatePage.confirmDonate')}
                             </button>
                         </div>
                     </div>

@@ -1,10 +1,12 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import './CrowdfundingSection.css';
 import hospitalWardImg from '../../assets/medical_bill_burden.png';
 import handsHeartImg from '../../assets/community_support_circle.png';
 import mobileAppImg from '../../assets/phone_donation_screen.png';
 
 const CrowdfundingSection = () => {
+    const { t } = useTranslation();
     return (
         <section className="crowdfunding-section">
             <div className="container">
@@ -12,10 +14,10 @@ const CrowdfundingSection = () => {
                 <div className="crowd-row">
                     <div className="crowd-content">
                         <h2 className="crowd-title">
-                            Medical Bills are a Burden for Many Individuals and Families
+                            {t('crowd.s1.title')}
                         </h2>
                         <p className="crowd-text">
-                            Expenses related to hospital stays, cancer treatments with high-cost chemotherapy routines, and other medicinal costs can be even higher. Treatment costs and necessary living expenses can bring the best of families to the brink of experiencing hard times. Insurance plans are not enough, as policies do not cover everything you need.
+                            {t('crowd.s1.text')}
                         </p>
                     </div>
                     <div className="crowd-image-wrapper">
@@ -27,10 +29,10 @@ const CrowdfundingSection = () => {
                 <div className="crowd-row reverse">
                     <div className="crowd-content">
                         <h2 className="crowd-title">
-                            Support Medical Crowdfunding
+                            {t('crowd.s2.title')}
                         </h2>
                         <p className="crowd-text">
-                            Stop worrying about the helpless, and start supporting them with The Dharmarth Foundation. We are a Donation Platform dedicated to helping those in need. Crowdfunding is the easiest way to pool support from friends, family and compassionate individuals who are waiting to contribute funds.
+                            {t('crowd.s2.text')}
                         </p>
                     </div>
                     <div className="crowd-image-wrapper">
@@ -42,10 +44,10 @@ const CrowdfundingSection = () => {
                 <div className="crowd-row">
                     <div className="crowd-content">
                         <h2 className="crowd-title">
-                            Contribute to Medical Aid for those in Need
+                            {t('crowd.s3.title')}
                         </h2>
                         <p className="crowd-text">
-                            With The Dharmarth Foundation, you can make a quick, secure donation in minutes to support medical bills and healthcare costs for the underprivileged. You can also take on the role of spreading the word and bringing in support. Your contributions give hope to patients and families during their most difficult times.
+                            {t('crowd.s3.text')}
                         </p>
                     </div>
                     <div className="crowd-image-wrapper">

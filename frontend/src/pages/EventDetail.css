@@ -356,6 +356,16 @@
     /* White border for 'frame' look */
 }
 
+.video-card-premium video,
+.youtube-card-premium iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
 /* Instagram */
 .instagram-card-premium {
     display: flex;

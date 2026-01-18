@@ -276,19 +276,19 @@ const AdminDashboard = () => {
                     </div>
                 </div>
 
-                <div className="chart-card">
+                <div className="chart-card traffic-sources-card">
                     <div className="chart-header">
                         <h3 className="chart-title">Traffic Sources</h3>
                     </div>
-                    <div style={{ height: '300px', width: '100%' }}>
+                    <div style={{ height: '220px', width: '100%', marginBottom: '1.5rem' }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={pieData}
                                     cx="50%"
                                     cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
+                                    innerRadius={70}
+                                    outerRadius={90}
                                     fill="#8884d8"
                                     paddingAngle={5}
                                     dataKey="value"
@@ -298,37 +298,31 @@ const AdminDashboard = () => {
                                     ))}
                                 </Pie>
                                 <Tooltip />
-                                <Legend
-                                    layout="vertical"
-                                    verticalAlign="middle"
-                                    align="right"
-                                    iconType="circle"
-                                    content={({ payload }) => (
-                                        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                                            {payload.map((entry, index) => {
-                                                const total = pieData.reduce((acc, curr) => acc + curr.value, 0);
-                                                const percent = total > 0 ? ((entry.payload.value / total) * 100).toFixed(0) : 0;
-
-                                                return (
-                                                    <li key={`item-${index}`} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', color: '#555', fontSize: '0.9rem' }}>
-                                                        <span style={{
-                                                            display: 'inline-block',
-                                                            width: '10px',
-                                                            height: '10px',
-                                                            backgroundColor: entry.color,
-                                                            borderRadius: '50%',
-                                                            marginRight: '8px'
-                                                        }}></span>
-                                                        <span style={{ flex: 1 }}>{entry.value}</span>
-                                                        <span style={{ fontWeight: '600', marginLeft: '10px' }}>{percent}%</span>
-                                                    </li>
-                                                );
-                                            })}
-                                        </ul>
-                                    )}
-                                />
                             </PieChart>
                         </ResponsiveContainer>
+                    </div>
+                    <div className="custom-chart-legend">
+                        {pieData.map((entry, index) => {
+                            const total = pieData.reduce((acc, curr) => acc + curr.value, 0);
+                            const percent = total > 0 ? ((entry.value / total) * 100).toFixed(0) : 0;
+                            // Use entry.name if available, otherwise fallback or from previous logic 
+                            // The previous code inside Legend payload used entry.payload.name? No, standard Legend payload has value/id/color/payload.
+                            // entry in map here is the data item itself.
+                            return (
+                                <div key={index} className="legend-item">
+                                    <div className="legend-left">
+                                        <span
+                                            className="legend-dot"
+                                            style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                        ></span>
+                                        <span className="legend-name">{entry.name || entry._id || 'Unknown'}</span>
+                                    </div>
+                                    <div className="legend-right">
+                                        <span className="legend-percent">{percent}%</span>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>

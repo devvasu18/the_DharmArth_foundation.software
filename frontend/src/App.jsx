@@ -29,6 +29,8 @@ import AdminGalleries from './components/admin/AdminGalleries';
 import CommissionReports from './components/admin/reports/CommissionReports';
 import Gallery from './pages/Gallery';
 import GalleryDetail from './pages/GalleryDetail';
+import AutoChat from './components/chat/AutoChat';
+import AdminLeads from './components/admin/AdminLeads';
 
 import { ConfirmProvider } from './context/ConfirmContext';
 
@@ -37,6 +39,7 @@ function App() {
     <ConfirmProvider>
       <Toaster position="top-right" />
       <Router>
+        <AutoChat />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
@@ -65,6 +68,7 @@ function App() {
             <Route path="events/new" element={<EventEditor />} />
 
             <Route path="events/edit/:id" element={<EventEditor />} />
+            <Route path="leads" element={<AdminLeads />} />
             <Route path="reports/commission" element={<CommissionReports />} />
           </Route>
 
