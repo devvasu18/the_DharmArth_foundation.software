@@ -110,7 +110,8 @@
 
 .charts-grid>.chart-card:first-child {
     flex: 4;
-    min-width: 400px;
+    min-width: 1100px;
+
     /* Prevent Recharts 0-width error */
 }
 
