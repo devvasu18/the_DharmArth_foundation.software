@@ -29,7 +29,7 @@ import AdminGalleries from './components/admin/AdminGalleries';
 import CommissionReports from './components/admin/reports/CommissionReports';
 import Gallery from './pages/Gallery';
 import GalleryDetail from './pages/GalleryDetail';
-import AutoChat from './components/chat/AutoChat';
+
 import AdminLeads from './components/admin/AdminLeads';
 import AdminDoctors from './components/admin/AdminDoctors';
 import AdminAvailability from './components/admin/AdminAvailability';
@@ -42,7 +42,7 @@ function App() {
     <ConfirmProvider>
       <Toaster position="top-right" />
       <Router>
-        <AutoChat />
+
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />

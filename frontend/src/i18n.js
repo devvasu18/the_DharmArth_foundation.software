@@ -91,7 +91,7 @@ i18n
                     },
                     "footer": {
                         "causes": "Causes",
-                        "doctorAvailability": "Doctor Availability",
+                        "howItWorks": "How It Works",
                         "aboutUs": "About Us",
                         "support": "Support",
                         "queries": "For any queries",

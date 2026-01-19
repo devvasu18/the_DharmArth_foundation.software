@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import './AdminAvailability.css';
 
@@ -13,6 +13,12 @@ const AdminAvailability = () => {
     const [loading, setLoading] = useState(true);
     const [filterType, setFilterType] = useState('all'); // 'all', 'clinic', 'government'
     const [showScheduleModal, setShowScheduleModal] = useState(false);
+
+    // Custom Dropdown State
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
     const [scheduleForm, setScheduleForm] = useState({
         timeSlots: [
             { period: 'Morning', startTime: '09:00', endTime: '12:00', status: 'Available' }
@@ -25,6 +31,18 @@ const AdminAvailability = () => {
     useEffect(() => {
         fetchDoctors();
         generateWeekDates();
+
+        // Click outside listener for dropdown
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
     }, []);
 
     useEffect(() => {
@@ -304,22 +322,66 @@ const AdminAvailability = () => {
 
             <div className="doctor-selector">
                 <label>Select Doctor ({doctors.filter(d => filterType === 'all' || d.type === filterType).length}):</label>
-                <select
-                    value={selectedDoctor?._id || ''}
-                    onChange={(e) => {
-                        const doctor = doctors.find(d => d._id === e.target.value);
-                        setSelectedDoctor(doctor);
-                    }}
-                >
-                    <option value="">-- Select a Doctor --</option>
-                    {doctors
-                        .filter(doctor => filterType === 'all' || doctor.type === filterType)
-                        .map(doctor => (
-                            <option key={doctor._id} value={doctor._id}>
-                                {doctor.name} - {doctor.title} ({doctor.type === 'government' ? 'Government' : 'Clinic'})
-                            </option>
-                        ))}
-                </select>
+
+                <div className="custom-dropdown" ref={dropdownRef}>
+                    <div
+                        className="dropdown-selected"
+                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    >
+                        {selectedDoctor
+                            ? `${selectedDoctor.name} - ${selectedDoctor.title} (${selectedDoctor.type === 'government' ? 'Government' : 'Clinic'})`
+                            : '-- Select a Doctor --'}
+                        <span className={`dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}>▼</span>
+                    </div>
+
+                    {isDropdownOpen && (
+                        <div className="dropdown-menu">
+                            <div className="dropdown-search">
+                                <input
+                                    type="text"
+                                    placeholder="Search doctor..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    autoFocus
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            </div>
+                            <div className="dropdown-list">
+                                {doctors
+                                    .filter(doctor => {
+                                        const matchesType = filterType === 'all' || doctor.type === filterType;
+                                        const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                            doctor.title.toLowerCase().includes(searchTerm.toLowerCase());
+                                        return matchesType && matchesSearch;
+                                    })
+                                    .map(doctor => (
+                                        <div
+                                            key={doctor._id}
+                                            className={`dropdown-item ${selectedDoctor?._id === doctor._id ? 'selected' : ''}`}
+                                            onClick={() => {
+                                                setSelectedDoctor(doctor);
+                                                setIsDropdownOpen(false);
+                                                setSearchTerm('');
+                                            }}
+                                        >
+                                            <div className="item-name">{doctor.name}</div>
+                                            <div className="item-meta">
+                                                {doctor.title} • {doctor.type === 'government' ? 'Government' : 'Clinic'}
+                                            </div>
+                                        </div>
+                                    ))}
+                                {doctors.filter(doctor => {
+                                    const matchesType = filterType === 'all' || doctor.type === filterType;
+                                    const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        doctor.title.toLowerCase().includes(searchTerm.toLowerCase());
+                                    return matchesType && matchesSearch;
+                                }).length === 0 && (
+                                        <div className="dropdown-no-results">No doctors found</div>
+                                    )}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {selectedDoctor && (
