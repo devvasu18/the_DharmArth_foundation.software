@@ -31,6 +31,9 @@ import Gallery from './pages/Gallery';
 import GalleryDetail from './pages/GalleryDetail';
 import AutoChat from './components/chat/AutoChat';
 import AdminLeads from './components/admin/AdminLeads';
+import AdminDoctors from './components/admin/AdminDoctors';
+import AdminAvailability from './components/admin/AdminAvailability';
+import DoctorAvailability from './pages/DoctorAvailability';
 
 import { ConfirmProvider } from './context/ConfirmContext';
 
@@ -52,6 +55,7 @@ function App() {
           <Route path="/events/:slug" element={<EventDetail />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/gallery/:id" element={<GalleryDetail />} />
+          <Route path="/doctors" element={<DoctorAvailability />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
@@ -69,6 +73,8 @@ function App() {
 
             <Route path="events/edit/:id" element={<EventEditor />} />
             <Route path="leads" element={<AdminLeads />} />
+            <Route path="doctors" element={<AdminDoctors />} />
+            <Route path="availability" element={<AdminAvailability />} />
             <Route path="reports/commission" element={<CommissionReports />} />
           </Route>
 

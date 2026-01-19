@@ -1,0 +1,386 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
+import './DoctorAvailability.css';
+
+const API_URL = 'http://localhost:5000/api';
+
+const DoctorAvailability = () => {
+    const navigate = useNavigate();
+    const [viewMode, setViewMode] = useState('calendar'); // 'calendar' or 'category'
+    const [selectedType, setSelectedType] = useState(null); // 'government' or 'clinic'
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [weekDates, setWeekDates] = useState([]);
+    const [availability, setAvailability] = useState([]);
+    const [emergencyDoctors, setEmergencyDoctors] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        generateWeekDates();
+        fetchEmergencyDoctors();
+    }, []);
+
+    useEffect(() => {
+        if (viewMode === 'calendar') {
+            fetchWeekAvailability();
+        }
+    }, [viewMode]);
+
+    useEffect(() => {
+        if (selectedDate && selectedType) {
+            fetchDateAvailability();
+        }
+    }, [selectedDate, selectedType]);
+
+    const generateWeekDates = () => {
+        const dates = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() + i);
+            dates.push(date);
+        }
+
+        setWeekDates(dates);
+    };
+
+    const fetchWeekAvailability = async () => {
+        try {
+            const response = await fetch(`${API_URL}/availability/week`);
+            const data = await response.json();
+            setAvailability(data);
+        } catch (error) {
+            console.error('Failed to fetch availability');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchDateAvailability = async () => {
+        if (!selectedDate) return;
+
+        try {
+            const dateStr = selectedDate.toISOString().split('T')[0];
+            const response = await fetch(`${API_URL}/availability/date/${dateStr}?type=${selectedType}`);
+            const data = await response.json();
+            setAvailability(data);
+        } catch (error) {
+            console.error('Failed to fetch date availability');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchEmergencyDoctors = async () => {
+        try {
+            const response = await fetch(`${API_URL}/doctors/emergency`);
+            const data = await response.json();
+            setEmergencyDoctors(data);
+        } catch (error) {
+            console.error('Failed to fetch emergency doctors');
+        }
+    };
+
+    const getDayName = (date) => {
+        return date.toLocaleDateString('en-US', { weekday: 'short' });
+    };
+
+    const getAvailabilityCountForDate = (date) => {
+        return availability.filter(a => {
+            const availDate = new Date(a.date);
+            availDate.setHours(0, 0, 0, 0);
+            return availDate.getTime() === date.getTime();
+        }).length;
+    };
+
+    const handleDateClick = (date) => {
+        setSelectedDate(date);
+        setViewMode('category');
+        setSelectedType(null);
+    };
+
+    const handleTypeSelect = (type) => {
+        setSelectedType(type);
+        setLoading(true);
+    };
+
+    const handleBackToCalendar = () => {
+        setViewMode('calendar');
+        setSelectedDate(null);
+        setSelectedType(null);
+        fetchWeekAvailability();
+    };
+
+    const handleBackToTypeSelection = () => {
+        setSelectedType(null);
+        setAvailability([]);
+    };
+
+    const handleCategoryView = () => {
+        setViewMode('category');
+        setSelectedDate(new Date());
+        setSelectedType(null);
+    };
+
+    if (loading && viewMode === 'calendar') {
+        return (
+            <>
+                <Navbar />
+                <div className="doctor-availability-loading">
+                    <div className="loading-spinner"></div>
+                    <p>Loading doctor availability...</p>
+                </div>
+                <Footer />
+            </>
+        );
+    }
+
+    return (
+        <>
+            <Navbar />
+            <div className="doctor-availability-page">
+                {/* Hero Section */}
+                <div className="availability-hero">
+                    <div className="container">
+                        <h1>Doctor Availability</h1>
+                        <p>Find the right doctor at the right time</p>
+                    </div>
+                </div>
+
+                {/* Emergency Doctors Section */}
+                {emergencyDoctors.length > 0 && (
+                    <div className="emergency-section">
+                        <div className="container">
+                            <div className="emergency-header">
+                                <div className="emergency-icon">🚨</div>
+                                <div>
+                                    <h2>Doctors Available Right Now</h2>
+                                    <p>Emergency doctors ready to help</p>
+                                </div>
+                            </div>
+
+                            <div className="emergency-doctors-grid">
+                                {emergencyDoctors.map(doctor => (
+                                    <div key={doctor._id} className="emergency-doctor-card">
+                                        <div className="emergency-badge-float">Available Now</div>
+                                        <div className="doctor-photo">
+                                            {doctor.photo ? (
+                                                <img src={doctor.photo} alt={doctor.name} />
+                                            ) : (
+                                                <div className="photo-placeholder">👨‍⚕️</div>
+                                            )}
+                                        </div>
+                                        <h3>{doctor.name}</h3>
+                                        <p className="doctor-title">{doctor.title}</p>
+                                        <p className="doctor-experience">📅 {doctor.experience}</p>
+                                        <div className="expertise-badge">{doctor.expertiseBadge}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="container">
+                    {/* View Mode Selector */}
+                    <div className="view-mode-selector">
+                        <button
+                            className={`mode-btn ${viewMode === 'calendar' ? 'active' : ''}`}
+                            onClick={handleBackToCalendar}
+                        >
+                            📅 Weekly Calendar
+                        </button>
+                        <button
+                            className={`mode-btn ${viewMode === 'category' ? 'active' : ''}`}
+                            onClick={handleCategoryView}
+                        >
+                            👨‍⚕️ Find by Category
+                        </button>
+                    </div>
+
+                    {/* Calendar View */}
+                    {viewMode === 'calendar' && (
+                        <div className="calendar-view">
+                            <h2>Next 7 Days</h2>
+                            <p className="calendar-subtitle">Click on any date to see available doctors</p>
+
+                            <div className="week-grid">
+                                {weekDates.map((date, index) => {
+                                    const count = getAvailabilityCountForDate(date);
+                                    const isToday = date.toDateString() === new Date().toDateString();
+
+                                    return (
+                                        <div
+                                            key={index}
+                                            className={`week-day-card ${isToday ? 'today' : ''} ${count > 0 ? 'has-doctors' : ''}`}
+                                            onClick={() => handleDateClick(date)}
+                                        >
+                                            <div className="day-name">{getDayName(date)}</div>
+                                            <div className="day-date">{date.getDate()}</div>
+                                            <div className="day-month">
+                                                {date.toLocaleDateString('en-US', { month: 'short' })}
+                                            </div>
+
+                                            {count > 0 ? (
+                                                <div className="doctor-count">
+                                                    <span className="count-number">{count}</span>
+                                                    <span className="count-label">
+                                                        {count === 1 ? 'Doctor' : 'Doctors'}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="no-doctors">Not Available</div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Category Selection View */}
+                    {viewMode === 'category' && !selectedType && (
+                        <div className="category-view">
+                            {selectedDate && (
+                                <div className="selected-date-header">
+                                    <button className="btn-back" onClick={handleBackToCalendar}>
+                                        ← Back to Calendar
+                                    </button>
+                                    <h2>
+                                        {selectedDate.toLocaleDateString('en-US', {
+                                            weekday: 'long',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            year: 'numeric'
+                                        })}
+                                    </h2>
+                                    <p>Choose where you want to visit</p>
+                                </div>
+                            )}
+
+                            <div className="category-options">
+                                <div
+                                    className="category-card government"
+                                    onClick={() => handleTypeSelect('government')}
+                                >
+                                    <div className="category-icon">🏥</div>
+                                    <h3>Government Hospital</h3>
+                                    <p>Scheduled appointments</p>
+                                    <div className="category-badge">Scheduled</div>
+                                </div>
+
+                                <div
+                                    className="category-card clinic"
+                                    onClick={() => handleTypeSelect('clinic')}
+                                >
+                                    <div className="category-icon">🏨</div>
+                                    <h3>Private Clinic</h3>
+                                    <p>High availability doctors</p>
+                                    <div className="category-badge priority">High Availability</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Doctor Cards View */}
+                    {viewMode === 'category' && selectedType && (
+                        <div className="doctors-view">
+                            <div className="doctors-view-header">
+                                <button className="btn-back" onClick={handleBackToTypeSelection}>
+                                    ← Back
+                                </button>
+                                <div>
+                                    <h2>
+                                        {selectedType === 'government' ? '🏥 Government Hospital' : '🏨 Private Clinic'}
+                                    </h2>
+                                    <p>
+                                        {selectedDate?.toLocaleDateString('en-US', {
+                                            weekday: 'long',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {loading ? (
+                                <div className="loading-doctors">
+                                    <div className="loading-spinner"></div>
+                                    <p>Loading doctors...</p>
+                                </div>
+                            ) : availability.length > 0 ? (
+                                <div className="doctors-grid">
+                                    {availability.map(avail => (
+                                        <div
+                                            key={avail._id}
+                                            className={`doctor-availability-card ${avail.doctorId.type}`}
+                                        >
+                                            <div className="doctor-photo">
+                                                {avail.doctorId.photo ? (
+                                                    <img src={avail.doctorId.photo} alt={avail.doctorId.name} />
+                                                ) : (
+                                                    <div className="photo-placeholder">👨‍⚕️</div>
+                                                )}
+                                            </div>
+
+                                            <div className="doctor-details">
+                                                <h3>{avail.doctorId.name}</h3>
+                                                <p className="doctor-title">{avail.doctorId.title}</p>
+                                                <p className="doctor-experience">📅 {avail.doctorId.experience}</p>
+                                                <div className="expertise-badge">{avail.doctorId.expertiseBadge}</div>
+
+                                                {avail.doctorId.type === 'clinic' && avail.doctorId.priority > 0 && (
+                                                    <div className="priority-indicator">
+                                                        ⭐ Priority Doctor
+                                                    </div>
+                                                )}
+
+                                                {avail.emergencyAvailable && (
+                                                    <div className="emergency-available">🚨 Emergency Available</div>
+                                                )}
+                                            </div>
+
+                                            <div className="time-slots">
+                                                <h4>Available Times</h4>
+                                                {avail.timeSlots.map((slot, idx) => (
+                                                    <div key={idx} className={`time-slot ${slot.status.toLowerCase().replace(' ', '-')}`}>
+                                                        <div className="slot-info">
+                                                            <span className="slot-period">{slot.period}</span>
+                                                            <span className="slot-time">{slot.startTime} - {slot.endTime}</span>
+                                                        </div>
+                                                        <div className={`slot-status ${slot.status.toLowerCase().replace(' ', '-')}`}>
+                                                            {slot.status === 'Available' && '✓ Available'}
+                                                            {slot.status === 'Limited' && '⚠ Limited'}
+                                                            {slot.status === 'Not Available' && '✗ Not Available'}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <button className="btn-book">Book Appointment</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="no-doctors-available">
+                                    <div className="no-doctors-icon">😔</div>
+                                    <h3>No Doctors Available</h3>
+                                    <p>There are no doctors available for this date and category.</p>
+                                    <button className="btn-back-alt" onClick={handleBackToTypeSelection}>
+                                        Try Another Category
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+            <Footer />
+        </>
+    );
+};
+
+export default DoctorAvailability;

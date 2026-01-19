@@ -1,0 +1,70 @@
+const mongoose = require('mongoose');
+
+const timeSlotSchema = new mongoose.Schema({
+    period: {
+        type: String,
+        enum: ['Morning', 'Afternoon', 'Evening'],
+        required: true
+    },
+    startTime: {
+        type: String,
+        required: true // e.g., "09:00"
+    },
+    endTime: {
+        type: String,
+        required: true // e.g., "12:00"
+    },
+    status: {
+        type: String,
+        enum: ['Available', 'Limited', 'Not Available'],
+        default: 'Available'
+    }
+});
+
+const availabilitySchema = new mongoose.Schema({
+    doctorId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Doctor',
+        required: true
+    },
+    date: {
+        type: Date,
+        required: true
+    },
+    dayName: {
+        type: String,
+        required: true // e.g., "Mon", "Tue", "Wed"
+    },
+    timeSlots: [timeSlotSchema],
+    isEnabled: {
+        type: Boolean,
+        default: true
+    },
+    emergencyAvailable: {
+        type: Boolean,
+        default: false
+    },
+    notes: {
+        type: String,
+        default: ''
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+// Compound index for efficient queries
+availabilitySchema.index({ doctorId: 1, date: 1 });
+
+// Update timestamp on save
+availabilitySchema.pre('save', function (next) {
+    this.updatedAt = Date.now();
+    next();
+});
+
+module.exports = mongoose.model('DoctorAvailability', availabilitySchema);
