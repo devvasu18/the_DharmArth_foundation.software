@@ -11,6 +11,7 @@ const AdminAvailability = () => {
     const [weekDates, setWeekDates] = useState([]);
     const [availability, setAvailability] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [filterType, setFilterType] = useState('all'); // 'all', 'clinic', 'government'
     const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [scheduleForm, setScheduleForm] = useState({
         timeSlots: [
@@ -277,8 +278,32 @@ const AdminAvailability = () => {
                 </button>
             </div>
 
+            <div className="filter-controls">
+                <span>Filter by Type:</span>
+                <div className="filter-buttons">
+                    <button
+                        className={`filter-btn ${filterType === 'all' ? 'active' : ''}`}
+                        onClick={() => setFilterType('all')}
+                    >
+                        All
+                    </button>
+                    <button
+                        className={`filter-btn ${filterType === 'clinic' ? 'active' : ''}`}
+                        onClick={() => setFilterType('clinic')}
+                    >
+                        🏥 Clinics
+                    </button>
+                    <button
+                        className={`filter-btn ${filterType === 'government' ? 'active' : ''}`}
+                        onClick={() => setFilterType('government')}
+                    >
+                        🏥 Government
+                    </button>
+                </div>
+            </div>
+
             <div className="doctor-selector">
-                <label>Select Doctor:</label>
+                <label>Select Doctor ({doctors.filter(d => filterType === 'all' || d.type === filterType).length}):</label>
                 <select
                     value={selectedDoctor?._id || ''}
                     onChange={(e) => {
@@ -286,11 +311,14 @@ const AdminAvailability = () => {
                         setSelectedDoctor(doctor);
                     }}
                 >
-                    {doctors.map(doctor => (
-                        <option key={doctor._id} value={doctor._id}>
-                            {doctor.name} - {doctor.title} ({doctor.type === 'government' ? 'Government' : 'Clinic'})
-                        </option>
-                    ))}
+                    <option value="">-- Select a Doctor --</option>
+                    {doctors
+                        .filter(doctor => filterType === 'all' || doctor.type === filterType)
+                        .map(doctor => (
+                            <option key={doctor._id} value={doctor._id}>
+                                {doctor.name} - {doctor.title} ({doctor.type === 'government' ? 'Government' : 'Clinic'})
+                            </option>
+                        ))}
                 </select>
             </div>
 
@@ -418,7 +446,6 @@ const AdminAvailability = () => {
                                                     onChange={(e) => updateTimeSlot(index, 'status', e.target.value)}
                                                 >
                                                     <option value="Available">Available</option>
-                                                    <option value="Limited">Limited</option>
                                                     <option value="Not Available">Not Available</option>
                                                 </select>
                                             </div>

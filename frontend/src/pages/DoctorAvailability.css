@@ -55,7 +55,7 @@
 
 /* Emergency Section */
 .emergency-section {
-    background: linear-gradient(135deg, #fff5f5, #ffffff);
+    background: linear-gradient(135deg, #fadcdc, #f7d7d7);
     padding: var(--spacing-8) 0;
     border-bottom: 3px solid #ff6b6b;
     margin-bottom: var(--spacing-8);
@@ -718,17 +718,6 @@
     margin: 0 0 var(--spacing-3);
 }
 
-.expertise-badge {
-    display: inline-block;
-    background: linear-gradient(135deg, #ffd700, #ffed4e);
-    color: #333;
-    padding: var(--spacing-1) var(--spacing-3);
-    border-radius: var(--radius-full);
-    font-size: var(--text-sm);
-    font-weight: 700;
-    margin-bottom: var(--spacing-2);
-}
-
 .priority-indicator {
     display: inline-block;
     background: var(--accent);
@@ -741,48 +730,67 @@
 }
 
 .emergency-available {
-    background: #ff6b6b;
-    color: white;
+    background: rgba(255, 107, 107, 0.1);
+    color: #e03131;
     padding: var(--spacing-2) var(--spacing-3);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 107, 107, 0.2);
     font-size: var(--text-sm);
-    font-weight: 700;
+    font-weight: 600;
     margin-top: var(--spacing-3);
-    display: inline-block;
-    animation: blink 1.5s infinite;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.1);
+    animation: pulse-emergency 2s infinite;
+}
+
+@keyframes pulse-emergency {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(255, 107, 107, 0);
+    }
 }
 
 /* Real-time Availability Status */
 .availability-status {
     padding: var(--spacing-2) var(--spacing-4);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-lg);
     font-size: var(--text-sm);
-    font-weight: 700;
+    font-weight: 600;
     margin-top: var(--spacing-3);
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .availability-status.available {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    color: white;
-    box-shadow: 0 0 15px rgba(40, 167, 69, 0.3);
-    animation: pulse-available 2s infinite;
+    background: rgba(40, 167, 69, 0.1);
+    color: #2b8a3e;
+    border: 1px solid rgba(40, 167, 69, 0.2);
 }
 
 .availability-status.upcoming {
-    background: linear-gradient(135deg, #ffc107, #ff9800);
-    color: white;
+    background: rgba(255, 193, 7, 0.1);
+    color: #f08c00;
+    border: 1px solid rgba(255, 193, 7, 0.2);
 }
 
 @keyframes pulse-available {
 
     0%,
     100% {
-        box-shadow: 0 0 15px rgba(40, 167, 69, 0.3);
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4);
     }
 
-    50% {
-        box-shadow: 0 0 25px rgba(40, 167, 69, 0.6);
+    70% {
+        box-shadow: 0 0 0 6px rgba(40, 167, 69, 0);
     }
 }
 
@@ -888,6 +896,14 @@
 
 .btn-book:hover {
     background: var(--primary-hover);
+}
+
+.btn-book.wait-btn {
+    background: linear-gradient(135deg, #f59f00, #f08c00);
+}
+
+.btn-book.wait-btn:hover {
+    background: linear-gradient(135deg, #e67700, #d9480f);
 }
 
 /* No Doctors Available */

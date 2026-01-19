@@ -92,13 +92,33 @@ exports.toggleEmergencyAvailability = async (req, res) => {
     }
 };
 
-// Get emergency available doctors
+// Get emergency available doctors based on TODAY's schedule
 exports.getEmergencyDoctors = async (req, res) => {
     try {
-        const doctors = await Doctor.find({
-            isEmergencyAvailable: true,
-            isActive: true
-        }).sort({ priority: -1, name: 1 });
+        // 1. Get today's date (start of day)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // 2. Find availability records for today having emergencyAvailable: true
+        // and populate the doctor details
+        const availabilities = await DoctorAvailability.find({
+            date: today,
+            emergencyAvailable: true,
+            isEnabled: true
+        }).populate('doctorId');
+
+        // 3. Extract doctors from the availability records
+        // Filter out any where doctorId might be null (if doctor was deleted) or inactive
+        const doctors = availabilities
+            .map(a => a.doctorId)
+            .filter(d => d && d.isActive)
+            .sort((a, b) => {
+                // Sort by priority (high to low) then name (A-Z)
+                if ((a.priority || 0) !== (b.priority || 0)) {
+                    return (b.priority || 0) - (a.priority || 0);
+                }
+                return a.name.localeCompare(b.name);
+            });
 
         res.json(doctors);
     } catch (error) {

@@ -254,6 +254,10 @@ const DoctorAvailability = () => {
         );
     }
 
+    const filteredEmergencyDoctors = selectedType
+        ? emergencyDoctors.filter(doc => doc.type === selectedType)
+        : emergencyDoctors;
+
     return (
         <>
             <Navbar />
@@ -266,39 +270,7 @@ const DoctorAvailability = () => {
                     </div>
                 </div>
 
-                {/* Emergency Doctors Section */}
-                {emergencyDoctors.length > 0 && (
-                    <div className="emergency-section">
-                        <div className="container">
-                            <div className="emergency-header">
 
-                                <div>
-                                    <h2>Doctors Available Right Now</h2>
-                                    <p>Emergency doctors ready to help</p>
-                                </div>
-                            </div>
-
-                            <div className="emergency-doctors-grid">
-                                {emergencyDoctors.map(doctor => (
-                                    <div key={doctor._id} className="emergency-doctor-card">
-                                        <div className="emergency-badge-float">Available Now</div>
-                                        <div className="doctor-photo">
-                                            {doctor.photo ? (
-                                                <img src={doctor.photo} alt={doctor.name} />
-                                            ) : (
-                                                <div className="photo-placeholder">👨‍⚕️</div>
-                                            )}
-                                        </div>
-                                        <h3>{doctor.name}</h3>
-                                        <p className="doctor-title">{doctor.title}</p>
-                                        <p className="doctor-experience">📅 {doctor.experience}</p>
-                                        <div className="expertise-badge">{doctor.expertiseBadge}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 <div className="container">
                     {/* View Mode Selector */}
@@ -495,15 +467,19 @@ const DoctorAvailability = () => {
                                                     <h3>{avail.doctorId.name}</h3>
                                                     <p className="doctor-title">{avail.doctorId.title}</p>
                                                     <p className="doctor-experience">📅 {avail.doctorId.experience}</p>
-                                                    <div className="expertise-badge">{avail.doctorId.expertiseBadge}</div>
-
                                                     {/* Real-time Availability Status */}
-                                                    <div className={`availability-status ${availabilityInfo.isAvailableNow ? 'available' : 'upcoming'}`}>
-                                                        {availabilityInfo.isAvailableNow ? '🟢' : '🕐'} {availabilityInfo.status}
+                                                    <div className={`availability-status ${availabilityInfo.isAvailableNow ? 'available' : availabilityInfo.status === 'Not Available Today' ? 'closed' : 'upcoming'}`}>
+                                                        <span>
+                                                            {availabilityInfo.isAvailableNow ? '●' : availabilityInfo.status === 'Not Available Today' ? '✕' : '🕒'}
+                                                        </span>
+                                                        <span>{availabilityInfo.status}</span>
                                                     </div>
 
                                                     {avail.emergencyAvailable && (
-                                                        <div className="emergency-available">🚨 Emergency Available</div>
+                                                        <div className="emergency-available">
+                                                            <span>🚨</span>
+                                                            <span>Emergency Available</span>
+                                                        </div>
                                                     )}
                                                 </div>
 
@@ -517,14 +493,18 @@ const DoctorAvailability = () => {
                                                             </div>
                                                             <div className={`slot-status ${slot.status.toLowerCase().replace(' ', '-')}`}>
                                                                 {slot.status === 'Available' && '✓ Available'}
-                                                                {slot.status === 'Limited' && '⚠ Limited'}
                                                                 {slot.status === 'Not Available' && '✗ Not Available'}
                                                             </div>
                                                         </div>
                                                     ))}
                                                 </div>
 
-                                                <button className="btn-book">Visit Now</button>
+                                                <button
+                                                    className={`btn-book ${availabilityInfo.isAvailableNow ? '' : availabilityInfo.status === 'Not Available Today' ? 'closed-btn' : 'wait-btn'}`}
+                                                    disabled={availabilityInfo.status === 'Not Available Today'}
+                                                >
+                                                    {availabilityInfo.isAvailableNow ? 'Visit Now' : availabilityInfo.status === 'Not Available Today' ? 'Not available today' : 'Wait for Slot'}
+                                                </button>
                                             </div>
                                         );
                                     })}
@@ -542,6 +522,41 @@ const DoctorAvailability = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Emergency Doctors Section */}
+                {filteredEmergencyDoctors.length > 0 && (
+                    <div className="emergency-section">
+                        <div className="container">
+                            <div className="emergency-header">
+                                <div>
+                                    <h2>In case of emergency,  Doctors Available Right Now :</h2>
+                                    <p>Emergency doctors ready to help</p>
+                                </div>
+                            </div>
+
+                            <div className="emergency-doctors-grid">
+                                {filteredEmergencyDoctors.map(doctor => (
+                                    <div key={doctor._id} className="emergency-doctor-card">
+                                        <div className="emergency-badge-float">Available Now</div>
+                                        <div className="doctor-photo">
+                                            {doctor.photo ? (
+                                                <img src={doctor.photo} alt={doctor.name} />
+                                            ) : (
+                                                <div className="photo-placeholder">👨‍⚕️</div>
+                                            )}
+                                        </div>
+                                        <h3>{doctor.name}</h3>
+                                        <p className="doctor-title">{doctor.title}</p>
+                                        <p className="doctor-experience">📅 {doctor.experience}</p>
+                                        <div className={`doctor-type-badge ${doctor.type}`}>
+                                            {doctor.type === 'clinic' ? '🏥 Private Clinic' : '🏥 Government Hospital'}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
             <Footer />
         </>
