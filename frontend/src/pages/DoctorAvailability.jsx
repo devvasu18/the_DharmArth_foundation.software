@@ -15,6 +15,7 @@ const DoctorAvailability = () => {
     const [availability, setAvailability] = useState([]);
     const [emergencyDoctors, setEmergencyDoctors] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     useEffect(() => {
         generateWeekDates();
@@ -125,6 +126,18 @@ const DoctorAvailability = () => {
         setSelectedType(null);
     };
 
+    const handleDateChange = (newDate) => {
+        setSelectedDate(newDate);
+        setShowDatePicker(false);
+        setLoading(true);
+    };
+
+    const getAvailabilityCountForDatePicker = (date) => {
+        // This would need to fetch availability for the date picker dates
+        // For now, we'll use a placeholder
+        return Math.floor(Math.random() * 10) + 1;
+    };
+
     if (loading && viewMode === 'calendar') {
         return (
             <>
@@ -155,7 +168,7 @@ const DoctorAvailability = () => {
                     <div className="emergency-section">
                         <div className="container">
                             <div className="emergency-header">
-                                <div className="emergency-icon">🚨</div>
+
                                 <div>
                                     <h2>Doctors Available Right Now</h2>
                                     <p>Emergency doctors ready to help</p>
@@ -292,19 +305,57 @@ const DoctorAvailability = () => {
                                 <button className="btn-back" onClick={handleBackToTypeSelection}>
                                     ← Back
                                 </button>
-                                <div>
+                                <div className="header-content">
                                     <h2>
                                         {selectedType === 'government' ? '🏥 Government Hospital' : '🏨 Private Clinic'}
                                     </h2>
-                                    <p>
-                                        {selectedDate?.toLocaleDateString('en-US', {
-                                            weekday: 'long',
-                                            month: 'long',
-                                            day: 'numeric'
-                                        })}
-                                    </p>
+                                    <div className="date-selector">
+                                        <button
+                                            className="date-display"
+                                            onClick={() => setShowDatePicker(true)}
+                                        >
+                                            📅 {selectedDate?.toLocaleDateString('en-US', {
+                                                weekday: 'long',
+                                                month: 'long',
+                                                day: 'numeric'
+                                            })}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
+
+                            {/* Custom Date Picker Modal */}
+                            {showDatePicker && (
+                                <div className="date-picker-overlay" onClick={() => setShowDatePicker(false)}>
+                                    <div className="date-picker-modal" onClick={(e) => e.stopPropagation()}>
+                                        <div className="date-picker-header">
+                                            <h3>Select a Date</h3>
+                                            <button className="close-btn" onClick={() => setShowDatePicker(false)}>×</button>
+                                        </div>
+                                        <div className="date-picker-grid">
+                                            {weekDates.map((date, index) => {
+                                                const count = getAvailabilityCountForDatePicker(date);
+                                                const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
+                                                const isToday = date.toDateString() === new Date().toDateString();
+
+                                                return (
+                                                    <div
+                                                        key={index}
+                                                        className={`date-picker-card ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`}
+                                                        onClick={() => handleDateChange(date)}
+                                                    >
+                                                        <div className="date-card-day">{date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}</div>
+                                                        <div className="date-card-date">{date.getDate()}</div>
+                                                        <div className="date-card-month">{date.toLocaleDateString('en-US', { month: 'short' })}</div>
+                                                        <div className="date-card-count">{count}</div>
+                                                        <div className="date-card-label">Doctors</div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {loading ? (
                                 <div className="loading-doctors">

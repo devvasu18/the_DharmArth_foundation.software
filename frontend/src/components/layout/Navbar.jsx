@@ -42,11 +42,8 @@ const Navbar = () => {
 
                     <Link to="/events" className="nav-link">{t('Events')}</Link>
 
-                    <Link to="/how-it-works" className="nav-link">{t('navbar.howItWorks')}</Link>
-                    <div className="nav-search">
-                        <Search size={16} />
-                        <span>{t('navbar.search')}</span>
-                    </div>
+                    <Link to="/doctors" className="nav-link">{t('Doctor Availability')}</Link>
+
                     {user?.isSuperAdmin && (
                         <Link to="/admin" className="nav-link" style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{t('navbar.admin')}</Link>
                     )}
