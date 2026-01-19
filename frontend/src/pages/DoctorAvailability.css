@@ -1009,3 +1009,105 @@
         padding: var(--spacing-4);
     }
 }
+
+/* Helpline Banner */
+.helpline-banner {
+    background: linear-gradient(135deg, #2c3e50, #4ca1af);
+    color: white;
+    padding: var(--spacing-8) 0;
+    margin-top: var(--spacing-8);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-8);
+}
+
+.helpline-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-6);
+    flex-wrap: wrap;
+}
+
+.helpline-icon {
+    font-size: 3rem;
+    background: rgba(255, 255, 255, 0.2);
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    animation: pulse-ring 2s infinite;
+}
+
+.helpline-text {
+    flex: 1;
+    min-width: 300px;
+}
+
+.helpline-text h3 {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    margin: 0 0 var(--spacing-2);
+    color: white;
+}
+
+.helpline-text p {
+    font-size: var(--text-lg);
+    margin: 0;
+    opacity: 0.9;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.btn-call-helpline {
+    background: white;
+    color: #2c3e50;
+    padding: var(--spacing-3) var(--spacing-8);
+    border-radius: var(--radius-full);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    white-space: nowrap;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-call-helpline:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    background: #f8f9fa;
+}
+
+@keyframes pulse-ring {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+}
+
+@media (max-width: 768px) {
+    .helpline-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .helpline-text {
+        min-width: auto;
+    }
+
+    .btn-call-helpline {
+        width: 100%;
+    }
+}

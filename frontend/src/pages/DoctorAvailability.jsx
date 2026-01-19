@@ -557,6 +557,20 @@ const DoctorAvailability = () => {
                         </div>
                     </div>
                 )}
+
+                {/* Helpline Banner */}
+                <div className="helpline-banner">
+                    <div className="container">
+                        <div className="helpline-content">
+                            <div className="helpline-icon">📞</div>
+                            <div className="helpline-text">
+                                <h3>Need immediate assistance?</h3>
+                                <p>Can't find a doctor? Our support team is here to help you find the nearest available facility.</p>
+                            </div>
+                            <button className="btn-call-helpline" onClick={() => window.location.href = 'tel:108'}>Call Now</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <Footer />
         </>
