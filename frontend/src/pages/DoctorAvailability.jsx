@@ -65,7 +65,10 @@ const DoctorAvailability = () => {
 
         try {
             setLoading(true);
-            const dateStr = selectedDate.toISOString().split('T')[0];
+            // Adjust for timezone to ensure we send the correct local date string
+            const offset = selectedDate.getTimezoneOffset();
+            const localDate = new Date(selectedDate.getTime() - (offset * 60 * 1000));
+            const dateStr = localDate.toISOString().split('T')[0];
             const response = await fetch(`${API_URL}/availability/date/${dateStr}?type=${selectedType}`);
 
             if (!response.ok) {
@@ -292,7 +295,7 @@ const DoctorAvailability = () => {
                     {/* Calendar View */}
                     {viewMode === 'calendar' && (
                         <div className="calendar-view">
-                            <h2>Next 7 Days</h2>
+                            <h2>Weekly Availability  Calendar</h2>
                             <p className="calendar-subtitle">Click on any date to see available doctors</p>
 
                             <div className="week-grid">
@@ -312,16 +315,7 @@ const DoctorAvailability = () => {
                                                 {date.toLocaleDateString('en-US', { month: 'short' })}
                                             </div>
 
-                                            {count > 0 ? (
-                                                <div className="doctor-count">
-                                                    <span className="count-number">{count}</span>
-                                                    <span className="count-label">
-                                                        {count === 1 ? 'Doctor' : 'Doctors'}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <div className="no-doctors">Not Available</div>
-                                            )}
+
                                         </div>
                                     );
                                 })}
@@ -465,46 +459,45 @@ const DoctorAvailability = () => {
 
                                                 <div className="doctor-details">
                                                     <h3>{avail.doctorId.name}</h3>
-                                                    <p className="doctor-title">{avail.doctorId.title}</p>
-                                                    <p className="doctor-experience">📅 {avail.doctorId.experience}</p>
-                                                    {/* Real-time Availability Status */}
-                                                    <div className={`availability-status ${availabilityInfo.isAvailableNow ? 'available' : availabilityInfo.status === 'Not Available Today' ? 'closed' : 'upcoming'}`}>
-                                                        <span>
-                                                            {availabilityInfo.isAvailableNow ? '●' : availabilityInfo.status === 'Not Available Today' ? '✕' : '🕒'}
-                                                        </span>
-                                                        <span>{availabilityInfo.status}</span>
+                                                    <div className="doctor-meta-row">
+                                                        <span className="doctor-title">{avail.doctorId.title}</span>
+                                                        <span className="doctor-experience">- {avail.doctorId.experience}</span>
                                                     </div>
-
-                                                    {avail.emergencyAvailable && (
-                                                        <div className="emergency-available">
-                                                            <span>🚨</span>
-                                                            <span>Emergency Available</span>
+                                                    <div className="doctor-badges">
+                                                        <div className={`availability-status ${availabilityInfo.isAvailableNow ? 'available' : availabilityInfo.status === 'Not Available Today' ? 'closed' : 'upcoming'}`}>
+                                                            <span>
+                                                                {availabilityInfo.isAvailableNow ? '●' : availabilityInfo.status === 'Not Available Today' ? '✕' : '🕒'}
+                                                            </span>
+                                                            <span>{availabilityInfo.status}</span>
                                                         </div>
-                                                    )}
+
+                                                        {avail.emergencyAvailable && (
+                                                            <div className="emergency-available">
+                                                                <span>🚨</span>
+                                                                <span>Emergency Available</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
 
                                                 <div className="time-slots">
-                                                    <h4>Available Times</h4>
+
                                                     {avail.timeSlots.map((slot, idx) => (
                                                         <div key={idx} className={`time-slot ${slot.status.toLowerCase().replace(' ', '-')}`}>
                                                             <div className="slot-info">
-                                                                <span className="slot-period">{slot.period}</span>
+                                                                <span className="slot-period">{slot.period} :</span>
                                                                 <span className="slot-time">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
-                                                            </div>
-                                                            <div className={`slot-status ${slot.status.toLowerCase().replace(' ', '-')}`}>
-                                                                {slot.status === 'Available' && '✓ Available'}
-                                                                {slot.status === 'Not Available' && '✗ Not Available'}
+
+                                                                <div className={`slot-status ${slot.status.toLowerCase().replace(' ', '-')}`}>
+                                                                    {slot.status === 'Available' && '✓ Available'}
+                                                                    {slot.status === 'Not Available' && '✗ Not Available'}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     ))}
                                                 </div>
 
-                                                <button
-                                                    className={`btn-book ${availabilityInfo.isAvailableNow ? '' : availabilityInfo.status === 'Not Available Today' ? 'closed-btn' : 'wait-btn'}`}
-                                                    disabled={availabilityInfo.status === 'Not Available Today'}
-                                                >
-                                                    {availabilityInfo.isAvailableNow ? 'Visit Now' : availabilityInfo.status === 'Not Available Today' ? 'Not available today' : 'Wait for Slot'}
-                                                </button>
+
                                             </div>
                                         );
                                     })}
@@ -529,7 +522,7 @@ const DoctorAvailability = () => {
                         <div className="container">
                             <div className="emergency-header">
                                 <div>
-                                    <h2>In case of emergency,  Doctors Available Right Now :</h2>
+                                    <h2>In case of emergency,  Doctors Availability :</h2>
                                     <p>Emergency doctors ready to help</p>
                                 </div>
                             </div>
@@ -547,7 +540,7 @@ const DoctorAvailability = () => {
                                         </div>
                                         <h3>{doctor.name}</h3>
                                         <p className="doctor-title">{doctor.title}</p>
-                                        <p className="doctor-experience">📅 {doctor.experience}</p>
+
                                         <div className={`doctor-type-badge ${doctor.type}`}>
                                             {doctor.type === 'clinic' ? '🏥 Private Clinic' : '🏥 Government Hospital'}
                                         </div>
@@ -568,6 +561,67 @@ const DoctorAvailability = () => {
                                 <p>Can't find a doctor? Our support team is here to help you find the nearest available facility.</p>
                             </div>
                             <button className="btn-call-helpline" onClick={() => window.location.href = 'tel:108'}>Call Now</button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Available Tests Section */}
+                <div className="tests-section">
+                    <div className="container">
+                        <div className="section-header center-text">
+                            <h2>Available Medical Tests</h2>
+                            <p>Comprehensive diagnostic services at affordable prices</p>
+                        </div>
+                        <div className="tests-grid">
+                            {[
+                                {
+                                    id: 1,
+                                    name: "Full Body Checkup",
+                                    price: "₹1999",
+                                    image: "https://placehold.co/600x400/2c3e50/ffffff?text=Body+Checkup",
+                                    category: "General Health",
+                                    time: "45 mins"
+                                },
+                                {
+                                    id: 2,
+                                    name: "Complete Blood Count",
+                                    price: "₹350",
+                                    image: "https://placehold.co/600x400/e74c3c/ffffff?text=Blood+Test",
+                                    category: "Pathology",
+                                    time: "10 mins"
+                                },
+                                {
+                                    id: 3,
+                                    name: "Digital X-Ray",
+                                    price: "₹500",
+                                    image: "https://placehold.co/600x400/3498db/ffffff?text=X-Ray",
+                                    category: "Radiology",
+                                    time: "15 mins"
+                                },
+                                {
+                                    id: 4,
+                                    name: "MRI Scan",
+                                    price: "₹4500",
+                                    image: "https://placehold.co/600x400/9b59b6/ffffff?text=MRI",
+                                    category: "Radiology",
+                                    time: "30 mins"
+                                }
+                            ].map(test => (
+                                <div key={test.id} className="test-card">
+                                    <div className="test-image">
+                                        <img src={test.image} alt={test.name} />
+                                        <div className="test-category">{test.category}</div>
+                                    </div>
+                                    <div className="test-content">
+                                        <h3>{test.name}</h3>
+                                        <div className="test-meta">
+                                            <span>⏱️ {test.time}</span>
+                                            <span className="test-price">{test.price}</span>
+                                        </div>
+                                        <button className="btn-book-test">Book This Test</button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>

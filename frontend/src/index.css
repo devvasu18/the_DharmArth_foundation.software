@@ -1,6 +1,7 @@
 :root {
   /* Colors */
   --primary: #00bfa5;
+  --primary-rgb: 0, 191, 165;
   --primary-hover: #009e89;
   --secondary: #005f56;
   --accent: #ff6d00;
@@ -83,29 +84,60 @@ button {
   padding: 0 var(--spacing-4);
 }
 
-.flex { display: flex; }
-.items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
-.justify-center { justify-content: center; }
-.flex-col { flex-direction: column; }
-.grid { display: grid; }
-.gap-4 { gap: var(--spacing-4); }
+.flex {
+  display: flex;
+}
 
-.text-primary { color: var(--primary); }
-.bg-primary { background-color: var(--primary); }
-.text-white { color: var(--bg-white); }
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.grid {
+  display: grid;
+}
+
+.gap-4 {
+  gap: var(--spacing-4);
+}
+
+.text-primary {
+  color: var(--primary);
+}
+
+.bg-primary {
+  background-color: var(--primary);
+}
+
+.text-white {
+  color: var(--bg-white);
+}
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: var(--bg-light);
 }
+
 ::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #aaa;
 }

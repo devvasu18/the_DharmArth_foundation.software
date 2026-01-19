@@ -206,7 +206,7 @@ const AdminDoctors = () => {
                         <div className="doctor-info">
                             <h3>{doctor.name}</h3>
                             <p className="doctor-title">{doctor.title}</p>
-                            <p className="doctor-experience">📅 {doctor.experience}</p>
+                            <p className="doctor-experience"> {doctor.experience}</p>
                             <div className="expertise-badge">{doctor.expertiseBadge}</div>
 
                             {doctor.type === 'clinic' && doctor.priority > 0 && (

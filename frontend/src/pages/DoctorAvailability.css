@@ -173,51 +173,52 @@
 /* Calendar View */
 .calendar-view {
     background: white;
-    padding: var(--spacing-8);
+    padding: var(--spacing-6);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
-    margin-bottom: var(--spacing-8);
+    margin-bottom: var(--spacing-6);
 }
 
 .calendar-view h2 {
-    font-size: var(--text-3xl);
+    font-size: var(--text-2xl);
     color: var(--text-main);
     text-align: center;
-    margin: 0 0 var(--spacing-2);
+    margin: 0 0 var(--spacing-1);
     font-weight: 700;
 }
 
 .calendar-subtitle {
     text-align: center;
     color: var(--text-muted);
-    font-size: var(--text-lg);
-    margin: 0 0 var(--spacing-8);
+    font-size: var(--text-base);
+    margin: 0 0 var(--spacing-6);
 }
 
 .week-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: var(--spacing-4);
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: var(--spacing-3);
 }
 
 .week-day-card {
-    background: var(--bg-light);
-    padding: var(--spacing-6);
-    border-radius: var(--radius-lg);
+    background: white;
+    padding: var(--spacing-3);
+    border-radius: var(--radius-md);
     text-align: center;
     cursor: pointer;
-    border: 3px solid #e0e0e0;
+    border: 1px solid #e0e0e0;
     transition: all var(--transition-normal);
-    min-height: 180px;
+    min-height: auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    box-shadow: var(--shadow-sm);
 }
 
 .week-day-card:hover {
     border-color: var(--primary);
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .week-day-card.today {
@@ -226,20 +227,21 @@
 }
 
 .week-day-card.has-doctors {
-    background: linear-gradient(135deg, #e8f5f3, white);
+    background: linear-gradient(135deg, #f0fffe, white);
     border-color: var(--primary);
 }
 
 .day-name {
-    font-size: var(--text-base);
-    font-weight: 700;
+    font-size: var(--text-xs);
+    font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
-    margin-bottom: var(--spacing-2);
+    margin-bottom: var(--spacing-1);
+    letter-spacing: 0.5px;
 }
 
 .day-date {
-    font-size: 3rem;
+    font-size: 1.75rem;
     font-weight: 700;
     color: var(--primary);
     line-height: 1;
@@ -247,32 +249,36 @@
 }
 
 .day-month {
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     color: var(--text-muted);
-    margin-bottom: var(--spacing-3);
+    margin-bottom: var(--spacing-2);
 }
 
 .doctor-count {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     gap: var(--spacing-1);
+    background: rgba(var(--primary-rgb), 0.1);
+    padding: 2px 8px;
+    border-radius: 12px;
 }
 
 .count-number {
-    font-size: var(--text-2xl);
+    font-size: var(--text-sm);
     font-weight: 700;
-    color: var(--success);
+    color: var(--primary);
 }
 
 .count-label {
-    font-size: var(--text-sm);
-    color: var(--text-muted);
+    font-size: var(--text-xs);
+    color: var(--text-main);
 }
 
 .no-doctors {
-    font-size: var(--text-sm);
-    color: var(--danger);
-    font-weight: 600;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    font-weight: 500;
 }
 
 /* Category View */
@@ -553,9 +559,9 @@
 
 .date-picker-card {
     background: var(--bg-light);
-    border: 3px solid #e0e0e0;
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-4);
+    border: 1px solid #e0e0e0;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-3);
     text-align: center;
     cursor: pointer;
     transition: all var(--transition-normal);
@@ -563,14 +569,14 @@
 
 .date-picker-card:hover {
     border-color: var(--primary);
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
 
 .date-picker-card.selected {
     background: linear-gradient(135deg, #e8f5f3, white);
     border-color: var(--primary);
-    border-width: 4px;
+    border-width: 2px;
 }
 
 .date-picker-card.today {
@@ -586,7 +592,7 @@
 }
 
 .date-card-date {
-    font-size: 2.5rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--primary);
     line-height: 1;
@@ -594,16 +600,16 @@
 }
 
 .date-card-month {
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     color: var(--text-muted);
-    margin-bottom: var(--spacing-3);
+    margin-bottom: var(--spacing-2);
 }
 
 .date-card-count {
-    font-size: var(--text-xl);
+    font-size: var(--text-lg);
     font-weight: 700;
     color: var(--success);
-    margin-bottom: var(--spacing-1);
+    margin-bottom: 0;
 }
 
 .date-card-label {
@@ -649,18 +655,18 @@
 
 .doctor-availability-card {
     background: white;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     overflow: hidden;
-    box-shadow: var(--shadow-md);
-    border: 3px solid #e0e0e0;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid #e0e0e0;
     transition: all var(--transition-normal);
     display: flex;
     flex-direction: column;
 }
 
 .doctor-availability-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .doctor-availability-card.clinic {
@@ -674,7 +680,7 @@
 
 .doctor-availability-card .doctor-photo {
     width: 100%;
-    height: 200px;
+    height: 180px;
     overflow: hidden;
     background: var(--bg-light);
     display: flex;
@@ -694,28 +700,39 @@
 }
 
 .doctor-details {
-    padding: var(--spacing-6);
-    border-bottom: 2px solid var(--bg-light);
+    padding: var(--spacing-4);
+    border-bottom: 1px solid var(--bg-light);
 }
 
 .doctor-details h3 {
-    font-size: var(--text-2xl);
+    font-size: var(--text-lg);
     color: var(--text-main);
-    margin: 0 0 var(--spacing-2);
+    margin: 0 0 var(--spacing-1);
     font-weight: 700;
 }
 
+.doctor-meta-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    margin-bottom: var(--spacing-2);
+    flex-wrap: wrap;
+}
+
 .doctor-title {
-    font-size: var(--text-lg);
+    font-size: var(--text-sm);
     color: var(--primary);
-    margin: 0 0 var(--spacing-2);
+    margin: 0;
     font-weight: 600;
 }
 
 .doctor-experience {
-    font-size: var(--text-base);
+    font-size: var(--text-xs);
     color: var(--text-muted);
-    margin: 0 0 var(--spacing-3);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .priority-indicator {
@@ -729,21 +746,7 @@
     margin-left: var(--spacing-2);
 }
 
-.emergency-available {
-    background: rgba(255, 107, 107, 0.1);
-    color: #e03131;
-    padding: var(--spacing-2) var(--spacing-3);
-    border-radius: var(--radius-lg);
-    border: 1px solid rgba(255, 107, 107, 0.2);
-    font-size: var(--text-sm);
-    font-weight: 600;
-    margin-top: var(--spacing-3);
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-2);
-    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.1);
-    animation: pulse-emergency 2s infinite;
-}
+
 
 @keyframes pulse-emergency {
 
@@ -758,16 +761,41 @@
 }
 
 /* Real-time Availability Status */
-.availability-status {
-    padding: var(--spacing-2) var(--spacing-4);
-    border-radius: var(--radius-lg);
-    font-size: var(--text-sm);
-    font-weight: 600;
+.doctor-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
     margin-top: var(--spacing-3);
+}
+
+.availability-status {
+    padding: 0 var(--spacing-3);
+    height: 28px;
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: 600;
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-2);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: none;
+    margin-top: 0;
+}
+
+.emergency-available {
+    padding: 0 var(--spacing-3);
+    height: 28px;
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    box-shadow: none;
+    margin-top: 0;
+    background: rgba(255, 107, 107, 0.1);
+    color: #e03131;
+    border: 1px solid rgba(255, 107, 107, 0.2);
+    animation: pulse-emergency 2s infinite;
 }
 
 .availability-status.available {
@@ -780,6 +808,12 @@
     background: rgba(255, 193, 7, 0.1);
     color: #f08c00;
     border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.availability-status.closed {
+    background: rgba(217, 83, 79, 0.1);
+    color: #d9534f;
+    border: 1px solid rgba(217, 83, 79, 0.2);
 }
 
 @keyframes pulse-available {
@@ -797,8 +831,8 @@
 /* Highlight available now cards */
 .doctor-availability-card.available-now {
     border-color: #28a745;
-    border-width: 4px;
-    box-shadow: 0 0 20px rgba(40, 167, 69, 0.2);
+    border-width: 2px;
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.1);
 }
 
 .doctor-availability-card.available-now:hover {
@@ -806,26 +840,29 @@
 }
 
 .time-slots {
-    padding: var(--spacing-6);
+    padding: var(--spacing-4);
+    padding-top: 0;
     flex: 1;
 }
 
 .time-slots h4 {
-    font-size: var(--text-lg);
-    color: var(--text-main);
-    margin: 0 0 var(--spacing-4);
-    font-weight: 700;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin: 0 0 var(--spacing-3);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .time-slot {
     background: var(--bg-light);
-    padding: var(--spacing-3);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--spacing-3);
+    padding: var(--spacing-2);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-2);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-left: 4px solid var(--primary);
+    border-left: 3px solid var(--primary);
 }
 
 .time-slot.available {
@@ -839,38 +876,41 @@
 }
 
 .time-slot.not-available {
-    border-left-color: var(--danger);
-    background: #fff5f5;
-    opacity: 0.6;
+    display: none;
+    /* Hide not available slots to save space, or style minimally */
 }
 
 .slot-info {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-1);
+    align-items: center;
+    gap: var(--spacing-2);
 }
 
 .slot-period {
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
     font-weight: 700;
     color: var(--text-main);
+    min-width: 70px;
 }
 
 .slot-time {
     font-size: var(--text-sm);
-    color: var(--text-muted);
+    color: #000000;
+    font-weight: 600;
 }
 
 .slot-status {
-    font-size: var(--text-sm);
+    font-size: 10px;
     font-weight: 700;
-    padding: var(--spacing-1) var(--spacing-3);
+    padding: 2px 8px;
     border-radius: var(--radius-full);
+    text-transform: uppercase;
 }
 
 .slot-status.available {
-    background: var(--success);
-    color: white;
+    background: transparent;
+    color: var(--success);
+    border: 1px solid var(--success);
 }
 
 .slot-status.limited {
@@ -887,11 +927,13 @@
     width: 100%;
     background: var(--primary);
     color: white;
-    padding: var(--spacing-4);
-    font-size: var(--text-lg);
-    font-weight: 700;
+    padding: var(--spacing-3);
+    font-size: var(--text-sm);
+    font-weight: 600;
     border-radius: 0;
     transition: all var(--transition-fast);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .btn-book:hover {
@@ -899,11 +941,11 @@
 }
 
 .btn-book.wait-btn {
-    background: linear-gradient(135deg, #f59f00, #f08c00);
+    background: #f59f00;
 }
 
 .btn-book.wait-btn:hover {
-    background: linear-gradient(135deg, #e67700, #d9480f);
+    background: #e67700;
 }
 
 /* No Doctors Available */
@@ -1008,6 +1050,152 @@
     .emergency-section {
         padding: var(--spacing-4);
     }
+}
+
+/* Available Tests Section */
+.tests-section {
+    padding: var(--spacing-8) 0;
+    margin-bottom: var(--spacing-8);
+}
+
+.section-header.center-text {
+    text-align: center;
+    margin-bottom: var(--spacing-10);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.section-header.center-text h2 {
+    font-size: var(--text-3xl);
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: var(--spacing-3);
+    background: linear-gradient(135deg, var(--text-main), var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.section-header.center-text p {
+    color: var(--text-muted);
+    font-size: var(--text-lg);
+}
+
+.tests-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-8);
+    padding: var(--spacing-4);
+}
+
+.test-card {
+    background: white;
+    border-radius: var(--radius-2xl);
+    overflow: hidden;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+    /* Softer, premium shadow */
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(0, 0, 0, 0.03);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.test-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1);
+}
+
+.test-image {
+    position: relative;
+    height: 180px;
+    overflow: hidden;
+}
+
+.test-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.test-card:hover .test-image img {
+    transform: scale(1.05);
+}
+
+.test-category {
+    position: absolute;
+    top: var(--spacing-4);
+    right: var(--spacing-4);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(4px);
+    color: var(--text-main);
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.test-content {
+    padding: var(--spacing-6);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.test-content h3 {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    margin: 0 0 var(--spacing-2);
+    color: var(--text-main);
+    line-height: 1.3;
+}
+
+.test-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-6);
+    margin-top: auto;
+    padding-top: var(--spacing-4);
+}
+
+.test-meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.test-price {
+    font-size: var(--text-xl) !important;
+    font-weight: 800 !important;
+    color: var(--primary) !important;
+}
+
+.btn-book-test {
+    width: 100%;
+    padding: var(--spacing-3) 0;
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    border: none;
+    color: white;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+    /* Muted primary shadow */
+}
+
+.btn-book-test:hover {
+    box-shadow: 0 8px 20px rgba(13, 148, 136, 0.3);
+    transform: translateY(-1px);
 }
 
 /* Helpline Banner */
