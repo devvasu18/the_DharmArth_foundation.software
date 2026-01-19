@@ -72,7 +72,20 @@ exports.getAvailabilityByDate = async (req, res) => {
 // Create or update availability
 exports.upsertAvailability = async (req, res) => {
     try {
+        console.log('Received availability upsert request:', req.body);
+
         const { doctorId, date, dayName, timeSlots, isEnabled, emergencyAvailable, notes } = req.body;
+
+        // Validate required fields
+        if (!doctorId) {
+            return res.status(400).json({ message: 'Doctor ID is required' });
+        }
+        if (!date) {
+            return res.status(400).json({ message: 'Date is required' });
+        }
+        if (!timeSlots || !Array.isArray(timeSlots) || timeSlots.length === 0) {
+            return res.status(400).json({ message: 'At least one time slot is required' });
+        }
 
         // Check if doctor exists
         const doctor = await Doctor.findById(doctorId);
@@ -114,6 +127,7 @@ exports.upsertAvailability = async (req, res) => {
         await availability.populate('doctorId');
         res.json(availability);
     } catch (error) {
+        console.error('Error in upsertAvailability:', error);
         res.status(400).json({ message: 'Error saving availability', error: error.message });
     }
 };

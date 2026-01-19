@@ -62,9 +62,8 @@ const availabilitySchema = new mongoose.Schema({
 availabilitySchema.index({ doctorId: 1, date: 1 });
 
 // Update timestamp on save
-availabilitySchema.pre('save', function (next) {
+availabilitySchema.pre('save', async function () {
     this.updatedAt = Date.now();
-    next();
 });
 
 module.exports = mongoose.model('DoctorAvailability', availabilitySchema);

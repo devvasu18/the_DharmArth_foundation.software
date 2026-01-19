@@ -27,10 +27,10 @@ const AdminAvailability = () => {
     }, []);
 
     useEffect(() => {
-        if (selectedDoctor) {
+        if (selectedDoctor && weekDates.length > 0) {
             fetchAvailability();
         }
-    }, [selectedDoctor]);
+    }, [selectedDoctor, weekDates]);
 
     const generateWeekDates = () => {
         const dates = [];
@@ -62,18 +62,22 @@ const AdminAvailability = () => {
     };
 
     const fetchAvailability = async () => {
-        if (!selectedDoctor) return;
+        if (!selectedDoctor || weekDates.length === 0) return;
 
         try {
             const startDate = weekDates[0].toISOString().split('T')[0];
             const endDate = weekDates[6].toISOString().split('T')[0];
 
+            console.log('Fetching availability:', { doctorId: selectedDoctor._id, startDate, endDate });
+
             const response = await fetch(
                 `${API_URL}/availability?doctorId=${selectedDoctor._id}&startDate=${startDate}&endDate=${endDate}`
             );
             const data = await response.json();
+            console.log('Fetched availability data:', data);
             setAvailability(data);
         } catch (error) {
+            console.error('Error fetching availability:', error);
             toast.error('Failed to fetch availability');
         }
     };
@@ -83,10 +87,21 @@ const AdminAvailability = () => {
     };
 
     const getAvailabilityForDate = (date) => {
+        const targetDate = new Date(date);
+        targetDate.setHours(0, 0, 0, 0);
+
         return availability.find(a => {
             const availDate = new Date(a.date);
-            availDate.setHours(0, 0, 0, 0);
-            return availDate.getTime() === date.getTime();
+            // Get the date in local timezone
+            const localDate = new Date(availDate.getFullYear(), availDate.getMonth(), availDate.getDate());
+
+            console.log('Comparing:', {
+                target: targetDate.toISOString().split('T')[0],
+                avail: localDate.toISOString().split('T')[0],
+                match: localDate.getTime() === targetDate.getTime()
+            });
+
+            return localDate.getTime() === targetDate.getTime();
         });
     };
 
@@ -94,12 +109,29 @@ const AdminAvailability = () => {
         setSelectedDate(date);
         const existing = getAvailabilityForDate(date);
 
+        console.log('Opening modal for date:', date);
+        console.log('Existing schedule:', existing);
+
         if (existing) {
+            // Clean the timeSlots by removing MongoDB _id fields
+            const cleanTimeSlots = existing.timeSlots.map(slot => ({
+                period: slot.period,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+                status: slot.status
+            }));
+
             setScheduleForm({
-                timeSlots: existing.timeSlots,
+                timeSlots: cleanTimeSlots,
                 isEnabled: existing.isEnabled,
                 emergencyAvailable: existing.emergencyAvailable,
-                notes: existing.notes
+                notes: existing.notes || ''
+            });
+
+            console.log('Loaded existing schedule into form:', {
+                timeSlots: cleanTimeSlots,
+                isEnabled: existing.isEnabled,
+                emergencyAvailable: existing.emergencyAvailable
             });
         } else {
             setScheduleForm({
@@ -110,21 +142,37 @@ const AdminAvailability = () => {
                 emergencyAvailable: false,
                 notes: ''
             });
+            console.log('No existing schedule, using default');
         }
 
         setShowScheduleModal(true);
     };
 
     const handleSaveSchedule = async () => {
-        if (!selectedDoctor || !selectedDate) return;
+        if (!selectedDoctor || !selectedDate) {
+            toast.error('Please select doctor and date');
+            return;
+        }
 
         try {
+            // Format date properly - use local date components to avoid timezone issues
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            const dateString = `${year}-${month}-${day}`;
+
             const payload = {
                 doctorId: selectedDoctor._id,
-                date: selectedDate.toISOString(),
+                date: dateString, // YYYY-MM-DD format in local timezone
                 dayName: getDayName(selectedDate),
-                ...scheduleForm
+                timeSlots: scheduleForm.timeSlots,
+                isEnabled: scheduleForm.isEnabled,
+                emergencyAvailable: scheduleForm.emergencyAvailable,
+                notes: scheduleForm.notes || ''
             };
+
+            console.log('=== SAVING SCHEDULE ===');
+            console.log('Payload:', JSON.stringify(payload, null, 2));
 
             const response = await fetch(`${API_URL}/availability`, {
                 method: 'POST',
@@ -132,15 +180,22 @@ const AdminAvailability = () => {
                 body: JSON.stringify(payload)
             });
 
+            console.log('Response status:', response.status);
+            const data = await response.json();
+            console.log('Response data:', data);
+
             if (response.ok) {
                 toast.success('Schedule saved successfully!');
-                fetchAvailability();
+                console.log('✅ Saved! Refreshing...');
+                await fetchAvailability(); // Wait for refresh
                 setShowScheduleModal(false);
             } else {
-                toast.error('Failed to save schedule');
+                console.error('❌ Server error:', data);
+                toast.error(data.message || 'Failed to save schedule');
             }
         } catch (error) {
-            toast.error('Error saving schedule');
+            console.error('❌ Catch error:', error);
+            toast.error('Error: ' + error.message);
         }
     };
 

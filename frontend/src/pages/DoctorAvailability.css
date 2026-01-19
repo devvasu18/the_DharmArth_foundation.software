@@ -420,6 +420,13 @@
     flex: 1;
 }
 
+.date-selector-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    flex-wrap: wrap;
+}
+
 .date-selector {
     position: relative;
     display: inline-block;
@@ -443,6 +450,25 @@
 .date-display:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
+}
+
+.change-date-link {
+    background: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-top: var(--spacing-2);
+}
+
+.change-date-link:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-1px);
 }
 
 /* Custom Date Picker Modal */
@@ -726,6 +752,51 @@
     animation: blink 1.5s infinite;
 }
 
+/* Real-time Availability Status */
+.availability-status {
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    margin-top: var(--spacing-3);
+    display: inline-block;
+}
+
+.availability-status.available {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    box-shadow: 0 0 15px rgba(40, 167, 69, 0.3);
+    animation: pulse-available 2s infinite;
+}
+
+.availability-status.upcoming {
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    color: white;
+}
+
+@keyframes pulse-available {
+
+    0%,
+    100% {
+        box-shadow: 0 0 15px rgba(40, 167, 69, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(40, 167, 69, 0.6);
+    }
+}
+
+/* Highlight available now cards */
+.doctor-availability-card.available-now {
+    border-color: #28a745;
+    border-width: 4px;
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.2);
+}
+
+.doctor-availability-card.available-now:hover {
+    box-shadow: 0 0 30px rgba(40, 167, 69, 0.4);
+}
+
 .time-slots {
     padding: var(--spacing-6);
     flex: 1;
@@ -886,6 +957,12 @@
         width: 100%;
     }
 
+    .date-selector-wrapper {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
     .date-selector {
         width: 100%;
     }
@@ -893,6 +970,11 @@
     .date-display {
         width: 100%;
         text-align: center;
+    }
+
+    .change-date-link {
+        width: 100%;
+        margin-top: var(--spacing-2);
     }
 
     .date-picker-grid {

@@ -61,15 +61,22 @@ const DoctorAvailability = () => {
     };
 
     const fetchDateAvailability = async () => {
-        if (!selectedDate) return;
+        if (!selectedDate || !selectedType) return;
 
         try {
+            setLoading(true);
             const dateStr = selectedDate.toISOString().split('T')[0];
             const response = await fetch(`${API_URL}/availability/date/${dateStr}?type=${selectedType}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
             setAvailability(data);
         } catch (error) {
-            console.error('Failed to fetch date availability');
+            console.error('Failed to fetch date availability:', error);
+            setAvailability([]);
         } finally {
             setLoading(false);
         }
@@ -136,6 +143,102 @@ const DoctorAvailability = () => {
         // This would need to fetch availability for the date picker dates
         // For now, we'll use a placeholder
         return Math.floor(Math.random() * 10) + 1;
+    };
+
+    const formatTime = (time24) => {
+        // Convert 24-hour format (HH:MM) to 12-hour format (HH:MM AM/PM)
+        const [hours, minutes] = time24.split(':');
+        const hour = parseInt(hours);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        return `${hour12}:${minutes} ${ampm}`;
+    };
+
+    const getCurrentTimeInMinutes = () => {
+        const now = new Date();
+        return now.getHours() * 60 + now.getMinutes();
+    };
+
+    const timeToMinutes = (timeStr) => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+    };
+
+    const checkDoctorAvailability = (timeSlots) => {
+        const currentMinutes = getCurrentTimeInMinutes();
+
+        // Check if doctor is currently available
+        for (const slot of timeSlots) {
+            if (slot.status !== 'Available') continue;
+
+            const startMinutes = timeToMinutes(slot.startTime);
+            const endMinutes = timeToMinutes(slot.endTime);
+
+            if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
+                return {
+                    isAvailableNow: true,
+                    status: 'Available Now',
+                    nextSlot: null,
+                    sortOrder: 0
+                };
+            }
+        }
+
+        // Find next available slot
+        let nextSlot = null;
+        let minDiff = Infinity;
+
+        for (const slot of timeSlots) {
+            if (slot.status !== 'Available') continue;
+
+            const startMinutes = timeToMinutes(slot.startTime);
+
+            if (startMinutes > currentMinutes) {
+                const diff = startMinutes - currentMinutes;
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    nextSlot = slot;
+                }
+            }
+        }
+
+        if (nextSlot) {
+            const hoursUntil = Math.floor(minDiff / 60);
+            const minutesUntil = minDiff % 60;
+
+            let statusMessage;
+            if (hoursUntil === 0) {
+                statusMessage = `Available in ${minutesUntil} minutes`;
+            } else if (hoursUntil === 1 && minutesUntil === 0) {
+                statusMessage = `Available in 1 hour`;
+            } else if (minutesUntil === 0) {
+                statusMessage = `Available in ${hoursUntil} hours`;
+            } else {
+                statusMessage = `Available at ${formatTime(nextSlot.startTime)}`;
+            }
+
+            return {
+                isAvailableNow: false,
+                status: statusMessage,
+                nextSlot: nextSlot,
+                sortOrder: 1 + minDiff // Sort by time until available
+            };
+        }
+
+        return {
+            isAvailableNow: false,
+            status: 'Not Available Today',
+            nextSlot: null,
+            sortOrder: 999999 // Put at the end
+        };
+    };
+
+    const sortDoctorsByAvailability = (doctors) => {
+        return [...doctors].sort((a, b) => {
+            const availA = checkDoctorAvailability(a.timeSlots);
+            const availB = checkDoctorAvailability(b.timeSlots);
+            return availA.sortOrder - availB.sortOrder;
+        });
     };
 
     if (loading && viewMode === 'calendar') {
@@ -309,16 +412,24 @@ const DoctorAvailability = () => {
                                     <h2>
                                         {selectedType === 'government' ? '🏥 Government Hospital' : '🏨 Private Clinic'}
                                     </h2>
-                                    <div className="date-selector">
+                                    <div className="date-selector-wrapper">
+                                        <div className="date-selector">
+                                            <button
+                                                className="date-display"
+                                                onClick={() => setShowDatePicker(true)}
+                                            >
+                                                📅 {selectedDate?.toLocaleDateString('en-US', {
+                                                    weekday: 'long',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                })}
+                                            </button>
+                                        </div>
                                         <button
-                                            className="date-display"
+                                            className="change-date-link"
                                             onClick={() => setShowDatePicker(true)}
                                         >
-                                            📅 {selectedDate?.toLocaleDateString('en-US', {
-                                                weekday: 'long',
-                                                month: 'long',
-                                                day: 'numeric'
-                                            })}
+                                            Change Date
                                         </button>
                                     </div>
                                 </div>
@@ -364,56 +475,59 @@ const DoctorAvailability = () => {
                                 </div>
                             ) : availability.length > 0 ? (
                                 <div className="doctors-grid">
-                                    {availability.map(avail => (
-                                        <div
-                                            key={avail._id}
-                                            className={`doctor-availability-card ${avail.doctorId.type}`}
-                                        >
-                                            <div className="doctor-photo">
-                                                {avail.doctorId.photo ? (
-                                                    <img src={avail.doctorId.photo} alt={avail.doctorId.name} />
-                                                ) : (
-                                                    <div className="photo-placeholder">👨‍⚕️</div>
-                                                )}
-                                            </div>
+                                    {sortDoctorsByAvailability(availability).map(avail => {
+                                        const availabilityInfo = checkDoctorAvailability(avail.timeSlots);
 
-                                            <div className="doctor-details">
-                                                <h3>{avail.doctorId.name}</h3>
-                                                <p className="doctor-title">{avail.doctorId.title}</p>
-                                                <p className="doctor-experience">📅 {avail.doctorId.experience}</p>
-                                                <div className="expertise-badge">{avail.doctorId.expertiseBadge}</div>
+                                        return (
+                                            <div
+                                                key={avail._id}
+                                                className={`doctor-availability-card ${avail.doctorId.type} ${availabilityInfo.isAvailableNow ? 'available-now' : ''}`}
+                                            >
+                                                <div className="doctor-photo">
+                                                    {avail.doctorId.photo ? (
+                                                        <img src={avail.doctorId.photo} alt={avail.doctorId.name} />
+                                                    ) : (
+                                                        <div className="photo-placeholder">👨‍⚕️</div>
+                                                    )}
+                                                </div>
 
-                                                {avail.doctorId.type === 'clinic' && avail.doctorId.priority > 0 && (
-                                                    <div className="priority-indicator">
-                                                        ⭐ Priority Doctor
+                                                <div className="doctor-details">
+                                                    <h3>{avail.doctorId.name}</h3>
+                                                    <p className="doctor-title">{avail.doctorId.title}</p>
+                                                    <p className="doctor-experience">📅 {avail.doctorId.experience}</p>
+                                                    <div className="expertise-badge">{avail.doctorId.expertiseBadge}</div>
+
+                                                    {/* Real-time Availability Status */}
+                                                    <div className={`availability-status ${availabilityInfo.isAvailableNow ? 'available' : 'upcoming'}`}>
+                                                        {availabilityInfo.isAvailableNow ? '🟢' : '🕐'} {availabilityInfo.status}
                                                     </div>
-                                                )}
 
-                                                {avail.emergencyAvailable && (
-                                                    <div className="emergency-available">🚨 Emergency Available</div>
-                                                )}
-                                            </div>
+                                                    {avail.emergencyAvailable && (
+                                                        <div className="emergency-available">🚨 Emergency Available</div>
+                                                    )}
+                                                </div>
 
-                                            <div className="time-slots">
-                                                <h4>Available Times</h4>
-                                                {avail.timeSlots.map((slot, idx) => (
-                                                    <div key={idx} className={`time-slot ${slot.status.toLowerCase().replace(' ', '-')}`}>
-                                                        <div className="slot-info">
-                                                            <span className="slot-period">{slot.period}</span>
-                                                            <span className="slot-time">{slot.startTime} - {slot.endTime}</span>
+                                                <div className="time-slots">
+                                                    <h4>Available Times</h4>
+                                                    {avail.timeSlots.map((slot, idx) => (
+                                                        <div key={idx} className={`time-slot ${slot.status.toLowerCase().replace(' ', '-')}`}>
+                                                            <div className="slot-info">
+                                                                <span className="slot-period">{slot.period}</span>
+                                                                <span className="slot-time">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
+                                                            </div>
+                                                            <div className={`slot-status ${slot.status.toLowerCase().replace(' ', '-')}`}>
+                                                                {slot.status === 'Available' && '✓ Available'}
+                                                                {slot.status === 'Limited' && '⚠ Limited'}
+                                                                {slot.status === 'Not Available' && '✗ Not Available'}
+                                                            </div>
                                                         </div>
-                                                        <div className={`slot-status ${slot.status.toLowerCase().replace(' ', '-')}`}>
-                                                            {slot.status === 'Available' && '✓ Available'}
-                                                            {slot.status === 'Limited' && '⚠ Limited'}
-                                                            {slot.status === 'Not Available' && '✗ Not Available'}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                                    ))}
+                                                </div>
 
-                                            <button className="btn-book">Book Appointment</button>
-                                        </div>
-                                    ))}
+                                                <button className="btn-book">Visit Now</button>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             ) : (
                                 <div className="no-doctors-available">
