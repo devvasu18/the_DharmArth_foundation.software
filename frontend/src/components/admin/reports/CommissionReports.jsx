@@ -41,6 +41,27 @@ const CommissionReports = () => {
             };
 
             const res = await axios.get('http://localhost:5000/api/transactions/commission-reports', { params });
+
+            // Fill missing dates in trend chart with 0
+            if (res.data?.charts?.trend && (filters.preset === 'MONTH' || filters.preset === 'CUSTOM' || filters.preset === 'WEEK')) {
+                const filledTrend = [];
+                const start = new Date(filters.startDate);
+                const end = new Date(filters.endDate);
+
+                // Create a map for quick lookup
+                const trendMap = new Map(res.data.charts.trend.map(item => [item._id, item.amount]));
+
+                // Iterate from start to end date
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    const dateStr = d.toISOString().split('T')[0];
+                    filledTrend.push({
+                        _id: dateStr,
+                        amount: trendMap.get(dateStr) || 0
+                    });
+                }
+                res.data.charts.trend = filledTrend;
+            }
+
             setData(res.data);
         } catch (error) {
             console.error(error);

@@ -15,6 +15,13 @@ const Events = () => {
     const [eventVideos, setEventVideos] = useState([]);
     const [headerLoading, setHeaderLoading] = useState(true);
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [activeVideo, setActiveVideo] = useState(null);
+
+    useEffect(() => {
+        if (eventVideos.length > 0) {
+            setActiveVideo(eventVideos[0]);
+        }
+    }, [eventVideos]);
 
     useEffect(() => {
         const fetchHeaders = async () => {
@@ -282,38 +289,37 @@ const Events = () => {
                     </div>
 
                     <div className={`video-asymmetric-grid ${eventVideos.length === 1 ? 'single' : ''}`}>
-                        {/* Main Featured Video (First one) */}
-                        {eventVideos.length > 0 && (
+                        {/* Main Featured Video */}
+                        {activeVideo && (
                             <div className="video-main-feature">
                                 <div className="video-wrapper">
                                     <iframe
-                                        src={`https://www.youtube.com/embed/${eventVideos[0].videoId}`}
-                                        title={eventVideos[0].title}
+                                        src={`https://www.youtube.com/embed/${activeVideo.videoId}`}
+                                        title={activeVideo.title}
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                         allowFullScreen
                                     ></iframe>
                                 </div>
                                 <div className="video-main-content">
-                                    <h3>{eventVideos[0].title}</h3>
+                                    <h3>{activeVideo.title}</h3>
                                 </div>
                             </div>
                         )}
 
-                        {/* Side List (Next 3) */}
+                        {/* Side List */}
                         <div className="video-side-list">
-                            {eventVideos.slice(1, 4).map(video => (
-                                <div key={video._id} className="video-side-item">
+                            {eventVideos.filter(v => v._id !== activeVideo?._id).slice(0, 3).map(video => (
+                                <div
+                                    key={video._id}
+                                    className="video-side-item"
+                                    onClick={() => setActiveVideo(video)}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <div className="side-video-thumb">
                                         <img src={video.thumbnail} alt={video.title} />
                                         <div className="play-overlay">
                                             <PlayCircle size={32} />
                                         </div>
-                                        <a
-                                            href={video.videoUrl}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="video-click-area"
-                                        > </a>
                                     </div>
                                     <div className="side-video-info">
                                         <h4>{video.title}</h4>

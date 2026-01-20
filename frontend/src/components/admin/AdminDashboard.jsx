@@ -33,6 +33,9 @@ const AdminDashboard = () => {
         return ((current - previous) / previous) * 100;
     };
 
+    const [allDonations, setAllDonations] = useState([]); // Store all for dynamic chart
+    const [trendRange, setTrendRange] = useState(7); // 7, 15, 30
+
     // 1. Initial Load: Fetch ALL data for Stats & Charts
     useEffect(() => {
         const fetchGlobalStats = async () => {
@@ -43,6 +46,8 @@ const AdminDashboard = () => {
                 ]);
 
                 const donationList = donationsRes.data;
+                setAllDonations(donationList); // Store for chart updates
+
                 const userList = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data.users || []);
                 const totalUserCount = usersRes.data.pagination?.totalUsers || userList.length;
 
@@ -82,18 +87,6 @@ const AdminDashboard = () => {
                 // Total Aggregate
                 const totalAmount = donationList.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
 
-                // Chart Data (Last 7 Days from ALL data)
-                const groupedByDate = donationList.reduce((acc, curr) => {
-                    const date = new Date(curr.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    acc[date] = (acc[date] || 0) + (Number(curr.amount) || 0);
-                    return acc;
-                }, {});
-
-                const processedChartData = Object.keys(groupedByDate).map(date => ({
-                    name: date,
-                    amount: groupedByDate[date]
-                })).slice(-7);
-
                 setStats({
                     userCount: totalUserCount,
                     totalDonations: totalAmount,
@@ -107,16 +100,12 @@ const AdminDashboard = () => {
                         isPositive: userGrowthVal >= 0
                     }
                 });
-                setChartData(processedChartData);
 
                 // Fetch Traffic Source Data
                 try {
                     const trafficRes = await api.get('/donate/analytics/traffic-sources');
                     if (trafficRes.data && trafficRes.data.data) {
                         setPieData(trafficRes.data.data);
-                        // Store total if needed, or calculate on fly
-                        // For simplicity, we just use the data. 
-                        // Note: backend calculates total, but we can also sum it here if `data.total` is missing
                     }
                 } catch (err) {
                     console.error("Traffic stats error", err);
@@ -131,6 +120,33 @@ const AdminDashboard = () => {
 
         fetchGlobalStats();
     }, []);
+
+    // 2. Chart Update Effect (Refires when allDonations or trendRange changes)
+    useEffect(() => {
+        if (allDonations.length === 0) return;
+
+        // Generate date range
+        const trendDays = [];
+        for (let i = trendRange - 1; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            trendDays.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        }
+
+        const groupedByDate = allDonations.reduce((acc, curr) => {
+            const date = new Date(curr.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            acc[date] = (acc[date] || 0) + (Number(curr.amount) || 0);
+            return acc;
+        }, {});
+
+        const processedChartData = trendDays.map(date => ({
+            name: date,
+            amount: groupedByDate[date] || 0
+        }));
+
+        setChartData(processedChartData);
+
+    }, [allDonations, trendRange]);
 
     // 2. Filter Change: Fetch Filtered Data for Table
     useEffect(() => {
@@ -220,11 +236,28 @@ const AdminDashboard = () => {
             </div>
 
             {/* Charts Section */}
-            <div className="charts-grid">
+            <div className="dashboard-charts-wrapper">
                 <div className="chart-card">
                     <div className="chart-header">
                         <h3 className="chart-title">Donation Trends</h3>
-                        <div style={{ fontSize: '0.8rem', color: '#999' }}>Last 7 Activity Days</div>
+                        <select
+                            className="form-select small-select"
+                            value={trendRange}
+                            onChange={(e) => setTrendRange(Number(e.target.value))}
+                            style={{
+                                fontSize: '0.8rem',
+                                padding: '4px 8px',
+                                border: '1px solid #e0e0e0',
+                                borderRadius: '6px',
+                                background: '#f9f9f9',
+                                color: '#666',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <option value={7}>Last 7 Days</option>
+                            <option value={15}>Last 15 Days</option>
+                            <option value={30}>Last 30 Days</option>
+                        </select>
                     </div>
                     <div style={{ height: '300px', width: '100%' }}>
                         <ResponsiveContainer width="100%" height="100%">
