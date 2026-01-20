@@ -1,62 +1,15 @@
-const express = require('express');
-const router = express.Router();
+require('dotenv').config();
+const mongoose = require('mongoose');
 const EventHeader = require('../models/EventHeader');
-const { protect, checkPermission } = require('../middlewares/authMiddleware');
+const connectDB = require('../config/db');
 
-// Get all active sliders for public
-router.get('/', async (req, res) => {
+const seedEventHeaders = async () => {
     try {
-        const headers = await EventHeader.find({ isActive: true }).sort({ order: 1 });
-        res.json(headers);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+        await connectDB();
 
-// Admin: Get all (active & inactive)
-router.get('/admin', protect, async (req, res) => {
-    try {
-        const headers = await EventHeader.find({}).sort({ order: 1 });
-        res.json(headers);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+        console.log('Clearing existing event headers...');
+        await EventHeader.deleteMany({});
 
-// Admin: Create
-router.post('/', protect, async (req, res) => {
-    try {
-        const newHeader = new EventHeader(req.body);
-        const savedHeader = await newHeader.save();
-        res.status(201).json(savedHeader);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-});
-
-// Admin: Update
-router.put('/:id', protect, async (req, res) => {
-    try {
-        const updatedHeader = await EventHeader.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        res.json(updatedHeader);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-});
-
-// Admin: Delete
-router.delete('/:id', protect, async (req, res) => {
-    try {
-        await EventHeader.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// Admin: Seed Dummy Data
-router.post('/seed', protect, async (req, res) => {
-    try {
         const dummyHeaders = [
             {
                 type: 'image',
@@ -106,20 +59,40 @@ router.post('/seed', protect, async (req, res) => {
                 ctaText: 'Learn More',
                 ctaText_hi: 'अधिक जानें',
                 ctaLink: '/events',
-                titleColor: '#fbbf24',
+                titleColor: '#fbbf24', // Amber color
                 descriptionColor: '#ffffff',
                 textPosition: 'right',
                 isActive: true,
                 order: 3
+            },
+            {
+                type: 'image',
+                url: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?q=80&w=1920&auto=format&fit=crop',
+                title: 'Healthcare for All',
+                title_hi: 'सभी के लिए स्वास्थ्य सेवा',
+                subtitle: 'Providing medical aid to remote areas',
+                subtitle_hi: 'दूरदराज के इलाकों में चिकित्सा सहायता प्रदान करना',
+                description: 'Our mobile clinics reach where traditional healthcare cannot reach.',
+                description_hi: 'हमारे मोबाइल क्लीनिक वहां पहुंचते हैं जहां पारंपरिक स्वास्थ्य सेवा नहीं पहुंच पाती है।',
+                ctaText: 'Get Involved',
+                ctaText_hi: 'शामिल हों',
+                ctaLink: '/contact',
+                titleColor: '#ffffff',
+                descriptionColor: '#ffffff',
+                textPosition: 'top-left',
+                isActive: true,
+                order: 4
             }
         ];
 
-        await EventHeader.deleteMany({});
-        const savedHeaders = await EventHeader.insertMany(dummyHeaders);
-        res.status(201).json(savedHeaders);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+        await EventHeader.insertMany(dummyHeaders);
+        console.log(`Successfully seeded ${dummyHeaders.length} event headers!`);
 
-module.exports = router;
+        process.exit();
+    } catch (error) {
+        console.error('Error seeding event headers:', error);
+        process.exit(1);
+    }
+};
+
+seedEventHeaders();

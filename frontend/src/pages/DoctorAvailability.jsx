@@ -17,8 +17,6 @@ const DoctorAvailability = () => {
     const [loading, setLoading] = useState(true);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [openFaqIndex, setOpenFaqIndex] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedSpecialist, setSelectedSpecialist] = useState('');
 
     useEffect(() => {
         generateWeekDates();
@@ -126,23 +124,17 @@ const DoctorAvailability = () => {
         setSelectedDate(null);
         setSelectedType(null);
         fetchWeekAvailability();
-        setSearchTerm('');
-        setSelectedSpecialist('');
     };
 
     const handleBackToTypeSelection = () => {
         setSelectedType(null);
         setAvailability([]);
-        setSearchTerm('');
-        setSelectedSpecialist('');
     };
 
     const handleCategoryView = () => {
         setViewMode('category');
         setSelectedDate(new Date());
         setSelectedType(null);
-        setSearchTerm('');
-        setSelectedSpecialist('');
     };
 
     const handleDateChange = (newDate) => {
@@ -269,14 +261,6 @@ const DoctorAvailability = () => {
     const filteredEmergencyDoctors = selectedType
         ? emergencyDoctors.filter(doc => doc.type === selectedType)
         : emergencyDoctors;
-
-    const specialists = [...new Set(availability.map(item => item.doctorId.title))];
-
-    const filteredDoctors = availability.filter(avail => {
-        const matchesSearch = avail.doctorId.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesSpecialist = selectedSpecialist ? avail.doctorId.title === selectedSpecialist : true;
-        return matchesSearch && matchesSpecialist;
-    });
 
     return (
         <>
@@ -419,30 +403,6 @@ const DoctorAvailability = () => {
                                 </div>
                             </div>
 
-                            <div className="search-filter-container">
-                                <div className="search-input-wrapper">
-                                    <span className="search-icon">🔍</span>
-                                    <input
-                                        type="text"
-                                        placeholder="Search doctors by name..."
-                                        className="search-input"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </div>
-
-                                <select
-                                    className="specialist-select"
-                                    value={selectedSpecialist}
-                                    onChange={(e) => setSelectedSpecialist(e.target.value)}
-                                >
-                                    <option value="">All Specialists</option>
-                                    {specialists.map((spec, index) => (
-                                        <option key={index} value={spec}>{spec}</option>
-                                    ))}
-                                </select>
-                            </div>
-
                             {/* Custom Date Picker Modal */}
                             {showDatePicker && (
                                 <div className="date-picker-overlay" onClick={() => setShowDatePicker(false)}>
@@ -481,9 +441,9 @@ const DoctorAvailability = () => {
                                     <div className="loading-spinner"></div>
                                     <p>Loading doctors...</p>
                                 </div>
-                            ) : filteredDoctors.length > 0 ? (
+                            ) : availability.length > 0 ? (
                                 <div className="doctors-grid">
-                                    {sortDoctorsByAvailability(filteredDoctors).map(avail => {
+                                    {sortDoctorsByAvailability(availability).map(avail => {
                                         const availabilityInfo = checkDoctorAvailability(avail.timeSlots);
 
                                         return (
@@ -547,21 +507,11 @@ const DoctorAvailability = () => {
                             ) : (
                                 <div className="no-doctors-available">
                                     <div className="no-doctors-icon">😔</div>
-                                    <h3>{availability.length > 0 ? 'No Doctors Found' : 'No Doctors Available'}</h3>
-                                    <p>
-                                        {availability.length > 0
-                                            ? 'No doctors match your search filters.'
-                                            : 'There are no doctors available for this date and category.'}
-                                    </p>
-                                    {availability.length > 0 ? (
-                                        <button className="btn-back-alt" onClick={() => { setSearchTerm(''); setSelectedSpecialist(''); }}>
-                                            Clear Filters
-                                        </button>
-                                    ) : (
-                                        <button className="btn-back-alt" onClick={handleBackToTypeSelection}>
-                                            Try Another Category
-                                        </button>
-                                    )}
+                                    <h3>No Doctors Available</h3>
+                                    <p>There are no doctors available for this date and category.</p>
+                                    <button className="btn-back-alt" onClick={handleBackToTypeSelection}>
+                                        Try Another Category
+                                    </button>
                                 </div>
                             )}
                         </div>
@@ -569,7 +519,7 @@ const DoctorAvailability = () => {
                 </div>
 
                 {/* Emergency Doctors Section */}
-                {selectedType && filteredEmergencyDoctors.length > 0 && (
+                {filteredEmergencyDoctors.length > 0 && (
                     <div className="emergency-section">
                         <div className="container">
                             <div className="emergency-header">
@@ -604,9 +554,8 @@ const DoctorAvailability = () => {
                 )}
 
                 {/* Helpline Banner */}
-                {/* Helpline Banner */}
-                <div className="container">
-                    <div className="helpline-banner">
+                <div className="helpline-banner">
+                    <div className="container">
                         <div className="helpline-content">
                             <div className="helpline-icon">📞</div>
                             <div className="helpline-text">

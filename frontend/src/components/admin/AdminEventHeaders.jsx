@@ -114,6 +114,21 @@ const AdminEventHeaders = () => {
         }
     };
 
+    const handleSeed = async () => {
+        if (!window.confirm('This will replace all current banners with dummy ones. Continue?')) return;
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            await axios.post('http://localhost:5000/api/event-headers/seed', {}, {
+                headers: { Authorization: `Bearer ${user.token}` }
+            });
+            toast.success('Dummy banners seeded successfully');
+            fetchHeaders();
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to seed dummy banners');
+        }
+    };
+
     const resetForm = () => {
         setFormData({
             _id: null, type: 'image', url: '', title: '', title_hi: '',
@@ -128,11 +143,16 @@ const AdminEventHeaders = () => {
         <div style={{ padding: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <h2>Events Header Manager</h2>
-                {!isEditing && (
-                    <button className="btn-primary" onClick={() => setIsEditing(true)}>
-                        <Plus size={18} /> Add New Slide
+                <div>
+                    <button className="btn-secondary" onClick={handleSeed} style={{ marginRight: 10 }}>
+                        Seed Dummy Banners
                     </button>
-                )}
+                    {!isEditing && (
+                        <button className="btn-primary" onClick={() => setIsEditing(true)}>
+                            <Plus size={18} /> Add New Slide
+                        </button>
+                    )}
+                </div>
             </div>
 
             {isEditing && (

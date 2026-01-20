@@ -125,8 +125,33 @@
     margin-bottom: 30px;
     opacity: 0.9;
     max-width: 600px;
+}
+
+.slider-item.pos-center .slider-content p {
     margin-left: auto;
     margin-right: auto;
+}
+
+.slider-content .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 24px;
+    background: #2563eb;
+    color: white;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+    margin-top: 10px;
+}
+
+.slider-content .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(37, 99, 235, 0.4);
+    background: #1e40af;
 }
 
 .header-loader {

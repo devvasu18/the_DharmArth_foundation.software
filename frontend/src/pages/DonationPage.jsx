@@ -5,7 +5,7 @@ import AuthFooter from '../components/auth/AuthFooter';
 
 const DonationPage = () => {
     return (
-        <div style={{ minHeight: '100vh', background: '#f0fdfa', paddingBottom: '2rem' }}>
+        <div style={{ minHeight: '100vh', background: '#e6fffa', paddingBottom: '2rem' }}>
             <Navbar />
             <DonationForm />
             <AuthFooter />
