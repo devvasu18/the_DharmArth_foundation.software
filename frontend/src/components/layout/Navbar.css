@@ -40,8 +40,10 @@
     cursor: pointer;
 }
 
-.nav-link:hover {
+.nav-link:hover,
+.nav-link.active {
     color: var(--primary);
+    font-weight: 700;
 }
 
 

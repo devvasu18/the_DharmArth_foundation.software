@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, ChevronDown, Menu, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import './Navbar.css';
@@ -38,14 +38,14 @@ const Navbar = () => {
 
                 {/* Desktop Menu */}
                 <div className="navbar-links hidden-mobile">
-                    <Link to="/donate" className="nav-link">{t('navbar.browseDonations')}</Link>
+                    <NavLink to="/donate" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.browseDonations')}</NavLink>
 
-                    <Link to="/events" className="nav-link">{t('navbar.fundraiseFor')}</Link>
+                    <NavLink to="/events" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.fundraiseFor')}</NavLink>
 
-                    <Link to="/doctors" className="nav-link">{t('navbar.doctorAvailability')}</Link>
+                    <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.doctorAvailability')}</NavLink>
 
                     {user?.isSuperAdmin && (
-                        <Link to="/admin" className="nav-link" style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{t('navbar.admin')}</Link>
+                        <NavLink to="/admin" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.admin')}</NavLink>
                     )}
                 </div>
 
