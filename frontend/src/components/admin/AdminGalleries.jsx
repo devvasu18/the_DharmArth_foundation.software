@@ -137,7 +137,7 @@ const AdminGalleries = () => {
                     <div style={{ background: '#e0f2f1', padding: 8, borderRadius: 8, color: '#00695c' }}>
                         <LayoutGrid size={24} />
                     </div>
-                    <span>Gallery Management</span>
+                    <span style={{ color: 'white' }}>Gallery Management</span>
                 </div>
                 <motion.button
                     whileHover={{ scale: 1.02 }}

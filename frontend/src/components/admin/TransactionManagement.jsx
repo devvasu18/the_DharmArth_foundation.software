@@ -24,6 +24,7 @@ const TransactionManagement = () => {
         searchUser: null, // The "Root" user for filtering
         levelFilter: 'ALL', // 'ALL', 'L1', 'L2' (Tabs)
         specificMotivatorIds: [], // Selected Checkboxes
+        commissionFilter: 'ALL', // 'ALL', 'L1', 'L2' (Global Filter)
         transactionType: 'ALL', // 'ALL', 'DONATION', 'COMMISSION'
         is80G: false,
         sort: 'desc', // 'desc' (newest) or 'asc' (oldest)
@@ -111,7 +112,8 @@ const TransactionManagement = () => {
                 is80G: filters.is80G,
                 startDate: filters.dateRange.start,
                 endDate: filters.dateRange.end,
-                sort: filters.sort === 'asc' ? 'oldest' : 'newest'
+                sort: filters.sort === 'asc' ? 'oldest' : 'newest',
+                commissionFilter: filters.commissionFilter
             };
 
             if (filters.searchUser) {
@@ -147,7 +149,7 @@ const TransactionManagement = () => {
 
             const res = await axios.get('http://localhost:5000/api/transactions/dashboard', { params });
             setTransactions(res.data.data);
-            setTotalPages(res.data.totalPages);
+            setTotalPages(Number(res.data.totalPages) || 1);
             setTotalRecords(res.data.totalRecords);
         } catch (error) {
             console.error(error);
@@ -177,7 +179,8 @@ const TransactionManagement = () => {
     };
 
     const selectUser = async (user) => {
-        setFilters(prev => ({ ...prev, searchUser: user, levelFilter: 'ALL', specificMotivatorIds: [] }));
+        setFilters(prev => ({ ...prev, searchUser: user, levelFilter: 'ALL', specificMotivatorIds: [], commissionFilter: 'ALL' }));
+        setPage(1); // Reset page
         setActiveDropdown(null); // Close User dropdown
 
         // Update History
@@ -210,7 +213,7 @@ const TransactionManagement = () => {
     // Initial Load & Refetch on filter change
     useEffect(() => {
         fetchTransactions();
-    }, [page, filters.searchUser, filters.specificMotivatorIds, filters.is80G, filters.dateRange, filters.levelFilter, filters.transactionType, filters.sort, filters.limit, levelData]);
+    }, [page, filters.searchUser, filters.specificMotivatorIds, filters.is80G, filters.dateRange, filters.levelFilter, filters.commissionFilter, filters.transactionType, filters.sort, filters.limit, levelData]);
 
     // Handle clicks outside dropdown
     useEffect(() => {
@@ -271,10 +274,12 @@ const TransactionManagement = () => {
     };
 
     const removeFilter = (key) => {
+        setPage(1); // Reset page
         if (key === 'user') {
             setFilters(prev => ({ ...prev, searchUser: null, levelFilter: 'ALL', transactionType: 'ALL', specificMotivatorIds: [] }));
             setLevelData({ l1Users: [], l2Users: [] });
         }
+        if (key === 'comm') setFilters(prev => ({ ...prev, commissionFilter: 'ALL' }));
         if (key === 'type') setFilters(prev => ({ ...prev, transactionType: 'ALL' }));
         if (key === '80g') setFilters(prev => ({ ...prev, is80G: false }));
         if (key === 'date') setFilters(prev => ({ ...prev, dateRange: { start: '', end: '' } }));
@@ -563,6 +568,34 @@ const TransactionManagement = () => {
                     </div>
                 )}
 
+                {/* 2.6 Commission Filter (Global - Only when NO user selected) */}
+                {!filters.searchUser && (
+                    <div className="filter-group">
+                        <button
+                            className={`filter-btn ${filters.commissionFilter !== 'ALL' ? 'active' : ''}`}
+                            onClick={() => toggleFilter('COMM_FILTER')}
+                        >
+                            <Wallet size={16} />
+                            {filters.commissionFilter === 'ALL' ? 'All Commissions' : filters.commissionFilter === 'L1' ? 'Comm: L1 Only' : 'Comm: L2 Only'}
+                            <ChevronDown size={14} />
+                        </button>
+
+                        {activeDropdown === 'COMM_FILTER' && (
+                            <div className="dropdown-menu w-48 font-medium">
+                                <div className="dropdown-item" onClick={() => { setFilters(prev => ({ ...prev, commissionFilter: 'ALL' })); setActiveDropdown(null); }}>
+                                    All
+                                </div>
+                                <div className="dropdown-item" onClick={() => { setFilters(prev => ({ ...prev, commissionFilter: 'L1' })); setActiveDropdown(null); }}>
+                                    Comm: L1 Only
+                                </div>
+                                <div className="dropdown-item" onClick={() => { setFilters(prev => ({ ...prev, commissionFilter: 'L2' })); setActiveDropdown(null); }}>
+                                    Comm: L2 Only
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* 3. 80G Filter */}
                 <button
                     className={`filter-btn ${filters.is80G ? 'active' : ''}`}
@@ -734,6 +767,9 @@ const TransactionManagement = () => {
                     {filters.transactionType !== 'ALL' && (
                         <span className="chip">Type: {filters.transactionType} <X size={12} className="chip-remove" onClick={() => removeFilter('type')} /></span>
                     )}
+                    {filters.commissionFilter !== 'ALL' && (
+                        <span className="chip">{filters.commissionFilter === 'L1' ? 'L1 Commission Only' : 'L2 Commission Only'} <X size={12} className="chip-remove" onClick={() => removeFilter('comm')} /></span>
+                    )}
                     {(filters.levelFilter !== 'ALL' || filters.specificMotivatorIds.length > 0) && (
                         <span className="chip">
                             {filters.levelFilter === 'ALL'
@@ -822,9 +858,9 @@ const TransactionManagement = () => {
 
             {/* Pagination */}
             <div className="pagination-controls">
-                <button className="page-btn" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Previous</button>
-                <span>Page {page} of {totalPages}</span>
-                <button className="page-btn" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next</button>
+                <button className="page-btn" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Previous</button>
+                <span>Page {page} of {totalPages || 1}</span>
+                <button className="page-btn" disabled={page >= totalPages} onClick={() => setPage(p => (p < totalPages ? p + 1 : p))}>Next</button>
             </div>
 
             {/* Breakdown Side Panel */}

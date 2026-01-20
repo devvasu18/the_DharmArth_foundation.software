@@ -188,7 +188,7 @@ const AdminDashboard = () => {
             {/* Stats Cards */}
             <div className="stats-grid">
                 <div className="stat-card stat-card-gradient-1">
-                    <div className="stat-content">
+                    <div className="stat-content" style={{ color: 'black' }}>
                         <h4>Total Donations</h4>
                         <p className="stat-value">₹{stats.totalDonations.toLocaleString()}</p>
                         <span className="stat-subtext">
@@ -199,7 +199,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="stat-card stat-card-gradient-2">
-                    <div className="stat-content">
+                    <div className="stat-content" style={{ color: 'black' }}>
                         <h4>Total Users</h4>
                         <p className="stat-value">{stats.userCount}</p>
                         <span className="stat-subtext">
@@ -210,7 +210,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="stat-card stat-card-gradient-3">
-                    <div className="stat-content">
+                    <div className="stat-content" style={{ color: 'black' }}>
                         <h4>Active Campaigns</h4>
                         <p className="stat-value">{stats.activeCampaigns}</p>
                         <span className="stat-subtext">Running Smoothly</span>

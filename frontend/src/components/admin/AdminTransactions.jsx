@@ -541,7 +541,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                         </div>
 
                         {/* 2. SEARCH BAR (Always Visible) */}
-                        <div className="search-input-wrapper" style={{ marginTop: '1rem' }}>
+                        <div className="admin-transactions-search-wrapper">
                             <Search size={16} />
                             <input
                                 type="text"

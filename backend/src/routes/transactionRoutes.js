@@ -61,7 +61,31 @@ router.get('/dashboard', async (req, res) => {
                 ]
             });
 
-        } else if (searchUserId) {
+        } else {
+            // commissionFilter Logic (Only when NO specific user is selected)
+            const { commissionFilter } = req.query; // 'ALL', 'L1', 'L2'
+
+            if (commissionFilter === 'L1') {
+                andConditions.push({
+                    $or: [
+                        { level1UserId: { $exists: true, $ne: null } },
+                        { motivatorMobile: { $exists: true, $ne: null, $ne: "" } }
+                    ]
+                });
+            } else if (commissionFilter === 'L2') {
+                // Broad search for L2 candidates (L1 or Motivator might imply L2)
+                // We filter strictly in-memory after polyfilling
+                andConditions.push({
+                    $or: [
+                        { level1UserId: { $exists: true, $ne: null } },
+                        { motivatorMobile: { $exists: true, $ne: null, $ne: "" } },
+                        { level2UserId: { $exists: true, $ne: null } }
+                    ]
+                });
+            }
+        }
+
+        if (searchUserId) {
             // "Involved" User: Search by Transaction Type
             const { type } = req.query; // 'ALL', 'DONATION', 'COMMISSION'
             const searchUser = await User.findById(searchUserId);
@@ -190,6 +214,14 @@ router.get('/dashboard', async (req, res) => {
             return d;
         });
 
+        // --- Final Filter: Ensure Commission Criteria is Met (Visual Check) ---
+        // This handles cases where populate returned null (orphaned ID) but DB query included it.
+        const { commissionFilter } = req.query;
+        if (commissionFilter === 'L1') {
+            donations = donations.filter(d => (d.level1UserId && typeof d.level1UserId === 'object') || (d.motivatorMobile && d.motivatorMobile.trim() !== ''));
+        } else if (commissionFilter === 'L2') {
+            donations = donations.filter(d => d.level2UserId && typeof d.level2UserId === 'object');
+        }
 
         const total = await Donation.countDocuments(query);
 
