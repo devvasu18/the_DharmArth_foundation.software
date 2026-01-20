@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Download, Filter, Calendar, TrendingUp, DollarSign, PieChart as PieIcon, BarChart3, ChevronLeft, ChevronRight, Search, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Download, Filter, Calendar, TrendingUp, DollarSign, PieChart as PieIcon, BarChart3, ChevronLeft, ChevronRight, Search, FileText, ArrowRight, TrendingDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -13,6 +14,7 @@ const CommissionReports = () => {
     // State
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(null);
+    const navigate = useNavigate();
     const [filters, setFilters] = useState({
         preset: 'MONTH', // 'TODAY', 'WEEK', 'MONTH', 'CUSTOM'
         startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
@@ -215,14 +217,33 @@ const CommissionReports = () => {
 
             {/* Top Summary Cards */}
             <div className="summary-cards-grid">
+                {/* 1. Total Donations */}
                 <div className="summary-card">
                     <div className="card-icon"><DollarSign size={24} /></div>
+                    <div className="card-top-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem', paddingRight: '40px' }}>
+                        <span className="card-label" style={{ marginBottom: 0 }}>Total Donations</span>
+                        <button
+                            className="view-btn-mini"
+                            onClick={() => navigate('/admin/transaction-management', {
+                                state: {
+                                    filters: {
+                                        start: filters.startDate,
+                                        end: filters.endDate,
+                                        commissionFilter: 'ALL'
+                                    }
+                                }
+                            })}
+                        >
+                            View <ArrowRight size={12} />
+                        </button>
+                    </div>
                     <div className="card-content">
-                        <span className="card-label">Total Donations</span>
                         <span className="card-value">{formatCurrency(summary.totalDonations)}</span>
                         <small className="text-neutral">Collected</small>
                     </div>
                 </div>
+
+                {/* 2. Total Commission (Expense) */}
                 <div className="summary-card">
                     <div className="card-icon"><TrendingUp size={24} /></div>
                     <div className="card-content">
@@ -243,18 +264,55 @@ const CommissionReports = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* 3. L1 Commission */}
                 <div className="summary-card">
+                    <div className="card-top-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                        <span className="card-label" style={{ marginBottom: 0 }}>L1 Commission</span>
+                        <button
+                            className="view-btn-mini"
+                            onClick={() => navigate('/admin/transaction-management', {
+                                state: {
+                                    filters: {
+                                        start: filters.startDate,
+                                        end: filters.endDate,
+                                        commissionFilter: 'L1'
+                                    }
+                                }
+                            })}
+                        >
+                            View <ArrowRight size={12} />
+                        </button>
+                    </div>
                     <div className="card-content">
-                        <span className="card-label">L1 Commission</span>
                         <span className="card-value">{formatCurrency(summary.l1Commission)}</span>
                     </div>
                 </div>
+
+                {/* 4. L2 Commission */}
                 <div className="summary-card">
+                    <div className="card-top-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                        <span className="card-label" style={{ marginBottom: 0 }}>L2 Commission</span>
+                        <button
+                            className="view-btn-mini"
+                            onClick={() => navigate('/admin/transaction-management', {
+                                state: {
+                                    filters: {
+                                        start: filters.startDate,
+                                        end: filters.endDate,
+                                        commissionFilter: 'L2'
+                                    }
+                                }
+                            })}
+                        >
+                            View <ArrowRight size={12} />
+                        </button>
+                    </div>
                     <div className="card-content">
-                        <span className="card-label">L2 Commission</span>
                         <span className="card-value">{formatCurrency(summary.l2Commission)}</span>
                     </div>
                 </div>
+
                 <div className="summary-card highlight">
                     <div className="card-icon"><DollarSign size={24} /></div>
                     <div className="card-content">

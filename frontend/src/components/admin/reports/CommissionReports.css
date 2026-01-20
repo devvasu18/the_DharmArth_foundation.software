@@ -399,3 +399,25 @@
         grid-template-columns: 1fr;
     }
 }
+
+.view-btn-mini {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: #e2e8f0;
+    color: #475569;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.view-btn-mini:hover {
+    background: #cbd5e1;
+    color: #1e293b;
+    transform: translateX(2px);
+}

@@ -12,6 +12,9 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const TransactionManagement = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+
     // --- Global State ---
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -20,26 +23,52 @@ const TransactionManagement = () => {
     const [totalRecords, setTotalRecords] = useState(0);
 
     // --- Filters State ---
-    const [filters, setFilters] = useState({
-        searchUser: null, // The "Root" user for filtering
-        levelFilter: 'ALL', // 'ALL', 'L1', 'L2' (Tabs)
-        specificMotivatorIds: [], // Selected Checkboxes
-        commissionFilter: 'ALL', // 'ALL', 'L1', 'L2' (Global Filter)
-        transactionType: 'ALL', // 'ALL', 'DONATION', 'COMMISSION'
-        is80G: false,
-        sort: 'desc', // 'desc' (newest) or 'asc' (oldest)
-        limit: 20,
-        dateRange: {
-            start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-            end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]
-        } // default this month
+    const [filters, setFilters] = useState(() => {
+        const initialState = {
+            searchUser: null,
+            levelFilter: 'ALL',
+            specificMotivatorIds: [],
+            commissionFilter: 'ALL',
+            transactionType: 'ALL',
+            is80G: false,
+            sort: 'desc',
+            limit: 20,
+            dateRange: {
+                start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+                end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]
+            }
+        };
+
+        if (location.state?.filters) {
+            const { start, end, commissionFilter } = location.state.filters;
+            return {
+                ...initialState,
+                dateRange: {
+                    start: start || initialState.dateRange.start,
+                    end: end || initialState.dateRange.end
+                },
+                commissionFilter: commissionFilter || 'ALL'
+            };
+        }
+        return initialState;
     });
 
     // Pending Filters for Manual Apply
-    const [pendingFilters, setPendingFilters] = useState({
-        levelFilter: 'ALL',
-        specificMotivatorIds: [],
-        dateRange: { start: '', end: '' }
+    const [pendingFilters, setPendingFilters] = useState(() => {
+        const defaultState = {
+            levelFilter: 'ALL',
+            specificMotivatorIds: [],
+            dateRange: { start: '', end: '' }
+        };
+
+        if (location.state?.filters) {
+            const { start, end } = location.state.filters;
+            return {
+                ...defaultState,
+                dateRange: { start: start || '', end: end || '' }
+            };
+        }
+        return defaultState;
     });
 
     const [activeDropdown, setActiveDropdown] = useState(null); // 'USER', 'LEVEL', 'DATE'
@@ -66,8 +95,13 @@ const TransactionManagement = () => {
         }
     }, []);
 
-    const location = useLocation();
-    const navigate = useNavigate();
+    useEffect(() => {
+        const storedHistory = localStorage.getItem('admin_transaction_search_history');
+        if (storedHistory) {
+            setSearchHistory(JSON.parse(storedHistory));
+        }
+    }, [location.state]); // Re-run if location changes just in case, though once is fine
+
 
     const handleOpenExplorer = (data) => {
         if (!data) return;
@@ -78,7 +112,8 @@ const TransactionManagement = () => {
         }
     };
 
-    // Handle redirect from Notification
+    // Handle redirect from Notification (Open Single Transaction)
+    // Note: Filter init is handled in useState lazy initializer above
     useEffect(() => {
         if (location.state?.openTransactionId) {
             setLoading(true);
