@@ -32,7 +32,8 @@ i18n
                         "signIn": "Sign In",
                         "donate": "Donate",
                         "wallet": "Wallet",
-                        "userDashboard": "User Dashboard"
+                        "userDashboard": "User Dashboard",
+                        "howItWorks": "How It Works"
                     },
                     "home": {
                         "welcomeTitle": "Welcome to The Dharmarth Foundation",
@@ -95,15 +96,15 @@ i18n
                         "aboutUs": "About Us",
                         "support": "Support",
                         "queries": "For any queries",
-                        "copyright": "Copyright © 2026 Dharmarth Online Ventures Pvt Ltd. All Rights Reserved.",
-                        "monthly": {
-                            "title": "Gift Smiles with Monthly Giving",
-                            "p1": "6,619 Lives",
-                            "p2": " Have Been Saved With Monthly Contributions From ",
-                            "p3": "4,21,908 Contributors",
-                            "p4": ". Save Countless Lives By Giving Monthly.",
-                            "cta": "START MONTHLY GIVING"
-                        }
+                        "copyright": "Copyright © 2026 Dharmarth Online Ventures Pvt Ltd. All Rights Reserved."
+                    },
+                    "monthly": {
+                        "title": "Gift Smiles with Monthly Giving",
+                        "p1": "6,619 Lives",
+                        "p2": " Have Been Saved With Monthly Contributions From ",
+                        "p3": "4,21,908 Contributors",
+                        "p4": ". Save Countless Lives By Giving Monthly.",
+                        "cta": "START MONTHLY GIVING"
                     },
                     "donatePage": {
                         "title": "Select Donation Amount",
@@ -171,7 +172,8 @@ i18n
                         "signIn": "साइन इन",
                         "donate": "दान करें",
                         "wallet": "वॉलेट",
-                        "userDashboard": "यूज़र डैशबोर्ड"
+                        "userDashboard": "यूज़र डैशबोर्ड",
+                        "howItWorks": "यह कैसे काम करता है"
                     },
                     "home": {
                         "welcomeTitle": "धर्मार्थ फाउंडेशन में आपका स्वागत है",
@@ -234,15 +236,15 @@ i18n
                         "aboutUs": "हमारे बारे में",
                         "support": "सहायता",
                         "queries": "किसी भी प्रश्न के लिए",
-                        "copyright": "कॉपीराइट © 2026 धर्मार्थ ऑनलाइन वेंचर्स प्राइवेट लिमिटेड। सर्वाधिकार सुरक्षित।",
-                        "monthly": {
-                            "title": "मासिक दान के साथ मुस्कान उपहार में दें",
-                            "p1": "4,21,908 योगदानकर्ताओं",
-                            "p2": " के मासिक योगदान से ",
-                            "p3": "6,619 जीवन",
-                            "p4": " बचाए गए हैं। मासिक दान देकर अनगिनत जीवन बचाएं।",
-                            "cta": "मासिक दान शुरू करें"
-                        }
+                        "copyright": "कॉपीराइट © 2026 धर्मार्थ ऑनलाइन वेंचर्स प्राइवेट लिमिटेड। सर्वाधिकार सुरक्षित।"
+                    },
+                    "monthly": {
+                        "title": "मासिक दान के साथ मुस्कान उपहार में दें",
+                        "p1": "4,21,908 योगदानकर्ताओं",
+                        "p2": " के मासिक योगदान से ",
+                        "p3": "6,619 जीवन",
+                        "p4": " बचाए गए हैं। मासिक दान देकर अनगिनत जीवन बचाएं।",
+                        "cta": "मासिक दान शुरू करें"
                     },
                     "donatePage": {
                         "title": "दान राशि चुनें",

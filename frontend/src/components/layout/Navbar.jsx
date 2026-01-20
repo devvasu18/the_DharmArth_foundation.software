@@ -38,11 +38,11 @@ const Navbar = () => {
 
                 {/* Desktop Menu */}
                 <div className="navbar-links hidden-mobile">
-                    <Link to="/donate" className="nav-link">{t('Store')}</Link>
+                    <Link to="/donate" className="nav-link">{t('navbar.browseDonations')}</Link>
 
-                    <Link to="/events" className="nav-link">{t('Events')}</Link>
+                    <Link to="/events" className="nav-link">{t('navbar.fundraiseFor')}</Link>
 
-                    <Link to="/doctors" className="nav-link">{t('Doctor Availability')}</Link>
+                    <Link to="/doctors" className="nav-link">{t('navbar.doctorAvailability')}</Link>
 
                     {user?.isSuperAdmin && (
                         <Link to="/admin" className="nav-link" style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{t('navbar.admin')}</Link>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import { Upload, X } from 'lucide-react';
 import './AdminDoctors.css';
 
 const API_URL = 'http://localhost:5000/api';
@@ -9,6 +10,7 @@ const AdminDoctors = () => {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingDoctor, setEditingDoctor] = useState(null);
+    const [uploading, setUploading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         title: '',
@@ -133,6 +135,34 @@ const AdminDoctors = () => {
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
+    };
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const uploadData = new FormData();
+        uploadData.append('image', file);
+
+        setUploading(true);
+        try {
+            const response = await fetch(`${API_URL}/upload`, {
+                method: 'POST',
+                body: uploadData
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                setFormData(prev => ({ ...prev, photo: data.imageUrl }));
+                toast.success('Image uploaded successfully');
+            } else {
+                toast.error(data.message || 'Upload failed');
+            }
+        } catch (error) {
+            toast.error('Error uploading image');
+        } finally {
+            setUploading(false);
+        }
     };
 
     if (loading) {
@@ -322,14 +352,47 @@ const AdminDoctors = () => {
                             </div>
 
                             <div className="form-group">
-                                <label>Photo URL</label>
-                                <input
-                                    type="text"
-                                    name="photo"
-                                    value={formData.photo}
-                                    onChange={handleChange}
-                                    placeholder="https://example.com/photo.jpg"
-                                />
+                                <label>Doctor Photo</label>
+                                <div className="image-upload-container">
+                                    <div className="image-input-wrapper">
+                                        <input
+                                            type="text"
+                                            name="photo"
+                                            value={formData.photo}
+                                            onChange={handleChange}
+                                            placeholder="Image URL or upload"
+                                            className="form-input"
+                                        />
+                                        <label className={`btn-upload ${uploading ? 'uploading' : ''}`}>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                                hidden
+                                                disabled={uploading}
+                                            />
+                                            {uploading ? (
+                                                <span>Uploading...</span>
+                                            ) : (
+                                                <>
+                                                    <Upload size={18} /> Upload
+                                                </>
+                                            )}
+                                        </label>
+                                    </div>
+                                    {formData.photo && (
+                                        <div className="image-preview">
+                                            <img src={formData.photo} alt="Preview" />
+                                            <button
+                                                type="button"
+                                                className="btn-remove-image"
+                                                onClick={() => setFormData(prev => ({ ...prev, photo: '' }))}
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="form-row checkbox-row">
