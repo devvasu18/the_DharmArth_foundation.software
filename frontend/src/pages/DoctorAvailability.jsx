@@ -167,79 +167,118 @@ const DoctorAvailability = () => {
         return hours * 60 + minutes;
     };
 
-    const checkDoctorAvailability = (timeSlots) => {
+    const checkDoctorAvailability = (timeSlots, targetDate) => {
+        const now = new Date();
+        const isToday = targetDate && targetDate.toDateString() === now.toDateString();
+        const isFuture = targetDate && targetDate > now && !isToday;
+
         const currentMinutes = getCurrentTimeInMinutes();
+        const hasAvailableSlots = timeSlots.some(slot => slot.status === 'Available');
 
-        // Check if doctor is currently available
-        for (const slot of timeSlots) {
-            if (slot.status !== 'Available') continue;
-
-            const startMinutes = timeToMinutes(slot.startTime);
-            const endMinutes = timeToMinutes(slot.endTime);
-
-            if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
-                return {
-                    isAvailableNow: true,
-                    status: 'Available Now',
-                    nextSlot: null,
-                    sortOrder: 0
-                };
-            }
-        }
-
-        // Find next available slot
-        let nextSlot = null;
-        let minDiff = Infinity;
-
-        for (const slot of timeSlots) {
-            if (slot.status !== 'Available') continue;
-
-            const startMinutes = timeToMinutes(slot.startTime);
-
-            if (startMinutes > currentMinutes) {
-                const diff = startMinutes - currentMinutes;
-                if (diff < minDiff) {
-                    minDiff = diff;
-                    nextSlot = slot;
-                }
-            }
-        }
-
-        if (nextSlot) {
-            const hoursUntil = Math.floor(minDiff / 60);
-            const minutesUntil = minDiff % 60;
-
-            let statusMessage;
-            if (hoursUntil === 0) {
-                statusMessage = `Available in ${minutesUntil} minutes`;
-            } else if (hoursUntil === 1 && minutesUntil === 0) {
-                statusMessage = `Available in 1 hour`;
-            } else if (minutesUntil === 0) {
-                statusMessage = `Available in ${hoursUntil} hours`;
-            } else {
-                statusMessage = `Available at ${formatTime(nextSlot.startTime)}`;
-            }
-
+        if (!hasAvailableSlots) {
             return {
                 isAvailableNow: false,
-                status: statusMessage,
-                nextSlot: nextSlot,
-                sortOrder: 1 + minDiff // Sort by time until available
+                status: 'Not Available Today',
+                nextSlot: null,
+                sortOrder: 999999
             };
         }
 
+        // If it's a future date, just show "Scheduled"
+        if (isFuture) {
+            return {
+                isAvailableNow: false,
+                status: 'Scheduled',
+                nextSlot: null,
+                sortOrder: 50
+            };
+        }
+
+        // If it's today, check current time
+        if (isToday) {
+            // Check if doctor is currently available
+            for (const slot of timeSlots) {
+                if (slot.status !== 'Available') continue;
+
+                const startMinutes = timeToMinutes(slot.startTime);
+                const endMinutes = timeToMinutes(slot.endTime);
+                
+                // Handle cross-midnight shifts (e.g., 9 PM to 12 AM or 12 PM next day)
+                const adjustedEnd = (endMinutes <= startMinutes) ? endMinutes + 1440 : endMinutes;
+
+                if (currentMinutes >= startMinutes && currentMinutes <= adjustedEnd) {
+                    return {
+                        isAvailableNow: true,
+                        status: 'Available Now',
+                        nextSlot: null,
+                        sortOrder: 0
+                    };
+                }
+            }
+
+            // Find next available slot
+            let nextSlot = null;
+            let minDiff = Infinity;
+
+            for (const slot of timeSlots) {
+                if (slot.status !== 'Available') continue;
+
+                const startMinutes = timeToMinutes(slot.startTime);
+
+                if (startMinutes > currentMinutes) {
+                    const diff = startMinutes - currentMinutes;
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        nextSlot = slot;
+                    }
+                }
+            }
+
+            if (nextSlot) {
+                const hoursUntil = Math.floor(minDiff / 60);
+                const minutesUntil = minDiff % 60;
+
+                let statusMessage;
+                if (hoursUntil === 0) {
+                    statusMessage = `Available in ${minutesUntil} minutes`;
+                } else if (hoursUntil === 1 && minutesUntil === 0) {
+                    statusMessage = `Available in 1 hour`;
+                } else if (minutesUntil === 0) {
+                    statusMessage = `Available in ${hoursUntil} hours`;
+                } else {
+                    statusMessage = `Available at ${formatTime(nextSlot.startTime)}`;
+                }
+
+                return {
+                    isAvailableNow: false,
+                    status: statusMessage,
+                    nextSlot: nextSlot,
+                    sortOrder: 1 + minDiff
+                };
+            }
+
+            // If we are here, it means all available slots for today have passed
+            return {
+                isAvailableNow: false,
+                status: 'Shift Ended',
+                nextSlot: null,
+                sortOrder: 900000
+            };
+        }
+
+        // Fallback for past dates or other cases
         return {
             isAvailableNow: false,
-            status: 'Not Available Today',
+            status: 'Not Available',
             nextSlot: null,
-            sortOrder: 999999 // Put at the end
+            sortOrder: 999999
         };
     };
 
     const sortDoctorsByAvailability = (doctors) => {
         return [...doctors].sort((a, b) => {
-            const availA = checkDoctorAvailability(a.timeSlots);
-            const availB = checkDoctorAvailability(b.timeSlots);
+            const availA = checkDoctorAvailability(a.timeSlots, selectedDate);
+            const availB = checkDoctorAvailability(b.timeSlots, selectedDate);
             return availA.sortOrder - availB.sortOrder;
         });
     };
@@ -374,12 +413,12 @@ const DoctorAvailability = () => {
                                     ) : availability.length > 0 ? (
                                         <div className="doctors-grid">
                                             {sortDoctorsByAvailability(availability).map(avail => {
-                                                const availabilityInfo = checkDoctorAvailability(avail.timeSlots);
+                                                const availabilityInfo = checkDoctorAvailability(avail.timeSlots, selectedDate);
 
                                                 return (
                                                     <div
                                                         key={avail._id}
-                                                        className={`doctor-availability-card ${avail.doctorId.type} ${availabilityInfo.isAvailableNow ? 'available-now' : ''}`}
+                                                        className={`doctor-availability-card ${avail.hospitalType} ${availabilityInfo.isAvailableNow ? 'available-now' : ''}`}
                                                     >
                                                         <div className="doctor-photo">
                                                             {avail.doctorId.photo ? (
@@ -396,9 +435,15 @@ const DoctorAvailability = () => {
                                                                 <span className="doctor-experience">- {avail.doctorId.experience}</span>
                                                             </div>
                                                             <div className="doctor-badges">
-                                                                <div className={`availability-status ${availabilityInfo.isAvailableNow ? 'available' : availabilityInfo.status === 'Not Available Today' ? 'closed' : 'upcoming'}`}>
+                                                                <div className={`availability-status ${
+                                                                    availabilityInfo.isAvailableNow ? 'available' : 
+                                                                    (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available') ? 'closed' : 
+                                                                    'upcoming'
+                                                                }`}>
                                                                     <span>
-                                                                        {availabilityInfo.isAvailableNow ? '●' : availabilityInfo.status === 'Not Available Today' ? '✕' : '🕒'}
+                                                                        {availabilityInfo.isAvailableNow ? '●' : 
+                                                                         (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available') ? '✕' : 
+                                                                         '🕒'}
                                                                     </span>
                                                                     <span>{availabilityInfo.status}</span>
                                                                 </div>
@@ -510,7 +555,7 @@ const DoctorAvailability = () => {
                                         <p className="doctor-title">{doctor.title}</p>
 
                                         <div className={`doctor-type-badge ${doctor.type}`}>
-                                            {doctor.type === 'clinic' ? '🏥 Private Clinic' : '🏥 Government Hospital'}
+                                            {doctor.type === 'clinic' ? '🏨 Private Clinic' : doctor.type === 'government' ? '🏥 Government Hospital' : '🏥 Works in Both'}
                                         </div>
                                     </div>
                                 ))}

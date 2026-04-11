@@ -60,7 +60,13 @@ const AdminDoctors = () => {
                 fetchDoctors();
                 closeModal();
             } else {
-                toast.error('Failed to save doctor');
+                const errorData = await response.json();
+                let errorMessage = errorData.message || 'Failed to save doctor';
+                if (errorData.validationErrors) {
+                    const fields = Object.keys(errorData.validationErrors);
+                    errorMessage = `Validation Error: ${fields.map(f => errorData.validationErrors[f].message).join(', ')}`;
+                }
+                toast.error(errorMessage);
             }
         } catch (error) {
             toast.error('Error saving doctor');
@@ -189,15 +195,15 @@ const AdminDoctors = () => {
                 <div className="stat-card">
                     <div className="stat-icon">🏥</div>
                     <div className="stat-info">
-                        <h3>{doctors.filter(d => d.type === 'government').length}</h3>
-                        <p>Government Hospital</p>
+                        <h3>{doctors.filter(d => d.type === 'government' || d.type === 'both').length}</h3>
+                        <p>In Govt Hospital</p>
                     </div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-icon">🏨</div>
                     <div className="stat-info">
-                        <h3>{doctors.filter(d => d.type === 'clinic').length}</h3>
-                        <p>Private Clinic</p>
+                        <h3>{doctors.filter(d => d.type === 'clinic' || d.type === 'both').length}</h3>
+                        <p>In Private Clinic</p>
                     </div>
                 </div>
                 <div className="stat-card emergency">
@@ -213,7 +219,9 @@ const AdminDoctors = () => {
                 {doctors.map(doctor => (
                     <div key={doctor._id} className={`doctor-card ${doctor.type}`}>
                         <div className="doctor-card-header">
-                            <div className="doctor-type-badge">{doctor.type === 'government' ? '🏥 Government' : '🏨 Clinic'}</div>
+                            <div className="doctor-type-badge">
+                                {doctor.type === 'government' ? '🏥 Government' : doctor.type === 'clinic' ? '🏨 Clinic' : '🏥 Works in Both'}
+                            </div>
                             <div className="doctor-actions">
                                 <button
                                     className={`emergency-toggle ${doctor.isEmergencyAvailable ? 'active' : ''}`}
@@ -335,6 +343,7 @@ const AdminDoctors = () => {
                                     >
                                         <option value="government">Government Hospital</option>
                                         <option value="clinic">Private Clinic</option>
+                                        <option value="both">Works in Both</option>
                                     </select>
                                 </div>
 

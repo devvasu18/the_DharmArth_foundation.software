@@ -22,7 +22,7 @@ const doctorSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['government', 'clinic'],
+        enum: ['government', 'clinic', 'both'],
         required: true
     },
     priority: {
@@ -52,9 +52,8 @@ const doctorSchema = new mongoose.Schema({
 });
 
 // Update timestamp on save
-doctorSchema.pre('save', function (next) {
+doctorSchema.pre('save', async function () {
     this.updatedAt = Date.now();
-    next();
 });
 
 module.exports = mongoose.model('Doctor', doctorSchema);

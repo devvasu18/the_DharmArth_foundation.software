@@ -11,7 +11,6 @@ const AdminAvailability = () => {
     const [weekDates, setWeekDates] = useState([]);
     const [availability, setAvailability] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filterType, setFilterType] = useState('all'); // 'all', 'clinic', 'government'
     const [showScheduleModal, setShowScheduleModal] = useState(false);
 
     // Custom Dropdown State
@@ -105,34 +104,25 @@ const AdminAvailability = () => {
         return date.toLocaleDateString('en-US', { weekday: 'short' });
     };
 
-    const getAvailabilityForDate = (date) => {
+    const getAvailabilityForDate = (date, type) => {
         const targetDate = new Date(date);
         targetDate.setHours(0, 0, 0, 0);
 
         return availability.find(a => {
             const availDate = new Date(a.date);
-            // Get the date in local timezone
             const localDate = new Date(availDate.getFullYear(), availDate.getMonth(), availDate.getDate());
+            
+            const matchesDate = localDate.getTime() === targetDate.getTime();
+            const matchesType = !type || a.hospitalType === type;
 
-            console.log('Comparing:', {
-                target: targetDate.toISOString().split('T')[0],
-                avail: localDate.toISOString().split('T')[0],
-                match: localDate.getTime() === targetDate.getTime()
-            });
-
-            return localDate.getTime() === targetDate.getTime();
+            return matchesDate && matchesType;
         });
     };
 
-    const openScheduleModal = (date) => {
-        setSelectedDate(date);
-        const existing = getAvailabilityForDate(date);
-
-        console.log('Opening modal for date:', date);
-        console.log('Existing schedule:', existing);
+    const loadScheduleIntoForm = (date, type) => {
+        const existing = getAvailabilityForDate(date, type);
 
         if (existing) {
-            // Clean the timeSlots by removing MongoDB _id fields
             const cleanTimeSlots = existing.timeSlots.map(slot => ({
                 period: slot.period,
                 startTime: slot.startTime,
@@ -144,13 +134,8 @@ const AdminAvailability = () => {
                 timeSlots: cleanTimeSlots,
                 isEnabled: existing.isEnabled,
                 emergencyAvailable: existing.emergencyAvailable,
-                notes: existing.notes || ''
-            });
-
-            console.log('Loaded existing schedule into form:', {
-                timeSlots: cleanTimeSlots,
-                isEnabled: existing.isEnabled,
-                emergencyAvailable: existing.emergencyAvailable
+                notes: existing.notes || '',
+                hospitalType: type
             });
         } else {
             setScheduleForm({
@@ -159,11 +144,16 @@ const AdminAvailability = () => {
                 ],
                 isEnabled: true,
                 emergencyAvailable: false,
-                notes: ''
+                notes: '',
+                hospitalType: type
             });
-            console.log('No existing schedule, using default');
         }
+    };
 
+    const openScheduleModal = (date) => {
+        setSelectedDate(date);
+        const initialType = selectedDoctor.type === 'both' ? 'government' : selectedDoctor.type;
+        loadScheduleIntoForm(date, initialType);
         setShowScheduleModal(true);
     };
 
@@ -180,9 +170,15 @@ const AdminAvailability = () => {
             const day = String(selectedDate.getDate()).padStart(2, '0');
             const dateString = `${year}-${month}-${day}`;
 
+            // If doctor works in both, use the selected hospital type from form, otherwise use doctor's type
+            const hospitalType = (selectedDoctor.type === 'both') 
+                ? scheduleForm.hospitalType 
+                : selectedDoctor.type;
+
             const payload = {
                 doctorId: selectedDoctor._id,
                 date: dateString, // YYYY-MM-DD format in local timezone
+                hospitalType,
                 dayName: getDayName(selectedDate),
                 timeSlots: scheduleForm.timeSlots,
                 isEnabled: scheduleForm.isEnabled,
@@ -236,12 +232,33 @@ const AdminAvailability = () => {
     };
 
     const updateTimeSlot = (index, field, value) => {
-        setScheduleForm(prev => ({
-            ...prev,
-            timeSlots: prev.timeSlots.map((slot, i) =>
-                i === index ? { ...slot, [field]: value } : slot
-            )
-        }));
+        setScheduleForm(prev => {
+            const updatedSlots = prev.timeSlots.map((slot, i) => {
+                if (i === index) {
+                    const updatedSlot = { ...slot, [field]: value };
+                    
+                    // Auto-select period if startTime changes
+                    if (field === 'startTime') {
+                        const hour = parseInt(value.split(':')[0]);
+                        if (hour < 12) {
+                            updatedSlot.period = 'Morning';
+                        } else if (hour < 16) {
+                            updatedSlot.period = 'Afternoon';
+                        } else {
+                            updatedSlot.period = 'Evening';
+                        }
+                    }
+                    
+                    return updatedSlot;
+                }
+                return slot;
+            });
+
+            return {
+                ...prev,
+                timeSlots: updatedSlots
+            };
+        });
     };
 
     const quickSetWeek = async () => {
@@ -259,6 +276,7 @@ const AdminAvailability = () => {
                 dayName: getDayName(date),
                 timeSlots: defaultSlots,
                 isEnabled: true,
+                hospitalType: selectedDoctor.type === 'both' ? 'government' : selectedDoctor.type,
                 emergencyAvailable: false,
                 notes: ''
             }));
@@ -296,32 +314,10 @@ const AdminAvailability = () => {
                 </button>
             </div>
 
-            <div className="filter-controls">
-                <span>Filter by Type:</span>
-                <div className="filter-buttons">
-                    <button
-                        className={`filter-btn ${filterType === 'all' ? 'active' : ''}`}
-                        onClick={() => setFilterType('all')}
-                    >
-                        All
-                    </button>
-                    <button
-                        className={`filter-btn ${filterType === 'clinic' ? 'active' : ''}`}
-                        onClick={() => setFilterType('clinic')}
-                    >
-                        🏥 Clinics
-                    </button>
-                    <button
-                        className={`filter-btn ${filterType === 'government' ? 'active' : ''}`}
-                        onClick={() => setFilterType('government')}
-                    >
-                        🏥 Government
-                    </button>
-                </div>
-            </div>
+
 
             <div className="doctor-selector">
-                <label>Select Doctor ({doctors.filter(d => filterType === 'all' || d.type === filterType).length}):</label>
+                <label>Select Doctor ({doctors.length}):</label>
 
                 <div className="custom-dropdown" ref={dropdownRef}>
                     <div
@@ -349,10 +345,8 @@ const AdminAvailability = () => {
                             <div className="dropdown-list">
                                 {doctors
                                     .filter(doctor => {
-                                        const matchesType = filterType === 'all' || doctor.type === filterType;
-                                        const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                            doctor.title.toLowerCase().includes(searchTerm.toLowerCase());
-                                        return matchesType && matchesSearch;
+                                        return (doctor.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                               (doctor.title || '').toLowerCase().includes(searchTerm.toLowerCase());
                                     })
                                     .map(doctor => (
                                         <div
@@ -366,15 +360,13 @@ const AdminAvailability = () => {
                                         >
                                             <div className="item-name">{doctor.name}</div>
                                             <div className="item-meta">
-                                                {doctor.title} • {doctor.type === 'government' ? 'Government' : 'Clinic'}
+                                                {doctor.title} • {doctor.type === 'government' ? 'Government' : doctor.type === 'clinic' ? 'Clinic' : 'Works in Both'}
                                             </div>
                                         </div>
                                     ))}
                                 {doctors.filter(doctor => {
-                                    const matchesType = filterType === 'all' || doctor.type === filterType;
-                                    const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                        doctor.title.toLowerCase().includes(searchTerm.toLowerCase());
-                                    return matchesType && matchesSearch;
+                                    return (doctor.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                          (doctor.title || '').toLowerCase().includes(searchTerm.toLowerCase());
                                 }).length === 0 && (
                                         <div className="dropdown-no-results">No doctors found</div>
                                     )}
@@ -398,7 +390,7 @@ const AdminAvailability = () => {
                             <h3>{selectedDoctor.name}</h3>
                             <p>{selectedDoctor.title}</p>
                             <span className={`type-badge ${selectedDoctor.type}`}>
-                                {selectedDoctor.type === 'government' ? '🏥 Government' : '🏨 Clinic'}
+                                {selectedDoctor.type === 'government' ? '🏥 Government' : selectedDoctor.type === 'clinic' ? '🏨 Clinic' : '🏥 Works in Both'}
                             </span>
                         </div>
                     </div>
@@ -409,13 +401,19 @@ const AdminAvailability = () => {
                 <h2>Next 7 Days Schedule</h2>
                 <div className="calendar-grid">
                     {weekDates.map((date, index) => {
-                        const avail = getAvailabilityForDate(date);
+                        const dayAvailabilities = availability.filter(a => {
+                            const availDate = new Date(a.date);
+                            const localDate = new Date(availDate.getFullYear(), availDate.getMonth(), availDate.getDate());
+                            const targetDate = new Date(date);
+                            targetDate.setHours(0, 0, 0, 0);
+                            return localDate.getTime() === targetDate.getTime();
+                        });
                         const isToday = date.toDateString() === new Date().toDateString();
 
                         return (
                             <div
                                 key={index}
-                                className={`calendar-day ${isToday ? 'today' : ''} ${avail ? 'has-schedule' : ''}`}
+                                className={`calendar-day ${isToday ? 'today' : ''} ${dayAvailabilities.length > 0 ? 'has-schedule' : ''}`}
                                 onClick={() => openScheduleModal(date)}
                             >
                                 <div className="day-header">
@@ -423,18 +421,20 @@ const AdminAvailability = () => {
                                     <div className="day-date">{date.getDate()}</div>
                                 </div>
 
-                                {avail ? (
+                                {dayAvailabilities.length > 0 ? (
                                     <div className="day-schedule">
-                                        {avail.timeSlots.map((slot, i) => (
-                                            <div key={i} className={`time-slot ${slot.status.toLowerCase().replace(' ', '-')}`}>
-                                                <div className="slot-period">{slot.period}</div>
-                                                <div className="slot-time">{slot.startTime} - {slot.endTime}</div>
-                                                <div className="slot-status">{slot.status}</div>
+                                        {dayAvailabilities.map((avail, idx) => (
+                                            <div key={idx} className="hospital-group">
+                                                <div className={`hospital-mini-badge ${avail.hospitalType}`}>
+                                                    {avail.hospitalType === 'government' ? '🏥 Govt' : '🏨 Clinic'}
+                                                </div>
+                                                {avail.timeSlots.map((slot, i) => (
+                                                    <div key={i} className={`time-slot ${slot.status.toLowerCase().replace(' ', '-')}`}>
+                                                        <div className="slot-time">{slot.startTime} - {slot.endTime}</div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         ))}
-                                        {avail.emergencyAvailable && (
-                                            <div className="emergency-indicator">🚨 Emergency</div>
-                                        )}
                                     </div>
                                 ) : (
                                     <div className="no-schedule">
@@ -462,6 +462,26 @@ const AdminAvailability = () => {
                         </div>
 
                         <div className="schedule-form">
+                            {selectedDoctor.type === 'both' && (
+                                <div className="form-group hospital-type-selector">
+                                    <label>Setting Schedule For:</label>
+                                    <div className="type-toggle">
+                                        <button 
+                                            className={`toggle-btn ${scheduleForm.hospitalType === 'government' ? 'active' : ''}`}
+                                            onClick={() => loadScheduleIntoForm(selectedDate, 'government')}
+                                        >
+                                            🏥 Government Hospital
+                                        </button>
+                                        <button 
+                                            className={`toggle-btn ${scheduleForm.hospitalType === 'clinic' ? 'active' : ''}`}
+                                            onClick={() => loadScheduleIntoForm(selectedDate, 'clinic')}
+                                        >
+                                            🏨 Private Clinic
+                                        </button>
+                                    </div>
+                                    <p className="type-note">Note: You can set different schedules for both hospitals on the same day.</p>
+                                </div>
+                            )}
                             <div className="time-slots-section">
                                 <div className="section-header">
                                     <h3>Time Slots</h3>

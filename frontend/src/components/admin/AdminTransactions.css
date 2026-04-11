@@ -440,7 +440,10 @@
 
 .transaction-card.selected {
     border: 1px solid var(--primary);
-    background: #f0fdf9;
+    background: white;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: 0 10px 20px -5px rgba(0, 191, 165, 0.1);
 }
 
 /* Icon box */
@@ -468,8 +471,8 @@
 }
 
 .debit-icon {
-    color: var(--danger);
-    background: #fef2f2 !important;
+    color: #1e293b;
+    background: #f1f5f9 !important;
 }
 
 /* Content */
@@ -479,9 +482,18 @@
     color: var(--text-main);
 }
 
-.txn-meta {
+.txn-meta, .txn-id {
     font-size: 0.85rem;
     color: var(--text-muted);
+}
+
+.txn-id {
+    font-family: monospace;
+    background: #f1f5f9;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    display: inline-block;
+    margin: 0.2rem 0;
 }
 
 .txn-amount {
@@ -495,33 +507,130 @@
 }
 
 .txn-amount.debit {
-    color: var(--danger);
+    color: #1e293b;
 }
 
 /* Breakdown Panel */
-.breakdown-panel {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px dashed rgba(0, 0, 0, 0.1);
-    animation: slideDown 0.3s ease-out;
+.breakdown-panel.inline-breakdown {
+    background: #f8fafc;
+    border: 1px solid var(--primary);
+    border-top: 1px dashed rgba(0, 191, 165, 0.2);
+    margin-top: -1px;
+    padding: 1.5rem;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+    animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.05);
+    z-index: 1;
+}
+
+.breakdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.breakdown-header h5 {
+    margin: 0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 700;
 }
 
 .breakdown-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    padding: 1rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0;
 }
 
 .commission-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5rem;
+    padding: 0.8rem 1rem;
     background: white;
-    margin-bottom: 0.5rem;
+    border-radius: 12px;
+    border: 1px solid #edf2f7;
+    transition: all 0.2s;
+}
+
+.commission-recipient {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.recipient-avatar {
+    width: 32px;
+    height: 32px;
     border-radius: 8px;
-    border: 1px solid #f1f5f9;
+    background: #eef2f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--secondary);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.recipient-info h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.recipient-info p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.donation-summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    border: 1px solid #edf2f7;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.summary-item .label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.summary-item .value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.verified-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #f0fdf4;
+    color: var(--success);
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
 }
 
 .level-badge {
@@ -542,7 +651,7 @@
 
 /* ============ TREE VIEW ============ */
 .tree-view {
-    padding: 3rem;
+    padding: 6rem 3rem 3rem; /* Increased top padding to fix mashup */
     flex: 1;
     overflow: hidden;
     /* Handle internal scrolling */
@@ -557,15 +666,61 @@
     top: 1.5rem;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(8px);
-    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    padding: 0.6rem 1.2rem;
     border-radius: var(--radius-full);
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    z-index: 50;
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 191, 165, 0.1);
+    z-index: 100;
     display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.presets {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.custom-dates {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding-left: 1rem;
+    border-left: 1px solid #e2e8f0;
+    animation: fadeIn 0.3s ease;
+}
+
+.date-input-group {
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
+}
+
+.date-input-group label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.date-input-group input {
+    padding: 0.35rem 0.6rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    outline: none;
+    background: #f8fafc;
+    transition: all 0.2s;
+}
+
+.date-input-group input:focus {
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0, 191, 165, 0.1);
 }
 
 .presets button {
@@ -596,6 +751,17 @@
     align-items: center;
     gap: 0.75rem;
     transition: transform 0.2s;
+}
+
+.sticky-root-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 4rem; /* Direct fix for the mashup */
+    padding-bottom: 2rem;
+    width: 100%;
+    position: relative;
+    z-index: 5;
 }
 
 .tree-node:hover .node-content {
@@ -861,7 +1027,7 @@
 }
 
 .tree-container.modal-tree .sticky-root-wrapper {
-    padding-top: 4rem;
+    padding-top: 6rem; /* Increased to fix expanded modal mashup */
     padding-bottom: 2rem;
     flex-shrink: 0;
     background: linear-gradient(to bottom, var(--bg-light) 80%, transparent);

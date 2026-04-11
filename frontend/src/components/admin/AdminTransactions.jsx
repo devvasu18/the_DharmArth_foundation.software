@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
-import { Search, Users, ChevronRight, TrendingUp, Wallet, ArrowDownRight, ArrowUpRight, DollarSign, User, Network, Maximize2, Minimize2, X } from 'lucide-react';
+import { Search, Users, ChevronRight, TrendingUp, Wallet, ArrowDownRight, ArrowUpRight, DollarSign, User, Network, Maximize2, Minimize2, X, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 import './AdminTransactions.css';
 
@@ -110,12 +110,21 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
 
     // Select a transaction to view breakdown
     const handleTransactionSelect = async (transaction) => {
+        if (selectedTransaction?._id === transaction._id) {
+            setSelectedTransaction(null);
+            setTransactionBreakdown(null);
+            return;
+        }
+
         setSelectedTransaction(transaction);
         setTransactionBreakdown(null);
 
-        if (transaction.referenceId && transaction.reason.includes('referral_commission')) {
+        const donationId = transaction.isDonation ? transaction._id : transaction.referenceId;
+        const isReferralOrDonation = transaction.isDonation || (transaction.reason && transaction.reason.includes('referral_commission'));
+
+        if (donationId && isReferralOrDonation) {
             try {
-                const res = await axios.get(`http://localhost:5000/api/transactions/donations/${transaction.referenceId}/breakdown`);
+                const res = await axios.get(`http://localhost:5000/api/transactions/donations/${donationId}/breakdown`);
                 setTransactionBreakdown(res.data);
             } catch (error) {
                 console.error('Error fetching transaction breakdown:', error);
@@ -202,11 +211,18 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
         preset: 'MONTH'
     });
 
-    // Sorted L1 Users for "Timeline" view
-    const sortedL1Users = useMemo(() => {
+    // Filtered and Sorted L1 Users for "Timeline" view
+    const filteredL1Users = useMemo(() => {
         if (!referralTree?.level1Users) return [];
-        return [...referralTree.level1Users].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-    }, [referralTree]);
+        const sorted = [...referralTree.level1Users].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        
+        if (dateFilter.preset === 'ALL') return sorted;
+        
+        return sorted.filter(user => {
+            const userDate = new Date(user.createdAt).toISOString().split('T')[0];
+            return userDate >= dateFilter.start && userDate <= dateFilter.end;
+        });
+    }, [referralTree, dateFilter]);
 
     // Handle User Scroll -> Update Date Filter
     const handleTreeScroll = () => {
@@ -256,9 +272,9 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
         setDateFilter(newFilter);
 
         // Scroll to first user in new range
-        if (sortedL1Users.length > 0 && treeScrollRef.current) {
+        if (filteredL1Users.length > 0 && treeScrollRef.current) {
             const targetDate = new Date(type === 'start' ? newVal : newFilter.start);
-            const targetUser = sortedL1Users.find(u => new Date(u.createdAt) >= targetDate);
+            const targetUser = filteredL1Users.find(u => new Date(u.createdAt) >= targetDate);
 
             if (targetUser) {
                 const node = document.getElementById(`node-${targetUser._id}`);
@@ -275,10 +291,10 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
 
     // Scroll to current month on mount/data load
     useEffect(() => {
-        if (referralTree && treeScrollRef.current && sortedL1Users.length > 0) {
+        if (referralTree && treeScrollRef.current && filteredL1Users.length > 0) {
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            const targetUser = sortedL1Users.find(u => new Date(u.createdAt) >= startOfMonth);
+            const targetUser = filteredL1Users.find(u => new Date(u.createdAt) >= startOfMonth);
 
             if (targetUser) {
                 const node = document.getElementById(`node-${targetUser._id}`);
@@ -292,7 +308,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                 }
             }
         }
-    }, [referralTree, sortedL1Users]);
+    }, [referralTree, filteredL1Users]);
 
 
     // --- DRAG TO SCROLL LOGIC ---
@@ -345,6 +361,12 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
             {/* Date Filters (Floating) */}
             <div className="tree-date-filter">
                 <div className="presets">
+                    <button
+                        className={dateFilter.preset === 'ALL' ? 'active' : ''}
+                        onClick={() => {
+                            setDateFilter({ ...dateFilter, preset: 'ALL' });
+                        }}
+                    >All</button>
                     <button
                         className={dateFilter.preset === 'TODAY' ? 'active' : ''}
                         onClick={() => {
@@ -402,8 +424,8 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                 )}
             </div>
 
-            {/* Root User - FIXED */}
-            <div className="sticky-root-wrapper" style={{ flexDirection: 'column', alignItems: 'center' }}>
+            {/* Root User - FIXED SPACING */}
+            <div className="sticky-root-wrapper">
                 <div className="tree-node root-node">
                     <div className="node-content">
                         <User size={24} />
@@ -416,10 +438,10 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                 </div>
 
                 {/* Level 1 Label - Moved Sticky */}
-                {sortedL1Users.length > 0 && (
+                {filteredL1Users.length > 0 && (
                     <div className="level-label" style={{ marginTop: '1.5rem', marginBottom: '0.5rem', zIndex: 51 }}>
                         <span className="badge badge-l1">Level 1 (10%)</span>
-                        <span className="count">{sortedL1Users.length} users</span>
+                        <span className="count">{filteredL1Users.length} users</span>
                     </div>
                 )}
             </div>
@@ -438,7 +460,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
 
                 {/* Family Tracks */}
                 <div className="family-track" style={{ display: 'flex', gap: '4rem', padding: '2rem 50vw 0', minWidth: 'max-content' }}>
-                    {sortedL1Users.map(l1User => {
+                    {filteredL1Users.map(l1User => {
                         const l2Group = referralTree.level2Data.find(g => g.level1User._id === l1User._id);
                         const hasL2 = l2Group && l2Group.level2Users.length > 0;
 
@@ -796,61 +818,69 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                                                             <div className="txn-details">
                                                                 <h4>{txn.description || txn.reason}</h4>
                                                                 <p className="txn-date">{formatDate(txn.createdAt)}</p>
+                                                                {txn.isDonation && txn.transactionId && (
+                                                                    <p className="txn-id">ID: {txn.transactionId}</p>
+                                                                )}
                                                                 {txn.donation && (
                                                                     <div className="txn-meta">
-                                                                        <span className="donor-name">From: {txn.donation.donorName}</span>
-                                                                        <span className={`commission-badge ${txn.reason === 'referral_commission_l1' ? 'l1' : 'l2'}`}>
-                                                                            {txn.reason === 'referral_commission_l1' ? 'L1 - 10%' : 'L2 - 3%'}
-                                                                        </span>
+                                                                        <span>From: {txn.donation.donorName}</span>
+                                                                        {txn.reason === 'referral_commission_l1' ? (
+                                                                            <span className="badge badge-l1">L1 - 10%</span>
+                                                                        ) : (
+                                                                            <span className="badge badge-l2">L2 - 3%</span>
+                                                                        )}
                                                                     </div>
                                                                 )}
                                                             </div>
                                                             <div className={`txn-amount ${txn.type}`}>
-                                                                {txn.type === 'credit' ? '+' : '-'}{formatCurrency(txn.amount)}
+                                                                {formatCurrency(txn.amount)}
                                                             </div>
                                                         </div>
 
-                                                        {/* Inline Transaction Breakdown */}
-                                                        {selectedTransaction?._id === txn._id && transactionBreakdown && (
+                                                        {/* Inline Transaction Breakdown */}                                                        {selectedTransaction?._id === txn._id && transactionBreakdown && (
                                                             <div className="breakdown-panel inline-breakdown">
-                                                                <h3>Transaction Breakdown</h3>
-                                                                <div className="breakdown-content">
-                                                                    <div className="donation-info">
-                                                                        <h4>Original Donation</h4>
-                                                                        <div className="info-row">
-                                                                            <span>Donor:</span>
-                                                                            <strong>{transactionBreakdown.donation.donorName}</strong>
-                                                                        </div>
-                                                                        <div className="info-row">
-                                                                            <span>Amount:</span>
-                                                                            <strong className="highlight">{formatCurrency(transactionBreakdown.donation.amount)}</strong>
-                                                                        </div>
-                                                                        <div className="info-row">
-                                                                            <span>Date:</span>
-                                                                            <strong>{formatDate(transactionBreakdown.donation.date)}</strong>
-                                                                        </div>
+                                                                <div className="breakdown-header">
+                                                                    <h5>Distribution Details</h5>
+                                                                    <div className="verified-badge">
+                                                                        <CheckCircle size={14} />
+                                                                        <span>Verified</span>
                                                                     </div>
+                                                                </div>
 
-                                                                    <div className="commission-flow">
-                                                                        <h4>Commission Distribution</h4>
-                                                                        {transactionBreakdown.commissions.map((comm, cIdx) => (
-                                                                            <div key={cIdx} className="commission-item">
-                                                                                <div className="comm-header">
-                                                                                    <span className={`level-badge ${comm.level === 1 ? 'l1' : 'l2'}`}>
-                                                                                        Level {comm.level}
+                                                                <div className="donation-summary-row">
+                                                                    <div className="summary-item">
+                                                                        <span className="label">Donor</span>
+                                                                        <span className="value">{transactionBreakdown.donation.donorName}</span>
+                                                                    </div>
+                                                                    <div className="summary-item">
+                                                                        <span className="label">Amount</span>
+                                                                        <span className="value highlight">{formatCurrency(transactionBreakdown.donation.amount)}</span>
+                                                                    </div>
+                                                                    <div className="summary-item">
+                                                                        <span className="label">Date</span>
+                                                                        <span className="value">{formatDate(transactionBreakdown.donation.date)}</span>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="breakdown-content">
+                                                                    {transactionBreakdown.commissions.map((comm, cIdx) => (
+                                                                        <div key={cIdx} className="commission-item">
+                                                                            <div className="commission-recipient">
+                                                                                <div className="recipient-avatar">
+                                                                                    {comm.recipient.name?.charAt(0).toUpperCase()}
+                                                                                </div>
+                                                                                <div className="recipient-info">
+                                                                                    <h4>{comm.recipient.name}</h4>
+                                                                                    <span className={`level-badge l${comm.level}`}>
+                                                                                        Level {comm.level} • {comm.percentage}%
                                                                                     </span>
-                                                                                    <span className="percentage">{comm.percentage}%</span>
-                                                                                </div>
-                                                                                <div className="comm-recipient">
-                                                                                    <User size={16} />
-                                                                                    <span>{comm.recipient.name}</span>
-                                                                                </div>
-                                                                                <div className="comm-amount">
-                                                                                    {formatCurrency(comm.amount)}
                                                                                 </div>
                                                                             </div>
-                                                                        ))}
-                                                                    </div>
+                                                                            <div className="card-value highlight" style={{ fontSize: '1rem' }}>
+                                                                                {formatCurrency(comm.amount)}
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
                                                                 </div>
                                                             </div>
                                                         )}

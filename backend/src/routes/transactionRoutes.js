@@ -368,28 +368,26 @@ router.get('/users/:userId/transactions', async (req, res) => {
         let totalEarned = 0;
         let currentBalance = 0;
 
+        // 1. Get Wallet Transactions (Commissions & Withdrawals)
+        let walletTransactions = [];
         if (wallet) {
             totalEarned = wallet.totalEarned || 0;
             currentBalance = wallet.balance || 0;
 
-            // Get all transactions for this wallet
-            const transactions = await Transaction.find({ wallet: wallet._id })
+            const rawTransactions = await Transaction.find({ wallet: wallet._id })
                 .sort({ createdAt: -1 })
                 .lean();
 
-            // Enrich transactions with donation details
-            enrichedTransactions = await Promise.all(
-                transactions.map(async (txn) => {
+            // Enrich wallet transactions with commission details
+            walletTransactions = await Promise.all(
+                rawTransactions.map(async (txn) => {
                     if (txn.referenceId && txn.reason.includes('referral_commission')) {
                         const donation = await Donation.findById(txn.referenceId)
                             .select('donorName donorMobile amount motivatorMobile createdAt');
 
                         if (donation) {
-                            // Find who the motivator was
                             const motivator = await User.findOne({ mobile: donation.motivatorMobile })
                                 .select('name mobile');
-
-                            // If this is L2 commission, find the L1 motivator
                             let level1Motivator = null;
                             if (txn.reason === 'referral_commission_l2' && motivator) {
                                 level1Motivator = motivator;
@@ -409,7 +407,7 @@ router.get('/users/:userId/transactions', async (req, res) => {
                 })
             );
 
-            // Check for total withdrawn
+            // Calculate total withdrawn
             const totalWithdrawnData = await Transaction.aggregate([
                 { $match: { wallet: wallet._id, type: 'debit' } },
                 { $group: { _id: null, total: { $sum: '$amount' } } }
@@ -417,9 +415,31 @@ router.get('/users/:userId/transactions', async (req, res) => {
             totalWithdrawn = totalWithdrawnData.length > 0 ? totalWithdrawnData[0].total : 0;
         }
 
+        // 2. Get Personal Donations (Direct payments by this user)
+        const rawPersonalDonations = await Donation.find({
+            donorMobile: { $regex: searchRegex },
+            status: 'success'
+        }).lean();
+
+        const donationTransactions = rawPersonalDonations.map(d => ({
+            _id: d._id,
+            amount: d.amount,
+            type: 'debit',
+            reason: 'personal_donation',
+            description: `Personal Donation to Foundation`,
+            createdAt: d.createdAt,
+            transactionId: d.transactionId,
+            isDonation: true
+        }));
+
+        // 3. Merge and Final Sort
+        const allTransactions = [...walletTransactions, ...donationTransactions].sort((a, b) => 
+            new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
         res.json({
             user,
-            transactions: enrichedTransactions,
+            transactions: allTransactions,
             totalEarned,
             currentBalance,
             totalWithdrawn,

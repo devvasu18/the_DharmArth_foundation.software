@@ -35,6 +35,11 @@ const availabilitySchema = new mongoose.Schema({
         type: String,
         required: true // e.g., "Mon", "Tue", "Wed"
     },
+    hospitalType: {
+        type: String,
+        enum: ['government', 'clinic'],
+        required: true
+    },
     timeSlots: [timeSlotSchema],
     isEnabled: {
         type: Boolean,
@@ -59,7 +64,7 @@ const availabilitySchema = new mongoose.Schema({
 });
 
 // Compound index for efficient queries
-availabilitySchema.index({ doctorId: 1, date: 1 });
+availabilitySchema.index({ doctorId: 1, date: 1, hospitalType: 1 }, { unique: true });
 
 // Update timestamp on save
 availabilitySchema.pre('save', async function () {

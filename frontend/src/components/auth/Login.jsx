@@ -10,7 +10,7 @@ import './Auth.css';
 
 const Login = () => {
     const { i18n } = useTranslation();
-    const [loginMethod, setLoginMethod] = useState('otp'); // 'otp' or 'password'
+    const [loginMethod, setLoginMethod] = useState('password'); // 'otp' or 'password'
     const [bannerData, setBannerData] = useState(null);
 
     // Form States

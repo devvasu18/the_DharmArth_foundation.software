@@ -37,7 +37,10 @@ exports.createDoctor = async (req, res) => {
         await doctor.save();
         res.status(201).json(doctor);
     } catch (error) {
-        res.status(400).json({ message: 'Error creating doctor', error: error.message });
+        res.status(400).json({ 
+            message: 'Error saving doctor', 
+            error: error.message 
+        });
     }
 };
 
