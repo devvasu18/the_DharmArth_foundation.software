@@ -78,17 +78,18 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
 
     return (
         <AnimatePresence>
-            <div className="modal-overlay">
+            <div className="payout-modal-overlay" onClick={onClose}>
                 <motion.div
                     className="payout-modal"
+                    onClick={(e) => e.stopPropagation()}
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.9, opacity: 0 }}
                 >
-                    <button className="modal-close" onClick={onClose}><X size={24} /></button>
+                    <button className="payout-modal-close" onClick={onClose}><X size={24} /></button>
 
-                    <div className="modal-header">
-                        <h2>Withdrow Now</h2>
+                    <div className="payout-modal-header">
+                        <h2>Withdraw Now</h2>
                         <p>Complete these milestones to unlock your rewards</p>
                     </div>
 

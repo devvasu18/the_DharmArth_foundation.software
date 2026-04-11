@@ -45,7 +45,7 @@ export const ConfirmProvider = ({ children }) => {
                 <div style={{
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
                     backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    zIndex: 2000 // Higher than other modals
+                    zIndex: 100000 // Higher than other modals
                 }}>
                     <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', minWidth: '350px', maxWidth: '90%', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
                         <h4 style={{ marginTop: 0, marginBottom: '1rem', color: '#333' }}>

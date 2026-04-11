@@ -14,7 +14,7 @@ const DonationForm = () => {
     const { showAlert } = useConfirm();
     const [amount, setAmount] = useState(1000);
     const [donationConfig, setDonationConfig] = useState({ plans: [600, 1000, 5000], popularAmount: 1000 });
-    const [customAmount, setCustomAmount] = useState('');
+    const [customAmount, setCustomAmount] = useState(1000);
     const [motivatorMobile, setMotivatorMobile] = useState('');
     const [referralSource, setReferralSource] = useState('');
     const [motivatorName, setMotivatorName] = useState('');
@@ -53,6 +53,7 @@ const DonationForm = () => {
                     if (config && config.plans && config.plans.length > 0) {
                         setDonationConfig(config);
                         setAmount(config.popularAmount || config.plans[0]);
+                        setCustomAmount(config.popularAmount || config.plans[0]);
                     }
                 }
             } catch (error) {
@@ -151,6 +152,7 @@ const DonationForm = () => {
             };
 
             const { data } = await api.post('/donate', payload);
+            setShowPanModal(false); 
             await showAlert(`Payment Successful! Donation ID: ${data.donationId}`);
             setDonationSuccess({
                 donationId: data.donationId,
@@ -160,11 +162,11 @@ const DonationForm = () => {
             // navigate('/');
 
         } catch (error) {
+            setShowPanModal(false);
             console.error("Donation failed:", error);
             await showAlert("Donation failed. Please try again.");
         } finally {
             setLoading(false);
-            setShowPanModal(false);
         }
     };
 
@@ -366,7 +368,7 @@ const DonationForm = () => {
                     <button
                         key={planAmount}
                         className={`amount-btn ${amount === planAmount ? 'active' : ''}`}
-                        onClick={() => { setAmount(planAmount); setCustomAmount(''); }}
+                        onClick={() => { setAmount(planAmount); setCustomAmount(planAmount); }}
                     >
                         {donationConfig.popularAmount === planAmount && (
                             <span className="popular-tag">{t('donatePage.popular')}</span>
