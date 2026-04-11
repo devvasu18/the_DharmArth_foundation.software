@@ -8,9 +8,9 @@ const API_URL = 'http://localhost:5000/api';
 
 const DoctorAvailability = () => {
     const navigate = useNavigate();
-    const [viewMode, setViewMode] = useState('calendar'); // 'calendar' or 'category'
+    const [viewMode, setViewMode] = useState('category'); // Always 'category' now
     const [selectedType, setSelectedType] = useState(null); // 'government' or 'clinic'
-    const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedDate, setSelectedDate] = useState(new Date());
     const [weekDates, setWeekDates] = useState([]);
     const [availability, setAvailability] = useState([]);
     const [emergencyDoctors, setEmergencyDoctors] = useState([]);
@@ -19,15 +19,14 @@ const DoctorAvailability = () => {
     const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
     useEffect(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        setSelectedDate(today);
         generateWeekDates();
         fetchEmergencyDoctors();
     }, []);
 
-    useEffect(() => {
-        if (viewMode === 'calendar') {
-            fetchWeekAvailability();
-        }
-    }, [viewMode]);
+    // Removed fetchWeekAvailability useEffect as we default to category view with today selected
 
     useEffect(() => {
         if (selectedDate && selectedType) {
@@ -277,157 +276,203 @@ const DoctorAvailability = () => {
 
 
                 <div className="container">
-                    {/* View Mode Selector */}
-                    <div className="view-mode-selector">
-                        <button
-                            className={`mode-btn ${viewMode === 'calendar' ? 'active' : ''}`}
-                            onClick={handleBackToCalendar}
-                        >
-                            📅 Weekly Calendar
-                        </button>
-                        <button
-                            className={`mode-btn ${viewMode === 'category' ? 'active' : ''}`}
-                            onClick={handleCategoryView}
-                        >
-                            👨‍⚕️ Find by Category
-                        </button>
-                    </div>
-
-                    {/* Calendar View */}
-                    {viewMode === 'calendar' && (
-                        <div className="calendar-view">
-                            <h2>Weekly Availability  Calendar</h2>
-                            <p className="calendar-subtitle">Click on any date to see available doctors</p>
-
-                            <div className="week-grid">
-                                {weekDates.map((date, index) => {
-                                    const count = getAvailabilityCountForDate(date);
-                                    const isToday = date.toDateString() === new Date().toDateString();
-
-                                    return (
-                                        <div
-                                            key={index}
-                                            className={`week-day-card ${isToday ? 'today' : ''} ${count > 0 ? 'has-doctors' : ''}`}
-                                            onClick={() => handleDateClick(date)}
-                                        >
-                                            <div className="date-row">
-                                                <span className="day-name">{getDayName(date)}</span>
-                                                <span className="day-date">{date.getDate()}</span>
-                                                <span className="day-month">{date.toLocaleDateString('en-US', { month: 'short' })}</span>
-                                            </div>
 
 
 
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
 
-                    {/* Category Selection View */}
-                    {viewMode === 'category' && !selectedType && (
-                        <div className="category-view">
-                            {selectedDate && (
-                                <div className="selected-date-header">
-                                    <button className="btn-back" onClick={handleBackToCalendar}>
-                                        ← Back to Calendar
-                                    </button>
-                                    <h2>
-                                        {selectedDate.toLocaleDateString('en-US', {
-                                            weekday: 'long',
-                                            month: 'long',
-                                            day: 'numeric',
-                                            year: 'numeric'
-                                        })}
-                                    </h2>
-                                    <p>Choose where you want to visit</p>
-                                </div>
-                            )}
+                    {/* Combined Sidebar and Main Content */}
+                    <div className="availability-layout">
 
-                            <div className="category-options">
-                                <div
-                                    className="category-card government"
-                                    onClick={() => handleTypeSelect('government')}
-                                >
-                                    <div className="category-icon">🏥</div>
-                                    <h3>Government Hospital</h3>
-                                    <p>Scheduled appointments</p>
-                                    <div className="category-badge">Scheduled</div>
-                                </div>
 
-                                <div
-                                    className="category-card clinic"
-                                    onClick={() => handleTypeSelect('clinic')}
-                                >
-                                    <div className="category-icon">🏨</div>
-                                    <h3>Private Clinic</h3>
-                                    <p>High availability doctors</p>
-                                    <div className="category-badge priority">High Availability</div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Doctor Cards View */}
-                    {viewMode === 'category' && selectedType && (
-                        <div className="doctors-view">
-                            <div className="doctors-view-header">
-                                <button className="btn-back" onClick={handleBackToTypeSelection}>
-                                    ← Back
-                                </button>
-                                <div className="header-content">
-                                    <h2>
-                                        {selectedType === 'government' ? '🏥 Government Hospital' : '🏨 Private Clinic'}
-                                    </h2>
-                                    <div className="date-selector-wrapper">
-                                        <div className="date-selector">
-                                            <button
-                                                className="date-display"
-                                                onClick={() => setShowDatePicker(true)}
-                                            >
-                                                📅 {selectedDate?.toLocaleDateString('en-US', {
+                        {/* Main Content: Category OR Doctors */}
+                        <div className="availability-main full-width">
+                            {/* Category Selection View */}
+                            {!selectedType && (
+                                <div className="category-view">
+                                    <div className="selected-date-header">
+                                        <div className="date-display-row">
+                                            <h2>
+                                                {selectedDate?.toLocaleDateString('en-US', {
                                                     weekday: 'long',
                                                     month: 'long',
                                                     day: 'numeric'
                                                 })}
+                                            </h2>
+                                            <button
+                                                className="btn-change-date"
+                                                onClick={() => setShowDatePicker(true)}
+                                            >
+                                                📅 Change Date
                                             </button>
                                         </div>
-                                        <button
-                                            className="change-date-link"
-                                            onClick={() => setShowDatePicker(true)}
+                                        <p>Select category to view available doctors</p>
+                                    </div>
+
+                                    <div className="category-options">
+                                        <div
+                                            className="category-card government"
+                                            onClick={() => handleTypeSelect('government')}
                                         >
-                                            Change Date
-                                        </button>
+                                            <div className="category-icon">🏥</div>
+                                            <h3>Government Hospital</h3>
+                                            <p>Scheduled appointments</p>
+                                            <div className="category-badge">Scheduled</div>
+                                        </div>
+
+                                        <div
+                                            className="category-card clinic"
+                                            onClick={() => handleTypeSelect('clinic')}
+                                        >
+                                            <div className="category-icon">🏨</div>
+                                            <h3>Private Clinic</h3>
+                                            <p>High availability doctors</p>
+                                            <div className="category-badge priority">High Availability</div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
+                            {/* Doctor Cards View */}
+                            {selectedType && (
+                                <div className="doctors-view">
+                                    <div className="premium-header-card">
+                                        <div className="header-left">
+                                            <button className="btn-back-circle" onClick={handleBackToTypeSelection}>
+                                                <span className="back-arrow">←</span>
+                                            </button>
+                                            <div className="category-info-mini">
+                                                <span className="category-label">Category</span>
+                                                <h2 className="category-name-modern">
+                                                    {selectedType === 'government' ? '🏥 Government Hospital' : '🏨 Private Clinic'}
+                                                </h2>
+                                            </div>
+                                        </div>
+
+                                        <div className="header-right">
+                                            <div className="date-selection-chip" onClick={() => setShowDatePicker(true)}>
+                                                <div className="chip-icon">📅</div>
+                                                <div className="chip-content">
+
+                                                    <span className="chip-value">
+                                                        {selectedDate?.toLocaleDateString('en-US', {
+                                                            weekday: 'long',
+                                                            month: 'long',
+                                                            day: 'numeric'
+                                                        })}
+                                                    </span>
+                                                </div>
+                                                <span className="chip-action">Change</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {loading ? (
+                                        <div className="loading-doctors">
+                                            <div className="loading-spinner"></div>
+                                            <p>Loading doctors...</p>
+                                        </div>
+                                    ) : availability.length > 0 ? (
+                                        <div className="doctors-grid">
+                                            {sortDoctorsByAvailability(availability).map(avail => {
+                                                const availabilityInfo = checkDoctorAvailability(avail.timeSlots);
+
+                                                return (
+                                                    <div
+                                                        key={avail._id}
+                                                        className={`doctor-availability-card ${avail.doctorId.type} ${availabilityInfo.isAvailableNow ? 'available-now' : ''}`}
+                                                    >
+                                                        <div className="doctor-photo">
+                                                            {avail.doctorId.photo ? (
+                                                                <img src={avail.doctorId.photo} alt={avail.doctorId.name} />
+                                                            ) : (
+                                                                <div className="photo-placeholder">👨‍⚕️</div>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="doctor-details">
+                                                            <h3>{avail.doctorId.name}</h3>
+                                                            <div className="doctor-meta-row">
+                                                                <span className="doctor-title">{avail.doctorId.title}</span>
+                                                                <span className="doctor-experience">- {avail.doctorId.experience}</span>
+                                                            </div>
+                                                            <div className="doctor-badges">
+                                                                <div className={`availability-status ${availabilityInfo.isAvailableNow ? 'available' : availabilityInfo.status === 'Not Available Today' ? 'closed' : 'upcoming'}`}>
+                                                                    <span>
+                                                                        {availabilityInfo.isAvailableNow ? '●' : availabilityInfo.status === 'Not Available Today' ? '✕' : '🕒'}
+                                                                    </span>
+                                                                    <span>{availabilityInfo.status}</span>
+                                                                </div>
+
+                                                                {avail.emergencyAvailable && (
+                                                                    <div className="emergency-available">
+                                                                        <span>🚨</span>
+                                                                        <span>Emergency Available</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="time-slots">
+                                                            {avail.timeSlots.map((slot, idx) => (
+                                                                <div key={idx} className={`time-slot ${slot.status.toLowerCase().replace(' ', '-')}`}>
+                                                                    <div className="slot-info">
+                                                                        <span className="slot-period">{slot.period} :</span>
+                                                                        <span className="slot-time">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
+
+                                                                        <div className={`slot-status ${slot.status.toLowerCase().replace(' ', '-')}`}>
+                                                                            {slot.status === 'Available' && '✓ Available'}
+                                                                            {slot.status === 'Not Available' && '✗ Not Available'}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="no-availability-premium">
+                                            <div className="premium-blank-illustration">
+                                                <span className="illustration-emoji">😔</span>
+                                            </div>
+                                            <h3>No Doctors Available</h3>
+                                            <p>There are no doctors scheduled for this specific date and category. Please try selecting a different date or a different hospital type.</p>
+                                            <div className="blank-actions">
+                                                <button className="btn-primary-modern" onClick={() => setShowDatePicker(true)}>
+                                                    Change Date
+                                                </button>
+                                                <button className="btn-secondary-modern" onClick={handleBackToTypeSelection}>
+                                                    Change Category
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                             {/* Custom Date Picker Modal */}
                             {showDatePicker && (
                                 <div className="date-picker-overlay" onClick={() => setShowDatePicker(false)}>
                                     <div className="date-picker-modal" onClick={(e) => e.stopPropagation()}>
                                         <div className="date-picker-header">
-                                            <h3>Select a Date</h3>
+                                            <h3>Select Date</h3>
                                             <button className="close-btn" onClick={() => setShowDatePicker(false)}>×</button>
                                         </div>
-                                        <div className="date-picker-grid">
+                                        <div className="date-picker-grid-simple">
                                             {weekDates.map((date, index) => {
-                                                const count = getAvailabilityCountForDatePicker(date);
                                                 const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
                                                 const isToday = date.toDateString() === new Date().toDateString();
 
                                                 return (
                                                     <div
                                                         key={index}
-                                                        className={`date-picker-card ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`}
+                                                        className={`date-picker-card-simple ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`}
                                                         onClick={() => handleDateChange(date)}
                                                     >
-                                                        <div className="date-card-day">{date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}</div>
-                                                        <div className="date-card-date">{date.getDate()}</div>
-                                                        <div className="date-card-month">{date.toLocaleDateString('en-US', { month: 'short' })}</div>
-                                                        <div className="date-card-count">{count}</div>
-                                                        <div className="date-card-label">Doctors</div>
+                                                        <div className="dp-day">{getDayName(date)}</div>
+                                                        <div className="dp-number">{date.getDate()}</div>
+                                                        <div className="dp-month">{date.toLocaleDateString('en-US', { month: 'short' })}</div>
+                                                        {isToday && <span className="dp-today-badge">Today</span>}
                                                     </div>
                                                 );
                                             })}
@@ -435,87 +480,8 @@ const DoctorAvailability = () => {
                                     </div>
                                 </div>
                             )}
-
-                            {loading ? (
-                                <div className="loading-doctors">
-                                    <div className="loading-spinner"></div>
-                                    <p>Loading doctors...</p>
-                                </div>
-                            ) : availability.length > 0 ? (
-                                <div className="doctors-grid">
-                                    {sortDoctorsByAvailability(availability).map(avail => {
-                                        const availabilityInfo = checkDoctorAvailability(avail.timeSlots);
-
-                                        return (
-                                            <div
-                                                key={avail._id}
-                                                className={`doctor-availability-card ${avail.doctorId.type} ${availabilityInfo.isAvailableNow ? 'available-now' : ''}`}
-                                            >
-                                                <div className="doctor-photo">
-                                                    {avail.doctorId.photo ? (
-                                                        <img src={avail.doctorId.photo} alt={avail.doctorId.name} />
-                                                    ) : (
-                                                        <div className="photo-placeholder">👨‍⚕️</div>
-                                                    )}
-                                                </div>
-
-                                                <div className="doctor-details">
-                                                    <h3>{avail.doctorId.name}</h3>
-                                                    <div className="doctor-meta-row">
-                                                        <span className="doctor-title">{avail.doctorId.title}</span>
-                                                        <span className="doctor-experience">- {avail.doctorId.experience}</span>
-                                                    </div>
-                                                    <div className="doctor-badges">
-                                                        <div className={`availability-status ${availabilityInfo.isAvailableNow ? 'available' : availabilityInfo.status === 'Not Available Today' ? 'closed' : 'upcoming'}`}>
-                                                            <span>
-                                                                {availabilityInfo.isAvailableNow ? '●' : availabilityInfo.status === 'Not Available Today' ? '✕' : '🕒'}
-                                                            </span>
-                                                            <span>{availabilityInfo.status}</span>
-                                                        </div>
-
-                                                        {avail.emergencyAvailable && (
-                                                            <div className="emergency-available">
-                                                                <span>🚨</span>
-                                                                <span>Emergency Available</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                <div className="time-slots">
-
-                                                    {avail.timeSlots.map((slot, idx) => (
-                                                        <div key={idx} className={`time-slot ${slot.status.toLowerCase().replace(' ', '-')}`}>
-                                                            <div className="slot-info">
-                                                                <span className="slot-period">{slot.period} :</span>
-                                                                <span className="slot-time">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
-
-                                                                <div className={`slot-status ${slot.status.toLowerCase().replace(' ', '-')}`}>
-                                                                    {slot.status === 'Available' && '✓ Available'}
-                                                                    {slot.status === 'Not Available' && '✗ Not Available'}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-
-
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            ) : (
-                                <div className="no-doctors-available">
-                                    <div className="no-doctors-icon">😔</div>
-                                    <h3>No Doctors Available</h3>
-                                    <p>There are no doctors available for this date and category.</p>
-                                    <button className="btn-back-alt" onClick={handleBackToTypeSelection}>
-                                        Try Another Category
-                                    </button>
-                                </div>
-                            )}
                         </div>
-                    )}
+                    </div>
                 </div>
 
                 {/* Emergency Doctors Section */}
