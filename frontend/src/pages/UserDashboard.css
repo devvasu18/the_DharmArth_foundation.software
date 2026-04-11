@@ -29,7 +29,7 @@
 /* Grid Layout */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: var(--spacing-6);
     margin-bottom: var(--spacing-8);
 }
@@ -136,11 +136,16 @@
 
 .wallet-balance {
     font-size: 3.5rem;
-    /* Larger impact */
     font-weight: 800;
     margin: var(--spacing-2) 0 var(--spacing-6);
     letter-spacing: -1.5px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 480px) {
+    .wallet-balance {
+        font-size: 2.5rem;
+    }
 }
 
 .wallet-stats {
@@ -235,11 +240,16 @@
 
 .share-desc {
     color: #0f172a;
-    /* Darker, more black text */
     font-size: 1.15rem;
     margin-bottom: var(--spacing-6);
     line-height: 1.6;
     font-weight: 600;
+}
+
+@media (max-width: 640px) {
+    .share-desc {
+        font-size: 1rem;
+    }
 }
 
 .share-desc strong {
@@ -432,6 +442,18 @@
     border-bottom: 1px solid #f7fafc;
     color: var(--text-main);
     font-size: 0.95rem;
+    vertical-align: middle;
+}
+
+.txn-table td:nth-child(2) {
+    max-width: 250px;
+    word-break: break-word;
+}
+
+@media (max-width: 768px) {
+    .txn-table td:nth-child(2) {
+        max-width: 150px;
+    }
 }
 
 .txn-table tr:last-child td {
@@ -470,9 +492,63 @@
 }
 
 /* Responsive adjustments */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: var(--spacing-4) var(--spacing-4);
+    }
+
+    .section-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .txn-filters {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .filter-select {
+        width: 100%;
+    }
+
+    .txn-table th,
+    .txn-table td {
+        padding: var(--spacing-3) var(--spacing-2);
+        font-size: 0.85rem;
+    }
+}
+
 @media (max-width: 640px) {
     .share-actions {
         grid-template-columns: 1fr;
+    }
+
+    .dashboard-card {
+        padding: var(--spacing-4);
+    }
+
+    .wallet-balance {
+        font-size: 2.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-title {
+        font-size: 1.5rem;
+    }
+
+    .txn-table {
+        display: block;
+        width: 100%;
+    }
+
+    /* Keep the table structure but ensure it doesn't break layout */
+    .txn-table-container {
+        margin: 0 -1rem;
+        width: calc(100% + 2rem);
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
     }
 }
 

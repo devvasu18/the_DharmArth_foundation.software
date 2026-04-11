@@ -204,6 +204,7 @@ const UserDashboard = () => {
                                         value={selectedMonth}
                                         onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
                                     >
+                                        <option value={0}>All Months</option>
                                         {Array.from({ length: 12 }, (_, i) => (
                                             <option key={i + 1} value={i + 1}>
                                                 {new Date(0, i).toLocaleString('default', { month: 'long' })}

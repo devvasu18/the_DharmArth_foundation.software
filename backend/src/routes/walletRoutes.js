@@ -30,10 +30,16 @@ router.get('/transactions', protect, async (req, res) => {
         let txnQuery = { wallet: wallet._id };
         let donationQuery = { donorMobile: req.user.mobile, status: 'success' };
 
-        if (month && year) {
+        if (Number(month) > 0 && year) {
             const start = new Date(year, month - 1, 1);
             const end = new Date(year, month, 1); // First day of next month
 
+            txnQuery.createdAt = { $gte: start, $lt: end };
+            donationQuery.createdAt = { $gte: start, $lt: end };
+        } else if (year) {
+            // All months for the selected year
+            const start = new Date(year, 0, 1);
+            const end = new Date(Number(year) + 1, 0, 1);
             txnQuery.createdAt = { $gte: start, $lt: end };
             donationQuery.createdAt = { $gte: start, $lt: end };
         }
