@@ -321,8 +321,8 @@ const EventDetail = () => {
                 )}
 
                 {/* --- NEW SECTION: CTA Banner --- */}
-                <section className="detail-cta-banner">
-                    <div className="cta-banner-content container">
+                <section className="detail-cta-banner container">
+                    <div className="cta-banner-card">
                         <div className="cta-text">
                             <h2>Inspired by what you read?</h2>
                             <p>Join our mission. Whether you contribute your time or money, every bit helps us bring change.</p>

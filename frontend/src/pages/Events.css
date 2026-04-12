@@ -111,6 +111,9 @@
     font-weight: 800;
     margin-bottom: 10px;
     line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .slider-content h3 {
@@ -162,7 +165,21 @@
     color: white;
 }
 
-/* Animations */
+.static-header-fallback h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+    .static-header-fallback h1 {
+        font-size: 2rem;
+    }
+}
+
 .event-slide-up {
     transform: translateY(30px);
     opacity: 0;
@@ -520,6 +537,9 @@
     margin-bottom: 20px;
     letter-spacing: -1px;
     line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .engagement-header p {
@@ -531,7 +551,7 @@
 /* CTA Cards */
 .cta-cards-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 40px;
     margin-bottom: 100px;
     position: relative;
@@ -808,7 +828,7 @@
 
 /* Event Videos Section - Cinematic Mode */
 .events-video-section {
-    padding: 100px 0;
+    padding: 50px 0 50px;
     background: #0f172a;
     /* Cinematic Dark */
     color: white;
@@ -829,6 +849,9 @@
     font-weight: 800;
     color: white;
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .view-channel-link {
@@ -1003,11 +1026,64 @@
         text-align: center;
     }
 
-    .newsletter-form {
-        width: 100%;
+    .engagement-header h2 {
+        font-size: 2.25rem;
+    }
+
+    .cta-card {
+        padding: 40px 25px;
     }
 
     .video-asymmetric-grid {
         grid-template-columns: 1fr;
+    }
+
+    .newsletter-wrapper {
+        padding: 40px 25px;
+    }
+
+    .newsletter-form {
+        flex-direction: column;
+        background: transparent;
+        border: none;
+        padding: 0;
+        gap: 12px;
+        border-radius: 0;
+    }
+
+    .newsletter-form input {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        width: 100%;
+    }
+
+    .subscribe-btn {
+        width: 100%;
+        border-radius: 14px;
+        padding: 16px;
+    }
+
+    .video-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        padding-bottom: 30px;
+    }
+
+    .video-section-header h2,
+    .engagement-header h2 {
+        font-size: 1.8rem !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .view-channel-link {
+        align-self: flex-start;
+        padding: 10px 20px;
+        font-size: 0.9rem;
     }
 }

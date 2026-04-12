@@ -162,22 +162,23 @@ const AdminLayout = () => {
                 <div
                     className="admin-brand"
                     onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                    style={{ cursor: 'pointer', title: 'Toggle Sidebar' }}
+                    style={{ cursor: 'pointer' }}
+                    title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
                 >
                     {isSidebarCollapsed ? <Menu size={24} /> : 'Dharmarth'}
                 </div>
                 <nav className="admin-nav">
-                    <NavLink to="/admin" end className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
+                    <NavLink to="/admin" end className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <LayoutDashboard size={20} title={isSidebarCollapsed ? "Dashboard" : ""} />
-                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Dashboard</span>}
+                        <span className="admin-link-text">Dashboard</span>
                     </NavLink>
-                    <NavLink to="/admin/users" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
+                    <NavLink to="/admin/users" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <Users size={20} title={isSidebarCollapsed ? "User Management" : ""} />
-                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>User Management</span>}
+                        <span className="admin-link-text">User Management</span>
                     </NavLink>
-                    <NavLink to="/admin/sliders" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
+                    <NavLink to="/admin/sliders" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <Image size={20} title={isSidebarCollapsed ? "Hero Sliders" : ""} />
-                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Hero Sliders</span>}
+                        <span className="admin-link-text">Hero Sliders</span>
                     </NavLink>
                     {/* Events Dropdown */}
                     <div className="admin-link-dropdown-container">
@@ -193,23 +194,43 @@ const AdminLayout = () => {
                         >
                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                 <Calendar size={20} title={isSidebarCollapsed ? "Events" : ""} />
-                                {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Events</span>}
+                                <span className="admin-link-text">Events</span>
                             </div>
                             {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isEventsDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
                         </div>
 
                         {!isSidebarCollapsed && isEventsDropdownOpen && (
                             <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
-                                <NavLink to="/admin/events" end className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}>
+                                <NavLink 
+                                    to="/admin/events" end 
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
                                     Blog Pages
                                 </NavLink>
-                                <NavLink to="/admin/events-header" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}>
+                                <NavLink 
+                                    to="/admin/events-header" 
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
                                     Events Header
                                 </NavLink>
-                                <NavLink to="/admin/event-videos" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}>
+                                <NavLink 
+                                    to="/admin/event-videos" 
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
                                     YouTube Videos
                                 </NavLink>
-                                <NavLink to="/admin/galleries" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}>
+                                <NavLink 
+                                    to="/admin/galleries" 
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
                                     Galleries
                                 </NavLink>
                             </div>
@@ -228,17 +249,27 @@ const AdminLayout = () => {
                         >
                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                 <Stethoscope size={20} title={isSidebarCollapsed ? "Doctors" : ""} />
-                                {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Doctors</span>}
+                                <span className="admin-link-text">Doctors</span>
                             </div>
                             {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isDoctorsDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
                         </div>
 
                         {!isSidebarCollapsed && isDoctorsDropdownOpen && (
                             <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
-                                <NavLink to="/admin/doctors" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}>
+                                <NavLink 
+                                    to="/admin/doctors" 
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
                                     Doctor Management
                                 </NavLink>
-                                <NavLink to="/admin/availability" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}>
+                                <NavLink 
+                                    to="/admin/availability" 
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
                                     Availability Management
                                 </NavLink>
                             </div>
@@ -254,45 +285,58 @@ const AdminLayout = () => {
                         >
                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                 <FileText size={20} title={isSidebarCollapsed ? "Reports" : ""} />
-                                {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Reports</span>}
+                                <span className="admin-link-text">Reports</span>
                             </div>
                             {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isReportsDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
                         </div>
 
                         {!isSidebarCollapsed && isReportsDropdownOpen && (
                             <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
-                                <NavLink to="/admin/reports/commission" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}>
+                                <NavLink 
+                                    to="/admin/reports/commission" 
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
                                     Commission Reports
                                 </NavLink>
                             </div>
                         )}
                     </div>
-                    <NavLink to="/admin-user-explorer/transactions" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
+                    <NavLink to="/admin-user-explorer/transactions" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <TrendingUp size={20} title={isSidebarCollapsed ? "User Explorer" : ""} />
-                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>User Explorer</span>}
+                        <span className="admin-link-text">User Explorer</span>
                     </NavLink>
-                    <NavLink to="/admin/transaction-management" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
+                    <NavLink to="/admin/transaction-management" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <Wallet size={20} title={isSidebarCollapsed ? "Transactions" : ""} />
-                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Transactions</span>}
+                        <span className="admin-link-text">Transactions</span>
                     </NavLink>
-                    <NavLink to="/admin/settings" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
+                    <NavLink to="/admin/settings" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <Settings size={20} title={isSidebarCollapsed ? "Site Settings" : ""} />
-                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Site Settings</span>}
+                        <span className="admin-link-text">Site Settings</span>
                     </NavLink>
-                    <NavLink to="/admin/roles" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`}>
+                    <NavLink to="/admin/roles" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <Users size={20} title={isSidebarCollapsed ? "Staff & Roles" : ""} />
-                        {!isSidebarCollapsed && <span style={{ marginLeft: '10px' }}>Staff & Roles</span>}
+                        <span className="admin-link-text">Staff & Roles</span>
                     </NavLink>
                 </nav>
             </div>
+
+            {/* Mobile Overlay */}
+            {isSidebarCollapsed && (
+                <div 
+                    className="sidebar-overlay mobile-only" 
+                    onClick={() => setIsSidebarCollapsed(false)}
+                ></div>
+            )}
 
             <div className="admin-main-wrapper">
                 <header className="admin-topbar">
                     <div className="topbar-left">
                         <button className="sidebar-toggle mobile-only" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
-                            <Menu size={20} />
+                            {isSidebarCollapsed ? <LogOut size={20} style={{ transform: 'rotate(180deg)' }} /> : <Menu size={20} />}
                         </button>
-                        {isSidebarCollapsed && <span className="header-brand">Dharmarth</span>}
+                        <span className="header-brand">Dharmarth</span>
                     </div>
 
                     <div className="topbar-right">

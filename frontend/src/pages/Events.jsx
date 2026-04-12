@@ -221,7 +221,7 @@ const Events = () => {
             <section className="events-engagement-section">
                 <div className="container">
                     <div className="engagement-header">
-                        <h2>Be The Change You Want To See</h2>
+                        <h2 style={{ fontSize: 'var(--text-4xl)', marginBottom: 'var(--spacing-4)', color: 'var(--secondary)' }}>Be The Change You Want To See</h2>
                         <p>Events are just the beginning. Become a permanent part of our journey.</p>
                     </div>
 
@@ -282,7 +282,8 @@ const Events = () => {
             <section className="events-video-section">
                 <div className="container">
                     <div className="video-section-header">
-                        <h2>Our Impact in Motion</h2>
+                        <h2 style={{ fontSize: 'var(--text-4xl)', marginBottom: 'var(--spacing-4)', color: 'var(--secondary)' }}>Our Impact in Motion</h2>
+
                         <a href="https://www.youtube.com/@TheDharmarthFoundation" target="_blank" rel="noreferrer" className="view-channel-link">
                             View Channel <ArrowRight size={16} />
                         </a>

@@ -9,6 +9,8 @@
     /* Modern, clean font */
     color: #334155;
     position: relative;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    width: 100%;
 }
 
 /* Optional: Add a subtle pattern overlay for texture */
@@ -178,12 +180,14 @@
 }
 
 .hero-title {
-    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-size: clamp(2.2rem, 5vw, 4.5rem);
     font-weight: 800;
     line-height: 1.1;
     margin-bottom: 15px;
     color: white;
     text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .hero-location {
@@ -203,6 +207,15 @@
     display: flex;
     align-items: center;
     gap: 20px;
+    z-index: 10;
+}
+
+@media (max-width: 600px) {
+    .hero-slider-nav {
+        right: 20px;
+        bottom: 20px;
+        gap: 12px;
+    }
 }
 
 .nav-arrow {
@@ -250,8 +263,8 @@
 
 .content-layout-grid {
     display: grid;
-    grid-template-columns: 2.5fr 1fr;
-    /* Main vs Sidebar */
+    grid-template-columns: minmax(0, 2.5fr) minmax(0, 1fr);
+    /* minmax(0, ...) prevents columns from overflowing parent */
     gap: 50px;
 }
 
@@ -259,7 +272,13 @@
 .main-article-column {
     background: white;
     border-radius: 20px;
-    padding: 50px;
+    padding-top: 50px;
+    padding-bottom: 50px;
+    padding-left: 50px;
+    padding-right: 65px;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0; /* Crucial: allows grid item to shrink */
     box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
     /* Premium Float */
     border: 1px solid rgba(0, 0, 0, 0.02);
@@ -375,7 +394,14 @@
     border-radius: 20px;
     border: 1px solid #f0f0f0;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-    /* Softer shadow */
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.instagram-card-premium blockquote {
+    min-width: unset !important;
+    width: 100% !important;
+    margin: 0 !important;
 }
 
 /* Article Footer */
@@ -444,12 +470,18 @@
     display: flex;
     flex-direction: column;
     gap: 30px;
+    min-width: 0; /* Crucial: allows grid item to shrink */
 }
 
 .sidebar-widget {
     background: white;
     border-radius: 16px;
-    padding: 30px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+    padding-left: 30px;
+    padding-right: 45px;
+    box-sizing: border-box;
+    width: 100%;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
     border: 1px solid rgba(0, 0, 0, 0.02);
 }
@@ -569,7 +601,11 @@
 
 @media (max-width: 768px) {
     .main-article-column {
-        padding: 30px 20px;
+        padding: 30px 30px 30px 20px; /* Balanced right padding for mobile */
+    }
+
+    .sidebar-widget {
+        padding: 30px 30px 30px 20px; /* Balanced right padding for mobile */
     }
 
     .hero-title {
@@ -698,23 +734,28 @@
 
 /* 6. CTA Banner */
 .detail-cta-banner {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    padding: 60px 0;
     margin-top: 60px;
-    border-radius: 20px;
     margin-bottom: 40px;
     position: relative;
     z-index: 5;
-    box-shadow: 0 20px 50px -10px rgba(15, 23, 42, 0.3);
 }
 
-.cta-banner-content {
+.cta-banner-card {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 60px;
+    border-radius: 24px;
+    box-shadow: 0 20px 50px -10px rgba(15, 23, 42, 0.3);
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: 30px;
-    padding: 0 40px;
+}
+
+.cta-banner-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .cta-text h2 {
@@ -773,14 +814,18 @@
         grid-template-columns: 1fr;
     }
 
-    .cta-banner-content {
+    .cta-banner-card {
         flex-direction: column;
         text-align: center;
-        padding: 0 20px;
+        padding: 40px 20px;
     }
 
     .cta-actions {
         width: 100%;
         justify-content: center;
+    }
+
+    .cta-text p {
+        margin: 0 auto 10px;
     }
 }

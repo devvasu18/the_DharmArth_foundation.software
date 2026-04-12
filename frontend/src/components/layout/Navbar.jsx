@@ -32,7 +32,7 @@ const Navbar = () => {
     return (
         <nav className="navbar">
             <div className="container navbar-container">
-                <Link to="/" className="navbar-logo">
+                <Link to="/" className="navbar-logo" onClick={() => setIsOpen(false)}>
                     <span className="logo-text">{t('navbar.brand')}</span>
                 </Link>
 
@@ -123,19 +123,21 @@ const Navbar = () => {
             {/* Mobile Menu */}
             {isOpen && (
                 <div className="mobile-menu">
-                    <Link to="/donate" className="nav-link">{t('navbar.browseDonations')}</Link>
-                    <span className="nav-link">{t('navbar.fundraiseFor')}</span>
-                    <Link to="/how-it-works" className="nav-link">{t('navbar.howItWorks')}</Link>
-                    {user && user.isSuperAdmin && <Link to="/admin" className="nav-link">{t('navbar.admin')}</Link>}
-                    {user && !user.isSuperAdmin && <Link to="/dashboard" className="nav-link">{t('navbar.userDashboard')}</Link>}
+                    <NavLink to="/donate" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.browseDonations')}</NavLink>
+                    <NavLink to="/events" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.fundraiseFor')}</NavLink>
+                    <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.doctorAvailability')}</NavLink>
+                    <NavLink to="/how-it-works" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.howItWorks')}</NavLink>
+                    
+                    {user && user.isSuperAdmin && <NavLink to="/admin" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.admin')}</NavLink>}
+                    {user && !user.isSuperAdmin && <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.userDashboard')}</NavLink>}
 
                     {!user ? (
-                        <Link to="/login" className="nav-link">{t('navbar.signIn')}</Link>
+                        <NavLink to="/login" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.signIn')}</NavLink>
                     ) : (
-                        <span className="nav-link" onClick={handleLogout} style={{ color: 'red' }}>{t('navbar.logout')}</span>
+                        <span className="nav-link" onClick={() => { handleLogout(); setIsOpen(false); }} style={{ color: 'red' }}>{t('navbar.logout')}</span>
                     )}
 
-                    <Link to="/donate" className="btn btn-outline" style={{ width: '100%', textAlign: 'center' }}>{t('navbar.donate')}</Link>
+                    <Link to="/donate" className="btn btn-outline" style={{ width: '100%', textAlign: 'center' }} onClick={() => setIsOpen(false)}>{t('navbar.donate')}</Link>
                 </div>
             )}
         </nav>

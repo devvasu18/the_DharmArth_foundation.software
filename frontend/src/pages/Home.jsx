@@ -15,8 +15,8 @@ const Home = () => {
         <div>
             <Navbar />
             <HeroSlider />
-            <div className="container" style={{ padding: '4rem 1rem', textAlign: 'center' }}>
-                <h2 style={{ fontSize: 'var(--text-4xl)', marginBottom: 'var(--spacing-4)', color: 'var(--secondary)' }}>{t('home.welcomeTitle')}</h2>
+            <div className="container home-welcome">
+                <h6 style={{ fontSize: 'var(--text-3xl)', marginBottom: 'var(--spacing-4)', color: 'var(--secondary)' }}>{t('home.welcomeTitle')}</h6>
                 <p style={{ color: 'var(--text-muted)', fontSize: '1.25rem' }}>{t('home.welcomeSubtitle')}</p>
             </div>
             <CrowdfundingSection />
