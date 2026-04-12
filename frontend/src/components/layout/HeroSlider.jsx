@@ -12,6 +12,16 @@ const HeroSlider = () => {
     const [loading, setLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [currentTextIndex, setCurrentTextIndex] = useState(0);
+    const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     useEffect(() => {
         const fetchSlides = async () => {
@@ -66,6 +76,9 @@ const HeroSlider = () => {
     // Use currentTextIndex for text, fallback to first
     const activeTextSlide = textSlides[currentTextIndex] || textSlides[0];
 
+    const xOffset = isMobile ? 120 : 220;
+    const enterExitOffset = isMobile ? 220 : 400;
+
     // Card Variants for Animation
     const cardVariants = {
         center: {
@@ -78,7 +91,7 @@ const HeroSlider = () => {
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
         },
         left: {
-            x: -220,
+            x: -xOffset,
             y: "-40%",
             scale: 0.9,
             zIndex: 5,
@@ -87,7 +100,7 @@ const HeroSlider = () => {
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
         },
         right: {
-            x: 220,
+            x: xOffset,
             y: "-40%",
             scale: 0.9,
             zIndex: 5,
@@ -96,7 +109,7 @@ const HeroSlider = () => {
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
         },
         enter: {
-            x: 400,
+            x: enterExitOffset,
             y: "-40%",
             scale: 0.7,
             zIndex: 1,
@@ -105,7 +118,7 @@ const HeroSlider = () => {
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
         },
         exit: {
-            x: -400,
+            x: -enterExitOffset,
             y: "-40%",
             scale: 0.7,
             zIndex: 1,

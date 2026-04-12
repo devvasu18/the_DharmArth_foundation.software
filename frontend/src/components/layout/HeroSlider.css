@@ -168,6 +168,7 @@
         height: 400px;
         /* Reduced height on stack */
         order: 1;
+        transform: translateX(-130px); /* Half of 260px card width */
     }
 
     .hero-content {
@@ -195,6 +196,7 @@
 @media (max-width: 640px) {
     .hero-visuals {
         height: 320px;
+        transform: translateX(-100px); /* Half of 200px card width */
     }
 
     .hero-card {
@@ -202,9 +204,24 @@
         height: 280px;
     }
 
+    .hero-section .hero-title {
+        font-size: 1.85rem;
+        line-height: 1.2;
+        margin-bottom: 1rem;
+    }
+
     .hero-stats {
         flex-direction: row;
         gap: 1.5rem;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        justify-content: center;
+    }
+
+    .stat-item h3 {
+        font-size: 1.75rem;
+    }
+
+    .stat-item p {
+        font-size: 0.8rem;
     }
 }
