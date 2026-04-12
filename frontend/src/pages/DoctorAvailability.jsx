@@ -312,6 +312,22 @@ const DoctorAvailability = () => {
                     </div>
                 </div>
 
+                {/* Medicine Order Promo */}
+                <div className="medicine-promo-banner">
+                    <div className="container">
+                        <div className="promo-card glassmorphism-modern">
+                            <div className="promo-content">
+                                <div className="promo-icon">💊</div>
+                                <div className="promo-text">
+                                    <h3>Need Medicines?</h3>
+                                    <p>Upload your doctor's prescription and get medicines delivered via our express express service.</p>
+                                </div>
+                                <button className="btn-primary-modern" onClick={() => navigate('/order-medicine')}>Order Now</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
 
 
                 <div className="container">

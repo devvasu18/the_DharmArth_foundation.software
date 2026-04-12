@@ -1,0 +1,62 @@
+const mongoose = require('mongoose');
+
+const orderSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    prescription: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Prescription'
+    },
+    items: [{
+        medicine: { type: mongoose.Schema.Types.ObjectId, ref: 'Medicine' },
+        name: String,
+        quantity: Number,
+        price: Number,
+        dosage: String
+    }],
+    totalAmount: {
+        type: Number,
+        required: true
+    },
+    status: {
+        type: String,
+        enum: ['Awaiting Approval', 'Payment Pending', 'Processing', 'Out for Delivery', 'Delivered', 'Cancelled'],
+        default: 'Payment Pending'
+    },
+    shippingAddress: {
+        street: String,
+        city: String,
+        state: String,
+        zip: String,
+        phone: String
+    },
+    paymentDetails: {
+        method: { type: String, enum: ['COD', 'Online', 'Wallet'], default: 'Online' },
+        transactionId: String,
+        status: { type: String, enum: ['Pending', 'Completed', 'Failed'], default: 'Pending' }
+    },
+    orderType: {
+        type: String,
+        enum: ['Medicine', 'Donation', 'Event'],
+        default: 'Medicine'
+    },
+    statusHistory: [{
+        status: String,
+        updatedAt: { type: Date, default: Date.now },
+        note: String
+    }]
+}, {
+    timestamps: true
+});
+
+// Indexes for performance
+orderSchema.index({ user: 1 });
+orderSchema.index({ status: 1 });
+orderSchema.index({ prescription: 1 });
+orderSchema.index({ createdAt: -1 });
+
+const Order = mongoose.model('Order', orderSchema);
+module.exports = Order;

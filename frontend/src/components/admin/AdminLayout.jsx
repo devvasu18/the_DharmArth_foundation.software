@@ -165,7 +165,7 @@ const AdminLayout = () => {
                     style={{ cursor: 'pointer' }}
                     title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
                 >
-                    {isSidebarCollapsed ? <Menu size={24} /> : 'Dharmarth'}
+                    {isSidebarCollapsed || window.innerWidth < 992 ? <Menu size={24} /> : 'Dharmarth'}
                 </div>
                 <nav className="admin-nav">
                     <NavLink to="/admin" end className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
@@ -251,10 +251,10 @@ const AdminLayout = () => {
                                 <Stethoscope size={20} title={isSidebarCollapsed ? "Doctors" : ""} />
                                 <span className="admin-link-text">Doctors</span>
                             </div>
-                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isDoctorsDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
+                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isDoctorsDropdownOpen || location.pathname.includes('/admin/doctors') ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
                         </div>
 
-                        {!isSidebarCollapsed && isDoctorsDropdownOpen && (
+                        {!isSidebarCollapsed && (isDoctorsDropdownOpen || location.pathname.includes('/admin/doctors')) && (
                             <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
                                 <NavLink 
                                     to="/admin/doctors" 
@@ -271,6 +271,48 @@ const AdminLayout = () => {
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Availability Management
+                                </NavLink>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Medical & Delivery Dropdown */}
+                    <div className="admin-link-dropdown-container">
+                        <div
+                            className={`admin-link ${location.pathname.includes('/admin/prescriptions') ||
+                                location.pathname.includes('/admin/delivery')
+                                ? 'active' : ''
+                                }`}
+                            onClick={() => {
+                                setEventsDropdownOpen(false);
+                                setDoctorsDropdownOpen(false);
+                            }}
+                            style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <FileText size={20} title={isSidebarCollapsed ? "Pharmacy" : ""} />
+                                <span className="admin-link-text">Pharmacy & Delivery</span>
+                            </div>
+                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: location.pathname.includes('/admin/prescriptions') || location.pathname.includes('/admin/delivery') ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
+                        </div>
+
+                        {!isSidebarCollapsed && (location.pathname.includes('/admin/prescriptions') || location.pathname.includes('/admin/delivery')) && (
+                            <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
+                                <NavLink 
+                                    to="/admin/prescriptions" 
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
+                                    Prescription Queue
+                                </NavLink>
+                                <NavLink 
+                                    to="/admin/delivery" 
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
+                                    Route Management
                                 </NavLink>
                             </div>
                         )}

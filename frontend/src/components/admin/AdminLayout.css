@@ -43,6 +43,7 @@ body {
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
     z-index: 1000;
     flex-shrink: 0;
+    overflow: hidden;
 }
 
 .admin-sidebar.collapsed {
@@ -381,6 +382,33 @@ body {
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+
+    .topbar-left {
+        gap: 0.5rem;
+    }
+
+    .profile-info {
+        display: none; /* Hide user name/role on mobile to save space */
+    }
+
+    .header-brand {
+        font-size: 1.05rem !important; /* Smaller brand on mobile */
+        white-space: nowrap;
+    }
+
+    .topbar-right {
+        gap: 0.35rem !important;
+    }
+
+    .icon-btn {
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    .profile-dropdown {
+        gap: 0.35rem !important;
+        padding-left: 0.5rem !important;
     }
 
     .topbar-left .header-brand {
