@@ -12,10 +12,17 @@ const busSchema = new mongoose.Schema({
         required: true
     },
     timing: {
-        type: String, // e.g. "08:00 AM"
+        type: String, // Base timing (departure from start)
         required: true
     },
-    capacity: Number,
+    mobileNumber: String,
+    stopTimings: [{
+        stopName: String,
+        arrivalTime: String,
+        departureTime: String
+    }],
+    image: String,
+    comment: String,
     status: {
         type: String,
         enum: ['Active', 'Inactive'],
