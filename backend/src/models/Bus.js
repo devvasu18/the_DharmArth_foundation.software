@@ -12,14 +12,15 @@ const busSchema = new mongoose.Schema({
         required: true
     },
     timing: {
-        type: String, // Base timing (departure from start)
-        required: true
+        type: String // Base timing (departure from start)
     },
     mobileNumber: String,
     stopTimings: [{
         stopName: String,
         arrivalTime: String,
-        departureTime: String
+        arrivalDayOffset: { type: Number, default: 0 },
+        departureTime: String,
+        departureDayOffset: { type: Number, default: 0 }
     }],
     image: String,
     comment: String,

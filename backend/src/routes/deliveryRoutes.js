@@ -3,9 +3,12 @@ const router = express.Router();
 const { 
     createRoute, 
     getRoutes, 
+    updateRoute,
+    deleteRoute,
     createBus, 
     getBusesByRoute, 
-    assignDelivery, 
+    assignDelivery,
+    getUnassignedOrders,
     getAssignedOrders, 
     updateAssignmentStatus,
     suggestRoutes
@@ -34,13 +37,14 @@ router.post('/routes',
     createRoute
 );
 router.get('/routes', protect, getRoutes);
+router.put('/routes/:id', protect, checkPermission('Delivery Management', 'edit'), updateRoute);
+router.delete('/routes/:id', protect, checkPermission('Delivery Management', 'delete'), deleteRoute);
 router.post('/buses', 
     protect, 
     checkPermission('Delivery Management', 'create'), 
     [
         body('busNumber').notEmpty(),
-        body('routeId').isMongoId(),
-        body('timing').notEmpty()
+        body('routeId').isMongoId()
     ], 
     validate, 
     createBus
@@ -48,6 +52,7 @@ router.post('/buses',
 router.get('/routes/:routeId/buses', protect, getBusesByRoute);
 
 // Assignment
+router.get('/unassigned-orders', protect, checkPermission('Delivery Management', 'view'), getUnassignedOrders);
 router.post('/assign', 
     protect, 
     checkPermission('Delivery Management', 'edit'), 

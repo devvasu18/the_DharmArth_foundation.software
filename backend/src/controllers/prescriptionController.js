@@ -1,6 +1,7 @@
 const Prescription = require('../models/Prescription');
 const Order = require('../models/Order');
 const Medicine = require('../models/Medicine');
+const User = require('../models/User');
 const MargErpService = require('../services/margErpService');
 
 // @desc    Upload Prescription
@@ -129,12 +130,16 @@ exports.approveAndCreateOrder = async (req, res) => {
 
         let totalAmount = 0;
         const orderItems = availableItems.map(item => {
-            totalAmount += item.price * (item.quantity || 1);
+            totalAmount += (item.price || 0);
             return {
                 name: item.medicineName,
                 quantity: item.quantity || 1,
                 price: item.price,
-                dosage: item.dosage
+                dosage: item.dosage,
+                frequency: item.frequency,
+                time: item.time,
+                foodRelation: item.foodRelation,
+                intakeMethod: item.intakeMethod
             };
         });
 
@@ -150,6 +155,50 @@ exports.approveAndCreateOrder = async (req, res) => {
             },
             status: 'Payment Pending'
         });
+
+        // Mutate prescription state to prevent overlapping checkout duplication
+        prescription.status = 'Ordered';
+        prescription.verificationLog.push({
+            status: 'Ordered',
+            updatedBy: req.user._id,
+            note: 'Converted to formal Order'
+        });
+        await prescription.save();
+
+        // -------------------------------------------------------------
+        // NEW: Address Management Logic
+        // -------------------------------------------------------------
+        const user = await User.findById(req.user._id);
+        if (user && shippingAddress) {
+            // Check if this specific address (by ID or fields) already exists
+            const existingAddrIndex = user.savedAddresses.findIndex(addr => 
+                (shippingAddress._id && addr._id.toString() === shippingAddress._id) ||
+                (addr.street === shippingAddress.street && addr.zip === shippingAddress.zip)
+            );
+
+            if (existingAddrIndex > -1) {
+                // Update existing if fields changed
+                user.savedAddresses[existingAddrIndex].street = shippingAddress.street;
+                user.savedAddresses[existingAddrIndex].city = shippingAddress.city;
+                user.savedAddresses[existingAddrIndex].state = shippingAddress.state;
+                user.savedAddresses[existingAddrIndex].zip = shippingAddress.zip;
+                user.savedAddresses[existingAddrIndex].phone = shippingAddress.phone;
+                user.savedAddresses[existingAddrIndex].altPhone = shippingAddress.altPhone;
+                user.savedAddresses[existingAddrIndex].updatedAt = Date.now();
+            } else {
+                // Save as new address
+                user.savedAddresses.push({
+                    street: shippingAddress.street,
+                    city: shippingAddress.city,
+                    state: shippingAddress.state,
+                    zip: shippingAddress.zip,
+                    phone: shippingAddress.phone,
+                    altPhone: shippingAddress.altPhone
+                });
+            }
+            await user.save();
+        }
+        // -------------------------------------------------------------
 
         res.status(201).json(order);
     } catch (error) {

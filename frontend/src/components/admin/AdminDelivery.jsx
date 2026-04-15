@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { MapPin, Plus, Trash, Truck, Clock, Navigation, PlusCircle, LayoutGrid, ChevronRight, Settings } from 'lucide-react';
+import { MapPin, Plus, Trash, Truck, Clock, Navigation, PlusCircle, LayoutGrid, ChevronRight, Settings, Edit2, Trash2, CheckCircle, AlertTriangle, X, Moon } from 'lucide-react';
 import './AdminDelivery.css';
 
 const AdminDelivery = () => {
@@ -11,7 +11,6 @@ const AdminDelivery = () => {
     const [buses, setBuses] = useState([]);
     const [newBus, setNewBus] = useState({ 
         busNumber: '', 
-        timing: '', 
         mobileNumber: '', 
         comment: '', 
         image: '',
@@ -19,8 +18,18 @@ const AdminDelivery = () => {
     });
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
-    const [viewMode, setViewMode] = useState('empty'); // 'empty', 'create', 'details'
+    const [viewMode, setViewMode] = useState('empty');
     const [showBusForm, setShowBusForm] = useState(false);
+    const [editRouteId, setEditRouteId] = useState(null);
+
+    // Custom Modal State
+    const [modal, setModal] = useState({
+        isOpen: false,
+        type: 'success', 
+        title: '',
+        message: '',
+        onConfirm: null
+    });
 
     useEffect(() => {
         fetchRoutes();
@@ -37,6 +46,12 @@ const AdminDelivery = () => {
         }
     };
 
+    const triggerModal = (type, title, message, onConfirm = null) => {
+        setModal({ isOpen: true, type, title, message, onConfirm });
+    };
+
+    const closeModal = () => setModal({ ...modal, isOpen: false });
+
     const handleFileUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -51,8 +66,7 @@ const AdminDelivery = () => {
             });
             setNewBus({ ...newBus, image: res.data.imageUrl });
         } catch (err) {
-            console.error(err);
-            alert('Failed to upload image');
+            triggerModal('error', 'Upload Failed', 'There was an issue uploading the vehicle image.');
         } finally {
             setUploading(false);
         }
@@ -72,17 +86,50 @@ const AdminDelivery = () => {
         }
     };
 
-    const handleCreateRoute = async (e) => {
+    const handleSaveRoute = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/delivery/routes', { routeName, stops: stops.filter(s => s.trim() !== '') });
+            const payload = { routeName, stops: stops.filter(s => s.trim() !== '') };
+            if (editRouteId) {
+                await api.put(`/delivery/routes/${editRouteId}`, payload);
+                triggerModal('success', 'Route Updated', 'The transportation line identity has been successfully modified.');
+            } else {
+                await api.post('/delivery/routes', payload);
+                triggerModal('success', 'Route Activated', 'A new logistics line has been established in your network.');
+            }
             setRouteName('');
             setStops(['']);
+            setEditRouteId(null);
             fetchRoutes();
             setViewMode('empty');
         } catch (err) {
-            alert('Failed to create route');
+            triggerModal('error', 'Action Failed', err.response?.data?.message || 'Failed to save the route identity.');
         }
+    };
+
+    const handleEditRoute = (e, route) => {
+        e.stopPropagation();
+        setEditRouteId(route._id);
+        setRouteName(route.routeName);
+        setStops(route.stops);
+        setViewMode('create');
+    };
+
+    const handleDeleteRoute = (e, routeId) => {
+        e.stopPropagation();
+        triggerModal('confirm', 'Confirm Deletion', 'Are you sure you want to permanently remove this route identity? This action cannot be undone.', async () => {
+            try {
+                await api.delete(`/delivery/routes/${routeId}`);
+                fetchRoutes();
+                if (selectedRoute?._id === routeId) {
+                    setSelectedRoute(null);
+                    setViewMode('empty');
+                }
+                triggerModal('success', 'Route Deleted', 'The identity has been purged from the system.');
+            } catch (err) {
+                triggerModal('error', 'Deletion Blocked', err.response?.data?.message || 'Could not delete route.');
+            }
+        });
     };
 
     const selectRoute = async (route) => {
@@ -97,19 +144,19 @@ const AdminDelivery = () => {
             setBuses(res.data);
             const route = routes.find(r => r._id === routeId) || selectedRoute;
             
-            // Get last bus to use timings as template
-            const lastBus = res.data.length > 0 ? res.data[res.data.length - 1] : null;
-
             setShowBusForm(res.data.length === 0);
             setNewBus({
                 busNumber: '', 
                 mobileNumber: '', 
                 comment: '', 
                 image: '',
-                timing: lastBus ? lastBus.timing : '',
-                stopTimings: lastBus 
-                    ? lastBus.stopTimings.map(st => ({ stopName: st.stopName, arrivalTime: st.arrivalTime, departureTime: st.departureTime }))
-                    : (route ? route.stops.map(s => ({ stopName: s, arrivalTime: '', departureTime: '' })) : [])
+                stopTimings: route ? route.stops.map(s => ({ 
+                    stopName: s, 
+                    arrivalTime: '', 
+                    arrivalDayOffset: 0,
+                    departureTime: '',
+                    departureDayOffset: 0
+                })) : []
             });
         } catch (err) {
             console.error(err);
@@ -119,6 +166,32 @@ const AdminDelivery = () => {
     const handleStopTimingChange = (index, field, value) => {
         const updatedTimings = [...newBus.stopTimings];
         updatedTimings[index][field] = value;
+
+        // Auto-detect Intra-Stop Midnight Rollover
+        if (field === 'departureTime' || field === 'arrivalTime') {
+            const arr = updatedTimings[index].arrivalTime;
+            const dep = updatedTimings[index].departureTime;
+            
+            if (arr && dep) {
+                const arrTotal = (parseInt(arr.split(':')[0]) * 60) + parseInt(arr.split(':')[1]);
+                const depTotal = (parseInt(dep.split(':')[0]) * 60) + parseInt(dep.split(':')[1]);
+                
+                // If departure time is earlier than arrival time, it must be next day
+                if (depTotal < arrTotal) {
+                    updatedTimings[index].departureDayOffset = 1;
+                } else {
+                    // Reset if user corrects it to a later time
+                    updatedTimings[index].departureDayOffset = updatedTimings[index].arrivalDayOffset;
+                }
+            }
+        }
+        
+        setNewBus({ ...newBus, stopTimings: updatedTimings });
+    };
+
+    const handleDayOffsetToggle = (index, field) => {
+        const updatedTimings = [...newBus.stopTimings];
+        updatedTimings[index][field] = updatedTimings[index][field] === 0 ? 1 : 0;
         setNewBus({ ...newBus, stopTimings: updatedTimings });
     };
 
@@ -128,14 +201,39 @@ const AdminDelivery = () => {
             await api.post('/delivery/buses', { ...newBus, routeId: selectedRoute._id });
             setShowBusForm(false);
             fetchBuses(selectedRoute._id);
-            alert('Vehicle Deployed Successfully');
+            triggerModal('success', 'Fleet Expanded', 'Your vehicle has been successfully deployed and scheduled.');
         } catch (err) {
-            alert('Failed to add bus');
+            triggerModal('error', 'Deployment Failed', 'There was a critical error while updating the route fleet.');
         }
     };
 
     return (
         <div className="admin-delivery-premium">
+            {/* Custom Modal */}
+            {modal.isOpen && (
+                <div className="custom-modal-overlay">
+                    <div className="custom-modal-card animate-pop-in">
+                        <div className={`modal-icon-wrap ${modal.type}`}>
+                            {modal.type === 'success' && <CheckCircle size={40} />}
+                            {modal.type === 'error' && <AlertTriangle size={40} />}
+                            {modal.type === 'confirm' && <Navigation size={40} />}
+                        </div>
+                        <h2>{modal.title}</h2>
+                        <p>{modal.message}</p>
+                        <div className="modal-actions-p">
+                            {modal.type === 'confirm' ? (
+                                <>
+                                    <button className="btn-modal-cancel" onClick={closeModal}>Cancel</button>
+                                    <button className="btn-modal-confirm" onClick={() => { modal.onConfirm(); closeModal(); }}>Confirm</button>
+                                </>
+                            ) : (
+                                <button className="btn-modal-primary" onClick={closeModal}>Got it</button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <header className="page-header-admin">
                 <div className="title-area">
                     <h1>Logistics Command Center</h1>
@@ -144,14 +242,18 @@ const AdminDelivery = () => {
             </header>
 
             <div className="delivery-master-container">
-                {/* 1. Master List: Route Navigator */}
                 <aside className="route-navigator">
                     <div className="nav-header">
                         <div className="h-top">
                             <h3>Route Navigator</h3>
                             <span className="count-pill">{routes.length}</span>
                         </div>
-                        <button className="btn-add-primary" onClick={() => setViewMode('create')}>
+                        <button className="btn-add-primary" onClick={() => {
+                            setEditRouteId(null);
+                            setRouteName('');
+                            setStops(['']);
+                            setViewMode('create');
+                        }}>
                             <Plus size={18} /> New Route Identity
                         </button>
                     </div>
@@ -170,16 +272,20 @@ const AdminDelivery = () => {
                                     <span className="nav-name">{r.routeName}</span>
                                     <span className="nav-meta">{r.stops.length} Stops configured</span>
                                 </div>
+                                <div className="nav-actions">
+                                    <button className="nav-btn edit" onClick={(e) => handleEditRoute(e, r)}>
+                                        <Edit2 size={14} />
+                                    </button>
+                                    <button className="nav-btn delete" onClick={(e) => handleDeleteRoute(e, r._id)}>
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
                                 <ChevronRight size={16} className="arr-icon" />
                             </div>
                         ))}
-                        {routes.length === 0 && !loading && (
-                            <div className="nav-empty">No routes found</div>
-                        )}
                     </div>
                 </aside>
 
-                {/* 2. Detail Workspace: Action Area */}
                 <main className="delivery-workspace">
                     {viewMode === 'empty' && (
                         <div className="workspace-placeholder">
@@ -194,11 +300,11 @@ const AdminDelivery = () => {
                             <div className="w-header">
                                 <PlusCircle className="text-primary" />
                                 <div>
-                                    <h3>Initialize Route Identity</h3>
-                                    <p>Establish the foundation for a new logistics line</p>
+                                    <h3>{editRouteId ? 'Update Route Identity' : 'Initialize Route Identity'}</h3>
+                                    <p>{editRouteId ? 'Modify the parameters of this existing transport line' : 'Establish the foundation for a new logistics line'}</p>
                                 </div>
                             </div>
-                            <form onSubmit={handleCreateRoute} className="w-form">
+                            <form onSubmit={handleSaveRoute} className="w-form">
                                 <div className="w-group">
                                     <label>Route Identity Name</label>
                                     <input 
@@ -236,7 +342,7 @@ const AdminDelivery = () => {
                                 </div>
                                 <div className="w-actions">
                                     <button type="button" className="btn-sec" onClick={() => setViewMode('empty')}>Cancel</button>
-                                    <button type="submit" className="btn-pri">Activate Route Identity</button>
+                                    <button type="submit" className="btn-pri">{editRouteId ? 'Update Identity' : 'Activate Route Identity'}</button>
                                 </div>
                             </form>
                         </div>
@@ -281,7 +387,21 @@ const AdminDelivery = () => {
                                             <div className="f-row">
                                                 <div className="f-group">
                                                     <label>Bus / Van No.</label>
-                                                    <input type="text" placeholder="RJ-14-XX-0000" value={newBus.busNumber} onChange={e => setNewBus({...newBus, busNumber: e.target.value})} required />
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="XX XX XX XXXX" 
+                                                        value={newBus.busNumber} 
+                                                        onChange={e => {
+                                                            let val = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                                                            let formatted = "";
+                                                            for(let i=0; i<val.length && i<10; i++) {
+                                                                if(i === 2 || i === 4 || i === 6) formatted += " ";
+                                                                formatted += val[i];
+                                                            }
+                                                            setNewBus({...newBus, busNumber: formatted});
+                                                        }} 
+                                                        required 
+                                                    />
                                                 </div>
                                                 <div className="f-group">
                                                     <label>Driver Phone</label>
@@ -290,31 +410,97 @@ const AdminDelivery = () => {
                                             </div>
                                             <div className="f-row">
                                                 <div className="f-group">
-                                                    <label>Departure Time</label>
-                                                    <input type="text" placeholder="08:30 AM" value={newBus.timing} onChange={e => setNewBus({...newBus, timing: e.target.value})} required />
-                                                </div>
-                                                <div className="f-group">
                                                     <label>Identity Image (Upload)</label>
-                                                    <div className="up-box">
-                                                        <input type="text" value={newBus.image} placeholder="Image URL..." readOnly />
-                                                        <label className="up-lbl">
-                                                            <input type="file" style={{display: 'none'}} onChange={handleFileUpload} />
-                                                            {uploading ? '...' : <Plus size={14} />}
-                                                        </label>
+                                                    <div className="up-container-p">
+                                                        {newBus.image ? (
+                                                            <div className="up-preview-wrap">
+                                                                <img src={newBus.image} alt="Preview" className="up-preview-img" />
+                                                                <button type="button" className="btn-remove-img" onClick={() => setNewBus({ ...newBus, image: '' })}>✕</button>
+                                                            </div>
+                                                        ) : (
+                                                            <label className={`up-trigger-p ${uploading ? 'loading' : ''}`}>
+                                                                <input type="file" style={{ display: 'none' }} onChange={handleFileUpload} accept="image/*" disabled={uploading}/>
+                                                                {uploading ? <div className="up-loader-dots"><span></span><span></span><span></span></div> : <><Plus size={20} /><span>Add Image</span></>}
+                                                            </label>
+                                                        )}
                                                     </div>
                                                 </div>
+                                                <div className="f-group"></div>
                                             </div>
                                             
                                             <div className="timing-schedule">
-                                                <label>Stop-by-Stop Schedule</label>
-                                                <div className="schedule-grid">
-                                                    {newBus.stopTimings.map((st, idx) => (
-                                                        <div key={idx} className="s-row">
-                                                            <span className="s-name">{st.stopName}</span>
-                                                            <input type="text" placeholder="Arr" value={st.arrivalTime} onChange={e => handleStopTimingChange(idx, 'arrivalTime', e.target.value)} />
-                                                            <input type="text" placeholder="Dep" value={st.departureTime} onChange={e => handleStopTimingChange(idx, 'departureTime', e.target.value)} />
-                                                        </div>
-                                                    ))}
+                                                <div className="schedule-header-p">
+                                                    <label>Stop-by-Stop Schedule</label>
+                                                    <span className="audit-badge">Chronological Audit Active</span>
+                                                </div>
+                                                <div className="schedule-timeline">
+                                                    {newBus.stopTimings.map((st, idx) => {
+                                                        // Integrated Chronology Audit (Inter-Stop & Intra-Stop)
+                                                        let isInvalid = false;
+                                                        const currArrTotal = (st.arrivalDayOffset * 1440) + 
+                                                                           (parseInt(st.arrivalTime?.split(':')[0]) * 60) + 
+                                                                           parseInt(st.arrivalTime?.split(':')[1] || 0);
+                                                        const currDepTotal = (st.departureDayOffset * 1440) + 
+                                                                           (parseInt(st.departureTime?.split(':')[0]) * 60) + 
+                                                                           parseInt(st.departureTime?.split(':')[1] || 0);
+
+                                                        // 1. Check Intra-Stop (Arr vs Dep at same stop)
+                                                        if (st.arrivalTime && st.departureTime && currDepTotal < currArrTotal) {
+                                                            isInvalid = true;
+                                                        }
+
+                                                        // 2. Check Inter-Stop (Prev Dep vs Curr Arr)
+                                                        if (!isInvalid && idx > 0) {
+                                                            const prev = newBus.stopTimings[idx-1];
+                                                            const prevDepTotal = (prev.departureDayOffset * 1440) + 
+                                                                             (parseInt(prev.departureTime?.split(':')[0]) * 60) + 
+                                                                             parseInt(prev.departureTime?.split(':')[1] || 0);
+                                                            if (st.arrivalTime && prev.departureTime && currArrTotal < prevDepTotal) {
+                                                                isInvalid = true;
+                                                            }
+                                                        }
+
+                                                        return (
+                                                            <div key={idx} className={`s-row-premium ${isInvalid ? 'invalid-sequence' : 'valid-sequence'}`}>
+                                                                {isInvalid && (
+                                                                    <div className="seq-warning animate-shake">
+                                                                        <AlertTriangle size={12} /> 
+                                                                        <span>Sequence Error: Check Day Offset</span>
+                                                                    </div>
+                                                                )}
+                                                                <div className="s-name-group">
+                                                                    <div className="p-dot"></div>
+                                                                    <span className="s-name">{st.stopName}</span>
+                                                                </div>
+                                                                <div className="s-time-pickers">
+                                                                    <div className="time-field">
+                                                                        <div className="time-label-row">
+                                                                            <span className="time-label">Arr</span>
+                                                                            {st.arrivalDayOffset > 0 && <span className="day-tag">+1 Day</span>}
+                                                                        </div>
+                                                                        <div className="time-input-wrap">
+                                                                            <input type="time" value={st.arrivalTime} onChange={e => handleStopTimingChange(idx, 'arrivalTime', e.target.value)} />
+                                                                            <button type="button" className={`btn-day-toggle ${st.arrivalDayOffset > 0 ? 'active' : ''}`} onClick={() => handleDayOffsetToggle(idx, 'arrivalDayOffset')} title="Toggle Next Day Offset">
+                                                                                <Moon size={12} />
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="time-field">
+                                                                        <div className="time-label-row">
+                                                                            <span className="time-label">Dep</span>
+                                                                            {st.departureDayOffset > 0 && <span className="day-tag">+1 Day</span>}
+                                                                        </div>
+                                                                        <div className="time-input-wrap">
+                                                                            <input type="time" value={st.departureTime} onChange={e => handleStopTimingChange(idx, 'departureTime', e.target.value)} />
+                                                                            <button type="button" className={`btn-day-toggle ${st.departureDayOffset > 0 ? 'active' : ''}`} onClick={() => handleDayOffsetToggle(idx, 'departureDayOffset')} title="Toggle Next Day Offset">
+                                                                                <Moon size={12} />
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
 
@@ -340,18 +526,17 @@ const AdminDelivery = () => {
                                                 {b.stopTimings.slice(0, 3).map((st, i) => (
                                                     <div key={i} className="v-row-s">
                                                         <span>{st.stopName}</span>
-                                                        <span>{st.arrivalTime} / {st.departureTime}</span>
+                                                        <span>
+                                                            {st.arrivalTime || '--:--'} {st.arrivalDayOffset > 0 ? '(+1)' : ''} / 
+                                                            {st.departureTime || '--:--'} {st.departureDayOffset > 0 ? '(+1)' : ''}
+                                                        </span>
                                                     </div>
                                                 ))}
                                                 {b.stopTimings.length > 3 && <p className="v-more">+{b.stopTimings.length - 3} more stations</p>}
                                             </div>
                                         </div>
                                     ))}
-                                    {buses.length === 0 && !showBusForm && (
-                                        <div className="empty-fleet-w">
-                                            <p>No vehicles assigned to this route identity yet.</p>
-                                        </div>
-                                    )}
+                                    {buses.length === 0 && !showBusForm && <div className="empty-fleet-w"><p>No vehicles assigned yet.</p></div>}
                                 </div>
                             </div>
                         </div>

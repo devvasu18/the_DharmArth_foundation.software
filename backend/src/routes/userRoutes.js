@@ -123,6 +123,55 @@ router.get('/staff', protect, async (req, res) => {
     }
 });
 
+// @desc    Get current user profile
+// @route   GET /api/users/profile
+// @access  Private
+router.get('/profile', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+        if (user) {
+            res.json(user);
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Add or Update an Address
+// @route   POST /api/users/profile/addresses
+// @access  Private
+router.post('/profile/addresses', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const addressData = req.body;
+        
+        if (addressData._id) {
+            // Update existing
+            const addrIndex = user.savedAddresses.findIndex(a => a._id.toString() === addressData._id);
+            if (addrIndex >= 0) {
+                user.savedAddresses[addrIndex].street = addressData.street;
+                user.savedAddresses[addrIndex].city = addressData.city;
+                user.savedAddresses[addrIndex].state = addressData.state;
+                user.savedAddresses[addrIndex].zip = addressData.zip;
+                user.savedAddresses[addrIndex].phone = addressData.phone;
+                user.savedAddresses[addrIndex].updatedAt = Date.now();
+            }
+        } else {
+            // Add new
+            user.savedAddresses.push(addressData);
+        }
+        
+        await user.save();
+        res.json(user.savedAddresses);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @desc    Get user by ID
 // @route   GET /api/users/:id
 // @access  Private/Admin (with View User permission)

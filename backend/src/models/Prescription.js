@@ -12,13 +12,16 @@ const prescriptionSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Under Review', 'Verified', 'Rejected'],
+        enum: ['Pending', 'Under Review', 'Verified', 'Rejected', 'Ordered'],
         default: 'Pending'
     },
     verifiedItems: [{
         medicineName: String,
         dosage: String,
         frequency: String,
+        time: String,
+        foodRelation: String,
+        intakeMethod: String,
         duration: String,
         quantity: Number,
         price: Number,

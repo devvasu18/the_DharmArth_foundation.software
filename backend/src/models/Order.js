@@ -15,7 +15,11 @@ const orderSchema = new mongoose.Schema({
         name: String,
         quantity: Number,
         price: Number,
-        dosage: String
+        dosage: String,
+        frequency: String,
+        time: String,
+        foodRelation: String,
+        intakeMethod: String
     }],
     totalAmount: {
         type: Number,
@@ -31,7 +35,8 @@ const orderSchema = new mongoose.Schema({
         city: String,
         state: String,
         zip: String,
-        phone: String
+        phone: String,
+        altPhone: String
     },
     paymentDetails: {
         method: { type: String, enum: ['COD', 'Online', 'Wallet'], default: 'Online' },

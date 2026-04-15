@@ -44,7 +44,17 @@ const userSchema = new mongoose.Schema({
     isSuspended: {
         type: Boolean,
         default: false
-    }
+    },
+    savedAddresses: [{
+        street: String,
+        city: String,
+        state: String,
+        zip: String,
+        phone: String,
+        altPhone: String,
+        label: { type: String, default: 'Home' },
+        updatedAt: { type: Date, default: Date.now }
+    }]
 }, {
     timestamps: true,
 });

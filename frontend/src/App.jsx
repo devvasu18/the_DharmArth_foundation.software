@@ -37,6 +37,8 @@ import DoctorAvailability from './pages/DoctorAvailability';
 import OrderMedicine from './pages/OrderMedicine';
 import AdminPrescriptions from './components/admin/AdminPrescriptions';
 import AdminDelivery from './components/admin/AdminDelivery';
+import AdminDispatch from './components/admin/AdminDispatch';
+import AdminPharmacyOrders from './components/admin/AdminPharmacyOrders';
 import DeliveryBoyDashboard from './pages/DeliveryBoyDashboard';
 
 import { ConfirmProvider } from './context/ConfirmContext';
@@ -82,7 +84,9 @@ function App() {
             <Route path="doctors" element={<AdminDoctors />} />
             <Route path="availability" element={<AdminAvailability />} />
             <Route path="prescriptions" element={<AdminPrescriptions />} />
+            <Route path="pharmacy-orders" element={<AdminPharmacyOrders />} />
             <Route path="delivery" element={<AdminDelivery />} />
+            <Route path="dispatch" element={<AdminDispatch />} />
             <Route path="reports/commission" element={<CommissionReports />} />
           </Route>
 

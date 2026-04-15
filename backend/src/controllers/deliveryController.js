@@ -34,6 +34,34 @@ exports.getRoutes = async (req, res) => {
     }
 };
 
+exports.updateRoute = async (req, res) => {
+    try {
+        const route = await BusRoute.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!route) return res.status(404).json({ message: 'Route not found' });
+        res.json(route);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.deleteRoute = async (req, res) => {
+    try {
+        const route = await BusRoute.findById(req.params.id);
+        if (!route) return res.status(404).json({ message: 'Route not found' });
+
+        // Check if any buses are assigned to this route
+        const busesCount = await Bus.countDocuments({ routeId: req.params.id });
+        if (busesCount > 0) {
+            return res.status(400).json({ message: 'Cannot delete route with assigned buses. Delete buses first.' });
+        }
+
+        await BusRoute.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Route deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 exports.createBus = async (req, res) => {
     try {
         const bus = await Bus.create(req.body);
@@ -97,6 +125,35 @@ exports.assignDelivery = async (req, res) => {
     }
 };
 
+// --- Delivery Dashboard Data (Admin) ---
+
+exports.getUnassignedOrders = async (req, res) => {
+    try {
+        // Fetch orders that are not delivered/cancelled, and are either PAID or COD
+        const orders = await Order.find({
+            status: { $nin: ['Delivered', 'Cancelled'] },
+            $or: [
+                { 'paymentDetails.status': 'Completed' },
+                { 'paymentDetails.method': 'COD' }
+            ]
+        })
+        .populate('user', 'name mobile email')
+        .sort({ createdAt: -1 });
+
+        // Filter out those already assigned to active deliveries (Not Delivered/Failed)
+        const activeAssignments = await DeliveryAssignment.find({
+            status: { $in: ['Assigned', 'In Transit'] }
+        });
+        const assignedOrderIds = activeAssignments.map(a => a.orderId.toString());
+
+        const unassignedOrders = orders.filter(o => !assignedOrderIds.includes(o._id.toString()));
+
+        res.json(unassignedOrders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // --- Delivery Boy Dashboard ---
 
 exports.getAssignedOrders = async (req, res) => {
@@ -151,16 +208,48 @@ exports.updateAssignmentStatus = async (req, res) => {
     }
 };
 
-// --- Smart Route Suggestion (Logic Simulation) ---
+// --- Smart Route Suggestion Engine ---
 
 exports.suggestRoutes = async (req, res) => {
-    const { city, zip } = req.query;
+    const { address, city, state, zip } = req.query;
     try {
-        // Simple logic: match city or zip with route stops
+        const queryTerms = [address, city, state, zip]
+            .filter(term => term && term.trim() !== '')
+            .map(term => {
+                // Escape regex characters and break into words for max matching
+                return term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').split(' ');
+            })
+            .flat()
+            .filter(word => word.length > 2); // Ignore tiny words like "St", "Rd"
+
+        if (queryTerms.length === 0) {
+            return res.json([]);
+        }
+
+        // Create case-insensitive regex for each significant word
+        const regexTerms = queryTerms.map(term => new RegExp(term, 'i'));
+
+        // Match ANY stop in the stops array that contains any of the geographical keywords
         const routes = await BusRoute.find({
-            stops: { $in: [city, zip] }
+            stops: { $in: regexTerms }
         });
-        res.json(routes);
+
+        // Add scoring logic: How many stops match the user's search query terms?
+        const scoredRoutes = routes.map(route => {
+            let score = 0;
+            route.stops.forEach(stop => {
+                regexTerms.forEach(regex => {
+                    if (regex.test(stop)) score++;
+                });
+            });
+            // Convert to regular object to append score
+            return { ...route.toObject(), relevanceScore: score };
+        });
+
+        // Sort by highest relevance score
+        scoredRoutes.sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+        res.json(scoredRoutes);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
