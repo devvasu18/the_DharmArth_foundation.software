@@ -40,8 +40,11 @@ const AdminPrescriptions = () => {
 
     const fetchPrescriptions = async () => {
         try {
-            const res = await api.get('/prescriptions?limit=50');
-            setPrescriptions(res.data.prescriptions || res.data);
+            const res = await api.get('/prescriptions?limit=100');
+            const allPrescriptions = res.data.prescriptions || res.data;
+            // Filter out 'Ordered' as they have moved to the Order Management system
+            const activeQueue = allPrescriptions.filter(p => p.status !== 'Ordered');
+            setPrescriptions(activeQueue);
             setLoading(false);
         } catch (err) {
             console.error(err);
@@ -107,7 +110,7 @@ const AdminPrescriptions = () => {
                 <div className="stats-pills">
                     <div className="stat-pill">
                         <span className="count">{prescriptions.length}</span>
-                        <span className="lbl">To Review</span>
+                        <span className="lbl">Active Queue</span>
                     </div>
                 </div>
             </header>

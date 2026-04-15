@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileText, CheckCircle, Clock, AlertCircle, Camera, ShieldCheck, Zap, Truck, ArrowRight, X, Info, MapPin, Plus, Edit2 } from 'lucide-react';
+import { Upload, FileText, CheckCircle, Clock, AlertCircle, Camera, ShieldCheck, Zap, Truck, ArrowRight, X, Info, MapPin, Plus, Edit2, Phone } from 'lucide-react';
 import api from '../services/api';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
@@ -228,15 +228,7 @@ const OrderMedicine = () => {
         }
     };
 
-    const filteredPrescriptions = myPrescriptions.filter(p => {
-        if (p.status !== 'Ordered') return true;
-        // Find if there's a delivered order for this prescription
-        const deliveredOrder = myOrders.find(o => 
-            (typeof o.prescription === 'string' ? o.prescription === p._id : o.prescription?._id === p._id) && 
-            o.status === 'Delivered'
-        );
-        return !deliveredOrder; // Hide if delivered
-    });
+    const filteredPrescriptions = myPrescriptions.filter(p => p.status !== 'Ordered');
 
     return (
         <div className="order-medicine-container">
@@ -351,7 +343,7 @@ const OrderMedicine = () => {
                                             onClick={() => setHistoryTab('prescriptions')}
                                             style={{flex: 1, padding: '8px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: historyTab === 'prescriptions' ? '#fff' : 'transparent', fontWeight: historyTab === 'prescriptions' ? '600' : '400', boxShadow: historyTab === 'prescriptions' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s', outline: 'none'}}
                                         >
-                                            Prescriptions ({myPrescriptions.length})
+                                            Prescriptions ({filteredPrescriptions.length})
                                         </button>
                                         <button 
                                             className={`tab-btn ${historyTab === 'orders' ? 'active' : ''}`}
@@ -431,6 +423,25 @@ const OrderMedicine = () => {
                                                             <MapPin size={12} style={{display: 'inline', marginRight: '4px'}}/>
                                                             Delivering to: {order.shippingAddress?.street}, {order.shippingAddress?.city}
                                                         </div>
+                                                        {order.dispatchDetails && (
+                                                            <div style={{marginTop: '8px', background: '#eff6ff', padding: '10px', borderRadius: '6px', border: '1px solid #dbeafe'}}>
+                                                                <div style={{display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', color: '#1d4ed8', fontWeight: '600', fontSize: '12px'}}>
+                                                                    <Truck size={14}/> Transport Details
+                                                                </div>
+                                                                <div style={{fontSize: '13px', color: '#1e40af', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px'}}>
+                                                                    <div><span style={{opacity: 0.7, fontSize: '11px', display: 'block'}}>Vehicle Name</span> {order.dispatchDetails.busName || 'Express Bus'}</div>
+                                                                    <div><span style={{opacity: 0.7, fontSize: '11px', display: 'block'}}>Number</span> {order.dispatchDetails.busNumber}</div>
+                                                                    {order.dispatchDetails.conductorNumber && (
+                                                                        <div style={{gridColumn: 'span 2', marginTop: '4px'}}>
+                                                                            <span style={{opacity: 0.7, fontSize: '11px', display: 'block'}}>Conductor Contact</span>
+                                                                            <a href={`tel:${order.dispatchDetails.conductorNumber}`} style={{color: '#1d4ed8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px'}}>
+                                                                                <Phone size={12}/> {order.dispatchDetails.conductorNumber}
+                                                                            </a>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))

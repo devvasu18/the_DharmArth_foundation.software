@@ -51,16 +51,16 @@ const AdminDispatch = () => {
     const fetchDeliveryBoys = async () => {
         try {
             // Use the staff endpoint since delivery boys are staff members
-            const res = await api.get('/users/staff'); 
-            
+            const res = await api.get('/users/staff');
+
             // Filter locally for delivery-related roles
-            const filtered = res.data.filter(u => u.roles && u.roles.some(r => 
-                r.name === 'DeliveryBoy' || 
-                r.name === 'Delivery boy' || 
+            const filtered = res.data.filter(u => u.roles && u.roles.some(r =>
+                r.name === 'DeliveryBoy' ||
+                r.name === 'Delivery boy' ||
                 r.name === 'Delivery Person' ||
                 u.isSuperAdmin
             ));
-            
+
             setDeliveryBoys(filtered);
         } catch (err) {
             console.error("Failed to fetch delivery personnel", err);
@@ -75,14 +75,14 @@ const AdminDispatch = () => {
 
     const handleRouteSelect = async (routeId) => {
         setAssignPayload(p => ({ ...p, routeId, busId: '' }));
-        if(!routeId) {
+        if (!routeId) {
             setBuses([]);
             return;
         }
         try {
             const res = await api.get(`/delivery/routes/${routeId}/buses`);
             setBuses(res.data);
-        } catch(err) {
+        } catch (err) {
             console.error("Fetch buses failed");
         }
     };
@@ -134,14 +134,14 @@ const AdminDispatch = () => {
                                     <User size={16} /> {order.shippingAddress?.phone || order.user?.mobile || 'No Phone'}
                                 </div>
                                 <div className="o-row">
-                                    <MapPin size={16} /> 
-                                    <span style={{flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                                        {order.shippingAddress?.street}, {order.shippingAddress?.city} 
+                                    <MapPin size={16} />
+                                    <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {order.shippingAddress?.street}, {order.shippingAddress?.city}
                                     </span>
                                 </div>
                             </div>
                             <button className="btn-assign-trigger" onClick={() => openDispatchModal(order)}>
-                                <Truck size={18} /> Assign to Fleet
+                                <Truck size={18} /> Assign to bus
                             </button>
                         </div>
                     ))}
@@ -154,7 +154,7 @@ const AdminDispatch = () => {
                     <div className="dispatch-modal-card">
                         <div className="dm-header">
                             <h3><Navigation size={24} color="#3b82f6" /> Dispatch Configuration</h3>
-                            <button className="btn-close-dm" onClick={() => setSelectedOrder(null)}><X size={24}/></button>
+                            <button className="btn-close-dm" onClick={() => setSelectedOrder(null)}><X size={24} /></button>
                         </div>
 
                         <div style={{ background: '#f8fafc', padding: '12px', border: '1px solid #e2e8f0', borderRadius: '8px', marginBottom: '20px' }}>
@@ -168,9 +168,9 @@ const AdminDispatch = () => {
                         <form onSubmit={submitAssignment}>
                             <div className="assign-form-group">
                                 <label>1. Confirm Route</label>
-                                <select 
-                                    required 
-                                    value={assignPayload.routeId} 
+                                <select
+                                    required
+                                    value={assignPayload.routeId}
                                     onChange={(e) => handleRouteSelect(e.target.value)}
                                 >
                                     <option value="">-- Select Destination Route --</option>
@@ -182,10 +182,10 @@ const AdminDispatch = () => {
 
                             <div className="assign-form-group">
                                 <label>2. Select Active Bus / Van</label>
-                                <select 
-                                    required 
-                                    value={assignPayload.busId} 
-                                    onChange={(e) => setAssignPayload({...assignPayload, busId: e.target.value})}
+                                <select
+                                    required
+                                    value={assignPayload.busId}
+                                    onChange={(e) => setAssignPayload({ ...assignPayload, busId: e.target.value })}
                                     disabled={!assignPayload.routeId}
                                 >
                                     <option value="">-- Select Vehicle --</option>
@@ -197,10 +197,10 @@ const AdminDispatch = () => {
 
                             <div className="assign-form-group">
                                 <label>3. Assign Personnel (Delivery Boy)</label>
-                                <select 
-                                    required 
-                                    value={assignPayload.deliveryBoyId} 
-                                    onChange={(e) => setAssignPayload({...assignPayload, deliveryBoyId: e.target.value})}
+                                <select
+                                    required
+                                    value={assignPayload.deliveryBoyId}
+                                    onChange={(e) => setAssignPayload({ ...assignPayload, deliveryBoyId: e.target.value })}
                                 >
                                     <option value="">-- Select Delivery Agent --</option>
                                     {deliveryBoys.map(db => (
@@ -211,10 +211,10 @@ const AdminDispatch = () => {
 
                             <div className="assign-form-group">
                                 <label>Additional Dispatch Notes</label>
-                                <textarea 
-                                    rows="3" 
+                                <textarea
+                                    rows="3"
                                     value={assignPayload.notes}
-                                    onChange={(e) => setAssignPayload({...assignPayload, notes: e.target.value})}
+                                    onChange={(e) => setAssignPayload({ ...assignPayload, notes: e.target.value })}
                                     placeholder="e.g., Handle with care, fragile medicines..."
                                 ></textarea>
                             </div>

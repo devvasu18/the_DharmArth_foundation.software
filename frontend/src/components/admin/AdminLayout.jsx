@@ -337,20 +337,20 @@ const AdminLayout = () => {
                                     Order Management
                                 </NavLink>
                                 <NavLink 
-                                    to="/admin/delivery" 
-                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
-                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
-                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
-                                >
-                                    Route Management
-                                </NavLink>
-                                <NavLink 
                                     to="/admin/dispatch" 
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
                                     style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Order Dispatch
+                                </NavLink>
+                                <NavLink 
+                                    to="/admin/delivery" 
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
+                                    Route Management
                                 </NavLink>
                             </div>
                         )}

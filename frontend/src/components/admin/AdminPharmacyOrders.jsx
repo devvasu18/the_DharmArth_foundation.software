@@ -12,7 +12,8 @@ import {
     CreditCard, 
     MoreVertical,
     ChevronDown,
-    Package
+    Package,
+    X
 } from 'lucide-react';
 import './AdminPharmacyOrders.css';
 import { useConfirm } from '../../context/ConfirmContext';
@@ -202,70 +203,120 @@ const AdminPharmacyOrders = () => {
             {/* Order Details Modal */}
             {isModalOpen && selectedOrder && (
                 <div className="order-modal-overlay" onClick={() => setIsModalOpen(false)}>
-                    <div className="order-modal-content" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>Order Details</h2>
-                            <button className="close-btn" onClick={() => setIsModalOpen(false)}><ChevronDown size={24} /></button>
+                    <div className="order-modal-content premium-modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header-gradient">
+                            <div className="header-text">
+                                <div className="order-badge">Order ID: #{selectedOrder._id.substring(selectedOrder._id.length-8).toUpperCase()}</div>
+                                <h2>Order Summary</h2>
+                            </div>
+                            <button className="close-btn-light" onClick={() => setIsModalOpen(false)}>
+                                <X size={20} />
+                            </button>
                         </div>
                         
-                        <div className="modal-body">
-                            <div className="detail-section">
-                                <h3>Customer & Shipping</h3>
-                                <div className="detail-grid">
-                                    <div className="info-block">
-                                        <span className="label">Customer Name</span>
-                                        <span className="value">{selectedOrder.user?.name}</span>
-                                    </div>
-                                    <div className="info-block">
-                                        <span className="label">Mobile</span>
-                                        <span className="value">{selectedOrder.user?.mobile}</span>
-                                    </div>
-                                    <div className="info-block full-width">
-                                        <span className="label">Delivery Address</span>
-                                        <span className="value">
-                                            {selectedOrder.shippingAddress?.street},<br/>
-                                            {selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state} - {selectedOrder.shippingAddress?.zip}
-                                        </span>
-                                    </div>
+                        <div className="modal-body-premium">
+                            <div className="status-progress-bar">
+                                <div className={`progress-step ${['Payment Pending', 'Processing', 'Out for Delivery', 'Delivered'].indexOf(selectedOrder.status) >= 0 ? 'active' : ''}`}>
+                                    <div className="step-point"></div>
+                                    <span>Pending</span>
+                                </div>
+                                <div className={`progress-step ${['Processing', 'Out for Delivery', 'Delivered'].indexOf(selectedOrder.status) >= 0 ? 'active' : ''}`}>
+                                    <div className="step-point"></div>
+                                    <span>Processing</span>
+                                </div>
+                                <div className={`progress-step ${['Out for Delivery', 'Delivered'].indexOf(selectedOrder.status) >= 0 ? 'active' : ''}`}>
+                                    <div className="step-point"></div>
+                                    <span>Shipping</span>
+                                </div>
+                                <div className={`progress-step ${selectedOrder.status === 'Delivered' ? 'active' : ''}`}>
+                                    <div className="step-point"></div>
+                                    <span>Delivered</span>
                                 </div>
                             </div>
 
-                            <div className="detail-section">
-                                <h3>Medicines & Dosage</h3>
-                                <div className="medicine-list">
-                                    {selectedOrder.items.map((item, idx) => (
-                                        <div key={idx} className="medicine-item">
-                                            <div className="med-header">
-                                                <span className="med-name">{item.medicineName}</span>
-                                                <span className="med-qty">Qty: {item.quantity || 1}</span>
-                                                <span className="med-price">₹{Number(item.price || 0).toFixed(2)}</span>
-                                            </div>
-                                            {(item.time || item.frequency || item.foodRelation) && (
-                                                <div className="med-dosage">
-                                                    <span className="dosage-tag">{item.frequency}</span>
-                                                    <span className="dosage-tag">{item.time}</span>
-                                                    <span className="dosage-tag">{item.foodRelation}</span>
-                                                    {item.intakeMethod && <span className="dosage-tag">{item.intakeMethod}</span>}
-                                                </div>
-                                            )}
+                            <div className="premium-grid">
+                                <section className="customer-info-pane">
+                                    <div className="pane-header">
+                                        <div className="icon-circle"><CreditCard size={18}/></div>
+                                        <h3>Customer Details</h3>
+                                    </div>
+                                    <div className="pane-content">
+                                        <div className="data-row">
+                                            <span className="data-label">Full Name</span>
+                                            <span className="data-value">{selectedOrder.user?.name}</span>
                                         </div>
-                                    ))}
-                                </div>
+                                        <div className="data-row">
+                                            <span className="data-label">Phone Number</span>
+                                            <span className="data-value">{selectedOrder.user?.mobile}</span>
+                                        </div>
+                                        <div className="data-row">
+                                            <span className="data-label">Shipping Address</span>
+                                            <span className="data-value address">
+                                                {selectedOrder.shippingAddress?.street},<br/>
+                                                {selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state} - {selectedOrder.shippingAddress?.zip}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section className="items-info-pane">
+                                    <div className="pane-header">
+                                        <div className="icon-circle"><ShoppingBag size={18}/></div>
+                                        <h3>Medicines Ordered</h3>
+                                    </div>
+                                    <div className="premium-medicine-list">
+                                        {selectedOrder.items.map((item, idx) => (
+                                            <div key={idx} className="premium-med-card">
+                                                <div className="med-main">
+                                                    <div className="med-info">
+                                                        <span className="name">{item.medicineName}</span>
+                                                        <span className="meta">Qty: {item.quantity || 1} • Unit Price: ₹{Number(item.price || 0).toFixed(2)}</span>
+                                                    </div>
+                                                    <div className="med-price-total">₹{(Number(item.price || 0) * (item.quantity || 1)).toFixed(2)}</div>
+                                                </div>
+                                                {(item.time || item.frequency || item.foodRelation) && (
+                                                    <div className="dosage-strip">
+                                                        <Clock size={12} />
+                                                        <span>{item.frequency}</span>
+                                                        <span className="dot">•</span>
+                                                        <span>{item.time}</span>
+                                                        <span className="dot">•</span>
+                                                        <span>{item.foodRelation}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
                             </div>
 
-                            <div className="modal-total">
-                                <span>Grand Total</span>
-                                <span>₹{selectedOrder.totalAmount.toFixed(2)}</span>
+                            <div className="modal-summary-footer">
+                                <div className="summary-details">
+                                    <div className="summary-row">
+                                        <span>Subtotal</span>
+                                        <span>₹{selectedOrder.totalAmount.toFixed(2)}</span>
+                                    </div>
+                                    <div className="summary-row">
+                                        <span>Processing Fee</span>
+                                        <span className="free">FREE</span>
+                                    </div>
+                                    <div className="summary-row grand-total">
+                                        <span>Grand Total</span>
+                                        <span>₹{selectedOrder.totalAmount.toFixed(2)}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="modal-footer">
-                            <button className="btn-secondary" onClick={() => setIsModalOpen(false)}>Close</button>
+                        <div className="modal-actions-premium">
+                            <button className="btn-glass-cancel" onClick={() => setIsModalOpen(false)}>Close View</button>
                             {selectedOrder.status === 'Payment Pending' && (
-                                <button className="btn-primary" onClick={() => {
+                                <button className="btn-glass-primary" onClick={() => {
                                     handleUpdateStatus(selectedOrder._id, 'Processing', 'Verified from details modal');
                                     setIsModalOpen(false);
-                                }}>Confirm Payment</button>
+                                }}>
+                                    <CheckCircle size={18} /> Confirm Payment
+                                </button>
                             )}
                         </div>
                     </div>

@@ -52,7 +52,14 @@ const orderSchema = new mongoose.Schema({
         status: String,
         updatedAt: { type: Date, default: Date.now },
         note: String
-    }]
+    }],
+    dispatchDetails: {
+        busNumber: String,
+        busName: String,
+        conductorNumber: String,
+        routeName: String,
+        dispatchedAt: Date
+    }
 }, {
     timestamps: true
 });

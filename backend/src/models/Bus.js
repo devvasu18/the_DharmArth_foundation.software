@@ -6,6 +6,7 @@ const busSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
+    busName: String,
     routeId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'BusRoute',

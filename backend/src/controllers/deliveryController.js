@@ -113,10 +113,21 @@ exports.assignDelivery = async (req, res) => {
             notes
         });
 
-        // Update Order status
+        // 3. Fetch Bus and Route details to sync with Order for Customer/Driver view
+        const bus = await Bus.findById(busId);
+        const route = await BusRoute.findById(routeId);
+
+        // Update Order status and sync dispatch details
         await Order.findByIdAndUpdate(orderId, { 
             status: 'Out for Delivery',
-            $push: { statusHistory: { status: 'Out for Delivery', note: 'Assigned to delivery' } }
+            $push: { statusHistory: { status: 'Out for Delivery', note: `Assigned to ${bus?.busName || 'Vehicle'} (${bus?.busNumber || 'N/A'})` } },
+            dispatchDetails: {
+                busNumber: bus?.busNumber,
+                busName: bus?.busName,
+                conductorNumber: bus?.mobileNumber, // Using mobileNumber as conductorNumber
+                routeName: route?.routeName,
+                dispatchedAt: Date.now()
+            }
         });
 
         res.status(201).json(assignment);

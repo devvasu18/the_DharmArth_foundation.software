@@ -168,8 +168,8 @@ const DeliveryBoyDashboard = () => {
                                             <span className="value">{a.routeId?.routeName || 'Direct'}</span>
                                         </div>
                                         <div className="pill-info">
-                                            <span className="label">Transport</span>
-                                            <span className="value">{a.busId?.busNumber || 'Local'}</span>
+                                            <span className="label">Vehicle</span>
+                                            <span className="value">{a.busId?.busName || 'Express'} ({a.busId?.busNumber || 'N/A'})</span>
                                         </div>
                                     </div>
 
