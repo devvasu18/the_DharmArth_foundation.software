@@ -3,7 +3,7 @@ import api from '../../services/api';
 import { useConfirm } from '../../context/ConfirmContext';
 
 const AdminSettings = () => {
-    const { confirm } = useConfirm();
+    const { showAlert, showConfirm } = useConfirm();
     const [settings, setSettings] = useState({});
     const [loading, setLoading] = useState(true);
 
@@ -81,10 +81,10 @@ const AdminSettings = () => {
             await api.put('/content/settings', updates);
             setSettings({ ...settings, ...updates });
             setConfigModalOpen(false);
-            alert("Banner Configuration Saved!");
+            showAlert('success', 'Saved', "Banner Configuration Saved!");
         } catch (error) {
             console.error("Save failed", error);
-            alert("Failed to save configuration");
+            showAlert('error', 'Error', "Failed to save configuration");
         }
     };
 
@@ -120,10 +120,10 @@ const AdminSettings = () => {
             // Update local settings state so it reflects immediately if we used it elsewhere (optional)
             setSettings({ ...settings, donation_config: donationConfig });
             setDonationModalOpen(false);
-            alert("Donation Plans Saved!");
+            showAlert('success', 'Saved', "Donation Plans Saved!");
         } catch (error) {
             console.error("Save failed", error);
-            alert("Failed to save donation plans");
+            showAlert('error', 'Error', "Failed to save donation plans");
         }
     };
 
@@ -285,7 +285,7 @@ const AdminSettings = () => {
                                             className="btn btn-outline"
                                             style={{ color: 'red', borderColor: 'red', padding: '5px 10px' }}
                                             onClick={async () => {
-                                                if (await confirm("Are you sure you want to remove this plan?")) {
+                                                if (await showConfirm("Remove Plan?", "Are you sure you want to remove this plan?")) {
                                                     handleRemovePlan(index)
                                                 }
                                             }}

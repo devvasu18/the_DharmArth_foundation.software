@@ -159,15 +159,15 @@ exports.getUnassignedOrders = async (req, res) => {
 exports.getAssignedOrders = async (req, res) => {
     try {
         const assignments = await DeliveryAssignment.find({ 
-            deliveryBoyId: req.user._id,
-            status: { $ne: 'Delivered' }
+            deliveryBoyId: req.user._id
         })
         .populate({
             path: 'orderId',
             populate: { path: 'user', select: 'name mobile' }
         })
         .populate('busId')
-        .populate('routeId');
+        .populate('routeId')
+        .sort({ updatedAt: -1 });
 
         res.json(assignments);
     } catch (error) {

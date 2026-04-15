@@ -234,19 +234,36 @@ router.post('/staff', protect, async (req, res) => {
     }
 
     const { name, mobile, email, password, roleId } = req.body;
+    console.log("Creating staff:", { name, mobile, email, roleId });
 
     try {
-        const checkQuery = { $or: [{ mobile }] };
-        if (email && email.trim() !== '') {
-            checkQuery.$or.push({ email });
+        const checkQuery = { mobile };
+        let user = await User.findOne(checkQuery);
+
+        if (user) {
+            // Case 1: User exists and already has roles (or is super admin)
+            if (user.roles.length > 0 || user.isSuperAdmin) {
+                console.log("Promotion attempt: User is already staff", user.mobile);
+                return res.status(400).json({ message: 'This user is already registered as a staff member.' });
+            }
+
+            // Case 2: User exists as a normal customer, promote them
+            console.log("Promoting existing user to staff:", user.mobile);
+            user.roles.push(roleId);
+            if (name) user.name = name; // Update name if provided
+            if (email && email.trim() !== '') user.email = email;
+            
+            await user.save();
+            return res.status(200).json({ message: 'Existing user has been promoted to Staff successfully!', user });
         }
 
-        const userExists = await User.findOne(checkQuery);
-        if (userExists) {
-            return res.status(400).json({ message: 'User with this mobile or email already exists' });
+        // Case 3: User does not exist, create new
+        const emailExists = email ? await User.findOne({ email }) : null;
+        if (emailExists) {
+            return res.status(400).json({ message: 'A user with this email already exists.' });
         }
 
-        const user = await User.create({
+        user = await User.create({
             name,
             mobile,
             email: email || undefined,
@@ -254,11 +271,12 @@ router.post('/staff', protect, async (req, res) => {
             roles: [roleId]
         });
 
-        // Create Wallet for staff? Maybe not needed but good for consistency
+        // Create Wallet for new staff
         await Wallet.create({ user: user._id });
 
-        res.status(201).json({ message: 'Staff created successfully', user });
+        res.status(201).json({ message: 'New Staff account created successfully', user });
     } catch (error) {
+        console.error("Staff Creation Error:", error);
         res.status(500).json({ message: error.message });
     }
 });

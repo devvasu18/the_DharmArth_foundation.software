@@ -4,12 +4,14 @@ import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize
 import { io } from "socket.io-client";
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { useConfirm } from '../../context/ConfirmContext';
 import './AdminLayout.css';
 
 // Simple notification sound
 const NOTIFICATION_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
 
 const AdminLayout = () => {
+    const { showAlert } = useConfirm();
     const navigate = useNavigate();
     const location = useLocation();
     const [user, setUser] = useState(null);
@@ -37,7 +39,7 @@ const AdminLayout = () => {
             navigate('/login');
             return;
         } else if (!storedUser.isSuperAdmin && (!storedUser.roles || storedUser.roles.length === 0)) {
-            alert("Access Denied: Admins Only");
+            showAlert('error', 'Access Denied', "Admins Only: You do not have permission to access this area.");
             navigate('/');
             return;
         }

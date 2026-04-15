@@ -22,6 +22,8 @@ const AdminPharmacyOrders = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const { showAlert } = useConfirm();
 
     useEffect(() => {
@@ -178,7 +180,14 @@ const AdminPharmacyOrders = () => {
                                                 {order.status === 'Processing' && (
                                                     <span className="ready-tag">Awaiting Dispatch</span>
                                                 )}
-                                                <button className="btn-view" title="View Details">
+                                                <button 
+                                                    className="btn-view" 
+                                                    title="View Details"
+                                                    onClick={() => {
+                                                        setSelectedOrder(order);
+                                                        setIsModalOpen(true);
+                                                    }}
+                                                >
                                                     <Eye size={16} />
                                                 </button>
                                             </div>
@@ -190,6 +199,78 @@ const AdminPharmacyOrders = () => {
                     </table>
                 )}
             </div>
+            {/* Order Details Modal */}
+            {isModalOpen && selectedOrder && (
+                <div className="order-modal-overlay" onClick={() => setIsModalOpen(false)}>
+                    <div className="order-modal-content" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Order Details</h2>
+                            <button className="close-btn" onClick={() => setIsModalOpen(false)}><ChevronDown size={24} /></button>
+                        </div>
+                        
+                        <div className="modal-body">
+                            <div className="detail-section">
+                                <h3>Customer & Shipping</h3>
+                                <div className="detail-grid">
+                                    <div className="info-block">
+                                        <span className="label">Customer Name</span>
+                                        <span className="value">{selectedOrder.user?.name}</span>
+                                    </div>
+                                    <div className="info-block">
+                                        <span className="label">Mobile</span>
+                                        <span className="value">{selectedOrder.user?.mobile}</span>
+                                    </div>
+                                    <div className="info-block full-width">
+                                        <span className="label">Delivery Address</span>
+                                        <span className="value">
+                                            {selectedOrder.shippingAddress?.street},<br/>
+                                            {selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state} - {selectedOrder.shippingAddress?.zip}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="detail-section">
+                                <h3>Medicines & Dosage</h3>
+                                <div className="medicine-list">
+                                    {selectedOrder.items.map((item, idx) => (
+                                        <div key={idx} className="medicine-item">
+                                            <div className="med-header">
+                                                <span className="med-name">{item.medicineName}</span>
+                                                <span className="med-qty">Qty: {item.quantity || 1}</span>
+                                                <span className="med-price">₹{Number(item.price || 0).toFixed(2)}</span>
+                                            </div>
+                                            {(item.time || item.frequency || item.foodRelation) && (
+                                                <div className="med-dosage">
+                                                    <span className="dosage-tag">{item.frequency}</span>
+                                                    <span className="dosage-tag">{item.time}</span>
+                                                    <span className="dosage-tag">{item.foodRelation}</span>
+                                                    {item.intakeMethod && <span className="dosage-tag">{item.intakeMethod}</span>}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="modal-total">
+                                <span>Grand Total</span>
+                                <span>₹{selectedOrder.totalAmount.toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <div className="modal-footer">
+                            <button className="btn-secondary" onClick={() => setIsModalOpen(false)}>Close</button>
+                            {selectedOrder.status === 'Payment Pending' && (
+                                <button className="btn-primary" onClick={() => {
+                                    handleUpdateStatus(selectedOrder._id, 'Processing', 'Verified from details modal');
+                                    setIsModalOpen(false);
+                                }}>Confirm Payment</button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

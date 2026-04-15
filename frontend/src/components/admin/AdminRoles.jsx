@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { useConfirm } from '../../context/ConfirmContext';
 
 const AdminRoles = () => {
+    const { showAlert } = useConfirm();
     const [activeTab, setActiveTab] = useState('staff'); // 'staff' or 'roles'
 
     // --- Roles State ---
@@ -86,26 +88,26 @@ const AdminRoles = () => {
     };
 
     const handleSaveRole = async () => {
-        if (!roleName) return alert("Role Name required");
+        if (!roleName) return showAlert('error', 'Required', "Role Name required");
         const formattedPerms = Object.keys(selectedPermissions).map(mod => ({
             module: mod,
             actions: selectedPermissions[mod]
         })).filter(p => p.actions.length > 0);
 
-        if (formattedPerms.length === 0) return alert("Select at least one permission");
+        if (formattedPerms.length === 0) return showAlert('error', 'Required', "Select at least one permission");
 
         try {
             if (editingRoleId) {
                 await api.put(`/roles/${editingRoleId}`, { name: roleName, permissions: formattedPerms });
-                alert("Role Updated!");
+                showAlert('success', 'Updated', "Role Updated!");
             } else {
                 await api.post('/roles', { name: roleName, permissions: formattedPerms });
-                alert("Role Created!");
+                showAlert('success', 'Created', "Role Created!");
             }
             resetRoleForm();
             fetchData();
         } catch (error) {
-            alert(error.response?.data?.message || "Failed to save role");
+            showAlert('error', 'Failed', error.response?.data?.message || "Failed to save role");
         }
     };
 
@@ -116,16 +118,16 @@ const AdminRoles = () => {
 
     const handleCreateStaff = async () => {
         if (!staffFormData.name || !staffFormData.mobile || !staffFormData.password || !staffFormData.roleId) {
-            return alert("Please fill all required fields");
+            return showAlert('error', 'Missing Info', "Please fill all required fields");
         }
         try {
             await api.post('/users/staff', staffFormData);
-            alert("Staff Member Created Successfully!");
+            showAlert('success', 'Success', "Staff Member Created Successfully!");
             setIsCreatingStaff(false);
             setStaffFormData({ name: '', mobile: '', email: '', password: '', roleId: '' });
             fetchData();
         } catch (error) {
-            alert(error.response?.data?.message || "Failed to create staff");
+            showAlert('error', 'Failed', error.response?.data?.message || "Failed to create staff");
         }
     };
 
@@ -260,7 +262,7 @@ const AdminRoles = () => {
                                         <td>
                                             {staff.isSuperAdmin ?
                                                 <span className="badge badge-red">Super Admin</span> :
-                                                staff.roles.map(r => <span key={r._id} className="badge badge-blue">{r.name}</span>)
+                                                staff.roles.map(r => <span key={r._id} className="badge badge-green">{r.name}</span>)
                                             }
                                         </td>
                                         <td>

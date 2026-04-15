@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { useConfirm } from '../../context/ConfirmContext';
 
 const AdminSliders = () => {
+    const { showAlert, showConfirm } = useConfirm();
     const [sliders, setSliders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isAdding, setIsAdding] = useState(false);
@@ -50,7 +52,7 @@ const AdminSliders = () => {
             setFormData({ ...formData, imageUrl: data.imageUrl });
         } catch (error) {
             console.error('Upload failed', error);
-            alert('Image upload failed');
+            showAlert('error', 'Upload Failed', 'Image upload failed');
         } finally {
             setUploading(false);
         }
@@ -91,15 +93,15 @@ const AdminSliders = () => {
 
             if (editingId) {
                 await api.put(`/content/sliders/${editingId}`, payload);
-                alert("Slider Updated!");
+                showAlert('success', 'Updated', "Slider Updated!");
             } else {
                 await api.post('/content/sliders', payload);
-                alert("Slider Created!");
+                showAlert('success', 'Created', "Slider Created!");
             }
             resetForm();
             fetchSliders(); // Refresh
         } catch (error) {
-            alert(error.response?.data?.message || 'Failed to save slider');
+            showAlert('error', 'Failed', error.response?.data?.message || 'Failed to save slider');
         }
     };
 
@@ -111,11 +113,11 @@ const AdminSliders = () => {
         if (!deleteConfirmation) return;
         try {
             await api.delete(`/content/sliders/${deleteConfirmation}`);
-            alert("Item deleted!");
+            showAlert('success', 'Deleted', "Item deleted!");
             fetchSliders();
         } catch (error) {
             console.error("Delete failed", error);
-            alert("Failed to delete item");
+            showAlert('error', 'Failed', "Failed to delete item");
         } finally {
             setDeleteConfirmation(null);
         }

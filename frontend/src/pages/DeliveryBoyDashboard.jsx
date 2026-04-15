@@ -2,15 +2,24 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
-import { Truck, MapPin, Phone, CheckCircle, Package, ExternalLink, Navigation } from 'lucide-react';
+import { useConfirm } from '../context/ConfirmContext';
+import { 
+    Truck, MapPin, Phone, CheckCircle, Package, 
+    Navigation, CreditCard, ClipboardList, Clock, 
+    ChevronRight, LogOut 
+} from 'lucide-react';
 import './DeliveryBoyDashboard.css';
 
 const DeliveryBoyDashboard = () => {
+    const { showAlert, showConfirm } = useConfirm();
     const [assignments, setAssignments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('Assigned'); // Assigned, In Transit, Delivered
+    const [filter, setFilter] = useState('Assigned'); 
+    const [userData, setUserData] = useState(null);
 
     useEffect(() => {
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        setUserData(storedUser);
         fetchAssignments();
     }, []);
 
@@ -26,110 +35,164 @@ const DeliveryBoyDashboard = () => {
     };
 
     const updateStatus = async (id, status) => {
+        const actionText = status === 'In Transit' ? 'Start this delivery?' : 'Mark as Delivered?';
+        const isConfirmed = await showConfirm(
+            "Confirm Action",
+            `Are you sure you want to ${actionText}`
+        );
+
+        if (!isConfirmed) return;
+
         try {
             await api.patch(`/delivery/assignments/${id}/status`, { status });
+            showAlert('success', 'Status Updated', `Order is now ${status}`);
             fetchAssignments();
         } catch (err) {
-            alert('Failed to update status');
+            showAlert('error', 'Update Failed', 'Could not sync status with server.');
         }
     };
 
     const openMaps = (address) => {
+        if (!address) return;
         const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
             `${address.street}, ${address.city}, ${address.state}`
         )}`;
         window.open(url, '_blank');
     };
 
+    // Calculate Stats
+    const stats = {
+        today: assignments.filter(a => new Date(a.createdAt).toDateString() === new Date().toDateString()).length,
+        completed: assignments.filter(a => a.status === 'Delivered').length
+    };
+
     const filtered = assignments.filter(a => {
         if (filter === 'Delivered') return a.status === 'Delivered';
-        if (filter === 'Assigned') return a.status === 'Assigned';
+        if (filter === 'Assigned') return a.status === 'Assigned' || a.status === 'Ready';
         if (filter === 'In Transit') return a.status === 'In Transit';
         return true;
     });
 
     return (
-        <>
+        <div className="delivery-dashboard-page">
             <Navbar />
+            
             <div className="delivery-dashboard">
-                <div className="delivery-container">
-                    <header className="delivery-header">
-                        <div className="user-profile">
-                            <Truck size={32} color="var(--primary)" />
-                            <div>
-                                <h1>Delivery Partner</h1>
-                                <p>Express Medical Delivery</p>
+                <main className="delivery-container">
+                    
+                    {/* Hero Profile Header */}
+                    <div className="delivery-header">
+                        <div className="rider-profile">
+                            <div className="rider-avatar">
+                                <Truck size={35} color="#000000" strokeWidth={2.5} />
+                            </div>
+                            <div className="rider-info">
+                                <h1>{userData?.name || 'Delivery Partner'}</h1>
+                                <p>Medical Dispatch Division</p>
                             </div>
                         </div>
-                    </header>
-
-                    <div className="delivery-tabs">
-                        <button className={filter === 'Assigned' ? 'active' : ''} onClick={() => setFilter('Assigned')}>To Pick</button>
-                        <button className={filter === 'In Transit' ? 'active' : ''} onClick={() => setFilter('In Transit')}>In Transit</button>
-                        <button className={filter === 'Delivered' ? 'active' : ''} onClick={() => setFilter('Delivered')}>History</button>
+                        <div className="rider-status">
+                            ON DUTY
+                        </div>
                     </div>
 
-                    <div className="assignment-list">
+                    {/* Quick Stats Grid */}
+                    <div className="stats-row" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+                        <div className="stat-card">
+                            <span className="label">Today Orders</span>
+                            <span className="value">{stats.today}</span>
+                        </div>
+                        <div className="stat-card">
+                            <span className="label">Completed</span>
+                            <span className="value">{stats.completed}</span>
+                        </div>
+                    </div>
+
+                    {/* Segmented Navigation */}
+                    <div className="delivery-tabs">
+                        <button className={filter === 'Assigned' ? 'active' : ''} onClick={() => setFilter('Assigned')}>
+                            <Package size={18} /> To Pick
+                        </button>
+                        <button className={filter === 'In Transit' ? 'active' : ''} onClick={() => setFilter('In Transit')}>
+                            <Clock size={18} /> Active
+                        </button>
+                        <button className={filter === 'Delivered' ? 'active' : ''} onClick={() => setFilter('Delivered')}>
+                            <CheckCircle size={18} /> History
+                        </button>
+                    </div>
+
+                    {/* Orders Feed */}
+                    <div className="assignment-feed">
                         {loading ? (
-                            <div className="loading-state">Loading assignments...</div>
+                            <div className="loading-state">
+                                <div className="spinner"></div>
+                                <p>Syncing your schedule...</p>
+                            </div>
                         ) : filtered.length === 0 ? (
                             <div className="empty-state">
-                                <Package size={48} color="#cbd5e0" />
-                                <p>No orders found in this category.</p>
+                                <Package size={60} strokeWidth={1} />
+                                <h3>All Clear!</h3>
+                                <p>No {filter.toLowerCase()} deliveries right now.</p>
                             </div>
                         ) : (
                             filtered.map(a => (
-                                <div key={a._id} className="assignment-card glassmorphism-modern">
-                                    <div className="card-top">
-                                        <span className="order-id">#{a.orderId?._id?.slice(-6).toUpperCase()}</span>
-                                        <span className={`status-pill ${a.status.toLowerCase().replace(' ', '-')}`}>
+                                <div key={a._id} className="assignment-card">
+                                    <div className="card-header">
+                                        <div className="order-badge">#{a.orderId?._id?.slice(-8).toUpperCase()}</div>
+                                        <div className={`status-indicator ${a.status.toLowerCase().replace(' ', '-')}`}>
+                                            <div className="dot" style={{width:8, height:8, borderRadius:'50%', background:'currentColor'}}></div>
                                             {a.status}
-                                        </span>
-                                    </div>
-
-                                    <div className="customer-info">
-                                        <h3>{a.orderId?.user?.name}</h3>
-                                        <div className="info-row">
-                                            <Phone size={16} />
-                                            <a href={`tel:${a.orderId?.user?.mobile}`}>{a.orderId?.user?.mobile}</a>
-                                        </div>
-                                        <div className="info-row align-start">
-                                            <MapPin size={16} />
-                                            <p>{a.orderId?.shippingAddress?.street}, {a.orderId?.shippingAddress?.city}</p>
                                         </div>
                                     </div>
 
-                                    <div className="transport-chip">
-                                        <div className="chip-item">
-                                            <span className="label">Bus No:</span>
-                                            <span className="value">{a.busId?.busNumber || 'Local'}</span>
+                                    <div className="customer-section">
+                                        <h2 className="customer-name">{a.orderId?.user?.name || 'Valued Customer'}</h2>
+                                        
+                                        <a href={`tel:${a.orderId?.user?.mobile}`} className="phone-strip">
+                                            <Phone size={16} /> 
+                                            {a.orderId?.user?.mobile}
+                                        </a>
+
+                                        <div className="address-box">
+                                            <MapPin size={22} className="text-gray-400" />
+                                            <div>
+                                                <p style={{margin:0, fontWeight:700}}>Destination</p>
+                                                <p style={{margin:0, fontSize:'0.95rem'}}>{a.orderId?.shippingAddress?.street}, {a.orderId?.shippingAddress?.city}</p>
+                                            </div>
                                         </div>
-                                        <div className="chip-item">
-                                            <span className="label">Route:</span>
+                                    </div>
+
+                                    <div className="logistic-details">
+                                        <div className="pill-info">
+                                            <span className="label">Route</span>
                                             <span className="value">{a.routeId?.routeName || 'Direct'}</span>
                                         </div>
+                                        <div className="pill-info">
+                                            <span className="label">Transport</span>
+                                            <span className="value">{a.busId?.busNumber || 'Local'}</span>
+                                        </div>
                                     </div>
 
-                                    <div className="card-actions">
-                                        <button className="btn btn-secondary" onClick={() => openMaps(a.orderId?.shippingAddress)}>
-                                            <Navigation size={18} /> Location
+                                    <div className="action-row">
+                                        <button className="btn-nav" onClick={() => openMaps(a.orderId?.shippingAddress)} title="Navigate">
+                                            <Navigation size={22} />
                                         </button>
 
                                         {a.status === 'Assigned' && (
-                                            <button className="btn btn-primary" onClick={() => updateStatus(a._id, 'In Transit')}>
-                                                Start Delivery
+                                            <button className="btn-main start" onClick={() => updateStatus(a._id, 'In Transit')}>
+                                                Start Delivery <ChevronRight size={20} />
                                             </button>
                                         )}
 
                                         {a.status === 'In Transit' && (
-                                            <button className="btn btn-success" onClick={() => updateStatus(a._id, 'Delivered')}>
-                                                Mark Delivered
+                                            <button className="btn-main finish" onClick={() => updateStatus(a._id, 'Delivered')}>
+                                                Mark Delivered <CheckCircle size={20} />
                                             </button>
                                         )}
                                         
                                         {a.status === 'Delivered' && (
-                                            <button className="btn btn-disabled" disabled>
-                                                <CheckCircle size={18} /> Completed
+                                            <button className="btn-main" disabled style={{background:'#f1f5f9', color:'#94a3b8'}}>
+                                                Delivered Successfully
                                             </button>
                                         )}
                                     </div>
@@ -137,11 +200,13 @@ const DeliveryBoyDashboard = () => {
                             ))
                         )}
                     </div>
-                </div>
+                </main>
             </div>
+            
             <Footer />
-        </>
+        </div>
     );
 };
 
 export default DeliveryBoyDashboard;
+

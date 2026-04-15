@@ -228,6 +228,16 @@ const OrderMedicine = () => {
         }
     };
 
+    const filteredPrescriptions = myPrescriptions.filter(p => {
+        if (p.status !== 'Ordered') return true;
+        // Find if there's a delivered order for this prescription
+        const deliveredOrder = myOrders.find(o => 
+            (typeof o.prescription === 'string' ? o.prescription === p._id : o.prescription?._id === p._id) && 
+            o.status === 'Delivered'
+        );
+        return !deliveredOrder; // Hide if delivered
+    });
+
     return (
         <div className="order-medicine-container">
             <Navbar />
@@ -355,13 +365,13 @@ const OrderMedicine = () => {
                                 
                                 <div className="order-list-premium">
                                     {historyTab === 'prescriptions' ? (
-                                        myPrescriptions.length === 0 ? (
+                                        filteredPrescriptions.length === 0 ? (
                                             <div className="empty-state-cool">
                                                 <FileText size={48} strokeWidth={1} />
                                                 <p>No prescriptions</p>
                                             </div>
                                         ) : (
-                                            myPrescriptions.map(p => (
+                                            filteredPrescriptions.map(p => (
                                                 <div key={p._id} className="order-card-premium">
                                                     <div className="presc-thumb" onClick={() => setImageModalSrc(p.image)} style={{ cursor: 'pointer' }}>
                                                         <img src={p.image} alt="Presc" />

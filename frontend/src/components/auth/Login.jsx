@@ -56,10 +56,15 @@ const Login = () => {
             }
 
             // Redirect based on role or default
+            const roles = data.roles || [];
+            const isDeliveryPartner = roles.some(r => typeof r === 'string' ? r === 'Delivery boy' : r.name === 'Delivery boy');
+
             if (data.isSuperAdmin) {
                 toast.success('Welcome back, Super Admin!');
-                // navigate('/admin/dashboard'); // Future
                 navigate('/admin');
+            } else if (isDeliveryPartner) {
+                toast.success('Rider Dashboard Loaded');
+                navigate('/delivery-boy');
             } else {
                 toast.success('Welcome back!');
                 navigate('/');

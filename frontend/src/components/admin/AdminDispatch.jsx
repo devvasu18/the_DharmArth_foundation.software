@@ -50,17 +50,20 @@ const AdminDispatch = () => {
 
     const fetchDeliveryBoys = async () => {
         try {
-            // Assuming we have an endpoint or role filter to get users with DeliveryBoy role
-            const res = await api.get('/users?role=DeliveryBoy'); // Requires backend logic if exact role search isn't there, or just general users for now.
-            // Actually, we'll just fetch all users and filter locally if role filter not perfect.
-            if(res.data.users) {
-                setDeliveryBoys(res.data.users.filter(u => u.roles && u.roles.some(r => r.name === 'DeliveryBoy' || r.name === 'Delivery Person' || u.isSuperAdmin)));
-            } else {
-                setDeliveryBoys(res.data.filter(u => u.roles?.some(r => r.name === 'DeliveryBoy')));
-            }
+            // Use the staff endpoint since delivery boys are staff members
+            const res = await api.get('/users/staff'); 
+            
+            // Filter locally for delivery-related roles
+            const filtered = res.data.filter(u => u.roles && u.roles.some(r => 
+                r.name === 'DeliveryBoy' || 
+                r.name === 'Delivery boy' || 
+                r.name === 'Delivery Person' ||
+                u.isSuperAdmin
+            ));
+            
+            setDeliveryBoys(filtered);
         } catch (err) {
-            // Fallback for simplicity if specialized fetch fails
-            console.error(err);
+            console.error("Failed to fetch delivery personnel", err);
         }
     };
 
