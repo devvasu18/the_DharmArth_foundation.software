@@ -16,6 +16,7 @@ const DeliveryBoyDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('Assigned'); 
     const [userData, setUserData] = useState(null);
+    const [imageModalSrc, setImageModalSrc] = useState(null);
 
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem('user'));
@@ -173,6 +174,25 @@ const DeliveryBoyDashboard = () => {
                                         </div>
                                     </div>
 
+                                    {/* Vehicle Photo Preview */}
+                                    {(a.busId?.image || a.orderId?.dispatchDetails?.busImage) && (
+                                        <div 
+                                            className="rider-bus-preview"
+                                            onClick={() => setImageModalSrc(a.busId?.image || a.orderId?.dispatchDetails?.busImage)}
+                                        >
+                                            <img 
+                                                src={(a.busId?.image || a.orderId?.dispatchDetails?.busImage).startsWith('http')
+                                                    ? (a.busId?.image || a.orderId?.dispatchDetails?.busImage)
+                                                    : `http://localhost:5000${(a.busId?.image || a.orderId?.dispatchDetails?.busImage).startsWith('/') ? '' : '/'}${(a.busId?.image || a.orderId?.dispatchDetails?.busImage)}`
+                                                } 
+                                                alt="Vehicle" 
+                                            />
+                                            <div className="preview-overlay">
+                                                <span>IDENTITY PHOTO • CLICK TO ZOOM</span>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="action-row">
                                         <button className="btn-nav" onClick={() => openMaps(a.orderId?.shippingAddress)} title="Navigate">
                                             <Navigation size={22} />
@@ -203,6 +223,24 @@ const DeliveryBoyDashboard = () => {
                 </main>
             </div>
             
+            {/* Image Viewer Modal */}
+            {imageModalSrc && (
+                <div className="image-viewer-modal-overlay" onClick={() => setImageModalSrc(null)}>
+                    <div className="image-viewer-modal-card" onClick={(e) => e.stopPropagation()}>
+                        <button className="btn-close-viewer" onClick={() => setImageModalSrc(null)}>
+                            <LogOut size={24} color="white" style={{transform: 'rotate(180deg)'}} />
+                        </button>
+                        <img 
+                            src={imageModalSrc.startsWith('http') 
+                                ? imageModalSrc 
+                                : `http://localhost:5000${imageModalSrc.startsWith('/') ? '' : '/'}${imageModalSrc}`
+                            } 
+                            alt="Full View" 
+                        />
+                    </div>
+                </div>
+            )}
+
             <Footer />
         </div>
     );

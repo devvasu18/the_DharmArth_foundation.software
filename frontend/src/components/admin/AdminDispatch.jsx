@@ -193,6 +193,18 @@ const AdminDispatch = () => {
                                         <option key={b._id} value={b._id}>{b.busNumber} (Driver: {b.mobileNumber})</option>
                                     ))}
                                 </select>
+                                {assignPayload.busId && buses.find(b => b._id === assignPayload.busId)?.image && (
+                                    <div className="bus-preview-select" style={{marginTop: '10px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0'}}>
+                                        <img 
+                                            src={buses.find(b => b._id === assignPayload.busId).image.startsWith('http') 
+                                                ? buses.find(b => b._id === assignPayload.busId).image 
+                                                : `http://localhost:5000${buses.find(b => b._id === assignPayload.busId).image.startsWith('/') ? '' : '/'}${buses.find(b => b._id === assignPayload.busId).image}`
+                                            } 
+                                            alt="Selected Bus" 
+                                            style={{width: '100%', height: '80px', objectFit: 'cover'}} 
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             <div className="assign-form-group">

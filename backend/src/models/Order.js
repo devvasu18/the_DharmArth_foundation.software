@@ -54,10 +54,12 @@ const orderSchema = new mongoose.Schema({
         note: String
     }],
     dispatchDetails: {
+        busId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bus' },
         busNumber: String,
         busName: String,
         conductorNumber: String,
         routeName: String,
+        busImage: String,
         dispatchedAt: Date
     }
 }, {

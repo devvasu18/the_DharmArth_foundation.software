@@ -122,10 +122,12 @@ exports.assignDelivery = async (req, res) => {
             status: 'Out for Delivery',
             $push: { statusHistory: { status: 'Out for Delivery', note: `Assigned to ${bus?.busName || 'Vehicle'} (${bus?.busNumber || 'N/A'})` } },
             dispatchDetails: {
+                busId: bus?._id,
                 busNumber: bus?.busNumber,
                 busName: bus?.busName,
                 conductorNumber: bus?.mobileNumber, // Using mobileNumber as conductorNumber
                 routeName: route?.routeName,
+                busImage: bus?.image,
                 dispatchedAt: Date.now()
             }
         });

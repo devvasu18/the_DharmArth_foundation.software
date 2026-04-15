@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileText, CheckCircle, Clock, AlertCircle, Camera, ShieldCheck, Zap, Truck, ArrowRight, X, Info, MapPin, Plus, Edit2, Phone } from 'lucide-react';
+import { Upload, FileText, CheckCircle, Clock, AlertCircle, Camera, ShieldCheck, Zap, Truck, ArrowRight, X, Info, MapPin, Plus, Edit2, Phone, User } from 'lucide-react';
 import api from '../services/api';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
@@ -70,6 +70,10 @@ const OrderMedicine = () => {
 
     // Image Viewer Modal State
     const [imageModalSrc, setImageModalSrc] = useState(null);
+
+    // Track Order Modal State
+    const [trackModalOpen, setTrackModalOpen] = useState(false);
+    const [selectedTrackOrder, setSelectedTrackOrder] = useState(null);
 
     const [shippingDetails, setShippingDetails] = useState({
         _id: null,
@@ -146,9 +150,9 @@ const OrderMedicine = () => {
 
     const getOrderBadge = (status) => {
         switch (status) {
-            case 'Payment Pending': return <span className="status-badge pending" style={{background: '#fff3cd', color: '#856404'}}>Pending Payment</span>;
-            case 'Processing': return <span className="status-badge review" style={{background: '#d1ecf1', color: '#0c5460'}}>Processing</span>;
-            case 'Out for Delivery': return <span className="status-badge verified" style={{background: '#d4edda', color: '#155724'}}>Out for Delivery</span>;
+            case 'Payment Pending': return <span className="status-badge pending" style={{ background: '#fff3cd', color: '#856404' }}>Pending Payment</span>;
+            case 'Processing': return <span className="status-badge review" style={{ background: '#d1ecf1', color: '#0c5460' }}>Processing</span>;
+            case 'Out for Delivery': return <span className="status-badge verified" style={{ background: '#d4edda', color: '#155724' }}>Out for Delivery</span>;
             case 'Delivered': return <span className="status-badge verified"><CheckCircle size={14} /> Delivered</span>;
             case 'Cancelled': return <span className="status-badge rejected"><X size={14} /> Cancelled</span>;
             default: return <span className="status-badge pending">{status}</span>;
@@ -330,31 +334,31 @@ const OrderMedicine = () => {
                         {/* RIGHT: History */}
                         <div className="history-column">
                             <div className="history-box glass-card">
-                                <div className="card-header" style={{flexDirection: 'column', alignItems: 'flex-start', gap: '15px'}}>
-                                    <div style={{display: 'flex', justifyContent: 'space-between', width: '100%'}}>
+                                <div className="card-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '15px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                                         <h3>Activity Log</h3>
                                         <button className="refresh-btn" onClick={() => { fetchHistory(); fetchOrders(); }}>
                                             <Clock size={16} /> Sync
                                         </button>
                                     </div>
-                                    <div className="tab-switcher" style={{display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '8px', width: '100%'}}>
-                                        <button 
+                                    <div className="tab-switcher" style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '8px', width: '100%' }}>
+                                        <button
                                             className={`tab-btn ${historyTab === 'prescriptions' ? 'active' : ''}`}
                                             onClick={() => setHistoryTab('prescriptions')}
-                                            style={{flex: 1, padding: '8px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: historyTab === 'prescriptions' ? '#fff' : 'transparent', fontWeight: historyTab === 'prescriptions' ? '600' : '400', boxShadow: historyTab === 'prescriptions' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s', outline: 'none'}}
+                                            style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: historyTab === 'prescriptions' ? '#fff' : 'transparent', fontWeight: historyTab === 'prescriptions' ? '600' : '400', boxShadow: historyTab === 'prescriptions' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s', outline: 'none' }}
                                         >
                                             Prescriptions ({filteredPrescriptions.length})
                                         </button>
-                                        <button 
+                                        <button
                                             className={`tab-btn ${historyTab === 'orders' ? 'active' : ''}`}
                                             onClick={() => setHistoryTab('orders')}
-                                            style={{flex: 1, padding: '8px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: historyTab === 'orders' ? '#fff' : 'transparent', fontWeight: historyTab === 'orders' ? '600' : '400', boxShadow: historyTab === 'orders' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s', outline: 'none'}}
+                                            style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: historyTab === 'orders' ? '#fff' : 'transparent', fontWeight: historyTab === 'orders' ? '600' : '400', boxShadow: historyTab === 'orders' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s', outline: 'none' }}
                                         >
                                             Track Orders ({myOrders.length})
                                         </button>
                                     </div>
                                 </div>
-                                
+
                                 <div className="order-list-premium">
                                     {historyTab === 'prescriptions' ? (
                                         filteredPrescriptions.length === 0 ? (
@@ -410,38 +414,30 @@ const OrderMedicine = () => {
                                             </div>
                                         ) : (
                                             myOrders.map(order => (
-                                                <div key={order._id} className="order-card-premium" style={{padding: '15px'}}>
-                                                    <div style={{width: '100%'}}>
-                                                        <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
-                                                            <span style={{fontWeight: '700', color: '#1a202c'}}>Order #{order._id.substring(order._id.length-6).toUpperCase()}</span>
+                                                <div
+                                                    key={order._id}
+                                                    className="order-card-premium"
+                                                    style={{ padding: '15px', cursor: 'pointer' }}
+                                                    onClick={() => {
+                                                        setSelectedTrackOrder(order);
+                                                        setTrackModalOpen(true);
+                                                    }}
+                                                >
+                                                    <div style={{ width: '100%' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                            <span style={{ fontWeight: '700', color: '#1a202c' }}>Order #{order._id.substring(order._id.length - 6).toUpperCase()}</span>
                                                             {getOrderBadge(order.status)}
                                                         </div>
-                                                        <div style={{fontSize: '13px', color: '#4a5568', marginBottom: '10px'}}>
+                                                        <div style={{ fontSize: '13px', color: '#4a5568', marginBottom: '10px' }}>
                                                             {order.items.length} Medicines • ₹{order.totalAmount.toFixed(2)}
                                                         </div>
-                                                        <div style={{background: '#f8fafc', padding: '10px', borderRadius: '6px', fontSize: '12px', color: '#718096'}}>
-                                                            <MapPin size={12} style={{display: 'inline', marginRight: '4px'}}/>
-                                                            Delivering to: {order.shippingAddress?.street}, {order.shippingAddress?.city}
-                                                        </div>
-                                                        {order.dispatchDetails && (
-                                                            <div style={{marginTop: '8px', background: '#eff6ff', padding: '10px', borderRadius: '6px', border: '1px solid #dbeafe'}}>
-                                                                <div style={{display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', color: '#1d4ed8', fontWeight: '600', fontSize: '12px'}}>
-                                                                    <Truck size={14}/> Transport Details
-                                                                </div>
-                                                                <div style={{fontSize: '13px', color: '#1e40af', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px'}}>
-                                                                    <div><span style={{opacity: 0.7, fontSize: '11px', display: 'block'}}>Vehicle Name</span> {order.dispatchDetails.busName || 'Express Bus'}</div>
-                                                                    <div><span style={{opacity: 0.7, fontSize: '11px', display: 'block'}}>Number</span> {order.dispatchDetails.busNumber}</div>
-                                                                    {order.dispatchDetails.conductorNumber && (
-                                                                        <div style={{gridColumn: 'span 2', marginTop: '4px'}}>
-                                                                            <span style={{opacity: 0.7, fontSize: '11px', display: 'block'}}>Conductor Contact</span>
-                                                                            <a href={`tel:${order.dispatchDetails.conductorNumber}`} style={{color: '#1d4ed8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px'}}>
-                                                                                <Phone size={12}/> {order.dispatchDetails.conductorNumber}
-                                                                            </a>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
+                                                        <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px', fontSize: '12px', color: '#718096', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <div>
+                                                                <MapPin size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                                                                {order.shippingAddress?.city}
                                                             </div>
-                                                        )}
+                                                            <span style={{ color: '#3182ce', fontWeight: 'bold' }}>View Details →</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))
@@ -563,10 +559,10 @@ const OrderMedicine = () => {
                                                 <input type="text" required value={shippingDetails.state} onChange={e => setShippingDetails({ ...shippingDetails, state: e.target.value })} placeholder="State" />
                                             </div>
                                             <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', justifyContent: 'flex-start' }} onClick={() => setIsOrderingForSomeoneElse(!isOrderingForSomeoneElse)}>
-                                                <input 
-                                                    type="checkbox" 
-                                                    id="someone-else" 
-                                                    checked={isOrderingForSomeoneElse} 
+                                                <input
+                                                    type="checkbox"
+                                                    id="someone-else"
+                                                    checked={isOrderingForSomeoneElse}
                                                     onChange={e => {
                                                         e.stopPropagation();
                                                         setIsOrderingForSomeoneElse(e.target.checked);
@@ -624,6 +620,199 @@ const OrderMedicine = () => {
                 </div>
             )}
 
+            {/* Track Order Detail Modal */}
+            {trackModalOpen && selectedTrackOrder && (
+                <div className="order-modal-overlay">
+                    <div className="premium-modal">
+                        <div className="modal-header-gradient">
+                            <div className="header-text">
+                                <div className="order-badge">Order ID: #{selectedTrackOrder._id.substring(selectedTrackOrder._id.length - 8).toUpperCase()}</div>
+                                <h2>Order Tracker</h2>
+                            </div>
+                            <button className="close-btn-light" onClick={() => setTrackModalOpen(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="modal-body-premium">
+                            {/* Progress Bar */}
+                            <div className="status-progress-bar">
+                                {['Pending', 'Processing', 'Shipping', 'Delivered'].map((step, idx) => {
+                                    const statuses = {
+                                        'Pending': ['Payment Pending', 'Awaiting Approval'],
+                                        'Processing': ['Processing'],
+                                        'Shipping': ['Out for Delivery'],
+                                        'Delivered': ['Delivered']
+                                    };
+
+                                    const currentStatus = selectedTrackOrder.status;
+                                    const stepIndex = ['Pending', 'Processing', 'Shipping', 'Delivered'].indexOf(step);
+
+                                    let isActive = false;
+                                    // Logic to determine if step is reached
+                                    if (currentStatus === 'Delivered') isActive = true;
+                                    else if (currentStatus === 'Out for Delivery' && step !== 'Delivered') isActive = true;
+                                    else if (currentStatus === 'Processing' && (step === 'Pending' || step === 'Processing')) isActive = true;
+                                    else if (statuses[step].includes(currentStatus)) isActive = true;
+
+                                    return (
+                                        <div key={step} className={`progress-step ${isActive ? 'active' : ''}`}>
+                                            <div className="step-point"></div>
+                                            <span>{step}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="premium-grid">
+                                {/* Left: Info Panes */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                    <div className="customer-info-pane">
+                                        <div className="pane-header">
+                                            <div className="icon-circle"><User size={18} /></div>
+                                            <h3>Delivery Information</h3>
+                                        </div>
+                                        <div className="pane-content">
+                                            <div className="data-row">
+                                                <span className="data-label">Receiver Name</span>
+                                                <span className="data-value">{selectedTrackOrder.user?.name}</span>
+                                            </div>
+                                            <div className="data-row">
+                                                <span className="data-label">Contact Number</span>
+                                                <span className="data-value">{selectedTrackOrder.shippingAddress?.phone}</span>
+                                            </div>
+                                            <div className="data-row">
+                                                <span className="data-label">Shipping Address</span>
+                                                <span className="data-value address">
+                                                    {selectedTrackOrder.shippingAddress?.street},<br />
+                                                    {selectedTrackOrder.shippingAddress?.city}, {selectedTrackOrder.shippingAddress?.zip}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {selectedTrackOrder.dispatchDetails && (
+                                        <div className="customer-info-pane" style={{ borderColor: '#3b82f6', background: '#eff6ff' }}>
+                                            <div className="pane-header" style={{ background: '#dbeafe', borderBottomColor: '#bfdbfe' }}>
+                                                <div className="icon-circle" style={{ background: '#3b82f6', color: 'white' }}><Truck size={18} /></div>
+                                                <h3>Dispatch & Logistics</h3>
+                                            </div>
+                                            <div className="pane-content">
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                                    <div className="data-row">
+                                                        <span className="data-label" style={{ color: '#3b82f6' }}>Vehicle Name</span>
+                                                        <span className="data-value" style={{ color: '#1d4ed8' }}>{selectedTrackOrder.dispatchDetails.busName || 'Express Bus'}</span>
+                                                    </div>
+                                                    <div className="data-row">
+                                                        <span className="data-label" style={{ color: '#3b82f6' }}>Bus Number</span>
+                                                        <span className="data-value" style={{ color: '#1d4ed8' }}>{selectedTrackOrder.dispatchDetails.busNumber}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="data-row">
+                                                    <span className="data-label" style={{ color: '#3b82f6' }}>Conductor Contact</span>
+                                                    <a href={`tel:${selectedTrackOrder.dispatchDetails.conductorNumber}`} className="data-value" style={{ color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+                                                        <Phone size={16} /> {selectedTrackOrder.dispatchDetails.conductorNumber}
+                                                    </a>
+                                                </div>
+                                                {/* Fetch live image from the Bus document via populated busId */}
+                                                <div className="data-row" style={{ marginTop: '10px' }}>
+                                                    <span className="data-label" style={{ color: '#3b82f6' }}>Vehicle Photo</span>
+                                                    <div
+                                                        className="bus-image-preview"
+                                                        style={{
+                                                            marginTop: '8px',
+                                                            borderRadius: '12px',
+                                                            overflow: 'hidden',
+                                                            cursor: 'pointer',
+                                                            border: '2px solid white',
+                                                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
+                                                            background: '#f1f5f9'
+                                                        }}
+                                                        onClick={() => {
+                                                            const finalImg = selectedTrackOrder.dispatchDetails.busId?.image || selectedTrackOrder.dispatchDetails.busImage;
+                                                            if (finalImg) setImageModalSrc(finalImg);
+                                                        }}
+                                                    >
+                                                        {(() => {
+                                                            const liveImage = selectedTrackOrder.dispatchDetails.busId?.image;
+                                                            const snapshotImage = selectedTrackOrder.dispatchDetails.busImage;
+                                                            const finalImage = liveImage || snapshotImage;
+
+                                                            if (!finalImage) return <div style={{padding: '20px', textAlign: 'center', fontSize: '11px', color: '#94a3b8'}}>No Photo Available</div>;
+
+                                                            const resolvedUrl = finalImage.startsWith('http')
+                                                                ? finalImage
+                                                                : `http://localhost:5000${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
+
+                                                            return (
+                                                                <img
+                                                                    src={resolvedUrl}
+                                                                    alt="Bus"
+                                                                    style={{ width: '100%', height: '120px', objectFit: 'cover' }}
+                                                                />
+                                                            );
+                                                        })()}
+                                                        <div style={{ background: 'rgba(0,0,0,0.5)', color: 'white', padding: '4px', textAlign: 'center', fontSize: '10px', fontWeight: 'bold' }}>
+                                                            CLICK TO ZOOM
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Right: Items Pane */}
+                                <div className="items-info-pane">
+                                    <div className="pane-header">
+                                        <div className="icon-circle"><CheckCircle size={18} /></div>
+                                        <h3>Medicines Packet</h3>
+                                    </div>
+                                    <div className="premium-medicine-list">
+                                        {selectedTrackOrder.items.map((item, idx) => (
+                                            <div key={idx} className="premium-med-card">
+                                                <div className="med-main">
+                                                    <div className="med-info">
+                                                        <span className="name">{item.name}</span>
+                                                        <span className="meta">Qty: {item.quantity} units</span>
+                                                    </div>
+                                                    <div className="med-price-total">₹{item.price?.toFixed(2)}</div>
+                                                </div>
+                                                {(item.frequency || item.time || item.foodRelation) && (
+                                                    <div className="dosage-strip">
+                                                        <Clock size={12} />
+                                                        <span>{item.frequency}</span>
+                                                        <span className="dot">•</span>
+                                                        <span>{item.time}</span>
+                                                        <span className="dot">•</span>
+                                                        <span>{item.foodRelation}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+
+                                        <div className="modal-summary-footer" style={{ marginTop: '10px' }}>
+                                            <div className="summary-details">
+                                                <div className="summary-row">
+                                                    <span>Order Total</span>
+                                                    <span>₹{selectedTrackOrder.totalAmount.toFixed(2)}</span>
+                                                </div>
+                                                <div className="summary-row grand-total">
+                                                    <span>Total Paid</span>
+                                                    <span>₹{selectedTrackOrder.totalAmount.toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            )}
+
             {/* Image Viewer Modal */}
             {imageModalSrc && (
                 <div className="image-viewer-modal-overlay" onClick={() => setImageModalSrc(null)}>
@@ -631,7 +820,13 @@ const OrderMedicine = () => {
                         <button className="btn-close-viewer" onClick={() => setImageModalSrc(null)}>
                             <X size={24} color="white" />
                         </button>
-                        <img src={imageModalSrc} alt="Full Prescription View" />
+                        <img
+                            src={imageModalSrc.startsWith('http')
+                                ? imageModalSrc
+                                : `http://localhost:5000${imageModalSrc.startsWith('/') ? '' : '/'}${imageModalSrc}`
+                            }
+                            alt="Full View"
+                        />
                     </div>
                 </div>
             )}

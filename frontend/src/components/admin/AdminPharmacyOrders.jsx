@@ -25,6 +25,7 @@ const AdminPharmacyOrders = () => {
     const [statusFilter, setStatusFilter] = useState('All');
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [imageModalSrc, setImageModalSrc] = useState(null);
     const { showAlert } = useConfirm();
 
     useEffect(() => {
@@ -155,7 +156,7 @@ const AdminPharmacyOrders = () => {
                                         <td>
                                             <div className="items-cell">
                                                 <span className="count">{order.items.length} Items</span>
-                                                <span className="preview">{order.items[0]?.medicineName}{order.items.length > 1 ? '...' : ''}</span>
+                                                <span className="preview">{order.items[0]?.name || order.items[0]?.medicineName}{order.items.length > 1 ? '...' : ''}</span>
                                             </div>
                                         </td>
                                         <td>
@@ -235,29 +236,96 @@ const AdminPharmacyOrders = () => {
                             </div>
 
                             <div className="premium-grid">
-                                <section className="customer-info-pane">
-                                    <div className="pane-header">
-                                        <div className="icon-circle"><CreditCard size={18}/></div>
-                                        <h3>Customer Details</h3>
-                                    </div>
-                                    <div className="pane-content">
-                                        <div className="data-row">
-                                            <span className="data-label">Full Name</span>
-                                            <span className="data-value">{selectedOrder.user?.name}</span>
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
+                                    <section className="customer-info-pane">
+                                        <div className="pane-header">
+                                            <div className="icon-circle"><CreditCard size={18}/></div>
+                                            <h3>Customer Details</h3>
                                         </div>
-                                        <div className="data-row">
-                                            <span className="data-label">Phone Number</span>
-                                            <span className="data-value">{selectedOrder.user?.mobile}</span>
+                                        <div className="pane-content">
+                                            <div className="data-row">
+                                                <span className="data-label">Full Name</span>
+                                                <span className="data-value">{selectedOrder.user?.name}</span>
+                                            </div>
+                                            <div className="data-row">
+                                                <span className="data-label">Phone Number</span>
+                                                <span className="data-value">{selectedOrder.user?.mobile}</span>
+                                            </div>
+                                            <div className="data-row">
+                                                <span className="data-label">Shipping Address</span>
+                                                <span className="data-value address">
+                                                    {selectedOrder.shippingAddress?.street},<br/>
+                                                    {selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state} - {selectedOrder.shippingAddress?.zip}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="data-row">
-                                            <span className="data-label">Shipping Address</span>
-                                            <span className="data-value address">
-                                                {selectedOrder.shippingAddress?.street},<br/>
-                                                {selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state} - {selectedOrder.shippingAddress?.zip}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </section>
+                                    </section>
+
+                                    {selectedOrder.dispatchDetails && (
+                                        <section className="customer-info-pane" style={{borderColor: '#3b82f6', background: '#eff6ff'}}>
+                                            <div className="pane-header" style={{background: '#dbeafe', borderBottomColor: '#bfdbfe'}}>
+                                                <div className="icon-circle" style={{background: '#3b82f6', color: 'white'}}><Truck size={18}/></div>
+                                                <h3>Logistics & Dispatch</h3>
+                                            </div>
+                                            <div className="pane-content">
+                                                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px'}}>
+                                                    <div className="data-row">
+                                                        <span className="data-label" style={{color: '#3b82f6'}}>Vehicle</span>
+                                                        <span className="data-value" style={{color: '#1d4ed8'}}>{selectedOrder.dispatchDetails.busName || 'Express'}</span>
+                                                    </div>
+                                                    <div className="data-row">
+                                                        <span className="data-label" style={{color: '#3b82f6'}}>Bus No.</span>
+                                                        <span className="data-value" style={{color: '#1d4ed8'}}>{selectedOrder.dispatchDetails.busNumber}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="data-row">
+                                                    <span className="data-label" style={{color: '#3b82f6'}}>Conductor Contact</span>
+                                                    <span className="data-value" style={{color: '#1d4ed8'}}>{selectedOrder.dispatchDetails.conductorNumber}</span>
+                                                </div>
+                                                <div className="data-row" style={{marginTop: '10px'}}>
+                                                    <span className="data-label" style={{color: '#3b82f6'}}>Vehicle Photo</span>
+                                                    <div 
+                                                        className="bus-image-preview" 
+                                                        style={{
+                                                            marginTop: '8px', 
+                                                            borderRadius: '12px', 
+                                                            overflow: 'hidden', 
+                                                            border: '2px solid white',
+                                                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
+                                                            background: '#f1f5f9',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                        onClick={() => {
+                                                            const finalImg = selectedOrder.dispatchDetails.busId?.image || selectedOrder.dispatchDetails.busImage;
+                                                            if (finalImg) setImageModalSrc(finalImg);
+                                                        }}
+                                                    >
+                                                        {(() => {
+                                                            const liveImage = selectedOrder.dispatchDetails.busId?.image;
+                                                            const snapshotImage = selectedOrder.dispatchDetails.busImage;
+                                                            const finalImage = liveImage || snapshotImage;
+
+                                                            if (!finalImage) return <div style={{padding: '20px', textAlign: 'center', fontSize: '11px', color: '#94a3b8'}}>No Photo Available</div>;
+
+                                                            const resolvedUrl = finalImage.startsWith('http') 
+                                                                ? finalImage 
+                                                                : `http://localhost:5000${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
+
+                                                            return (
+                                                                <img 
+                                                                    src={resolvedUrl} 
+                                                                    alt="Bus" 
+                                                                    style={{width: '100%', height: '110px', objectFit: 'cover'}} 
+                                                                />
+                                                            );
+                                                        })()}
+                                                        <div className="zoom-hint">CLICK TO ZOOM</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+                                    )}
+                                </div>
 
                                 <section className="items-info-pane">
                                     <div className="pane-header">
@@ -269,7 +337,7 @@ const AdminPharmacyOrders = () => {
                                             <div key={idx} className="premium-med-card">
                                                 <div className="med-main">
                                                     <div className="med-info">
-                                                        <span className="name">{item.medicineName}</span>
+                                                        <span className="name">{item.name || item.medicineName}</span>
                                                         <span className="meta">Qty: {item.quantity || 1} • Unit Price: ₹{Number(item.price || 0).toFixed(2)}</span>
                                                     </div>
                                                     <div className="med-price-total">₹{(Number(item.price || 0) * (item.quantity || 1)).toFixed(2)}</div>
@@ -319,6 +387,23 @@ const AdminPharmacyOrders = () => {
                                 </button>
                             )}
                         </div>
+                    </div>
+                </div>
+            )}
+            {/* Image Viewer Modal */}
+            {imageModalSrc && (
+                <div className="image-viewer-modal-overlay" onClick={() => setImageModalSrc(null)}>
+                    <div className="image-viewer-modal-card" onClick={(e) => e.stopPropagation()}>
+                        <button className="btn-close-viewer" onClick={() => setImageModalSrc(null)}>
+                            <X size={24} color="white" />
+                        </button>
+                        <img 
+                            src={imageModalSrc.startsWith('http') 
+                                ? imageModalSrc 
+                                : `http://localhost:5000${imageModalSrc.startsWith('/') ? '' : '/'}${imageModalSrc}`
+                            } 
+                            alt="Full View" 
+                        />
                     </div>
                 </div>
             )}
