@@ -40,6 +40,7 @@ import AdminDelivery from './components/admin/AdminDelivery';
 import AdminDispatch from './components/admin/AdminDispatch';
 import AdminPharmacyOrders from './components/admin/AdminPharmacyOrders';
 import DeliveryBoyDashboard from './pages/DeliveryBoyDashboard';
+import SharedCheckout from './pages/SharedCheckout';
 
 import { ConfirmProvider } from './context/ConfirmContext';
 
@@ -64,6 +65,7 @@ function App() {
           <Route path="/doctors" element={<DoctorAvailability />} />
           <Route path="/order-medicine" element={<OrderMedicine />} />
           <Route path="/delivery-boy" element={<DeliveryBoyDashboard />} />
+          <Route path="/checkout/:id" element={<SharedCheckout />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>

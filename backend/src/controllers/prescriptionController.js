@@ -118,9 +118,8 @@ exports.approveAndCreateOrder = async (req, res) => {
             return res.status(400).json({ message: 'Invalid or unverified prescription' });
         }
 
-        if (prescription.user.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: 'Not authorized' });
-        }
+        // For shareable links, we allow skip of ownership check if the prescription is verified.
+        // If req.user is missing, it's a guest payment for someone else.
 
         // Filter out unavailable items
         const availableItems = prescription.verifiedItems.filter(item => item.isAvailable);
@@ -143,8 +142,10 @@ exports.approveAndCreateOrder = async (req, res) => {
             };
         });
 
+        // The order should always be associated with the prescription owner, 
+        // even if someone else pays for it.
         const order = await Order.create({
-            user: req.user._id,
+            user: prescription.user, 
             prescription: prescription._id,
             items: orderItems,
             totalAmount,
@@ -201,6 +202,28 @@ exports.approveAndCreateOrder = async (req, res) => {
         // -------------------------------------------------------------
 
         res.status(201).json(order);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+// @desc    Get public prescription for checkout
+// @route   GET /api/prescriptions/:id/public
+// @access  Public
+exports.getPublicPrescription = async (req, res) => {
+    try {
+        const prescription = await Prescription.findById(req.params.id)
+            .populate('user', 'name mobile savedAddresses');
+        
+        if (!prescription) {
+            return res.status(404).json({ message: 'Prescription not found' });
+        }
+
+        // Only allow viewing if it is Verified or Ordered
+        if (prescription.status !== 'Verified' && prescription.status !== 'Ordered') {
+            return res.status(403).json({ message: 'This prescription is not available for public viewing' });
+        }
+
+        res.json(prescription);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -5,7 +5,8 @@ const {
     getMyPrescriptions, 
     getAllPrescriptions, 
     verifyPrescription, 
-    approveAndCreateOrder 
+    approveAndCreateOrder,
+    getPublicPrescription 
 } = require('../controllers/prescriptionController');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 const { upload } = require('../config/cloudinary');
@@ -34,6 +35,10 @@ router.patch('/:id/verify',
     validate,
     verifyPrescription
 );
-router.post('/:id/approve', protect, approveAndCreateOrder);
+router.get('/:id/public', getPublicPrescription);
+router.post('/:id/approve', (req, res, next) => {
+    // Optional protection: if session exists, great. If not, we still allow for shareable links.
+    next();
+}, approveAndCreateOrder);
 
 module.exports = router;

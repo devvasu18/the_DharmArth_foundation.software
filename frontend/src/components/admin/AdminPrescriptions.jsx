@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { Check, X, Eye, Package, Truck, Search, User, Phone, Calendar, AlertCircle, Trash2, Plus, Edit2, Lock } from 'lucide-react';
+import { Check, X, Eye, Package, Truck, Search, User, Phone, Calendar, AlertCircle, Trash2, Plus, Edit2, Lock, Share2 } from 'lucide-react';
 import { useConfirm } from '../../context/ConfirmContext';
 import './AdminPrescriptions.css';
 
@@ -14,6 +14,12 @@ const AdminPrescriptions = () => {
     const [imageModalSrc, setImageModalSrc] = useState(null);
     const [verifiedItems, setVerifiedItems] = useState([{ medicineName: '', frequency: '', time: '', foodRelation: '', intakeMethod: '', quantity: 1, price: '' }]);
     const [errors, setErrors] = useState([]);
+
+    const handleCopyLink = (prescriptionId) => {
+        const url = `${window.location.origin}/checkout/${prescriptionId}`;
+        navigator.clipboard.writeText(url);
+        showAlert('success', 'Link Copied', 'The shareable checkout link has been copied to your clipboard.');
+    };
 
     useEffect(() => {
         fetchPrescriptions();
@@ -146,7 +152,19 @@ const AdminPrescriptions = () => {
                                             {p.status}
                                         </div>
                                     </div>
-                                    <Eye size={16} className="hov-icon" />
+                                    <div className="action-buttons">
+                                        <button className="btn-icon view" onClick={() => setSelected(p)}><Eye size={18} /></button>
+                                        {p.status === 'Verified' && (
+                                            <button 
+                                                className="btn-icon share" 
+                                                onClick={(e) => { e.stopPropagation(); handleCopyLink(p._id); }}
+                                                title="Copy Payment Link"
+                                                style={{ color: '#10b981' }}
+                                            >
+                                                <Share2 size={18} />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             ))
                         )}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileText, CheckCircle, Clock, AlertCircle, Camera, ShieldCheck, Zap, Truck, ArrowRight, X, Info, MapPin, Plus, Edit2, Phone, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Upload, FileText, CheckCircle, Clock, AlertCircle, Camera, ShieldCheck, Zap, Truck, ArrowRight, X, Info, MapPin, Plus, Edit2, Phone, User, Share2 } from 'lucide-react';
 import api from '../services/api';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
@@ -51,6 +52,7 @@ const VerifiedItemRow = ({ item }) => {
 };
 
 const OrderMedicine = () => {
+    const navigate = useNavigate();
     const { showAlert } = useConfirm();
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
@@ -142,10 +144,16 @@ const OrderMedicine = () => {
             setTimeout(() => setSuccess(false), 5000);
             fetchHistory();
         } catch (err) {
-            setError(err.response?.data?.message || 'Upload failed. Please try again.');
+            setError(err.response?.data?.message || 'Upload failed');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleCopyLink = (prescriptionId) => {
+        const url = `${window.location.origin}/checkout/${prescriptionId}`;
+        navigator.clipboard.writeText(url);
+        showAlert('success', 'Link Copied', 'Shareable checkout link copied! Send this to anyone to pay for your medicines.');
     };
 
     const getOrderBadge = (status) => {
@@ -379,12 +387,23 @@ const OrderMedicine = () => {
                                                         </div>
                                                         <div className="meta-footer">
                                                             {p.status === 'Verified' ? (
-                                                                <button
-                                                                    className="btn-action-primary"
-                                                                    onClick={() => openCheckoutModal(p)}
-                                                                >
-                                                                    Review & Checkout
-                                                                </button>
+                                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                                    <button
+                                                                        className="btn-action-primary"
+                                                                        onClick={() => navigate(`/checkout/${p._id}`)}
+                                                                        style={{ flex: 1 }}
+                                                                    >
+                                                                        Review & Checkout
+                                                                    </button>
+                                                                    <button 
+                                                                        className="btn-action-secondary"
+                                                                        onClick={() => handleCopyLink(p._id)}
+                                                                        title="Share Payment Link"
+                                                                        style={{ width: '40px', padding: '0', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                                    >
+                                                                        <Share2 size={16} />
+                                                                    </button>
+                                                                </div>
                                                             ) : p.status === 'Ordered' ? (
                                                                 <button
                                                                     className="btn-action-secondary"
