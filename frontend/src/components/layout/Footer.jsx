@@ -3,8 +3,29 @@ import { useTranslation } from 'react-i18next';
 import { Facebook, Twitter, Linkedin, Youtube, Instagram, Phone, Mail } from 'lucide-react';
 import './Footer.css';
 
-const Footer = () => {
+const Footer = ({ variant = 'default' }) => {
     const { t } = useTranslation();
+
+    if (variant === 'small') {
+        return (
+            <footer className="footer footer-small">
+                <div className="container">
+                    <div className="footer-small-content">
+                        <div className="footer-brand">
+                            <h2>Dharmarth</h2>
+                            <p>© {new Date().getFullYear()} The Dharmarth Foundation. All Rights Reserved.</p>
+                        </div>
+                        <div className="footer-small-links">
+                            <a href="#">Privacy Policy</a>
+                            <a href="#">Terms of Use</a>
+                            <a href="#">Contact Support</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        );
+    }
+
     return (
         <footer className="footer">
             <div className="container">

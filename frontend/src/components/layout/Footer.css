@@ -128,3 +128,4 @@
         text-align: center;
     }
 }
+.footer-small { padding: 20px 0; margin-top: auto; } .footer-small-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; } .footer-small-content .footer-brand h2 { margin-bottom: 5px; } .footer-small-content .footer-brand p { color: #94a3b8; font-size: 0.85rem; } .footer-small-links { display: flex; gap: 30px; } .footer-small-links a { color: #cbd5e1; text-decoration: none; font-size: 0.9rem; transition: color 0.2s; } .footer-small-links a:hover { color: white; } @media (max-width: 768px) { .footer-small-content { flex-direction: column; text-align: center; } .footer-small-links { justify-content: center; gap: 15px; } }
