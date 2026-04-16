@@ -11,6 +11,7 @@ const AdminDelivery = () => {
     const [buses, setBuses] = useState([]);
     const [newBus, setNewBus] = useState({ 
         busNumber: '', 
+        busName: '',
         mobileNumber: '', 
         comment: '', 
         image: '',
@@ -21,6 +22,7 @@ const AdminDelivery = () => {
     const [viewMode, setViewMode] = useState('empty');
     const [showBusForm, setShowBusForm] = useState(false);
     const [editRouteId, setEditRouteId] = useState(null);
+    const [editBusId, setEditBusId] = useState(null);
 
     // Custom Modal State
     const [modal, setModal] = useState({
@@ -147,6 +149,7 @@ const AdminDelivery = () => {
             setShowBusForm(res.data.length === 0);
             setNewBus({
                 busNumber: '', 
+                busName: '',
                 mobileNumber: '', 
                 comment: '', 
                 image: '',
@@ -195,15 +198,49 @@ const AdminDelivery = () => {
         setNewBus({ ...newBus, stopTimings: updatedTimings });
     };
 
+    const handleEditBus = (bus) => {
+        setEditBusId(bus._id);
+        setNewBus({
+            busNumber: bus.busNumber,
+            busName: bus.busName || '',
+            mobileNumber: bus.mobileNumber || '',
+            comment: bus.comment || '',
+            image: bus.image || '',
+            stopTimings: bus.stopTimings
+        });
+        setShowBusForm(true);
+        // Scroll to form
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleDeleteBus = (e, busId) => {
+        e.stopPropagation();
+        triggerModal('confirm', 'Remove Vehicle?', 'This will permanently remove this vehicle from the route fleet. Active assignments may prevent deletion.', async () => {
+            try {
+                await api.delete(`/delivery/buses/${busId}`);
+                fetchBuses(selectedRoute._id);
+                triggerModal('success', 'Vehicle Removed', 'The fleet has been updated.');
+            } catch (err) {
+                triggerModal('error', 'Removal Failed', err.response?.data?.message || 'Could not remove vehicle.');
+            }
+        });
+    };
+
     const handleAddBus = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/delivery/buses', { ...newBus, routeId: selectedRoute._id });
+            if (editBusId) {
+                await api.put(`/delivery/buses/${editBusId}`, { ...newBus, routeId: selectedRoute._id });
+                triggerModal('success', 'Update Successful', 'Vehicle deployment parameters have been updated.');
+            } else {
+                await api.post('/delivery/buses', { ...newBus, routeId: selectedRoute._id });
+                triggerModal('success', 'Fleet Expanded', 'Your vehicle has been successfully deployed and scheduled.');
+            }
             setShowBusForm(false);
+            setEditBusId(null);
             fetchBuses(selectedRoute._id);
-            triggerModal('success', 'Fleet Expanded', 'Your vehicle has been successfully deployed and scheduled.');
         } catch (err) {
-            triggerModal('error', 'Deployment Failed', 'There was a critical error while updating the route fleet.');
+            triggerModal('error', 'Action Failed', err.response?.data?.message || 'Could not process vehicle operation.');
         }
     };
 
@@ -374,7 +411,10 @@ const AdminDelivery = () => {
                                 <div className="fleet-header-row">
                                     <h3>Scheduled Fleet</h3>
                                     {!showBusForm && (
-                                        <button className="btn-add-fleet-trigger" onClick={() => setShowBusForm(true)}>
+                                        <button className="btn-add-fleet-trigger" onClick={() => {
+                                            setEditBusId(null);
+                                            setShowBusForm(true);
+                                        }}>
                                             <Plus size={16} /> Deploy New Vehicle
                                         </button>
                                     )}
@@ -382,9 +422,19 @@ const AdminDelivery = () => {
 
                                 {showBusForm && (
                                     <div className="fleet-form-card">
-                                        <h4>Vehicle Deployment Parameters</h4>
+                                        <h4>{editBusId ? `Edit Deployment: ${newBus.busName || newBus.busNumber}` : 'Vehicle Deployment Parameters'}</h4>
                                         <form onSubmit={handleAddBus} className="fleet-form-w">
                                             <div className="f-row">
+                                                <div className="f-group">
+                                                    <label>Vehicle Name (e.g. Sujangarh Exp)</label>
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="Sujangarh Express" 
+                                                        value={newBus.busName} 
+                                                        onChange={e => setNewBus({...newBus, busName: e.target.value})} 
+                                                        required 
+                                                    />
+                                                </div>
                                                 <div className="f-group">
                                                     <label>Bus / Van No.</label>
                                                     <input 
@@ -505,8 +555,8 @@ const AdminDelivery = () => {
                                             </div>
 
                                             <div className="f-actions">
-                                                <button type="button" className="btn-sec" onClick={() => setShowBusForm(false)}>Discard</button>
-                                                <button type="submit" className="btn-pri">Confirm Deployment</button>
+                                                <button type="button" className="btn-sec" onClick={() => { setShowBusForm(false); setEditBusId(null); }}>Discard</button>
+                                                <button type="submit" className="btn-pri">{editBusId ? 'Update Parameters' : 'Confirm Deployment'}</button>
                                             </div>
                                         </form>
                                     </div>
@@ -518,8 +568,17 @@ const AdminDelivery = () => {
                                             <div className="v-top">
                                                 {b.image ? <img src={b.image} alt="Bus" /> : <div className="v-ph">🚌</div>}
                                                 <div className="v-info">
+                                                    <span className="v-name" style={{fontWeight: 800, fontSize: '1.1rem', color: '#1e293b', display: 'block'}}>{b.busName || 'Express Vehicle'}</span>
                                                     <span className="v-no">{b.busNumber}</span>
                                                     <span className="v-ph-no">{b.mobileNumber}</span>
+                                                </div>
+                                                <div className="v-card-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+                                                    <button className="nav-btn edit" onClick={() => handleEditBus(b)} title="Edit Vehicle">
+                                                        <Edit2 size={14} />
+                                                    </button>
+                                                    <button className="nav-btn delete" onClick={(e) => handleDeleteBus(e, b._id)} title="Delete Vehicle">
+                                                        <Trash2 size={14} />
+                                                    </button>
                                                 </div>
                                             </div>
                                             <div className="v-sched">

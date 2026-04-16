@@ -250,7 +250,7 @@ const OrderMedicine = () => {
                 {/* Hero Header */}
                 <section className="hero-head">
                     <div className="container">
-                        <div className="badge-pill">Express Pharmacy Service</div>
+
                         <h1>Order Medicines with Ease</h1>
                         <p>Our pharmacists bridge the gap between your prescription and doorstep. Fast, secure, and reliable delivery via our dedicated transport network.</p>
                     </div>
@@ -395,7 +395,7 @@ const OrderMedicine = () => {
                                                                     >
                                                                         Review & Checkout
                                                                     </button>
-                                                                    <button 
+                                                                    <button
                                                                         className="btn-action-secondary"
                                                                         onClick={() => handleCopyLink(p._id)}
                                                                         title="Share Payment Link"
@@ -645,8 +645,20 @@ const OrderMedicine = () => {
                     <div className="premium-modal">
                         <div className="modal-header-gradient">
                             <div className="header-text">
-                                <div className="order-badge">Order ID: #{selectedTrackOrder._id.substring(selectedTrackOrder._id.length - 8).toUpperCase()}</div>
-                                <h2>Order Tracker</h2>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div className="order-badge color-white">ORDER ID: #{selectedTrackOrder._id.substring(selectedTrackOrder._id.length - 8).toUpperCase()}</div>
+                                    <button
+                                        onClick={() => {
+                                            const url = `${window.location.origin}/track/${selectedTrackOrder._id}`;
+                                            navigator.clipboard.writeText(url);
+                                            toast.success('Tracking link copied!');
+                                        }}
+                                        style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '6px', color: '#cbd5e1', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                                    >
+                                        <Share2 size={12} /> Copy Link
+                                    </button>
+                                </div>
+                                <h2 style={{ margin: 0, fontSize: '20px' }}>Order Tracker</h2>
                             </div>
                             <button className="close-btn-light" onClick={() => setTrackModalOpen(false)}>
                                 <X size={20} />
@@ -688,14 +700,15 @@ const OrderMedicine = () => {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                     <div className="customer-info-pane">
                                         <div className="pane-header">
-                                            <div className="icon-circle"><User size={18} /></div>
-                                            <h3>Delivery Information</h3>
+                                            <div className="icon-circle"><MapPin size={18} /></div>
+                                            <h3>Your Pickup Station</h3>
                                         </div>
                                         <div className="pane-content">
-                                            <div className="data-row">
-                                                <span className="data-label">Receiver Name</span>
-                                                <span className="data-value">{selectedTrackOrder.user?.name}</span>
+                                            <div className="pill-info">
+                                                <span className="label">Vehicle</span>
+                                                <span className="value">{selectedTrackOrder.dispatchDetails?.vehicleName || selectedTrackOrder.dispatchDetails?.busId?.busName || 'Express'} ({selectedTrackOrder.dispatchDetails?.busId?.busNumber || 'N/A'})</span>
                                             </div>
+
                                             <div className="data-row">
                                                 <span className="data-label">Contact Number</span>
                                                 <span className="data-value">{selectedTrackOrder.shippingAddress?.phone}</span>
@@ -720,11 +733,21 @@ const OrderMedicine = () => {
                                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                                                     <div className="data-row">
                                                         <span className="data-label" style={{ color: '#3b82f6' }}>Vehicle Name</span>
-                                                        <span className="data-value" style={{ color: '#1d4ed8' }}>{selectedTrackOrder.dispatchDetails.busName || 'Express Bus'}</span>
+                                                        <span className="data-value" style={{ color: '#1d4ed8' }}>{selectedTrackOrder.dispatchDetails.vehicleName || selectedTrackOrder.dispatchDetails.busName || 'Express Bus'}</span>
                                                     </div>
                                                     <div className="data-row">
                                                         <span className="data-label" style={{ color: '#3b82f6' }}>Bus Number</span>
                                                         <span className="data-value" style={{ color: '#1d4ed8' }}>{selectedTrackOrder.dispatchDetails.busNumber}</span>
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                                    <div className="data-row">
+                                                        <span className="data-label" style={{ color: '#3b82f6' }}>Meet Bus At</span>
+                                                        <span className="data-value" style={{ color: '#1d4ed8', fontWeight: 'bold' }}>{selectedTrackOrder.dispatchDetails?.pickupStoppage || 'Fetching...'}</span>
+                                                    </div>
+                                                    <div className="data-row">
+                                                        <span className="data-label" style={{ color: '#3b82f6' }}>Be Ready At</span>
+                                                        <span className="data-value" style={{ color: '#059669', fontWeight: 'bold' }}>{selectedTrackOrder.dispatchDetails?.estimatedArrivalTime || 'TBD'}</span>
                                                     </div>
                                                 </div>
                                                 <div className="data-row">
@@ -757,7 +780,7 @@ const OrderMedicine = () => {
                                                             const snapshotImage = selectedTrackOrder.dispatchDetails.busImage;
                                                             const finalImage = liveImage || snapshotImage;
 
-                                                            if (!finalImage) return <div style={{padding: '20px', textAlign: 'center', fontSize: '11px', color: '#94a3b8'}}>No Photo Available</div>;
+                                                            if (!finalImage) return <div style={{ padding: '20px', textAlign: 'center', fontSize: '11px', color: '#94a3b8' }}>No Photo Available</div>;
 
                                                             const resolvedUrl = finalImage.startsWith('http')
                                                                 ? finalImage
@@ -775,6 +798,9 @@ const OrderMedicine = () => {
                                                             CLICK TO ZOOM
                                                         </div>
                                                     </div>
+                                                </div>
+                                                <div style={{ marginTop: '15px', padding: '12px', background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '8px', fontSize: '11px', color: '#92400e', lineHeight: '1.4' }}>
+                                                    <strong>Station Pickup Note:</strong> Please reach the station 5 minutes before the "Be Ready" time. Keep your phone handy to coordinate with the bus conductor in case of minor delay.
                                                 </div>
                                             </div>
                                         </div>

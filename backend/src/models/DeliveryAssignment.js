@@ -28,6 +28,9 @@ const deliveryAssignmentSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    pickupStoppage: String,
+    estimatedArrivalTime: String,
+    vehicleName: String,
     deliveredAt: Date,
     notes: String
 }, {

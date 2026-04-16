@@ -68,6 +68,10 @@ const SharedCheckout = () => {
             const res = await api.get(`/prescriptions/${id}/public`);
             setPrescription(res.data);
 
+            if (res.data.status === 'Ordered') {
+                setSuccess(true);
+            }
+
             // If the patient has saved addresses, show them to the payer (relative)
             if (res.data.user?.savedAddresses && res.data.user.savedAddresses.length > 0) {
                 setSavedAddresses(res.data.user.savedAddresses);
@@ -84,6 +88,17 @@ const SharedCheckout = () => {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setShippingDetails(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleAddressSelect = (addr) => {
+        setShippingDetails(addr);
+        // If the address has a phone number that is different from the prescription user's main mobile,
+        // we automatically show the phone fields.
+        if (addr.phone && addr.phone !== prescription.user?.mobile) {
+            setIsOrderingForOther(true);
+        } else {
+            setIsOrderingForOther(false);
+        }
     };
 
     const handleSubmitOrder = async (e) => {
@@ -128,13 +143,30 @@ const SharedCheckout = () => {
         <div className="shared-checkout-page">
             <Navbar />
             <div className="success-container-shared">
-                <div className="success-icon-wrap">
-                    <CheckCircle size={80} color="#10b981" />
+                <div className="success-header-wrap">
+                    <div className="success-icon-wrap premium">
+                         <CheckCircle size={80} color="#10b981" />
+                    </div>
                 </div>
-                <h2>Order Placed Successfully!</h2>
-                <p>The pharmacy team has been notified. You can now track the status of this delivery.</p>
+                <h2>Payment Successful!</h2>
+                <div className="order-summary-box-success">
+                    <div className="success-row">
+                        <span>Paid For</span>
+                        <strong>{prescription.user?.name}</strong>
+                    </div>
+                    <div className="success-row">
+                        <span>Total Amount</span>
+                        <strong className="success-price">₹{prescription.totalPaid?.toFixed(2) || calculateTotal().toFixed(2)}</strong>
+                    </div>
+                </div>
+                
+                <p className="success-subtext">The order has been finalized and processed. You can monitor the real-time delivery status using the link below.</p>
+                
                 <div className="success-actions">
-                    <button className="btn-main-p" onClick={() => navigate('/order-medicine')}>Track My Orders</button>
+                    <button className="btn-track-p" onClick={() => navigate(`/track/${prescription.orderId}`)}>
+                        <Truck size={20} /> Track Your Order
+                    </button>
+                    <button className="btn-secondary-p" onClick={() => navigate('/')}>Return to Home</button>
                 </div>
             </div>
             <Footer />
@@ -197,7 +229,7 @@ const SharedCheckout = () => {
                                                 <div
                                                     key={idx}
                                                     className={`addr-pill-shared ${shippingDetails.street === addr.street ? 'active' : ''}`}
-                                                    onClick={() => setShippingDetails(addr)}
+                                                    onClick={() => handleAddressSelect(addr)}
                                                 >
                                                     <strong>{addr.city}</strong>
                                                     <span className="addr-text-full">{addr.street}</span>
@@ -205,7 +237,10 @@ const SharedCheckout = () => {
                                             ))}
                                             <div
                                                 className={`addr-pill-shared ${!savedAddresses.some(a => a.street === shippingDetails.street) ? 'active' : ''}`}
-                                                onClick={() => setShippingDetails({ street: '', city: '', state: '', zip: '', phone: prescription.user?.mobile || '', altPhone: '' })}
+                                                onClick={() => {
+                                                    setShippingDetails({ street: '', city: '', state: '', zip: '', phone: prescription.user?.mobile || '', altPhone: '' });
+                                                    setIsOrderingForOther(false);
+                                                }}
                                             >
                                                 <strong>+ New</strong>
                                                 <span className="addr-text-full">Custom Address</span>
@@ -231,18 +266,21 @@ const SharedCheckout = () => {
                                         <label>PIN Code</label>
                                         <input type="text" name="zip" value={shippingDetails.zip} onChange={handleInputChange} placeholder="341001" required />
                                     </div>
-                                <div className="checkbox-group-shared">
-                                    <label className="checkbox-wrap-p">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={isOrderingForOther} 
-                                            onChange={(e) => setIsOrderingForOther(e.target.checked)} 
-                                        />
-                                        <span className="check-text">Ordering for someone else?</span>
-                                    </label>
-                                </div>
+                                    {/* Only show the checkbox if the current phone is NOT a custom saved number */}
+                                    {(!(shippingDetails.phone && shippingDetails.phone !== prescription.user?.mobile)) && (
+                                        <div className="checkbox-group-shared">
+                                            <label className="checkbox-wrap-p">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={isOrderingForOther} 
+                                                    onChange={(e) => setIsOrderingForOther(e.target.checked)} 
+                                                />
+                                                <span className="check-text">Ordering for someone else?</span>
+                                            </label>
+                                        </div>
+                                    )}
 
-                                {isOrderingForOther && (
+                                    {(isOrderingForOther || (shippingDetails.phone && shippingDetails.phone !== prescription.user?.mobile)) && (
                                     <div className="form-grid-shared phone-grid-p">
                                         <div className="input-group-shared">
                                             <label>Primary Phone</label>

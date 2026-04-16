@@ -57,9 +57,12 @@ const orderSchema = new mongoose.Schema({
         busId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bus' },
         busNumber: String,
         busName: String,
+        vehicleName: String,
         conductorNumber: String,
         routeName: String,
         busImage: String,
+        pickupStoppage: String,
+        estimatedArrivalTime: String,
         dispatchedAt: Date
     }
 }, {

@@ -255,3 +255,14 @@
     margin-top: 15px;
     font-size: 1.1rem;
 }
+
+@media (max-width: 768px) {
+    .dispatch-header h2 { font-size: 1.5rem; }
+    .order-grid { grid-template-columns: 1fr; }
+    .dispatch-modal-card { padding: 15px; width: 95%; margin: 0 auto; }
+}
+
+@media (max-width: 480px) {
+    .dm-header h3 { font-size: 1.1rem; }
+    .btn-confirm-assign { padding: 12px; font-size: 0.9rem; }
+}

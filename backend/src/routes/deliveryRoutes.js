@@ -11,7 +11,9 @@ const {
     getUnassignedOrders,
     getAssignedOrders, 
     updateAssignmentStatus,
-    suggestRoutes
+    suggestRoutes,
+    updateBus,
+    deleteBus
 } = require('../controllers/deliveryController');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 
@@ -50,6 +52,8 @@ router.post('/buses',
     createBus
 );
 router.get('/routes/:routeId/buses', protect, getBusesByRoute);
+router.put('/buses/:id', protect, checkPermission('Delivery Management', 'edit'), updateBus);
+router.delete('/buses/:id', protect, checkPermission('Delivery Management', 'delete'), deleteBus);
 
 // Assignment
 router.get('/unassigned-orders', protect, checkPermission('Delivery Management', 'view'), getUnassignedOrders);

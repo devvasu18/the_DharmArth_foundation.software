@@ -5,7 +5,7 @@
 }
 
 .checkout-banner {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background: linear-gradient(135deg, var(--secondary) 0%, #004d46 100%);
     color: white;
     padding: 60px 0;
     text-align: center;
@@ -53,7 +53,7 @@
     align-items: center;
     gap: 12px;
     margin-bottom: 25px;
-    color: #3b82f6;
+    color: var(--primary);
 }
 
 .card-header-p h3 {
@@ -96,7 +96,7 @@
 
 .med-price {
     font-weight: 800;
-    color: #3b82f6;
+    color: var(--primary);
 }
 
 .med-details-shared {
@@ -142,12 +142,12 @@
     padding-top: 20px;
     font-size: 1.75rem;
     font-weight: 900;
-    color: #1e293b;
-    border-top: 2px solid #3b82f6;
+    color: var(--secondary);
+    border-top: 2px solid var(--primary);
 }
 
 .total-row-shared span:last-child {
-    color: #2563eb;
+    color: var(--primary);
 }
 
 /* Patient Meta */
@@ -180,15 +180,15 @@
     font-size: 0.85rem;
     color: #64748b;
     margin-bottom: 12px;
-    border-left: 3px solid #3b82f6;
+    border-left: 3px solid var(--primary);
     padding-left: 10px;
 }
 
 /* Dosage Toggles */
 .btn-link-dosage {
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    color: #2563eb;
+    background: rgba(0, 191, 165, 0.08);
+    border: 1px solid rgba(0, 191, 165, 0.2);
+    color: var(--secondary);
     font-size: 0.8rem;
     font-weight: 700;
     cursor: pointer;
@@ -200,8 +200,7 @@
 }
 
 .btn-link-dosage:hover {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: rgba(0, 191, 165, 0.15);
 }
 
 .dosage-popover-shared {
@@ -243,9 +242,9 @@
 }
 
 .addr-pill-shared.active {
-    border-color: #3b82f6;
-    background: #f0f7ff;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+    border-color: var(--primary);
+    background: rgba(0, 191, 165, 0.05);
+    box-shadow: 0 4px 15px rgba(0, 191, 165, 0.1);
 }
 
 .addr-pill-shared strong {
@@ -267,7 +266,7 @@
 }
 
 .addr-pill-shared.active .addr-text-full {
-    color: #3b82f6;
+    color: var(--primary);
 }
 
 /* Form Styles */
@@ -302,8 +301,8 @@
 
 .input-group-shared input:focus {
     outline: none;
-    border-color: #3b82f6;
-    background: #f0f7ff;
+    border-color: var(--primary);
+    background: rgba(0, 191, 165, 0.02);
 }
 
 /* Payment Options */
@@ -327,8 +326,8 @@
 }
 
 .pay-opt.active {
-    border-color: #3b82f6;
-    background: #f0f7ff;
+    border-color: var(--primary);
+    background: rgba(0, 191, 165, 0.05);
 }
 
 .pay-opt .check-dot {
@@ -340,8 +339,8 @@
 }
 
 .pay-opt.active .check-dot {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: var(--primary);
+    border-color: var(--primary);
 }
 
 .pay-opt.active .check-dot::after {
@@ -358,7 +357,7 @@
 
 .btn-finalize-order {
     width: 100%;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
     color: white;
     border: none;
     padding: 18px;
@@ -366,7 +365,7 @@
     font-size: 1.1rem;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 10px 25px rgba(0, 191, 165, 0.2);
     transition: all 0.3s;
     margin-top: 10px;
 }
@@ -392,19 +391,116 @@
     gap: 6px;
 }
 
-/* Success/Error States */
-.success-container-shared, .error-container-shared {
-    max-width: 600px;
+.success-container-shared {
+    max-width: 650px;
     margin: 80px auto;
     text-align: center;
     padding: 60px 40px;
     background: white;
     border-radius: 32px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+    box-shadow: 0 40px 100px -20px rgba(0,0,0,0.1);
+    animation: slideInUpSuccess 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.success-icon-wrap {
-    margin-bottom: 30px;
+@keyframes slideInUpSuccess {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.success-icon-wrap.premium {
+    width: 120px;
+    height: 120px;
+    background: #f0fdf4;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 30px;
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.1);
+}
+
+.order-summary-box-success {
+    background: #f8fafc;
+    border: 1.5px solid #f1f5f9;
+    border-radius: 20px;
+    padding: 24px;
+    margin: 30px 0;
+}
+
+.success-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    color: #64748b;
+}
+
+.success-row:last-child {
+    margin-bottom: 0;
+    padding-top: 12px;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.success-row strong {
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.success-price {
+    font-size: 1.25rem;
+    color: #10b981 !important;
+}
+
+.success-subtext {
+    color: #94a3b8;
+    line-height: 1.6;
+    margin-bottom: 40px;
+    padding: 0 20px;
+}
+
+.success-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-track-p {
+    background: #1e293b;
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(30, 41, 59, 0.15);
+    transition: all 0.3s;
+}
+
+.btn-track-p:hover {
+    background: #0f172a;
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(30, 41, 59, 0.2);
+}
+
+.btn-secondary-p {
+    background: white;
+    color: #64748b;
+    border: 1.5px solid #e2e8f0;
+    padding: 16px 32px;
+    border-radius: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary-p:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #1e293b;
 }
 
 .loading-state-shared {
@@ -419,7 +515,7 @@
     width: 50px;
     height: 50px;
     border: 5px solid #f1f5f9;
-    border-top: 5px solid #3b82f6;
+    border-top: 5px solid var(--primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 20px;
@@ -523,15 +619,15 @@
 }
 
 .dosage-instructions {
-    border-left: 5px solid #3b82f6;
+    border-left: 5px solid var(--primary);
 }
 
 .items-card {
-    border-top: 5px solid #3b82f6;
+    border-top: 5px solid var(--primary);
 }
 
 .items-card h3 {
-    color: #3b82f6;
+    color: var(--primary);
 }
 
 .checkout-grid {
@@ -560,7 +656,7 @@
 }
 
 .checkbox-wrap-p:hover {
-    background: #e2e8f0;
+    background: rgba(0, 191, 165, 0.1);
 }
 
 .checkbox-wrap-p input[type="checkbox"] {
@@ -576,7 +672,7 @@
 }
 
 .phone-grid-p {
-    margin-top: 20px;
+    margin-top: 0;
 }
 
 .order-review-pane {

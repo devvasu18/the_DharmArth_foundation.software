@@ -992,3 +992,27 @@
 .animate-pop-in {
     animation: pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/* RESPONSIVE OVERRIDES */
+@media (max-width: 1024px) {
+    .admin-delivery-premium { height: auto; min-height: 100vh; }
+    .delivery-master-container { flex-direction: column; height: auto; overflow: visible; }
+    .route-navigator { width: 100%; border-right: none; border-bottom: 1px solid #e2e8f0; height: 350px; min-height: 350px; }
+    .delivery-workspace { padding: 20px; height: auto; overflow: visible; }
+    .workspace-card { padding: 25px; border-radius: 20px; width: 100%; max-width: 100%; }
+    .details-header-card { flex-direction: column; align-items: flex-start; gap: 20px; padding: 20px; }
+    .h-left-p { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .stat-box { text-align: left; }
+    .w-header { flex-direction: column; gap: 15px; }
+}
+
+@media (max-width: 768px) {
+    .page-header-admin { padding: 15px 20px; }
+    .f-row { flex-direction: column; gap: 15px; }
+    .fleet-form-card { padding: 20px; }
+    .w-actions, .f-actions { flex-direction: column-reverse; gap: 10px; }
+    .w-actions button, .f-actions button { width: 100%; }
+    .schedule-grid { grid-template-columns: 1fr; }
+    .stop-input-row { flex-wrap: wrap; }
+    .stop-input-row input { flex-grow: 1; min-width: 200px; }
+}

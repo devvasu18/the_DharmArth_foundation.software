@@ -80,10 +80,41 @@ exports.getBusesByRoute = async (req, res) => {
     }
 };
 
+exports.updateBus = async (req, res) => {
+    try {
+        const bus = await Bus.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!bus) return res.status(404).json({ message: 'Vehicle not found' });
+        res.json(bus);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.deleteBus = async (req, res) => {
+    try {
+        const bus = await Bus.findById(req.params.id);
+        if (!bus) return res.status(404).json({ message: 'Vehicle not found' });
+
+        const activeCount = await DeliveryAssignment.countDocuments({ 
+            busId: req.params.id, 
+            status: { $in: ['Assigned', 'In Transit'] } 
+        });
+        if (activeCount > 0) {
+            return res.status(400).json({ message: 'Cannot delete vehicle with active assignments' });
+        }
+
+        await Bus.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Vehicle purged from fleet successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // --- Delivery Assignment (Admin) ---
 
 exports.assignDelivery = async (req, res) => {
-    const { orderId, deliveryBoyId, busId, routeId, notes } = req.body;
+    const { orderId, deliveryBoyId, busId, routeId, notes, pickupStoppage, estimatedArrivalTime, vehicleName } = req.body;
+    console.log("Assigning Delivery Payload:", { orderId, pickupStoppage, estimatedArrivalTime, vehicleName, deliveryBoyId });
     try {
         // 1. Check if Order exists and is paid (or COD)
         const order = await Order.findById(orderId);
@@ -110,6 +141,9 @@ exports.assignDelivery = async (req, res) => {
             deliveryBoyId,
             busId,
             routeId,
+            pickupStoppage,
+            estimatedArrivalTime,
+            vehicleName,
             notes
         });
 
@@ -117,18 +151,23 @@ exports.assignDelivery = async (req, res) => {
         const bus = await Bus.findById(busId);
         const route = await BusRoute.findById(routeId);
 
-        // Update Order status and sync dispatch details
+        // Update Order status and sync dispatch details (Using $set for nested safety)
         await Order.findByIdAndUpdate(orderId, { 
             status: 'Out for Delivery',
             $push: { statusHistory: { status: 'Out for Delivery', note: `Assigned to ${bus?.busName || 'Vehicle'} (${bus?.busNumber || 'N/A'})` } },
-            dispatchDetails: {
-                busId: bus?._id,
-                busNumber: bus?.busNumber,
-                busName: bus?.busName,
-                conductorNumber: bus?.mobileNumber, // Using mobileNumber as conductorNumber
-                routeName: route?.routeName,
-                busImage: bus?.image,
-                dispatchedAt: Date.now()
+            $set: {
+                dispatchDetails: {
+                    busId: bus?._id,
+                    busNumber: bus?.busNumber,
+                    busName: bus?.busName,
+                    vehicleName,
+                    conductorNumber: bus?.mobileNumber, 
+                    routeName: route?.routeName,
+                    busImage: bus?.image,
+                    pickupStoppage,
+                    estimatedArrivalTime,
+                    dispatchedAt: Date.now()
+                }
             }
         });
 

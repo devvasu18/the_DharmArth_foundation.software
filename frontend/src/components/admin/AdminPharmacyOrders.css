@@ -92,7 +92,25 @@
     background: white;
     border-radius: 16px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    overflow-x: auto;
+    padding-bottom: 5px;
+}
+
+.orders-table-wrapper::-webkit-scrollbar {
+    height: 6px;
+}
+
+.orders-table-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.orders-table-wrapper::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+
+.orders-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e0;
 }
 
 .orders-premium-table {
@@ -732,8 +750,62 @@
     to { transform: scale(1); opacity: 1; }
 }
 
+@media (max-width: 1024px) {
+    .premium-modal {
+        max-width: 95%;
+    }
+}
+
 @media (max-width: 768px) {
+    .admin-orders-page {
+        padding: 15px;
+    }
+    .admin-orders-page .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+    .orders-control-bar {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .orders-control-bar .filter-group {
+        min-width: 100%;
+    }
+    .orders-table-wrapper {
+        overflow-x: auto;
+    }
+    .orders-premium-table th, .orders-premium-table td {
+        padding: 12px 15px;
+        white-space: nowrap;
+    }
+    .status-progress-bar {
+        margin: 0 10px 30px;
+    }
+    .progress-step {
+        width: 60px;
+    }
+    .progress-step span {
+        font-size: 9px;
+    }
     .premium-grid {
         grid-template-columns: 1fr;
+    }
+    .modal-actions-premium {
+        flex-direction: column-reverse;
+        padding: 20px;
+    }
+    .btn-glass-cancel, .btn-glass-primary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-orders-page h1 {
+        font-size: 20px;
+    }
+    .admin-orders-page .stat-pill {
+        width: 100%;
     }
 }

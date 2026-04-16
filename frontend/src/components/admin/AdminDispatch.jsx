@@ -16,6 +16,9 @@ const AdminDispatch = () => {
     const [assignPayload, setAssignPayload] = useState({
         routeId: '',
         busId: '',
+        pickupStoppage: '',
+        estimatedArrivalTime: '',
+        vehicleName: '',
         deliveryBoyId: '',
         notes: ''
     });
@@ -69,7 +72,7 @@ const AdminDispatch = () => {
 
     const openDispatchModal = async (order) => {
         setSelectedOrder(order);
-        setAssignPayload({ routeId: '', busId: '', deliveryBoyId: '', notes: '' });
+        setAssignPayload({ routeId: '', busId: '', pickupStoppage: '', estimatedArrivalTime: '', deliveryBoyId: '', notes: '' });
         setBuses([]);
     };
 
@@ -81,18 +84,26 @@ const AdminDispatch = () => {
         }
         try {
             const res = await api.get(`/delivery/routes/${routeId}/buses`);
-            setBuses(res.data);
+            setBuses(res.data || []);
         } catch (err) {
-            console.error("Fetch buses failed");
+            console.error("Fetch buses failed", err);
+            setBuses([]);
         }
     };
 
     const submitAssignment = async (e) => {
         e.preventDefault();
+        console.log("Dispatching with Payload:", assignPayload);
         try {
             await api.post('/delivery/assign', {
                 orderId: selectedOrder._id,
-                ...assignPayload
+                routeId: assignPayload.routeId,
+                busId: assignPayload.busId,
+                deliveryBoyId: assignPayload.deliveryBoyId,
+                pickupStoppage: assignPayload.pickupStoppage,
+                estimatedArrivalTime: assignPayload.estimatedArrivalTime,
+                vehicleName: assignPayload.vehicleName,
+                notes: assignPayload.notes
             });
             toast.success("Order Successfully Dispatched!");
             setSelectedOrder(null);
@@ -184,21 +195,30 @@ const AdminDispatch = () => {
                                 <label>2. Select Active Bus / Van</label>
                                 <select
                                     required
-                                    value={assignPayload.busId}
-                                    onChange={(e) => setAssignPayload({ ...assignPayload, busId: e.target.value })}
+                                    onChange={(e) => {
+                                        const bId = e.target.value;
+                                        const bus = buses.find(b => b._id.toString() === bId);
+                                        setAssignPayload({ 
+                                            ...assignPayload, 
+                                            busId: bId, 
+                                            vehicleName: bus?.busName || '',
+                                            pickupStoppage: '', 
+                                            estimatedArrivalTime: '' 
+                                        });
+                                    }}
                                     disabled={!assignPayload.routeId}
                                 >
                                     <option value="">-- Select Vehicle --</option>
                                     {buses.map(b => (
-                                        <option key={b._id} value={b._id}>{b.busNumber} (Driver: {b.mobileNumber})</option>
+                                        <option key={b._id} value={b._id.toString()}>{b.busNumber} ({b.busName || 'Vehicle'})</option>
                                     ))}
                                 </select>
-                                {assignPayload.busId && buses.find(b => b._id === assignPayload.busId)?.image && (
+                                {assignPayload.busId && buses.find(b => b._id.toString() === assignPayload.busId)?.image && (
                                     <div className="bus-preview-select" style={{marginTop: '10px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0'}}>
                                         <img 
-                                            src={buses.find(b => b._id === assignPayload.busId).image.startsWith('http') 
-                                                ? buses.find(b => b._id === assignPayload.busId).image 
-                                                : `http://localhost:5000${buses.find(b => b._id === assignPayload.busId).image.startsWith('/') ? '' : '/'}${buses.find(b => b._id === assignPayload.busId).image}`
+                                            src={buses.find(b => b._id.toString() === assignPayload.busId).image.startsWith('http') 
+                                                ? buses.find(b => b._id.toString() === assignPayload.busId).image 
+                                                : `http://localhost:5000${buses.find(b => b._id.toString() === assignPayload.busId).image.startsWith('/') ? '' : '/'}${buses.find(b => b._id.toString() === assignPayload.busId).image}`
                                             } 
                                             alt="Selected Bus" 
                                             style={{width: '100%', height: '80px', objectFit: 'cover'}} 
@@ -208,7 +228,53 @@ const AdminDispatch = () => {
                             </div>
 
                             <div className="assign-form-group">
-                                <label>3. Assign Personnel (Delivery Boy)</label>
+                                <label>3. Select Pickup Stoppage</label>
+                                <select
+                                    required
+                                    value={assignPayload.pickupStoppage}
+                                    onChange={(e) => {
+                                        const stop = e.target.value;
+                                        const bus = buses.find(b => b._id.toString() === assignPayload.busId);
+                                        const timing = bus?.stopTimings?.find(st => st.stopName === stop);
+                                        setAssignPayload({ 
+                                            ...assignPayload, 
+                                            pickupStoppage: stop, 
+                                            estimatedArrivalTime: timing?.arrivalTime || 'Not Set' 
+                                        });
+                                    }}
+                                    disabled={!assignPayload.busId}
+                                >
+                                    <option value="">-- Select Station --</option>
+                                    {assignPayload.busId && buses.find(b => b._id.toString() === assignPayload.busId)?.stopTimings?.map((st, i) => (
+                                        <option key={i} value={st.stopName}>{st.stopName} (Arrives: {st.arrivalTime || 'TBD'})</option>
+                                    ))}
+                                </select>
+                                {assignPayload.estimatedArrivalTime && (
+                                    <div className="timing-badge" style={{marginTop: '10px', background: '#ecfdf5', color: '#059669', padding: '8px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold', border: '1px solid #d1fae5'}}>
+                                        Will arrive at {assignPayload.pickupStoppage} by {assignPayload.estimatedArrivalTime}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="assign-form-group">
+                                <label>4. Vehicle Deployment Name</label>
+                                <input 
+                                    type="text"
+                                    placeholder="Enter Vehicle Name (e.g. Sujangarh Express)"
+                                    value={assignPayload.vehicleName}
+                                    onChange={(e) => setAssignPayload({...assignPayload, vehicleName: e.target.value})}
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px',
+                                        borderRadius: '10px',
+                                        border: '1.5px solid #e2e8f0',
+                                        fontSize: '0.95rem'
+                                    }}
+                                />
+                            </div>
+
+                            <div className="assign-form-group">
+                                <label>5. Assign Delivery Courier</label>
                                 <select
                                     required
                                     value={assignPayload.deliveryBoyId}
@@ -231,7 +297,7 @@ const AdminDispatch = () => {
                                 ></textarea>
                             </div>
 
-                            <button type="submit" className="btn-confirm-assign" disabled={!assignPayload.routeId || !assignPayload.busId || !assignPayload.deliveryBoyId}>
+                            <button type="submit" className="btn-confirm-assign" disabled={!assignPayload.routeId || !assignPayload.busId || !assignPayload.deliveryBoyId || !assignPayload.pickupStoppage}>
                                 Finalize Dispatch
                             </button>
                         </form>

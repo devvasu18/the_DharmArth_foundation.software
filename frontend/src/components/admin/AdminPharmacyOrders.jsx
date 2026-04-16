@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import { 
     ShoppingBag, 
@@ -13,14 +13,23 @@ import {
     MoreVertical,
     ChevronDown,
     Package,
-    X
+    X,
+    Share2
 } from 'lucide-react';
 import './AdminPharmacyOrders.css';
 import { useConfirm } from '../../context/ConfirmContext';
 
 const AdminPharmacyOrders = () => {
+    const handleCopyTrackLink = (orderId) => {
+        const url = `${window.location.origin}/track/${orderId}`;
+        navigator.clipboard.writeText(url);
+        showAlert('success', 'Tracking Link Copied', 'The shareable order tracking link has been copied to your clipboard.');
+    };
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -28,21 +37,50 @@ const AdminPharmacyOrders = () => {
     const [imageModalSrc, setImageModalSrc] = useState(null);
     const { showAlert } = useConfirm();
 
-    useEffect(() => {
-        fetchOrders();
-    }, []);
+    const loaderRef = useRef(null);
 
-    const fetchOrders = async () => {
-        setLoading(true);
+    useEffect(() => {
+        setPage(1);
+        fetchOrders(1, true);
+    }, [statusFilter, searchTerm]);
+
+    const fetchOrders = async (pageNum, isInitial = false) => {
+        if (isInitial) setLoading(true);
+        else setIsFetchingMore(true);
+
         try {
-            const res = await api.get('/orders');
-            setOrders(res.data);
+            const res = await api.get(`/orders?page=${pageNum}&limit=20&status=${statusFilter === 'All' ? '' : statusFilter}&search=${searchTerm}`);
+            const { orders: newOrders, totalPages: total } = res.data;
+            
+            if (isInitial) {
+                setOrders(newOrders);
+            } else {
+                setOrders(prev => [...prev, ...newOrders]);
+            }
+            setTotalPages(total);
         } catch (error) {
             console.error('Fetch orders failed', error);
         } finally {
             setLoading(false);
+            setIsFetchingMore(false);
         }
     };
+
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            const target = entries[0];
+            if (target.isIntersecting && !loading && !isFetchingMore && page < totalPages) {
+                const nextPage = page + 1;
+                setPage(nextPage);
+                fetchOrders(nextPage);
+            }
+        }, { threshold: 0.1 });
+
+        if (loaderRef.current) observer.observe(loaderRef.current);
+        return () => {
+            if (loaderRef.current) observer.unobserve(loaderRef.current);
+        };
+    }, [page, totalPages, loading, isFetchingMore]);
 
     const handleUpdateStatus = async (orderId, newStatus, note) => {
         try {
@@ -54,12 +92,8 @@ const AdminPharmacyOrders = () => {
         }
     };
 
-    const filteredOrders = orders.filter(o => {
-        const matchesSearch = o.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                             o._id.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === 'All' || o.status === statusFilter;
-        return matchesSearch && matchesStatus;
-    });
+    // Server handles filtering now, but we keep this for small client-side refinements if needed
+    const filteredOrders = orders;
 
     const getStatusStyle = (status) => {
         switch(status) {
@@ -122,7 +156,8 @@ const AdminPharmacyOrders = () => {
                         <p>No orders found matching your criteria.</p>
                     </div>
                 ) : (
-                    <table className="orders-premium-table">
+                    <>
+                        <table className="orders-premium-table">
                         <thead>
                             <tr>
                                 <th>Order Details</th>
@@ -184,6 +219,14 @@ const AdminPharmacyOrders = () => {
                                                 )}
                                                 <button 
                                                     className="btn-view" 
+                                                    title="Copy Tracking Link"
+                                                    style={{ color: '#3b82f6', background: '#eff6ff', border: '1px solid #dbeafe' }}
+                                                    onClick={() => handleCopyTrackLink(order._id)}
+                                                >
+                                                    <Share2 size={16} />
+                                                </button>
+                                                <button 
+                                                    className="btn-view" 
                                                     title="View Details"
                                                     onClick={() => {
                                                         setSelectedOrder(order);
@@ -199,7 +242,21 @@ const AdminPharmacyOrders = () => {
                             })}
                         </tbody>
                     </table>
-                )}
+                    
+                    {/* Sentinel for Infinite Scroll */}
+                    <div ref={loaderRef} style={{ padding: '20px', textAlign: 'center', background: '#f8fafc' }}>
+                        {isFetchingMore && (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#64748b', fontSize: '14px' }}>
+                                <div className="order-loader" style={{ width: '20px', height: '20px', margin: 0 }}></div>
+                                <span>Syncing more records...</span>
+                            </div>
+                        )}
+                        {!isFetchingMore && page >= totalPages && orders.length > 0 && (
+                            <span style={{ color: '#94a3b8', fontSize: '12px' }}>All records synchronized ✓</span>
+                        )}
+                    </div>
+                </>
+            )}
             </div>
             {/* Order Details Modal */}
             {isModalOpen && selectedOrder && (
@@ -268,32 +325,40 @@ const AdminPharmacyOrders = () => {
                                                 <h3>Logistics & Dispatch</h3>
                                             </div>
                                             <div className="pane-content">
+                                                <div className="data-row" style={{marginBottom: '10px', background: '#dbeafe', padding: '8px', borderRadius: '8px'}}>
+                                                    <span className="data-label" style={{color: '#3b82f6', fontWeight: 'bold'}}>Assigned Courier Partner</span>
+                                                    <span className="data-value" style={{color: '#1d4ed8', fontSize: '1.1rem', fontWeight: '800'}}>
+                                                        {selectedOrder.dispatchDetails.deliveryBoyName || 'Official Dispatcher'} 
+                                                        {selectedOrder.dispatchDetails.deliveryBoyMobile && <span style={{fontSize: '0.85rem', fontWeight: 'normal', color: '#3b82f6', marginLeft: '5px'}}>({selectedOrder.dispatchDetails.deliveryBoyMobile})</span>}
+                                                    </span>
+                                                </div>
                                                 <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px'}}>
                                                     <div className="data-row">
-                                                        <span className="data-label" style={{color: '#3b82f6'}}>Vehicle</span>
-                                                        <span className="data-value" style={{color: '#1d4ed8'}}>{selectedOrder.dispatchDetails.busName || 'Express'}</span>
+                                                        <span className="data-label" style={{color: '#3b82f6'}}>Vehicle Name</span>
+                                                        <span className="data-value" style={{color: '#1d4ed8'}}>{selectedOrder.dispatchDetails.vehicleName || selectedOrder.dispatchDetails.busName || 'Express'}</span>
                                                     </div>
                                                     <div className="data-row">
-                                                        <span className="data-label" style={{color: '#3b82f6'}}>Bus No.</span>
+                                                        <span className="data-label" style={{color: '#3b82f6'}}>Registration No.</span>
                                                         <span className="data-value" style={{color: '#1d4ed8'}}>{selectedOrder.dispatchDetails.busNumber}</span>
                                                     </div>
                                                 </div>
                                                 <div className="data-row">
-                                                    <span className="data-label" style={{color: '#3b82f6'}}>Conductor Contact</span>
-                                                    <span className="data-value" style={{color: '#1d4ed8'}}>{selectedOrder.dispatchDetails.conductorNumber}</span>
+                                                    <span className="data-label" style={{color: '#3b82f6'}}>Bus Conductor Contact</span>
+                                                    <span className="data-value" style={{color: '#1d4ed8'}}>{selectedOrder.dispatchDetails.conductorNumber || 'Not Set'}</span>
                                                 </div>
                                                 <div className="data-row" style={{marginTop: '10px'}}>
-                                                    <span className="data-label" style={{color: '#3b82f6'}}>Vehicle Photo</span>
+                                                    <span className="data-label" style={{color: '#3b82f6'}}>Vehicle Photo Identity</span>
                                                     <div 
                                                         className="bus-image-preview" 
                                                         style={{
-                                                            marginTop: '8px', 
+                                                            marginTop: '6px', 
                                                             borderRadius: '12px', 
                                                             overflow: 'hidden', 
                                                             border: '2px solid white',
-                                                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
+                                                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)',
                                                             background: '#f1f5f9',
-                                                            cursor: 'pointer'
+                                                            cursor: 'pointer',
+                                                            height: '100px'
                                                         }}
                                                         onClick={() => {
                                                             const finalImg = selectedOrder.dispatchDetails.busId?.image || selectedOrder.dispatchDetails.busImage;
@@ -304,18 +369,18 @@ const AdminPharmacyOrders = () => {
                                                             const liveImage = selectedOrder.dispatchDetails.busId?.image;
                                                             const snapshotImage = selectedOrder.dispatchDetails.busImage;
                                                             const finalImage = liveImage || snapshotImage;
-
-                                                            if (!finalImage) return <div style={{padding: '20px', textAlign: 'center', fontSize: '11px', color: '#94a3b8'}}>No Photo Available</div>;
-
+ 
+                                                            if (!finalImage) return <div style={{padding: '30px', textAlign: 'center', fontSize: '11px', color: '#94a3b8'}}>No Identity Photo Loaded</div>;
+ 
                                                             const resolvedUrl = finalImage.startsWith('http') 
                                                                 ? finalImage 
                                                                 : `http://localhost:5000${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
-
+ 
                                                             return (
                                                                 <img 
                                                                     src={resolvedUrl} 
                                                                     alt="Bus" 
-                                                                    style={{width: '100%', height: '110px', objectFit: 'cover'}} 
+                                                                    style={{width: '100%', height: '100%', objectFit: 'cover'}} 
                                                                 />
                                                             );
                                                         })()}
@@ -377,6 +442,9 @@ const AdminPharmacyOrders = () => {
                         </div>
 
                         <div className="modal-actions-premium">
+                            <button className="btn-glass-secondary" onClick={() => handleCopyTrackLink(selectedOrder._id)} style={{marginRight: 'auto', display: 'flex', gap: '8px', alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '10px 15px', borderRadius: '12px', cursor: 'pointer', fontWeight: '600', color: '#475569'}}>
+                                <Share2 size={18} /> Share Tracker
+                            </button>
                             <button className="btn-glass-cancel" onClick={() => setIsModalOpen(false)}>Close View</button>
                             {selectedOrder.status === 'Payment Pending' && (
                                 <button className="btn-glass-primary" onClick={() => {

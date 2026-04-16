@@ -109,7 +109,8 @@ const AdminLayout = () => {
 
         if (location.pathname.includes('/admin/prescriptions') ||
             location.pathname.includes('/admin/delivery') ||
-            location.pathname.includes('/admin/dispatch')) {
+            location.pathname.includes('/admin/dispatch') ||
+            location.pathname.includes('/admin/pharmacy-orders')) {
             setPharmacyDropdownOpen(true);
         }
     }, [location.pathname]);
@@ -172,9 +173,9 @@ const AdminLayout = () => {
                     className="admin-brand"
                     onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                     style={{ cursor: 'pointer' }}
-                    title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                    title={isSidebarCollapsed ? "Collapse Sidebar" : "Expand Sidebar"}
                 >
-                    {isSidebarCollapsed || window.innerWidth < 992 ? <Menu size={24} /> : 'Dharmarth'}
+                    {(!isSidebarCollapsed && window.innerWidth < 992) ? <Menu size={24} /> : 'Dharmarth'}
                 </div>
                 <nav className="admin-nav">
                     <NavLink to="/admin" end className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
@@ -300,7 +301,8 @@ const AdminLayout = () => {
                         <div
                             className={`admin-link ${location.pathname.includes('/admin/prescriptions') ||
                                 location.pathname.includes('/admin/delivery') ||
-                                location.pathname.includes('/admin/dispatch')
+                                location.pathname.includes('/admin/dispatch') ||
+                                location.pathname.includes('/admin/pharmacy-orders')
                                 ? 'active' : ''
                                 }`}
                             onClick={() => {
@@ -315,10 +317,10 @@ const AdminLayout = () => {
                                 <FileText size={20} title={isSidebarCollapsed ? "Pharmacy" : ""} />
                                 <span className="admin-link-text">Pharmacy & Delivery</span>
                             </div>
-                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isPharmacyDropdownOpen || location.pathname.includes('/admin/prescriptions') || location.pathname.includes('/admin/delivery') || location.pathname.includes('/admin/dispatch') ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
+                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isPharmacyDropdownOpen || location.pathname.includes('/admin/prescriptions') || location.pathname.includes('/admin/delivery') || location.pathname.includes('/admin/dispatch') || location.pathname.includes('/admin/pharmacy-orders') ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
                         </div>
 
-                        {(isPharmacyDropdownOpen || location.pathname.includes('/admin/prescriptions') || location.pathname.includes('/admin/delivery') || location.pathname.includes('/admin/dispatch')) && (
+                        {(isPharmacyDropdownOpen || location.pathname.includes('/admin/prescriptions') || location.pathname.includes('/admin/delivery') || location.pathname.includes('/admin/dispatch') || location.pathname.includes('/admin/pharmacy-orders')) && (
                             <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
                                 <NavLink 
                                     to="/admin/prescriptions" 

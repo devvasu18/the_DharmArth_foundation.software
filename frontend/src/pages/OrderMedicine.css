@@ -278,6 +278,24 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+    max-height: 550px;
+    overflow-y: auto;
+    padding-right: 12px;
+}
+
+/* Premium Scrollbar */
+.order-list-premium::-webkit-scrollbar {
+    width: 6px;
+}
+.order-list-premium::-webkit-scrollbar-track {
+    background: transparent;
+}
+.order-list-premium::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+.order-list-premium::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e0;
 }
 
 .order-card-premium {

@@ -353,29 +353,25 @@ body {
 @media (max-width: 991px) {
     .admin-sidebar {
         position: fixed;
-        left: 0;
+        left: 0 !important;
         top: 0;
         transform: translateX(-100%);
-        width: 70px; /* Narrower for icons only */
+        width: 280px !important; 
         height: 100vh;
         z-index: 2000;
         transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+        box-shadow: 2px 0 25px rgba(0, 0, 0, 0.15);
+        background: #ffffff;
     }
 
     .admin-sidebar.collapsed {
         transform: translateX(0);
-        width: 70px;
+        width: 280px !important;
     }
 
     .admin-main-wrapper {
         width: 100% !important;
         margin-left: 0 !important;
-    }
-
-    /* Hide header brand on mobile when sidebar is open */
-    .admin-sidebar.collapsed + .admin-main-wrapper .header-brand {
-        display: none;
     }
 
     .sidebar-toggle.mobile-only {
@@ -389,30 +385,11 @@ body {
     }
 
     .profile-info {
-        display: none; /* Hide user name/role on mobile to save space */
-    }
-
-    .header-brand {
-        font-size: 1.05rem !important; /* Smaller brand on mobile */
-        white-space: nowrap;
+        display: none; 
     }
 
     .topbar-right {
         gap: 0.35rem !important;
-    }
-
-    .icon-btn {
-        width: 32px !important;
-        height: 32px !important;
-    }
-
-    .profile-dropdown {
-        gap: 0.35rem !important;
-        padding-left: 0.5rem !important;
-    }
-
-    .topbar-left .header-brand {
-        display: block; /* Ensure it's shown by default on mobile */
     }
 
     .sidebar-overlay {
@@ -434,15 +411,6 @@ body {
 
     .admin-content {
         padding: 1.5rem;
-    }
-
-    .topbar-left {
-        gap: 0.5rem;
-    }
-
-    .admin-sidebar.collapsed .admin-link {
-        justify-content: center !important;
-        padding: 1rem !important;
     }
 }
 
@@ -750,18 +718,46 @@ body {
 }
 
 @media (max-width: 991px) {
-    /* Always hide text on mobile as per user request */
-    .admin-link-text,
-    .admin-brand span,
-    .admin-nav .admin-link span,
-    .admin-link-dropdown-container span,
-    .lucide-chevron-down {
-        display: none !important;
+    .admin-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        transform: translateX(-100%);
+        width: 280px; /* Drawer width */
+        height: 100vh;
+        z-index: 2000;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 2px 0 25px rgba(0, 0, 0, 0.15);
+        background: #ffffff;
+    }
+
+    .admin-sidebar.collapsed {
+        transform: translateX(0);
+        width: 280px;
+    }
+
+    /* Ensure labels are visible when drawer is open on mobile */
+    .admin-sidebar.collapsed .admin-link-text {
+        display: block !important;
+        opacity: 1;
     }
 
     .admin-sidebar.collapsed .admin-link {
-        justify-content: center !important;
-        padding: 1rem !important;
+        justify-content: flex-start !important;
+        padding: 1rem 2rem !important;
+    }
+
+    .admin-sidebar.collapsed .lucide-chevron-down {
+        display: block !important;
+    }
+
+    .admin-main-wrapper {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    .sidebar-overlay {
+        display: block !important; /* Managed by React state usually, but ensure it's showable */
     }
 }
 

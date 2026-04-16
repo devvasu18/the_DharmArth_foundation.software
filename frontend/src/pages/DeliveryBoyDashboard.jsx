@@ -88,8 +88,8 @@ const DeliveryBoyDashboard = () => {
                                 <Truck size={35} color="#000000" strokeWidth={2.5} />
                             </div>
                             <div className="rider-info">
-                                <h1>{userData?.name || 'Delivery Partner'}</h1>
-                                <p>Medical Dispatch Division</p>
+                                <h1>{userData?.name || 'Dispatch Partner'}</h1>
+                                <p>Medical Dispatch Division (Pharmacy to Bus)</p>
                             </div>
                         </div>
                         <div className="rider-status">
@@ -157,22 +157,33 @@ const DeliveryBoyDashboard = () => {
                                         <div className="address-box">
                                             <MapPin size={22} className="text-gray-400" />
                                             <div>
-                                                <p style={{margin:0, fontWeight:700}}>Destination</p>
+                                                <p style={{margin:0, fontWeight:700}}>Dispatch Point (Bus Stand)</p>
                                                 <p style={{margin:0, fontSize:'0.95rem'}}>{a.orderId?.shippingAddress?.street}, {a.orderId?.shippingAddress?.city}</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="logistic-details">
-                                        <div className="pill-info">
-                                            <span className="label">Route</span>
-                                            <span className="value">{a.routeId?.routeName || 'Direct'}</span>
+                                        <div className="logistic-details">
+                                            <div className="pill-info">
+                                                <span className="label">Route</span>
+                                                <span className="value">{a.routeId?.routeName || 'Direct'}</span>
+                                            </div>
+                                            <div className="pill-info">
+                                                <span className="label">Vehicle</span>
+                                                <span className="value">{a.vehicleName || a.busId?.busName || 'Express'} ({a.busId?.busNumber || 'N/A'})</span>
+                                            </div>
                                         </div>
-                                        <div className="pill-info">
-                                            <span className="label">Vehicle</span>
-                                            <span className="value">{a.busId?.busName || 'Express'} ({a.busId?.busNumber || 'N/A'})</span>
+
+                                        <div className="logistic-details" style={{ marginTop: '10px', background: '#f0fdf4', borderColor: '#dcfce7' }}>
+                                            <div className="pill-info">
+                                                <span className="label" style={{ color: '#166534' }}>Receive At</span>
+                                                <span className="value" style={{ color: '#166534', fontWeight: '700' }}>{a.pickupStoppage || a.orderId?.dispatchDetails?.pickupStoppage || 'Scheduled Station'}</span>
+                                            </div>
+                                            <div className="pill-info">
+                                                <span className="label" style={{ color: '#166534' }}>Arrival Time</span>
+                                                <span className="value" style={{ color: '#166534', fontWeight: '700' }}>{a.estimatedArrivalTime || a.orderId?.dispatchDetails?.estimatedArrivalTime || 'Awaiting Sync'}</span>
+                                            </div>
                                         </div>
-                                    </div>
 
                                     {/* Vehicle Photo Preview */}
                                     {(a.busId?.image || a.orderId?.dispatchDetails?.busImage) && (
@@ -200,13 +211,13 @@ const DeliveryBoyDashboard = () => {
 
                                         {a.status === 'Assigned' && (
                                             <button className="btn-main start" onClick={() => updateStatus(a._id, 'In Transit')}>
-                                                Start Delivery <ChevronRight size={20} />
+                                                Pick up from Pharmacy <ChevronRight size={20} />
                                             </button>
                                         )}
 
                                         {a.status === 'In Transit' && (
                                             <button className="btn-main finish" onClick={() => updateStatus(a._id, 'Delivered')}>
-                                                Mark Delivered <CheckCircle size={20} />
+                                                Hand over to Bus <CheckCircle size={20} />
                                             </button>
                                         )}
                                         

@@ -86,6 +86,24 @@
     flex-grow: 1;
     overflow-y: auto;
     padding: 15px;
+    padding-right: 12px;
+}
+
+.queue-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.queue-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.queue-list::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+
+.queue-list::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e0;
 }
 
 .queue-card {
@@ -415,21 +433,27 @@
 
 /* RESPONSIVE */
 @media (max-width: 1200px) {
-    .admin-flex-container { height: auto; flex-direction: column; }
-    .queue-sidebar { width: 100%; height: 250px; }
-    .queue-list { display: flex; gap: 15px; overflow-x: auto; overflow-y: hidden; }
-    .queue-card { min-width: 250px; margin-bottom: 0; }
+    .admin-flex-container { height: auto; flex-direction: column; overflow: visible; }
+    .queue-sidebar { width: 100%; height: auto; min-height: 200px; }
+    .queue-list { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 20px; }
+    .queue-card { min-width: 280px; margin-bottom: 0; }
+    .verification-master { width: 100%; height: auto; }
 }
 
 @media (max-width: 992px) {
     .master-grid { grid-template-columns: 1fr; }
-    .image-view-pane { height: 400px; }
+    .image-view-pane { height: 350px; min-height: 350px; }
+    .form-view-pane { height: auto; overflow: visible; }
+    .page-header-admin { flex-direction: column; align-items: flex-start; gap: 20px; }
 }
 
 @media (max-width: 768px) {
+    .admin-prescriptions-premium { padding: 15px; }
     .medicine-row-premium { flex-direction: column; align-items: stretch; }
     .input-group-p.dosage, .input-group-p.qty, .input-group-p.price { width: 100% !important; }
-    .action-footer { flex-direction: column; }
+    .action-footer { flex-direction: column; gap: 10px; padding: 15px; }
+    .action-footer button { width: 100%; }
+    .stat-pill { width: 100%; justify-content: space-between; }
 }
 
 /* Image Viewer Modal */

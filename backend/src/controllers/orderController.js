@@ -63,26 +63,55 @@ const getOrderById = async (req, res) => {
 // @access  Private/Admin
 const getAllOrders = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+
+        const total = await Order.countDocuments();
+        
         const orders = await Order.find({})
             .populate('user', 'name mobile')
             .populate('dispatchDetails.busId')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
 
-        // Logic to backfill image if missing in snapshot but exists in master Bus record
+        // Logic to backfill image and FETCH DELIVERY BOY info
         const Bus = require('../models/Bus');
+        const DeliveryAssignment = require('../models/DeliveryAssignment');
+        
         const ordersWithBackfill = await Promise.all(orders.map(async (order) => {
             const orderObj = order.toObject();
+            
+            // 1. Backfill Bus info if needed
             if (orderObj.dispatchDetails && !orderObj.dispatchDetails.busId && orderObj.dispatchDetails.busNumber) {
                 const liveBus = await Bus.findOne({ busNumber: orderObj.dispatchDetails.busNumber });
                 if (liveBus) {
-                    orderObj.dispatchDetails.busId = liveBus; // Backfill the bus object
+                    orderObj.dispatchDetails.busId = liveBus; 
                     orderObj.dispatchDetails.backfill = true;
                 }
             }
+
+            // 2. Fetch assigned Delivery Boy info
+            const assignment = await DeliveryAssignment.findOne({ orderId: order._id })
+                .populate('deliveryBoyId', 'name mobile');
+            
+            if (assignment && assignment.deliveryBoyId) {
+                if (!orderObj.dispatchDetails) orderObj.dispatchDetails = {};
+                orderObj.dispatchDetails.deliveryBoyName = assignment.deliveryBoyId.name;
+                orderObj.dispatchDetails.deliveryBoyMobile = assignment.deliveryBoyId.mobile;
+                orderObj.dispatchDetails.assignmentStatus = assignment.status;
+            }
+
             return orderObj;
         }));
 
-        res.json(ordersWithBackfill);
+        res.json({
+            orders: ordersWithBackfill,
+            page,
+            totalPages: Math.ceil(total / limit),
+            total
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
