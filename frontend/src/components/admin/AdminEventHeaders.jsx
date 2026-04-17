@@ -33,7 +33,6 @@ const AdminEventHeaders = () => {
 
     const fetchHeaders = async () => {
         try {
-        try {
             const res = await api.get('/event-headers/admin');
             setHeaders(res.data);
             setLoading(false);

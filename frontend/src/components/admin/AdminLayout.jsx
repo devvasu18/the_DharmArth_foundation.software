@@ -30,6 +30,16 @@ const AdminLayout = () => {
     const notificationRef = useRef(null);
     const audioRef = useRef(new Audio(NOTIFICATION_SOUND));
 
+    const fetchNotifications = async () => {
+        try {
+            const res = await api.get('/notifications');
+            setNotifications(res.data.notifications || []);
+            setUnreadCount(res.data.unreadCount || 0);
+        } catch (err) {
+            console.error("Failed to fetch notifications", err);
+        }
+    };
+
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem('user'));
         setUser(storedUser);
@@ -114,15 +124,6 @@ const AdminLayout = () => {
             setPharmacyDropdownOpen(true);
         }
     }, [location.pathname]);
-
-        try {
-            const res = await api.get('/notifications');
-            setNotifications(res.data.notifications);
-            setUnreadCount(res.data.unreadCount);
-        } catch (err) {
-            console.error("Failed to fetch notifications", err);
-        }
-    };
 
     const handleMarkAllRead = async () => {
         try {
