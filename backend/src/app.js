@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
-    origin: [process.env.FRONTEND_URL, 'http://localhost:5173'], // Frontend URLs
+    origin: [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'].filter(Boolean),
     credentials: true
 }));
 app.use(helmet());
