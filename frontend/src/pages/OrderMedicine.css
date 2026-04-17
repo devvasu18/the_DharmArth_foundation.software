@@ -945,6 +945,8 @@
     transition: transform 0.3s ease;
 }
 
+}
+
 @media (max-width: 768px) {
     .premium-grid {
         grid-template-columns: 1fr;
