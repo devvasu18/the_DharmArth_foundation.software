@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../services/api';
+import api, { API_BASE_URL } from '../services/api';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { useConfirm } from '../context/ConfirmContext';
@@ -194,7 +194,7 @@ const DeliveryBoyDashboard = () => {
                                             <img 
                                                 src={(a.busId?.image || a.orderId?.dispatchDetails?.busImage).startsWith('http')
                                                     ? (a.busId?.image || a.orderId?.dispatchDetails?.busImage)
-                                                    : `http://localhost:5000${(a.busId?.image || a.orderId?.dispatchDetails?.busImage).startsWith('/') ? '' : '/'}${(a.busId?.image || a.orderId?.dispatchDetails?.busImage)}`
+                                                    : `${API_BASE_URL}${(a.busId?.image || a.orderId?.dispatchDetails?.busImage).startsWith('/') ? '' : '/'}${(a.busId?.image || a.orderId?.dispatchDetails?.busImage)}`
                                                 } 
                                                 alt="Vehicle" 
                                             />
@@ -244,7 +244,7 @@ const DeliveryBoyDashboard = () => {
                         <img 
                             src={imageModalSrc.startsWith('http') 
                                 ? imageModalSrc 
-                                : `http://localhost:5000${imageModalSrc.startsWith('/') ? '' : '/'}${imageModalSrc}`
+                                : `${API_BASE_URL}${imageModalSrc.startsWith('/') ? '' : '/'}${imageModalSrc}`
                             } 
                             alt="Full View" 
                         />

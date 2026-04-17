@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet, Calendar, FileText, Stethoscope } from 'lucide-react';
 import { io } from "socket.io-client";
 import toast from 'react-hot-toast';
-import axios from 'axios';
+import api, { API_BASE_URL } from '../../services/api';
 import { useConfirm } from '../../context/ConfirmContext';
 import './AdminLayout.css';
 
@@ -45,7 +45,7 @@ const AdminLayout = () => {
         }
 
         // Initialize Socket
-        socketRef.current = io('http://localhost:5000', {
+        socketRef.current = io(API_BASE_URL, {
             withCredentials: true
         });
 
@@ -115,9 +115,8 @@ const AdminLayout = () => {
         }
     }, [location.pathname]);
 
-    const fetchNotifications = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/notifications');
+            const res = await api.get('/notifications');
             setNotifications(res.data.notifications);
             setUnreadCount(res.data.unreadCount);
         } catch (err) {
@@ -127,7 +126,7 @@ const AdminLayout = () => {
 
     const handleMarkAllRead = async () => {
         try {
-            await axios.put('http://localhost:5000/api/notifications/read-all');
+            await api.put('/notifications/read-all');
             setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
             setUnreadCount(0);
         } catch (err) {

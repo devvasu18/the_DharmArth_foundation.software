@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import { Plus, Trash2, Video, GripVertical, Play, Save } from 'lucide-react';
 import './AdminEvents.css'; // Reuse existing styles or create new
 
@@ -22,7 +21,7 @@ const AdminEventVideos = () => {
 
     const fetchVideos = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/event-videos');
+            const res = await api.get('/event-videos');
             setVideos(res.data);
             setLoading(false);
         } catch (err) {
@@ -53,9 +52,9 @@ const AdminEventVideos = () => {
         e.preventDefault();
         try {
             if (currentVideo._id) {
-                await axios.put(`http://localhost:5000/api/event-videos/${currentVideo._id}`, currentVideo);
+                await api.put(`/event-videos/${currentVideo._id}`, currentVideo);
             } else {
-                await axios.post('http://localhost:5000/api/event-videos', {
+                await api.post('/event-videos', {
                     ...currentVideo,
                     order: videos.length // Add to end
                 });
@@ -71,7 +70,7 @@ const AdminEventVideos = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this video?')) {
             try {
-                await axios.delete(`http://localhost:5000/api/event-videos/${id}`);
+                await api.delete(`/event-videos/${id}`);
                 fetchVideos();
             } catch (err) {
                 console.error(err);

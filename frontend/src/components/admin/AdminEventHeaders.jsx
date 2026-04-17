@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api, { API_BASE_URL } from '../../services/api';
 import { Plus, Edit, Trash2, Eye, Video, Image as ImageIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -33,10 +33,8 @@ const AdminEventHeaders = () => {
 
     const fetchHeaders = async () => {
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const res = await axios.get('http://localhost:5000/api/event-headers/admin', {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+        try {
+            const res = await api.get('/event-headers/admin');
             setHeaders(res.data);
             setLoading(false);
         } catch (error) {
@@ -55,11 +53,9 @@ const AdminEventHeaders = () => {
 
         setUploading(true);
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const res = await axios.post('http://localhost:5000/api/upload', uploadData, {
+            const res = await api.post('/upload', uploadData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    // Authorization: `Bearer ${user.token}` // Upload route might be public or require auth, assuming public based on previous code but typically should be protected
                 }
             });
             setFormData({ ...formData, url: res.data.imageUrl });
@@ -75,14 +71,11 @@ const AdminEventHeaders = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const headers = { Authorization: `Bearer ${user.token}` };
-
             if (formData._id) {
-                await axios.put(`http://localhost:5000/api/event-headers/${formData._id}`, formData, { headers });
+                await api.put(`/event-headers/${formData._id}`, formData);
                 toast.success('Header updated');
             } else {
-                await axios.post('http://localhost:5000/api/event-headers', formData, { headers });
+                await api.post('/event-headers', formData);
                 toast.success('Header created');
             }
 
@@ -103,10 +96,7 @@ const AdminEventHeaders = () => {
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this slide?')) return;
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            await axios.delete(`http://localhost:5000/api/event-headers/${id}`, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            await api.delete(`/event-headers/${id}`);
             setHeaders(headers.filter(h => h._id !== id));
             toast.success('Deleted successfully');
         } catch (error) {
@@ -117,10 +107,7 @@ const AdminEventHeaders = () => {
     const handleSeed = async () => {
         if (!window.confirm('This will replace all current banners with dummy ones. Continue?')) return;
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            await axios.post('http://localhost:5000/api/event-headers/seed', {}, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            await api.post('/event-headers/seed', {});
             toast.success('Dummy banners seeded successfully');
             fetchHeaders();
         } catch (error) {
@@ -328,7 +315,7 @@ const AdminEventHeaders = () => {
                             <tr key={h._id} style={{ borderBottom: '1px solid #eee' }}>
                                 <td style={{ padding: 12 }}>{h.order}</td>
                                 <td style={{ padding: 12 }}>
-                                    {h.type === 'video' ? <Video size={24} /> : <img src={h.url} style={{ width: 50, height: 30, objectFit: 'cover', borderRadius: 4 }} alt="" />}
+                                    {h.type === 'video' ? <Video size={24} /> : <img src={h.url.startsWith('http') ? h.url : `${API_BASE_URL}${h.url.startsWith('/') ? '' : '/'}${h.url}`} style={{ width: 50, height: 30, objectFit: 'cover', borderRadius: 4 }} alt="" />}
                                 </td>
                                 <td style={{ padding: 12 }}>
                                     <div>{h.title || 'No Title'}</div>

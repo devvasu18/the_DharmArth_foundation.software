@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
+import { API_BASE_URL } from '../services/api';
 import './DoctorAvailability.css';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = `${API_BASE_URL}/api`;
 
 const DoctorAvailability = () => {
     const navigate = useNavigate();
@@ -438,7 +439,10 @@ const DoctorAvailability = () => {
                                                     >
                                                         <div className="doctor-photo">
                                                             {avail.doctorId.photo ? (
-                                                                <img src={avail.doctorId.photo} alt={avail.doctorId.name} />
+                                                                <img 
+                                                                    src={avail.doctorId.photo.startsWith('http') ? avail.doctorId.photo : `${API_BASE_URL}${avail.doctorId.photo.startsWith('/') ? '' : '/'}${avail.doctorId.photo}`} 
+                                                                    alt={avail.doctorId.name} 
+                                                                />
                                                             ) : (
                                                                 <div className="photo-placeholder">👨‍⚕️</div>
                                                             )}
@@ -532,7 +536,7 @@ const DoctorAvailability = () => {
                                                     >
                                                         <div className="dp-day">{getDayName(date)}</div>
                                                         <div className="dp-number">{date.getDate()}</div>
-                                                        <div className="dp-month">{date.toLocaleDateString('en-US', { month: 'short' })}</div>
+                                                        <div className="dp-number">{date.toLocaleDateString('en-US', { month: 'short' })}</div>
                                                         {isToday && <span className="dp-today-badge">Today</span>}
                                                     </div>
                                                 );
@@ -562,7 +566,10 @@ const DoctorAvailability = () => {
                                         <div className="emergency-badge-float">Available Now</div>
                                         <div className="doctor-photo">
                                             {doctor.photo ? (
-                                                <img src={doctor.photo} alt={doctor.name} />
+                                                <img 
+                                                    src={doctor.photo.startsWith('http') ? doctor.photo : `${API_BASE_URL}${doctor.photo.startsWith('/') ? '' : '/'}${doctor.photo}`} 
+                                                    alt={doctor.name} 
+                                                />
                                             ) : (
                                                 <div className="photo-placeholder">👨‍⚕️</div>
                                             )}
