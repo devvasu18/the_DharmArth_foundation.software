@@ -374,7 +374,7 @@ const AdminPharmacyOrders = () => {
  
                                                             const resolvedUrl = finalImage.startsWith('http') 
                                                                 ? finalImage 
-                                                                : `http://localhost:5000${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
+                                                                : `${API_BASE_URL}${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
  
                                                             return (
                                                                 <img 
@@ -468,7 +468,7 @@ const AdminPharmacyOrders = () => {
                         <img 
                             src={imageModalSrc.startsWith('http') 
                                 ? imageModalSrc 
-                                : `http://localhost:5000${imageModalSrc.startsWith('/') ? '' : '/'}${imageModalSrc}`
+                                : `${API_BASE_URL}${imageModalSrc.startsWith('/') ? '' : '/'}${imageModalSrc}`
                             } 
                             alt="Full View" 
                         />

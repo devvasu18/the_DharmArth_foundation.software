@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { Download, Filter, Calendar, TrendingUp, DollarSign, PieChart as PieIcon, BarChart3, ChevronLeft, ChevronRight, Search, FileText, ArrowRight, TrendingDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
@@ -40,7 +40,7 @@ const CommissionReports = () => {
                 limit: 20
             };
 
-            const res = await axios.get('http://localhost:5000/api/transactions/commission-reports', { params });
+            const res = await api.get('/transactions/commission-reports', { params });
 
             // Fill missing dates in trend chart with 0
             if (res.data?.charts?.trend && (filters.preset === 'MONTH' || filters.preset === 'CUSTOM' || filters.preset === 'WEEK')) {

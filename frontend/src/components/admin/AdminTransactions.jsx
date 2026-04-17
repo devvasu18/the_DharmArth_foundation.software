@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { Search, Users, ChevronRight, TrendingUp, Wallet, ArrowDownRight, ArrowUpRight, DollarSign, User, Network, Maximize2, Minimize2, X, CheckCircle } from 'lucide-react';
-import axios from 'axios';
+import api, { API_BASE_URL } from '../../services/api';
 import './AdminTransactions.css';
 
 const AdminTransactions = ({ initialUser, isModal, onClose }) => {
@@ -47,7 +47,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
     const fetchPaginatedUsers = async (page) => {
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:5000/api/transactions/users/paginated?page=${page}`);
+            const res = await api.get(`/transactions/users/paginated?page=${page}`);
             setAllUsers(res.data.users);
             setTotalPages(res.data.totalPages);
         } catch (error) {
@@ -66,7 +66,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
         }
 
         try {
-            const res = await axios.get(`http://localhost:5000/api/transactions/users/search?query=${query}`);
+            const res = await api.get(`/transactions/users/search?query=${query}`);
             setSearchResults(res.data.users);
         } catch (error) {
             console.error('Error searching users:', error);
@@ -79,7 +79,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
         setLoading(true);
 
         try {
-            const res = await axios.get(`http://localhost:5000/api/transactions/users/${user._id}/referral-tree`);
+            const res = await api.get(`/transactions/users/${user._id}/referral-tree`);
             const treeData = res.data || {};
             setReferralTree({
                 ...treeData,
@@ -88,7 +88,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
             });
 
             // Also fetch transactions and stats
-            const txnRes = await axios.get(`http://localhost:5000/api/transactions/users/${user._id}/transactions`);
+            const txnRes = await api.get(`/transactions/users/${user._id}/transactions`);
             setUserTransactions(txnRes.data.transactions);
 
             setUserStats({
@@ -98,7 +98,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
             });
 
             // Fetch Network Stats
-            const netRes = await axios.get(`http://localhost:5000/api/transactions/users/${user._id}/network-stats`);
+            const netRes = await api.get(`/transactions/users/${user._id}/network-stats`);
             setNetworkData(netRes.data.network || []);
 
         } catch (error) {
@@ -124,7 +124,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
 
         if (donationId && isReferralOrDonation) {
             try {
-                const res = await axios.get(`http://localhost:5000/api/transactions/donations/${donationId}/breakdown`);
+                const res = await api.get(`/transactions/donations/${donationId}/breakdown`);
                 setTransactionBreakdown(res.data);
             } catch (error) {
                 console.error('Error fetching transaction breakdown:', error);
@@ -145,7 +145,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
             // Perform explicit search and auto-select logic for navigation
             const query = location.state.searchQuery;
             setSearchQuery(query);
-            axios.get(`http://localhost:5000/api/transactions/users/search?query=${query}`)
+            api.get(`/transactions/users/search?query=${query}`)
                 .then(res => {
                     const users = res.data.users;
                     setSearchResults(users);

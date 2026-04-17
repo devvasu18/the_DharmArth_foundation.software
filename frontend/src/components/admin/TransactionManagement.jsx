@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import {
     Search, Filter, Calendar, Download, ChevronDown, X,
     ArrowRight, User, CheckCircle, Wallet, FileText
@@ -119,7 +119,7 @@ const TransactionManagement = () => {
             setLoading(true);
             const txnId = location.state.openTransactionId;
             // Fetch the specific transaction
-            axios.get('http://localhost:5000/api/transactions/dashboard', {
+            api.get('/transactions/dashboard', {
                 params: { _id: txnId }
             })
                 .then(res => {
@@ -182,7 +182,7 @@ const TransactionManagement = () => {
                 }
             }
 
-            const res = await axios.get('http://localhost:5000/api/transactions/dashboard', { params });
+            const res = await api.get('/transactions/dashboard', { params });
             setTransactions(res.data.data);
             setTotalPages(Number(res.data.totalPages) || 1);
             setTotalRecords(res.data.totalRecords);
@@ -204,7 +204,7 @@ const TransactionManagement = () => {
         }
         setIsSearchingUser(true);
         try {
-            const res = await axios.get(`http://localhost:5000/api/transactions/users/search?query=${query}`);
+            const res = await api.get(`/transactions/users/search?query=${query}`);
             setUserSearchResults(res.data.users);
         } catch (err) {
             console.error(err);
@@ -228,7 +228,7 @@ const TransactionManagement = () => {
         // Fetch Level Data for this user immediately to enable Level Filter
         setLoadingLevels(true);
         try {
-            const res = await axios.get(`http://localhost:5000/api/transactions/users/${user._id}/referral-tree`);
+            const res = await api.get(`/transactions/users/${user._id}/referral-tree`);
             const l1 = res.data.level1Users || [];
             const l2 = [];
             if (res.data.level2Data) {
