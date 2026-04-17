@@ -796,17 +796,23 @@ body {
 
 .admin-sublink {
     display: block;
+    padding: 8px 0;
     padding-left: 10px;
-    transition: all 0.2s;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
 }
 
 .admin-sublink:hover {
-    color: var(--primary-color) !important;
+    color: var(--primary-color);
     transform: translateX(5px);
 }
 
 .active-sub {
     color: var(--primary-color) !important;
     font-weight: 600;
-    border-right: 3px solid var(--primary-color);
+    border-left: 3px solid var(--primary-color) !important;
+    background: rgba(var(--primary-rgb), 0.05);
 }

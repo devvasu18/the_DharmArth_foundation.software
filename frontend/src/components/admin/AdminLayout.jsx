@@ -218,7 +218,6 @@ const AdminLayout = () => {
                                 <NavLink
                                     to="/admin/events" end
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
-                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Blog Pages
@@ -226,7 +225,6 @@ const AdminLayout = () => {
                                 <NavLink
                                     to="/admin/events-header"
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
-                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Events Header
@@ -324,7 +322,6 @@ const AdminLayout = () => {
                                 <NavLink
                                     to="/admin/prescriptions"
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
-                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Prescription Queue
@@ -332,7 +329,6 @@ const AdminLayout = () => {
                                 <NavLink
                                     to="/admin/pharmacy-orders"
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
-                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Order Management
@@ -340,7 +336,6 @@ const AdminLayout = () => {
                                 <NavLink
                                     to="/admin/dispatch"
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
-                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Order Dispatch
@@ -348,7 +343,6 @@ const AdminLayout = () => {
                                 <NavLink
                                     to="/admin/delivery"
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
-                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Route Management
@@ -381,7 +375,6 @@ const AdminLayout = () => {
                                 <NavLink
                                     to="/admin/reports/commission"
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
-                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Commission Reports
