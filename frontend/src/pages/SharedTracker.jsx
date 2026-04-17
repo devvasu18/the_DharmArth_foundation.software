@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import api from '../services/api';
+import api, { API_BASE_URL } from '../services/api';
 import { 
     Truck, 
     CheckCircle, 
@@ -154,7 +154,7 @@ const SharedTracker = () => {
                                               if (!finalImage) return <div style={{padding: '40px', textAlign: 'center', fontSize: '11px', color: '#94a3b8'}}>Identity Photo Pending</div>;
                                               const resolvedUrl = finalImage.startsWith('http') 
                                                   ? finalImage 
-                                                  : `http://localhost:5000${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
+                                                  : `${API_BASE_URL}${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
                                               return <img src={resolvedUrl} alt="Bus" style={{width: '100%', height: '100%', objectFit: 'cover'}} />;
                                           })()}
                                     </div>
@@ -210,7 +210,7 @@ const SharedTracker = () => {
             {imageModalSrc && (
                 <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'}} onClick={() => setImageModalSrc(null)}>
                      <img 
-                        src={imageModalSrc.startsWith('http') ? imageModalSrc : `http://localhost:5000${imageModalSrc.startsWith('/') ? '' : '/'}${imageModalSrc}`} 
+                        src={imageModalSrc.startsWith('http') ? imageModalSrc : `${API_BASE_URL}${imageModalSrc.startsWith('/') ? '' : '/'}${imageModalSrc}`} 
                         alt="Zoom" 
                         style={{maxWidth: '100%', maxHeight: '100%', borderRadius: '12px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'}}
                     />

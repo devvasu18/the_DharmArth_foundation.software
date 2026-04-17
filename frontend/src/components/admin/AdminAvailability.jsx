@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
+import { API_BASE_URL } from '../../services/api';
 import './AdminAvailability.css';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = `${API_BASE_URL}/api`;
 
 const AdminAvailability = () => {
     const [doctors, setDoctors] = useState([]);

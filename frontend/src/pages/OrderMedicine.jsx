@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, FileText, CheckCircle, Clock, AlertCircle, Camera, ShieldCheck, Zap, Truck, ArrowRight, X, Info, MapPin, Plus, Edit2, Phone, User, Share2 } from 'lucide-react';
-import api from '../services/api';
+import api, { API_BASE_URL } from '../services/api';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import SimplifyDosage from '../components/SimplifyDosage';
@@ -378,7 +378,7 @@ const OrderMedicine = () => {
                                             filteredPrescriptions.map(p => (
                                                 <div key={p._id} className="order-card-premium">
                                                     <div className="presc-thumb" onClick={() => setImageModalSrc(p.image)} style={{ cursor: 'pointer' }}>
-                                                        <img src={p.image} alt="Presc" />
+                                                        <img src={p.image.startsWith('http') ? p.image : `${API_BASE_URL}${p.image.startsWith('/') ? '' : '/'}${p.image}`} alt="Presc" />
                                                     </div>
                                                     <div className="order-meta">
                                                         <div className="meta-row">
@@ -784,7 +784,7 @@ const OrderMedicine = () => {
 
                                                             const resolvedUrl = finalImage.startsWith('http')
                                                                 ? finalImage
-                                                                : `http://localhost:5000${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
+                                                                : `${API_BASE_URL}${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
 
                                                             return (
                                                                 <img

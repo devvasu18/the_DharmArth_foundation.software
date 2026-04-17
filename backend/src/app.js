@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
-    origin: 'http://localhost:5173', // Frontend URL
+    origin: [process.env.FRONTEND_URL, 'http://localhost:5173'], // Frontend URLs
     credentials: true
 }));
 app.use(helmet());
@@ -32,6 +32,11 @@ const eventHeaderRoutes = require('./routes/eventHeaderRoutes');
 
 app.get('/', (req, res) => {
     res.send('API is running...');
+});
+
+// Health check for UptimeRobot
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'UP', timestamp: new Date() });
 });
 
 app.use('/api/auth', authRoutes);
