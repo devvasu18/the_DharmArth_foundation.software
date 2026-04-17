@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api, { API_BASE_URL } from '../services/api';
 import { Link } from 'react-router-dom';
 import { Search, Calendar, MapPin, ArrowRight, Loader2, Mail, Heart, Users, CheckCircle, Smartphone, PlayCircle, Eye, Image } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
@@ -26,7 +26,7 @@ const Events = () => {
     useEffect(() => {
         const fetchHeaders = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/event-headers');
+                const res = await api.get('/event-headers');
                 setHeaderSlides(res.data);
             } catch (err) {
                 console.error(err);
@@ -37,7 +37,7 @@ const Events = () => {
 
         const fetchVideos = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/event-videos');
+                const res = await api.get('/event-videos');
                 setEventVideos(res.data);
             } catch (err) {
                 console.error(err);
@@ -62,7 +62,7 @@ const Events = () => {
         try {
             // Fetch all for now and filter status client side or server side
             // Ideally server side, but for MVP fetching default is okay
-            const res = await axios.get('http://localhost:5000/api/events');
+            const res = await api.get('/events');
             setEvents(res.data.events || []);
         } catch (error) {
             console.error('Failed to fetch events');
@@ -99,11 +99,11 @@ const Events = () => {
                             <div
                                 key={slide._id}
                                 className={`slider-item ${index === currentSlide ? 'active' : ''} pos-${slide.textPosition || 'center'}`}
-                                style={{ backgroundImage: slide.type === 'image' ? `url(${slide.url})` : 'none' }}
+                                style={{ backgroundImage: slide.type === 'image' ? `url(${slide.url.startsWith('http') ? slide.url : `${API_BASE_URL}${slide.url.startsWith('/') ? '' : '/'}${slide.url}`})` : 'none' }}
                             >
                                 {slide.type === 'video' && (
                                     <video className="slider-video-bg" autoPlay muted loop playsInline>
-                                        <source src={slide.url} type="video/mp4" />
+                                        <source src={slide.url.startsWith('http') ? slide.url : `${API_BASE_URL}${slide.url.startsWith('/') ? '' : '/'}${slide.url}`} type="video/mp4" />
                                     </video>
                                 )}
                                 <div className="slider-overlay"></div>
@@ -178,7 +178,7 @@ const Events = () => {
                             <div key={event._id} className="event-card">
                                 <Link to={`/events/${event.slug}`} className="event-card-image">
                                     {event.coverImage ? (
-                                        <img src={event.coverImage} alt={event.title} />
+                                        <img src={event.coverImage.startsWith('http') ? event.coverImage : `${API_BASE_URL}${event.coverImage.startsWith('/') ? '' : '/'}${event.coverImage}`} alt={event.title} />
                                     ) : (
                                         <div className="placeholder-image">
                                             <Calendar size={40} color="#ccc" />
@@ -317,7 +317,7 @@ const Events = () => {
                                     style={{ cursor: 'pointer' }}
                                 >
                                     <div className="side-video-thumb">
-                                        <img src={video.thumbnail} alt={video.title} />
+                                        <img src={video.thumbnail.startsWith('http') ? video.thumbnail : `${API_BASE_URL}${video.thumbnail.startsWith('/') ? '' : '/'}${video.thumbnail}`} alt={video.title} />
                                         <div className="play-overlay">
                                             <PlayCircle size={32} />
                                         </div>

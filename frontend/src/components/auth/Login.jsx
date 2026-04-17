@@ -78,7 +78,7 @@ const Login = () => {
 
     const handleGoogleLogin = () => {
         // In a real app, this would redirect to backend OAuth endpoint
-        // window.location.href = 'http://localhost:5000/api/auth/google';
+        // window.location.href = `${API_BASE_URL}/api/auth/google`;
         alert("Google Login Logic initiated! (Requires Google Cloud Credentials setup)");
     };
 

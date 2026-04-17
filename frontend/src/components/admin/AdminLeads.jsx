@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api, { API_BASE_URL } from '../../services/api';
 import { Search, Loader, Phone, Calendar, MessageSquare, CheckCircle, Clock, XCircle, Send } from 'lucide-react';
 import './AdminLeads.css'; // We'll assume some basic styles or reuse AdminUsers.css
 
@@ -21,7 +21,7 @@ const AdminLeads = () => {
     const fetchLeads = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:5000/api/leads?page=${page}&limit=10${statusFilter ? `&status=${statusFilter}` : ''}`);
+            const res = await api.get(`/leads?page=${page}&limit=10${statusFilter ? `&status=${statusFilter}` : ''}`);
             setLeads(res.data.leads);
             setTotalPages(res.data.totalPages);
         } catch (error) {
@@ -42,7 +42,7 @@ const AdminLeads = () => {
                 timestamp: new Date()
             };
 
-            await axios.post(`http://localhost:5000/api/leads/${selectedChat._id}/messages`, {
+            await api.post(`/leads/${selectedChat._id}/messages`, {
                 message: newMessage
             });
 
@@ -67,7 +67,7 @@ const AdminLeads = () => {
 
     const handleStatusChange = async (id, newStatus) => {
         try {
-            await axios.put(`http://localhost:5000/api/leads/${id}`, { status: newStatus });
+            await api.put(`/leads/${id}`, { status: newStatus });
             setLeads(prev => prev.map(l => l._id === id ? { ...l, status: newStatus } : l));
         } catch (error) {
             console.error(error);

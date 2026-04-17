@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import api, { API_BASE_URL } from '../../services/api';
 import { Plus, Trash2, Edit2, Image as ImageIcon, Save, X, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './AdminGalleries.css';
@@ -29,7 +29,7 @@ const AdminGalleries = () => {
     const fetchGalleries = async () => {
         try {
             setIsLoading(true);
-            const res = await axios.get('http://localhost:5000/api/galleries/admin');
+            const res = await api.get('/galleries/admin');
             setGalleries(res.data);
         } catch (err) {
             console.error("Failed to fetch galleries");
@@ -92,10 +92,10 @@ const AdminGalleries = () => {
         e.preventDefault();
         try {
             if (currentGallery._id) {
-                await axios.put(`http://localhost:5000/api/galleries/${currentGallery._id}`, currentGallery);
+                await api.put(`/galleries/${currentGallery._id}`, currentGallery);
                 toast.success("Gallery updated successfully");
             } else {
-                await axios.post('http://localhost:5000/api/galleries', currentGallery);
+                await api.post('/galleries', currentGallery);
                 toast.success("Gallery created successfully");
             }
             setIsEditing(false);
@@ -110,7 +110,7 @@ const AdminGalleries = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this gallery?')) {
             try {
-                await axios.delete(`http://localhost:5000/api/galleries/${id}`);
+                await api.delete(`/galleries/${id}`);
                 toast.success("Gallery deleted");
                 fetchGalleries();
             } catch (err) {
@@ -166,7 +166,7 @@ const AdminGalleries = () => {
                             className="gallery-card"
                         >
                             <div className="card-image-container">
-                                <img src={gallery.coverImage} alt={gallery.title} className="card-image" />
+                                <img src={gallery.coverImage.startsWith('http') ? gallery.coverImage : `${API_BASE_URL}${gallery.coverImage.startsWith('/') ? '' : '/'}${gallery.coverImage}`} alt={gallery.title} className="card-image" />
                                 <div className="card-overlay">
                                     <button onClick={() => { setCurrentGallery(gallery); setIsEditing(true); }} className="card-action-btn" title="Edit">
                                         <Edit2 size={16} />
@@ -253,7 +253,7 @@ const AdminGalleries = () => {
                                     </div>
                                     {currentGallery.coverImage && (
                                         <div style={{ marginTop: '1rem', height: '150px', borderRadius: '12px', overflow: 'hidden' }}>
-                                            <img src={currentGallery.coverImage} alt="Cover Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <img src={currentGallery.coverImage.startsWith('http') ? currentGallery.coverImage : `${API_BASE_URL}${currentGallery.coverImage.startsWith('/') ? '' : '/'}${currentGallery.coverImage}`} alt="Cover Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         </div>
                                     )}
                                 </div>
@@ -312,7 +312,7 @@ const AdminGalleries = () => {
                                                 initial={{ scale: 0 }}
                                                 animate={{ scale: 1 }}
                                             >
-                                                <img src={img} alt={`Img ${idx}`} />
+                                                <img src={img.startsWith('http') ? img : `${API_BASE_URL}${img.startsWith('/') ? '' : '/'}${img}`} alt={`Img ${idx}`} />
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveImage(idx)}

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import { API_BASE_URL } from '../../services/api';
 import { Upload, X } from 'lucide-react';
 import './AdminDoctors.css';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = `${API_BASE_URL}/api`;
 
 const AdminDoctors = () => {
     const [doctors, setDoctors] = useState([]);
@@ -235,7 +236,7 @@ const AdminDoctors = () => {
 
                         <div className="doctor-photo">
                             {doctor.photo ? (
-                                <img src={doctor.photo} alt={doctor.name} />
+                                <img src={doctor.photo.startsWith('http') ? doctor.photo : `${API_BASE_URL}${doctor.photo.startsWith('/') ? '' : '/'}${doctor.photo}`} alt={doctor.name} />
                             ) : (
                                 <div className="photo-placeholder">👨‍⚕️</div>
                             )}
@@ -391,7 +392,7 @@ const AdminDoctors = () => {
                                     </div>
                                     {formData.photo && (
                                         <div className="image-preview">
-                                            <img src={formData.photo} alt="Preview" />
+                                            <img src={formData.photo.startsWith('http') ? formData.photo : `${API_BASE_URL}${formData.photo.startsWith('/') ? '' : '/'}${formData.photo}`} alt="Preview" />
                                             <button
                                                 type="button"
                                                 className="btn-remove-image"

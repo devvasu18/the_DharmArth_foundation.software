@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import api, { API_BASE_URL } from '../services/api';
 import { Calendar, MapPin, Share2, ArrowLeft, Loader2, ChevronLeft, ChevronRight, Clock, Tag, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Navbar from '../components/layout/Navbar';
@@ -32,7 +32,7 @@ const EventDetail = () => {
 
     const fetchEvent = async () => {
         try {
-            const res = await axios.get(`http://localhost:5000/api/events/slug/${slug}`);
+            const res = await api.get(`/events/slug/${slug}`);
             setEvent(res.data);
             document.title = (res.data.metaTitle || res.data.title) + " - The Dharmarth Foundation";
         } catch (error) {
@@ -44,7 +44,7 @@ const EventDetail = () => {
 
     const fetchRecentEvents = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/events');
+            const res = await api.get('/events');
             if (res.data.events) {
                 // Get 6 events: 3 for sidebar, 3 for related grid
                 setRecentEvents(res.data.events.filter(e => e.slug !== slug).slice(0, 6));
@@ -113,7 +113,7 @@ const EventDetail = () => {
                 return (
                     <div key={index} className="detail-block image-block animate-up">
                         <figure className="premium-figure">
-                            <img src={block.content.url} alt={block.content.title || ''} loading="lazy" />
+                            <img src={block.content.url.startsWith('http') ? block.content.url : `${API_BASE_URL}${block.content.url.startsWith('/') ? '' : '/'}${block.content.url}`} alt={block.content.title || ''} loading="lazy" />
                             {block.content.title && <figcaption>{block.content.title}</figcaption>}
                         </figure>
                     </div>
@@ -123,7 +123,7 @@ const EventDetail = () => {
                     <div key={index} className="detail-block video-block animate-up">
                         <div className="block-label">Video Feature</div>
                         <div className="video-card-premium">
-                            <video src={block.content.url} controls poster={block.content.thumbnail}></video>
+                            <video src={block.content.url.startsWith('http') ? block.content.url : `${API_BASE_URL}${block.content.url.startsWith('/') ? '' : '/'}${block.content.url}`} controls poster={block.content.thumbnail && (block.content.thumbnail.startsWith('http') ? block.content.thumbnail : `${API_BASE_URL}${block.content.thumbnail.startsWith('/') ? '' : '/'}${block.content.thumbnail}`)}></video>
                         </div>
                         {block.content.caption && <p className="media-caption">{block.content.caption}</p>}
                     </div>
@@ -183,7 +183,7 @@ const EventDetail = () => {
                     <div
                         key={idx}
                         className={`hero-slide-bg ${idx === currentHeroSlide ? 'active' : ''}`}
-                        style={{ backgroundImage: `url(${img})` }}
+                        style={{ backgroundImage: `url(${img.startsWith('http') ? img : `${API_BASE_URL}${img.startsWith('/') ? '' : '/'}${img}`})` }}
                     />
                 ))}
                 <div className="hero-overlay-gradient"></div>
@@ -262,7 +262,7 @@ const EventDetail = () => {
                                         {recentEvents.slice(0, 3).map(re => (
                                             <Link to={`/events/${re.slug}`} key={re._id} className="sidebar-event-item">
                                                 <div className="sidebar-event-thumb">
-                                                    <img src={re.coverImage || '/placeholder.jpg'} alt={re.title} />
+                                                    <img src={re.coverImage && (re.coverImage.startsWith('http') ? re.coverImage : `${API_BASE_URL}${re.coverImage.startsWith('/') ? '' : '/'}${re.coverImage}`) || '/placeholder.jpg'} alt={re.title} />
                                                 </div>
                                                 <div className="sidebar-event-info">
                                                     <h4>{re.title}</h4>
@@ -306,7 +306,7 @@ const EventDetail = () => {
                             {recentEvents.slice(3, 6).map(evt => (
                                 <Link to={`/events/${evt.slug}`} key={evt._id} className="related-card">
                                     <div className="related-thumb">
-                                        <img src={evt.coverImage || '/placeholder.jpg'} alt={evt.title} />
+                                        <img src={evt.coverImage && (evt.coverImage.startsWith('http') ? evt.coverImage : `${API_BASE_URL}${evt.coverImage.startsWith('/') ? '' : '/'}${evt.coverImage}`) || '/placeholder.jpg'} alt={evt.title} />
                                         <span className="related-tag">{evt.status}</span>
                                     </div>
                                     <div className="related-content">

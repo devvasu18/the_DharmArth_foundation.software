@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api, { API_BASE_URL } from '../../services/api';
 import { Plus, Edit, Trash2, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './AdminEvents.css';
@@ -16,10 +16,7 @@ const AdminEvents = () => {
 
     const fetchEvents = async () => {
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const res = await axios.get('http://localhost:5000/api/events/admin/all', {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const res = await api.get('/events/admin/all');
             setEvents(res.data);
             setLoading(false);
         } catch (error) {
@@ -32,10 +29,7 @@ const AdminEvents = () => {
     const handleDelete = async (id) => {
         if (!window.confirm('Are you sure you want to delete this event?')) return;
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            await axios.delete(`http://localhost:5000/api/events/${id}`, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            await api.delete(`/events/${id}`);
             setEvents(events.filter(e => e._id !== id));
             toast.success('Event deleted');
         } catch (error) {
@@ -75,7 +69,7 @@ const AdminEvents = () => {
                                 <td>
                                     <div className="event-info-cell">
                                         {event.coverImage ? (
-                                            <img src={event.coverImage} alt="" className="event-thumb" />
+                                            <img src={event.coverImage.startsWith('http') ? event.coverImage : `${API_BASE_URL}${event.coverImage.startsWith('/') ? '' : '/'}${event.coverImage}`} alt="" className="event-thumb" />
                                         ) : (
                                             <div className="event-thumb" style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>N/A</div>
                                         )}

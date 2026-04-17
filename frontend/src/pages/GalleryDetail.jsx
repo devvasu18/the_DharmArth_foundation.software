@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import api, { API_BASE_URL } from '../services/api';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import './GalleryDetail.css';
@@ -14,7 +14,7 @@ const GalleryDetail = () => {
     useEffect(() => {
         const fetchGallery = async () => {
             try {
-                const res = await axios.get(`http://localhost:5000/api/galleries/${id}`);
+                const res = await api.get(`/galleries/${id}`);
                 setGallery(res.data);
             } catch (err) {
                 console.error(err);
@@ -57,7 +57,10 @@ const GalleryDetail = () => {
 
                     <div className="slide-frame">
                         <img
-                            src={gallery.images[currentIndex] || gallery.coverImage}
+                            src={(gallery.images[currentIndex] || gallery.coverImage).startsWith('http') 
+                                ? (gallery.images[currentIndex] || gallery.coverImage) 
+                                : `${API_BASE_URL}${(gallery.images[currentIndex] || gallery.coverImage).startsWith('/') ? '' : '/'}${gallery.images[currentIndex] || gallery.coverImage}`
+                            }
                             alt={`Slide ${currentIndex}`}
                             className="active-slide"
                         />

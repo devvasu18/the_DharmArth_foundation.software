@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../services/api';
+import api, { API_BASE_URL } from '../../services/api';
 import toast from 'react-hot-toast';
 import { Truck, MapPin, Phone, User, CheckCircle, Navigation, X, AlertCircle } from 'lucide-react';
 import './AdminDispatch.css';
@@ -218,7 +218,7 @@ const AdminDispatch = () => {
                                         <img 
                                             src={buses.find(b => b._id.toString() === assignPayload.busId).image.startsWith('http') 
                                                 ? buses.find(b => b._id.toString() === assignPayload.busId).image 
-                                                : `http://localhost:5000${buses.find(b => b._id.toString() === assignPayload.busId).image.startsWith('/') ? '' : '/'}${buses.find(b => b._id.toString() === assignPayload.busId).image}`
+                                                : `${API_BASE_URL}${buses.find(b => b._id.toString() === assignPayload.busId).image.startsWith('/') ? '' : '/'}${buses.find(b => b._id.toString() === assignPayload.busId).image}`
                                             } 
                                             alt="Selected Bus" 
                                             style={{width: '100%', height: '80px', objectFit: 'cover'}} 

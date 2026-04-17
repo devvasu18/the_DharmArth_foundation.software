@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api, { API_BASE_URL } from '../../services/api';
 import {
     Save, ArrowLeft, Image as ImageIcon, Video, Type, Youtube, Instagram,
     Trash2, ArrowUp, ArrowDown, Move, Loader2
@@ -43,10 +43,7 @@ const EventEditor = () => {
     const fetchEvent = async () => {
         setLoading(true);
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const res = await axios.get(`http://localhost:5000/api/events/admin/${id}`, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const res = await api.get(`/events/admin/${id}`);
             setFormData(res.data);
         } catch (error) {
             console.error(error);
@@ -131,16 +128,11 @@ const EventEditor = () => {
 
         setSaving(true);
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
             if (isEditMode) {
-                await axios.put(`http://localhost:5000/api/events/${id}`, formData, {
-                    headers: { Authorization: `Bearer ${user.token}` }
-                });
+                await api.put(`/events/${id}`, formData);
                 toast.success('Event updated successfully');
             } else {
-                await axios.post('http://localhost:5000/api/events', formData, {
-                    headers: { Authorization: `Bearer ${user.token}` }
-                });
+                await api.post('/events', formData);
                 toast.success('Event created successfully');
                 navigate('/admin/events');
             }
@@ -161,7 +153,7 @@ const EventEditor = () => {
 
         try {
             const toastId = toast.loading('Uploading...');
-            const res = await axios.post('http://localhost:5000/api/upload', uploadData, {
+            const res = await api.post('/upload', uploadData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             toast.dismiss(toastId);
@@ -256,14 +248,14 @@ const EventEditor = () => {
                                 />
                                 <input type="file" onChange={(e) => handleFileUpload(e, 'coverImage')} style={{ width: 100 }} />
                             </div>
-                            {formData.coverImage && <img src={formData.coverImage} className="preview-img" alt="Cover" />}
+                            {formData.coverImage && <img src={formData.coverImage.startsWith('http') ? formData.coverImage : `${API_BASE_URL}${formData.coverImage.startsWith('/') ? '' : '/'}${formData.coverImage}`} className="preview-img" alt="Cover" />}
                         </div>
                         <div className="form-group full-width">
                             <label>Hero Slider Images (Optional - overrides Cover Image on page)</label>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 10 }}>
                                 {formData.heroImages && formData.heroImages.map((img, idx) => (
                                     <div key={idx} style={{ position: 'relative', width: 100, height: 60 }}>
-                                        <img src={img} alt="Hero" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4 }} />
+                                        <img src={img.startsWith('http') ? img : `${API_BASE_URL}${img.startsWith('/') ? '' : '/'}${img}`} alt="Hero" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4 }} />
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -282,7 +274,7 @@ const EventEditor = () => {
                                         const uploadData = new FormData();
                                         uploadData.append('image', file);
                                         try {
-                                            const res = await axios.post('http://localhost:5000/api/upload', uploadData, {
+                                            const res = await api.post('/upload', uploadData, {
                                                 headers: { 'Content-Type': 'multipart/form-data' }
                                             });
                                             setFormData(prev => ({
@@ -337,7 +329,7 @@ const EventEditor = () => {
                                                     <input type="text" className="form-control" value={block.content.url} onChange={(e) => updateBlock(index, 'url', e.target.value)} />
                                                     <input type="file" onChange={(e) => handleBlockFileUpload(e, index, 'url')} style={{ width: 80 }} />
                                                 </div>
-                                                {block.content.url && <img src={block.content.url} className="preview-img" alt="Preview" />}
+                                                {block.content.url && <img src={block.content.url.startsWith('http') ? block.content.url : `${API_BASE_URL}${block.content.url.startsWith('/') ? '' : '/'}${block.content.url}`} className="preview-img" alt="Preview" />}
                                             </div>
                                             <div className="form-group">
                                                 <label>Title/Caption</label>
@@ -417,7 +409,7 @@ const EventEditor = () => {
                                                     <input type="text" className="form-control" value={block.content.url} onChange={(e) => updateBlock(index, 'url', e.target.value)} />
                                                     <input type="file" onChange={(e) => handleBlockFileUpload(e, index, 'url')} style={{ width: 80 }} />
                                                 </div>
-                                                {block.content.url && <video src={block.content.url} className="preview-img" controls />}
+                                                {block.content.url && <video src={block.content.url.startsWith('http') ? block.content.url : `${API_BASE_URL}${block.content.url.startsWith('/') ? '' : '/'}${block.content.url}`} className="preview-img" controls />}
                                             </div>
                                             <div className="form-group">
                                                 <label>Caption</label>

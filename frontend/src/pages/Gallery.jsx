@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api, { API_BASE_URL } from '../services/api';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
@@ -13,7 +13,7 @@ const Gallery = () => {
     useEffect(() => {
         const fetchGalleries = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/galleries');
+                const res = await api.get('/galleries');
                 setGalleries(res.data);
             } catch (err) {
                 console.error(err);
@@ -40,7 +40,13 @@ const Gallery = () => {
                     {galleries.map(gallery => (
                         <Link to={`/gallery/${gallery._id}`} key={gallery._id} className="gallery-card">
                             <div className="gallery-card-img">
-                                <img src={gallery.coverImage} alt={gallery.title} />
+                                <img 
+                                    src={gallery.coverImage.startsWith('http') 
+                                        ? gallery.coverImage 
+                                        : `${API_BASE_URL}${gallery.coverImage.startsWith('/') ? '' : '/'}${gallery.coverImage}`
+                                    } 
+                                    alt={gallery.title} 
+                                />
                                 <div className="gallery-overlay">
                                     <span className="view-text">View Gallery</span>
                                 </div>
