@@ -1,9 +1,7 @@
 {
-  "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/frontend/index.html"
-    }
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/frontend/(.*)", "dest": "/frontend/index.html" },
+    { "src": "/(.*)", "dest": "/frontend/index.html" }
   ]
 }
