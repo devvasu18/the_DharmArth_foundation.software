@@ -50,6 +50,11 @@ body {
     width: var(--sidebar-collapsed-width);
 }
 
+.admin-sidebar.collapsed .admin-brand {
+    display: flex;
+    justify-content: center;
+}
+
 .admin-brand {
     height: var(--topbar-height);
     display: flex;
@@ -333,7 +338,9 @@ body {
     border: none;
     cursor: pointer;
     color: var(--primary-color);
-    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 8px;
     border-radius: 4px;
     transition: background 0.2s;
@@ -737,6 +744,10 @@ body {
     }
 
     /* Ensure labels are visible when drawer is open on mobile */
+    .admin-sidebar.collapsed .admin-brand {
+        display: block !important;
+    }
+
     .admin-sidebar.collapsed .admin-link-text {
         display: block !important;
         opacity: 1;

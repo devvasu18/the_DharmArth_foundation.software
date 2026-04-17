@@ -173,9 +173,8 @@ const AdminLayout = () => {
                     className="admin-brand"
                     onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                     style={{ cursor: 'pointer' }}
-                    title={isSidebarCollapsed ? "Collapse Sidebar" : "Expand Sidebar"}
                 >
-                    {(!isSidebarCollapsed && window.innerWidth < 992) ? <Menu size={24} /> : 'Dharmarth'}
+                    {isSidebarCollapsed ? <Menu size={24} /> : 'Dharmarth'}
                 </div>
                 <nav className="admin-nav">
                     <NavLink to="/admin" end className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
@@ -216,33 +215,33 @@ const AdminLayout = () => {
 
                         {isEventsDropdownOpen && (
                             <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
-                                <NavLink 
-                                    to="/admin/events" end 
-                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                <NavLink
+                                    to="/admin/events" end
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Blog Pages
                                 </NavLink>
-                                <NavLink 
-                                    to="/admin/events-header" 
-                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                <NavLink
+                                    to="/admin/events-header"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Events Header
                                 </NavLink>
-                                <NavLink 
-                                    to="/admin/event-videos" 
-                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                <NavLink
+                                    to="/admin/event-videos"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     YouTube Videos
                                 </NavLink>
-                                <NavLink 
-                                    to="/admin/galleries" 
-                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                <NavLink
+                                    to="/admin/galleries"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
@@ -276,17 +275,17 @@ const AdminLayout = () => {
 
                         {(isDoctorsDropdownOpen || location.pathname.includes('/admin/doctors') || location.pathname.includes('/admin/availability')) && (
                             <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
-                                <NavLink 
-                                    to="/admin/doctors" 
-                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                <NavLink
+                                    to="/admin/doctors"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Doctor Management
                                 </NavLink>
-                                <NavLink 
-                                    to="/admin/availability" 
-                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                <NavLink
+                                    to="/admin/availability"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
@@ -322,33 +321,33 @@ const AdminLayout = () => {
 
                         {(isPharmacyDropdownOpen || location.pathname.includes('/admin/prescriptions') || location.pathname.includes('/admin/delivery') || location.pathname.includes('/admin/dispatch') || location.pathname.includes('/admin/pharmacy-orders')) && (
                             <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
-                                <NavLink 
-                                    to="/admin/prescriptions" 
-                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                <NavLink
+                                    to="/admin/prescriptions"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Prescription Queue
                                 </NavLink>
-                                <NavLink 
-                                    to="/admin/pharmacy-orders" 
-                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                <NavLink
+                                    to="/admin/pharmacy-orders"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Order Management
                                 </NavLink>
-                                <NavLink 
-                                    to="/admin/dispatch" 
-                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                <NavLink
+                                    to="/admin/dispatch"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Order Dispatch
                                 </NavLink>
-                                <NavLink 
-                                    to="/admin/delivery" 
-                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                <NavLink
+                                    to="/admin/delivery"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
@@ -379,9 +378,9 @@ const AdminLayout = () => {
 
                         {isReportsDropdownOpen && (
                             <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
-                                <NavLink 
-                                    to="/admin/reports/commission" 
-                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} 
+                                <NavLink
+                                    to="/admin/reports/commission"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
@@ -411,8 +410,8 @@ const AdminLayout = () => {
 
             {/* Mobile Overlay */}
             {isSidebarCollapsed && (
-                <div 
-                    className="sidebar-overlay mobile-only" 
+                <div
+                    className="sidebar-overlay mobile-only"
                     onClick={() => setIsSidebarCollapsed(false)}
                 ></div>
             )}
@@ -420,9 +419,7 @@ const AdminLayout = () => {
             <div className="admin-main-wrapper">
                 <header className="admin-topbar">
                     <div className="topbar-left">
-                        <button className="sidebar-toggle mobile-only" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
-                            {isSidebarCollapsed ? <LogOut size={20} style={{ transform: 'rotate(180deg)' }} /> : <Menu size={20} />}
-                        </button>
+
                         <span className="header-brand">Dharmarth</span>
                     </div>
 
