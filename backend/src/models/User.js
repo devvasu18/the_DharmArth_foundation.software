@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { encrypt, decrypt } = require('../utils/security');
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -36,6 +37,23 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
+    referralCode: {
+        type: String,
+        unique: true,
+        sparse: true // Only for motivators
+    },
+    isMotivator: {
+        type: Boolean,
+        default: false
+    },
+    payoutCredentials: {
+        bankName: String,
+        accountHolder: String,
+        accountNumber: String,
+        ifscCode: String,
+        upiId: String,
+        isVerified: { type: Boolean, default: false }
+    },
     language: {
         type: String,
         default: 'hi',
@@ -59,14 +77,30 @@ const userSchema = new mongoose.Schema({
     timestamps: true,
 });
 
-// Encrypt password
-// Encrypt password
+// Encrypt password and sensitive details
 userSchema.pre('save', async function () {
-    if (!this.isModified('password')) {
-        return;
+    // Password
+    if (this.isModified('password')) {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
     }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+    
+    // Banking Credentials
+    if (this.isModified('payoutCredentials.accountNumber') && this.payoutCredentials.accountNumber) {
+        this.payoutCredentials.accountNumber = encrypt(this.payoutCredentials.accountNumber);
+    }
+    if (this.isModified('payoutCredentials.ifscCode') && this.payoutCredentials.ifscCode) {
+        this.payoutCredentials.ifscCode = encrypt(this.payoutCredentials.ifscCode);
+    }
+});
+
+userSchema.post('init', function(doc) {
+    if (doc.payoutCredentials?.accountNumber) {
+        doc.payoutCredentials.accountNumber = decrypt(doc.payoutCredentials.accountNumber);
+    }
+    if (doc.payoutCredentials?.ifscCode) {
+        doc.payoutCredentials.ifscCode = decrypt(doc.payoutCredentials.ifscCode);
+    }
 });
 
 // Compare password

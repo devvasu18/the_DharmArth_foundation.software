@@ -28,6 +28,9 @@ const loginUser = async (req, res) => {
                     mobile: user.referredBy.mobile
                 } : null,
                 language: user.language,
+                isMotivator: user.isMotivator,
+                referralCode: user.referralCode,
+                payoutCredentials: user.payoutCredentials,
                 token: generateToken(user._id),
             });
         } else {

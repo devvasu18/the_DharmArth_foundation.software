@@ -2,6 +2,7 @@ const Wallet = require('../models/Wallet');
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const Setting = require('../models/Setting');
+const notificationService = require('./notificationService');
 
 const processDonationCommission = async (donationAmount, motivatorMobile, donationId, donorName, donorMobile) => {
     if (!motivatorMobile) return;
@@ -41,6 +42,9 @@ const processDonationCommission = async (donationAmount, motivatorMobile, donati
         });
 
         console.log(`L1 Commission: ${comm1} credited to ${motivator.name}`);
+        
+        // Notify Motivator
+        await notificationService.notifyMotivatorDonation(motivator, donationAmount, donorName, 1);
 
         // --- LEVEL 2 COMMISSION ---
         // "This commission will be given to the motivator of the Level 1 motivator"
@@ -70,6 +74,9 @@ const processDonationCommission = async (donationAmount, motivatorMobile, donati
                 });
 
                 console.log(`L2 Commission: ${comm2} credited to ${grandMotivator.name}`);
+        
+        // Notify Grand Motivator
+        await notificationService.notifyMotivatorDonation(grandMotivator, donationAmount, donorName, 2);
             }
         }
 

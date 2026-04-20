@@ -3,6 +3,7 @@ import Navbar from '../layout/Navbar';
 import AuthFooter from './AuthFooter';
 import api from '../../services/api';
 import { useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import './Auth.css';
 import { Eye, EyeOff, User, BadgeCheck } from 'lucide-react';
 import SuccessModal from './SuccessModal';
@@ -58,7 +59,7 @@ const Signup = () => {
     };
 
     const handleGoogleSignup = () => {
-        alert("Google Signup Logic initiated! (Requires Google Cloud Credentials setup)");
+        toast.info("Google Signup Logic initiated! (Requires Google Cloud Credentials setup)");
     };
 
     const handleMobileChange = (e) => {

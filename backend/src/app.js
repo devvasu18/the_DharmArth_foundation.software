@@ -16,6 +16,8 @@ app.use(cors({
 }));
 app.use(helmet());
 app.use(morgan('dev'));
+const path = require('path');
+app.use('/public', express.static(path.join(__dirname, '../public')));
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
@@ -59,6 +61,7 @@ app.use('/api/availability', require('./routes/availabilityRoutes'));
 app.use('/api/prescriptions', require('./routes/prescriptionRoutes'));
 app.use('/api/delivery', require('./routes/deliveryRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/api/payouts', require('./routes/payoutRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -10,6 +10,7 @@ const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [user, setUser] = useState(null);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const dropdownRef = React.useRef(null);
 
     // Check auth status on mount
     React.useEffect(() => {
@@ -22,6 +23,23 @@ const Navbar = () => {
             }
         }
     }, []);
+
+    // Close dropdown on click outside
+    React.useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsProfileOpen(false);
+            }
+        };
+
+        if (isProfileOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isProfileOpen]);
 
     const handleLogout = () => {
         localStorage.removeItem('user');
@@ -96,7 +114,7 @@ const Navbar = () => {
 
                     <Link to="/donate" className="btn btn-outline">{t('navbar.donate')}</Link>
                     {user ? (
-                        <div className="nav-dropdown" style={{ cursor: 'pointer', position: 'relative' }}>
+                        <div className="nav-dropdown" ref={dropdownRef} style={{ cursor: 'pointer', position: 'relative' }}>
                             <span
                                 className="nav-link"
                                 style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}

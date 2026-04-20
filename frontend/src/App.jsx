@@ -21,6 +21,7 @@ import AdminTransactions from './components/admin/AdminTransactions';
 
 import TransactionManagement from './components/admin/TransactionManagement';
 import AdminEvents from './components/admin/AdminEvents';
+import PayoutManagement from './components/admin/PayoutManagement';
 
 import EventEditor from './components/admin/EventEditor';
 import AdminEventHeaders from './components/admin/AdminEventHeaders';
@@ -77,6 +78,7 @@ function App() {
             <Route path="settings" element={<AdminSettings />} />
             <Route path="roles" element={<AdminRoles />} />
             <Route path="transaction-management" element={<TransactionManagement />} />
+            <Route path="payouts" element={<PayoutManagement />} />
             <Route path="events" element={<AdminEvents />} />
             <Route path="events-header" element={<AdminEventHeaders />} />
             <Route path="event-videos" element={<AdminEventVideos />} />

@@ -327,4 +327,79 @@ router.put('/language', protect, async (req, res) => {
     }
 });
 
+// @desc    Become a Motivator
+// @route   PUT /api/users/become-motivator
+// @access  Private
+router.put('/become-motivator', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const { bankName, accountHolder, accountNumber, ifscCode, upiId } = req.body;
+
+        console.log(`Starting motivator registration for user: ${user.mobile} (${user.name})`);
+
+        // 1. Generate referralCode if not exists
+        if (!user.referralCode) {
+            try {
+                // Ensure name exists for prefix
+                const namePart = (user.name || 'USER').split(' ')[0] || 'USER';
+                const prefix = namePart.substring(0, 4).toUpperCase();
+                const suffix = (user.mobile || '0000').slice(-4);
+                let code = `${prefix}${suffix}`;
+                
+                // Check if code exists
+                const exists = await User.findOne({ referralCode: code });
+                if (exists) {
+                    // Force a unique code with random numbers
+                    code = `${prefix}${Math.floor(1000 + Math.random() * 9000)}`;
+                }
+                user.referralCode = code;
+                console.log(`Generated referral code: ${code}`);
+            } catch (err) {
+                console.error("Referral Code Generation Error:", err);
+                throw new Error("Failed to generate unique referral code");
+            }
+        }
+
+        user.isMotivator = true;
+        user.payoutCredentials = {
+            bankName: bankName || '',
+            accountHolder: accountHolder || '',
+            accountNumber: accountNumber || '',
+            ifscCode: ifscCode || '',
+            upiId: upiId || '',
+            isVerified: false 
+        };
+
+        await user.save();
+        console.log(`Motivator registration successful for: ${user.mobile}`);
+
+        const sanitizedUser = user.toObject();
+        delete sanitizedUser.password;
+        
+        // Ensure decrypted values are sent back to frontend
+        if (sanitizedUser.payoutCredentials?.accountNumber) {
+            const { decrypt } = require('../utils/security');
+            sanitizedUser.payoutCredentials.accountNumber = decrypt(sanitizedUser.payoutCredentials.accountNumber);
+        }
+        if (sanitizedUser.payoutCredentials?.ifscCode) {
+            const { decrypt } = require('../utils/security');
+            sanitizedUser.payoutCredentials.ifscCode = decrypt(sanitizedUser.payoutCredentials.ifscCode);
+        }
+
+        res.json({
+            message: 'Successfully registered as Motivator',
+            user: sanitizedUser
+        });
+
+    } catch (error) {
+        console.error("Become Motivator Error:", error);
+        res.status(500).json({ 
+            message: error.message,
+            detail: "Internal server error during motivator registration" 
+        });
+    }
+});
+
 module.exports = router;

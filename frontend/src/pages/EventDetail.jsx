@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api, { API_BASE_URL } from '../services/api';
 import { Calendar, MapPin, Share2, ArrowLeft, Loader2, ChevronLeft, ChevronRight, Clock, Tag, ArrowRight } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
@@ -245,7 +246,7 @@ const EventDetail = () => {
 
                             <button className="share-btn-large" onClick={() => {
                                 navigator.clipboard.writeText(window.location.href);
-                                alert('Link copied to clipboard!');
+                                toast.success('Link copied to clipboard!');
                             }}>
                                 <Share2 size={18} /> Share Event
                             </button>

@@ -2,17 +2,37 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import AuthFooter from '../components/auth/AuthFooter';
 import api from '../services/api';
-import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote } from 'lucide-react';
+import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, CreditCard, ShieldCheck, Send, ArrowRight, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import './UserDashboard.css';
 import PayoutModal from './PayoutModal';
 
 const UserDashboard = () => {
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
     const [wallet, setWallet] = useState(null);
+
+    // Force login if no token (handles corrupted localStorage from previous bug)
+    useEffect(() => {
+        if (!user || !user.token) {
+            window.location.href = '/login';
+        }
+    }, [user]);
+
     const [transactions, setTransactions] = useState([]);
     const [copied, setCopied] = useState(false);
     const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
+    const [stats, setStats] = useState({ l1Donors: 0, l2Donors: 0 });
+    const [isBecomingMotivator, setIsBecomingMotivator] = useState(false);
+    const [payoutMethod, setPayoutMethod] = useState(null); // 'bank' or 'upi'
+    const [bankForm, setBankForm] = useState({
+        bankName: '',
+        accountHolder: '',
+        accountNumber: '',
+        ifscCode: '',
+        upiId: ''
+    });
+    const [bankLoading, setBankLoading] = useState(false);
 
     // Filters (Default to current month/year)
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
@@ -22,31 +42,74 @@ const UserDashboard = () => {
     const [txnTypeFilter, setTxnTypeFilter] = useState('All');
     const [commissionLevelFilter, setCommissionLevelFilter] = useState('All');
 
+    // Fetch initial profile, balance and stats
     useEffect(() => {
-        // Only fetch data for normal users
-        if (user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
-
-        const fetchData = async () => {
+        if (!user?.token || user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
+        
+        const fetchInitialData = async () => {
             try {
-                // Fetch wallet balance
+                const uRes = await api.get('/users/profile');
+                const updatedUser = { ...uRes.data, token: user.token };
+                setUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+
                 const wRes = await api.get('/wallet/my');
                 setWallet(wRes.data);
 
-                // Fetch transactions with filters
+                const sRes = await api.get('/wallet/stats');
+                setStats(sRes.data);
+            } catch (error) {
+                console.error("Error fetching initial dashboard data", error);
+            }
+        };
+        fetchInitialData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Fetch transaction history when filters change
+    useEffect(() => {
+        if (!user?.token || user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
+
+        const fetchTransactions = async () => {
+            try {
                 const tRes = await api.get(`/wallet/transactions?month=${selectedMonth}&year=${selectedYear}`);
                 setTransactions(tRes.data);
             } catch (error) {
-                console.error("Error fetching dashboard data", error);
+                console.error("Error fetching transactions", error);
             }
         };
-        fetchData();
-    }, [user, selectedMonth, selectedYear]);
+        fetchTransactions();
+    }, [selectedMonth, selectedYear]);
 
-    const shareLink = `${window.location.origin}/donate?ref=${user?.mobile}`;
+    const handleBecomeMotivator = async (e) => {
+        e.preventDefault();
+        setBankLoading(true);
+        try {
+            const { data } = await api.put('/users/become-motivator', bankForm);
+            
+            const updatedUser = { ...data.user, token: user.token };
+            
+            setUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setIsBecomingMotivator(false);
+            
+            // Reload to ensure all components (Navbar, etc) have fresh data
+            window.location.reload(); 
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to register as motivator");
+        } finally {
+            setBankLoading(false);
+        }
+    };
+
+    const shareLink = user?.referralCode
+        ? `${window.location.origin}/donate?ref=${user.referralCode}`
+        : `${window.location.origin}/donate?ref=${user?.mobile}`;
 
     const handleCopy = () => {
         navigator.clipboard.writeText(shareLink);
         setCopied(true);
+        toast.success("Link copied to clipboard!");
         setTimeout(() => setCopied(false), 2000);
     };
 
@@ -60,6 +123,11 @@ const UserDashboard = () => {
                 <div className="dashboard-header">
 
                     <p className="dashboard-subtitle">Manage your earnings, payouts, and referrals</p>
+                    {user?.isMotivator && user?.referralCode && (
+                        <div className="motivator-id-badge">
+                            Motivator ID: <strong>{user.referralCode}</strong>
+                        </div>
+                    )}
                 </div>
 
                 {/* Only show Wallet & Share options to Normal Users (Not Admin/Role-based) */}
@@ -87,13 +155,35 @@ const UserDashboard = () => {
                                 </div>
 
                                 <div className="wallet-stats">
-                                    <TrendingUp size={16} />
-                                    <span>Total Earned: ₹ {wallet?.totalEarned?.toLocaleString() || 0}</span>
+                                    <div className="stat-row">
+                                        <TrendingUp size={16} />
+                                        <span>Total Earned: ₹ {wallet?.totalEarned?.toLocaleString() || 0}</span>
+                                    </div>
+                                    <div className="stat-row secondary">
+                                        <div className="stat-item">
+                                            <span className="stat-val">{stats.l1Donors || 0}</span>
+                                            <span className="stat-lbl">L1 Donors</span>
+                                        </div>
+                                        <div className="stat-item">
+                                            <span className="stat-val">{stats.l2Donors || 0}</span>
+                                            <span className="stat-lbl">L2 Donors</span>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <button
+
+                                <button 
                                     className="payout-btn"
-                                    onClick={() => setIsPayoutModalOpen(true)}
+                                    onClick={() => {
+                                        const hasPayoutDetails = user?.payoutCredentials && (user?.payoutCredentials.accountNumber || user?.payoutCredentials.upiId);
+                                        if (!user?.isMotivator || !hasPayoutDetails) {
+                                            // Scroll to onboarding
+                                            document.querySelector('.onboarding-section')?.scrollIntoView({ behavior: 'smooth' });
+                                            toast.error("Please register your Payout Details (Bank or UPI) below first.");
+                                        } else {
+                                            setIsPayoutModalOpen(true);
+                                        }
+                                    }}
                                 >
                                     Withdraw Now
                                 </button>
@@ -144,7 +234,7 @@ const UserDashboard = () => {
                                 <div className="share-actions">
                                     <button
                                         className="share-action-btn btn-whatsapp"
-                                        onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent("Check this out! " + shareLink)}`, '_blank')}
+                                        onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent("Join me in supporting this cause! Donate here: " + shareLink)}`, '_blank')}
                                     >
                                         WhatsApp
                                     </button>
@@ -154,15 +244,128 @@ const UserDashboard = () => {
                                     >
                                         Facebook
                                     </button>
-                                    <button
-                                        className="share-action-btn btn-instagram"
-                                        onClick={() => window.open('https://www.instagram.com/', '_blank')}
-                                    >
-                                        Instagram
-                                    </button>
                                 </div>
+
+
                             </motion.div>
                         </div>
+
+                        {(!user?.isMotivator || !user?.payoutCredentials || (!user.payoutCredentials.accountNumber && !user.payoutCredentials.upiId)) && (
+                            <motion.div 
+                                className="onboarding-section"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <div className="onboarding-card">
+                                    <div className="onboarding-header">
+                                        <div className="onboarding-badge">Required for Payouts</div>
+
+                                        <p>Complete your profile with bank details to unlock withdrawals and higher commissions.</p>
+                                    </div>
+                                    <div className="payout-method-selector-label">Select Payout Method</div>
+                                    <div className="payout-method-options">
+                                        <div
+                                            className={`method-option ${payoutMethod === 'bank' ? 'active' : ''}`}
+                                            onClick={() => setPayoutMethod('bank')}
+                                        >
+                                            <div className="option-check"></div>
+                                            <Building className="option-icon" size={24} />
+                                            <div className="option-info">
+                                                <span className="option-title">Bank Transfer</span>
+                                                <span className="option-desc">Direct to bank account</span>
+                                            </div>
+                                        </div>
+                                        <div
+                                            className={`method-option ${payoutMethod === 'upi' ? 'active' : ''}`}
+                                            onClick={() => setPayoutMethod('upi')}
+                                        >
+                                            <div className="option-check"></div>
+                                            <Send className="option-icon" size={24} />
+                                            <div className="option-info">
+                                                <span className="option-title">UPI / Mobile Pay</span>
+                                                <span className="option-desc">Fast & Instant payout</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {payoutMethod && (
+                                        <form onSubmit={handleBecomeMotivator} className="onboarding-form">
+                                            <div className="form-grid">
+                                                {payoutMethod === 'bank' ? (
+                                                    <>
+                                                        <div className="input-group">
+                                                            <label>Bank Name</label>
+                                                            <div className="input-with-icon">
+                                                                <Building className="field-icon" size={18} />
+                                                                <input required type="text" value={bankForm.bankName} onChange={e => setBankForm({ ...bankForm, bankName: e.target.value })} placeholder="e.g. HDFC Bank" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="input-group">
+                                                            <label>Account Holder Name</label>
+                                                            <div className="input-with-icon">
+                                                                <User className="field-icon" size={18} />
+                                                                <input required type="text" value={bankForm.accountHolder} onChange={e => setBankForm({ ...bankForm, accountHolder: e.target.value })} placeholder="Your Name" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="input-group">
+                                                            <label>Account Number</label>
+                                                            <div className="input-with-icon">
+                                                                <CreditCard className="field-icon" size={18} />
+                                                                <input required type="text" value={bankForm.accountNumber} onChange={e => setBankForm({ ...bankForm, accountNumber: e.target.value })} placeholder="Enter Account Number" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="input-group">
+                                                            <label>IFSC Code</label>
+                                                            <div className="input-with-icon">
+                                                                <ShieldCheck className="field-icon" size={18} />
+                                                                <input required type="text" value={bankForm.ifscCode} onChange={e => setBankForm({ ...bankForm, ifscCode: e.target.value.toUpperCase() })} placeholder="HDFC0001234" />
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="input-group">
+                                                            <label>Account Holder Name</label>
+                                                            <div className="input-with-icon">
+                                                                <User className="field-icon" size={18} />
+                                                                <input required type="text" value={bankForm.accountHolder} onChange={e => setBankForm({ ...bankForm, accountHolder: e.target.value })} placeholder="Your Name" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="input-group">
+                                                            <label>UPI ID or Mobile Number</label>
+                                                            <div className="input-with-icon">
+                                                                <Send className="field-icon" size={18} />
+                                                                <input required type="text" value={bankForm.upiId} onChange={e => setBankForm({ ...bankForm, upiId: e.target.value })} placeholder="e.g. 9876543210@paytm" />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="upi-compatibility full-width">
+                                                            <span className="comp-text">Supports all major apps</span>
+                                                            <div className="comp-icons">
+                                                                <div className="comp-badge">G-Pay</div>
+                                                                <div className="comp-badge">PhonePe</div>
+                                                                <div className="comp-badge">Paytm</div>
+                                                                <div className="comp-badge">+ UPI</div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="upi-info-banner full-width">
+                                                            <ShieldCheck className="info-icon" size={18} />
+                                                            <p>Payments will be sent instantly to the UPI app linked to this ID or Mobile Number.</p>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <div className="form-actions mt-6">
+                                                <button type="submit" className="btn-register-modern" disabled={bankLoading}>
+                                                    {bankLoading ? 'Registering...' : `Register ${payoutMethod === 'bank' ? 'Bank' : 'UPI'} & Start Earning`}
+                                                    {!bankLoading && <ArrowRight size={18} />}
+                                                </button>
+                                            </div>
+                                        </form>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
 
                         {/* TRANSACTIONS */}
                         <motion.div
@@ -267,9 +470,21 @@ const UserDashboard = () => {
                                                         {txn.type === 'credit' ? '+' : ''} ₹{txn.amount}
                                                     </td>
                                                     <td>
-                                                        <span className={`status-badge ${txn.type === 'credit' || txn.isDonation ? 'badge-credit' : 'badge-debit'}`}>
-                                                            {txn.type === 'credit' ? 'Commission' : (txn.isDonation ? 'Donation' : txn.type)}
-                                                        </span>
+                                                        <div className="status-cell">
+                                                            <span className={`status-badge ${txn.type === 'credit' || txn.isDonation ? 'badge-credit' : 'badge-debit'}`}>
+                                                                {txn.type === 'credit' ? 'Commission' : (txn.isDonation ? 'Donation' : txn.type)}
+                                                            </span>
+                                                            {txn.certificateUrl && (
+                                                                <a
+                                                                    href={`${api.defaults.baseURL.replace('/api', '')}${txn.certificateUrl}`}
+                                                                    target="_blank"
+                                                                    className="btn-download-receipt"
+                                                                    title="Download 80G Receipt"
+                                                                >
+                                                                    <Download size={12} /> Receipt
+                                                                </a>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}

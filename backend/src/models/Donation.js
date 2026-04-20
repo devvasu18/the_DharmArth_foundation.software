@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { encrypt, decrypt } = require('../utils/security');
 
 const donationSchema = new mongoose.Schema({
     donorName: { type: String, required: true },
@@ -17,6 +18,8 @@ const donationSchema = new mongoose.Schema({
 
     transactionId: { type: String }, // Gateway ID
     is80G: { type: Boolean, default: false, index: true },
+    receiptNumber: { type: String, unique: true, sparse: true },
+    certificateUrl: { type: String },
 
     // Optimized Filtering Fields
     level1UserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true }, // The Motivator
@@ -24,6 +27,18 @@ const donationSchema = new mongoose.Schema({
 
 }, {
     timestamps: true
+});
+
+// Encryption Hooks
+donationSchema.pre('save', function(next) {
+    if (this.isModified('panNumber')) this.panNumber = encrypt(this.panNumber);
+    if (this.isModified('aadhaarNumber')) this.aadhaarNumber = encrypt(this.aadhaarNumber);
+    next();
+});
+
+donationSchema.post('init', function(doc) {
+    if (doc.panNumber) doc.panNumber = decrypt(doc.panNumber);
+    if (doc.aadhaarNumber) doc.aadhaarNumber = decrypt(doc.aadhaarNumber);
 });
 
 module.exports = mongoose.model('Donation', donationSchema);

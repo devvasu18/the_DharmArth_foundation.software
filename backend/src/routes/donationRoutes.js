@@ -4,6 +4,7 @@ const Donation = require('../models/Donation');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const { processDonationCommission } = require('../services/commissionService');
+const certificateService = require('../services/certificateService');
 const { protect } = require('../middlewares/authMiddleware');
 
 // @desc    Get All Donations (Admin)
@@ -62,13 +63,20 @@ router.post('/', async (req, res) => {
     }
 
     try {
+        const { donationType = 'one-time' } = req.body;
 
         // Prepare Commission Fields
         let level1UserId = null;
         let level2UserId = null;
 
         if (motivatorMobile) {
-            const motivator = await User.findOne({ mobile: motivatorMobile }).populate('referredBy');
+            const motivator = await User.findOne({
+                $or: [
+                    { mobile: motivatorMobile },
+                    { referralCode: motivatorMobile.toUpperCase() }
+                ]
+            }).populate('referredBy');
+
             if (motivator) {
                 level1UserId = motivator._id;
                 if (motivator.referredBy) {
@@ -77,35 +85,89 @@ router.post('/', async (req, res) => {
             }
         }
 
-        // 1. Create Donation Record (Pending)
+        // self-referral check
+        const isSelfReferral = donorMobile === motivatorMobile || 
+                             (level1UserId && level1UserId.toString() === donorMobile);
+
+        if (donationType === 'monthly') {
+            const Subscription = require('../models/Subscription');
+            const subscription = await Subscription.create({
+                amount,
+                donorName,
+                donorMobile,
+                donorEmail,
+                motivatorMobile: isSelfReferral ? null : motivatorMobile,
+                level1UserId: isSelfReferral ? null : level1UserId,
+                level2UserId: isSelfReferral ? null : level2UserId,
+                status: 'active',
+                is80G: !!(panNumber && panNumber.trim().length > 0),
+                panNumber,
+                aadhaarNumber,
+                nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            });
+
+            // For subscriptions, we also create the FIRST donation record immediately
+            const donation = await Donation.create({
+                amount,
+                donorName,
+                donorMobile,
+                donorEmail,
+                motivatorMobile: isSelfReferral ? null : motivatorMobile,
+                status: 'success',
+                transactionId: `MOCK_SUB_FIRST_${Date.now()}`,
+                level1UserId: isSelfReferral ? null : level1UserId,
+                level2UserId: isSelfReferral ? null : level2UserId,
+                is80G: !!(panNumber && panNumber.trim().length > 0),
+                panNumber,
+                aadhaarNumber
+            });
+
+            // Handle commission and certificates for first payment
+            if (motivatorMobile && !isSelfReferral) {
+                await processDonationCommission(amount, motivatorMobile, donation._id, donorName, donorMobile);
+            }
+            if (donation.is80G) await certificateService.createCertificate(donation);
+
+            return res.status(201).json({
+                message: 'Subscription Started Successfully',
+                subscriptionId: subscription._id,
+                donationId: donation._id
+            });
+        }
+
+        // 1. One-time Donation Logic (Existing)
         const donation = await Donation.create({
             amount,
             donorName,
             donorMobile,
             donorEmail,
-            motivatorMobile,
+            motivatorMobile: isSelfReferral ? null : motivatorMobile,
             referralSource,
             panNumber,
             aadhaarNumber,
             status: 'pending',
-            level1UserId,
-            level2UserId,
+            level1UserId: isSelfReferral ? null : level1UserId,
+            level2UserId: isSelfReferral ? null : level2UserId,
             is80G: !!(panNumber && panNumber.trim().length > 0)
         });
 
-
-
         // 2. MOCK PAYMENT SUCCESS
-        // mostly here we'd initiate gateway. For now, immediate success.
-
         donation.status = 'success';
         donation.transactionId = `MOCK_TXN_${Date.now()}`;
+        
+        // 4. Generate 80G Certificate if applicable
+        if (donation.is80G) {
+            try {
+                await certificateService.createCertificate(donation);
+            } catch (err) {
+                console.error("Certificate Generation Failed:", err);
+            }
+        }
+
         await donation.save();
 
         // 3. Trigger Commission Logic
-        if (motivatorMobile) {
-            // Run async, don't block response? Or await?
-            // Safer to await to ensure data integrity during test, but usually async background job.
+        if (motivatorMobile && !isSelfReferral) {
             await processDonationCommission(amount, motivatorMobile, donation._id, donorName, donorMobile);
         }
 
@@ -134,12 +196,17 @@ router.post('/', async (req, res) => {
     }
 });
 
-// @desc Validate Motivator Mobile
-router.get('/validate-motivator/:mobile', async (req, res) => {
+// @desc Validate Motivator Mobile or Code
+router.get('/validate-motivator/:identifier', async (req, res) => {
     try {
-        const user = await User.findOne({ mobile: req.params.mobile });
+        const { identifier } = req.params;
+        const query = identifier.length >= 10 
+            ? { mobile: identifier } 
+            : { referralCode: identifier.toUpperCase() };
+
+        const user = await User.findOne(query);
         if (user) {
-            res.json({ valid: true, name: user.name });
+            res.json({ valid: true, name: user.name, mobile: user.mobile, code: user.referralCode });
         } else {
             res.json({ valid: false });
         }
@@ -207,6 +274,40 @@ router.get('/analytics/traffic-sources', async (req, res) => {
         };
 
         res.json(responseData);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Update Tax Info & Regenerate Certificate (Admin)
+// @route   PUT /api/donate/update-tax-info/:id
+router.put('/update-tax-info/:id', async (req, res) => {
+    try {
+        const donation = await Donation.findById(req.params.id);
+        if (!donation) return res.status(404).json({ message: 'Donation not found' });
+
+        const { panNumber, aadhaarNumber } = req.body;
+        donation.panNumber = panNumber;
+        donation.aadhaarNumber = aadhaarNumber;
+        donation.is80G = !!(panNumber && panNumber.trim().length > 0);
+        
+        await donation.save();
+        res.json({ message: 'Tax information updated successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Regenerate Certificate (Admin)
+// @route   POST /api/donate/regenerate-certificate/:id
+router.post('/regenerate-certificate/:id', async (req, res) => {
+    try {
+        const donation = await Donation.findById(req.params.id);
+        if (!donation) return res.status(404).json({ message: 'Donation not found' });
+        if (!donation.is80G) return res.status(400).json({ message: 'This donation does not require 80G' });
+
+        await certificateService.createCertificate(donation);
+        res.json({ message: 'Certificate regenerated successfully', url: donation.certificateUrl });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

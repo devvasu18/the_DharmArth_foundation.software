@@ -59,7 +59,9 @@ router.get('/transactions', protect, async (req, res) => {
             type: 'debit', // Treat as debit
             status: 'success',
             createdAt: d.createdAt,
-            isDonation: true
+            isDonation: true,
+            certificateUrl: d.certificateUrl,
+            receiptNumber: d.receiptNumber
         }));
 
         // 4. Merge and Sort
@@ -70,6 +72,39 @@ router.get('/transactions', protect, async (req, res) => {
         res.json(allTransactions);
     } catch (error) {
         console.error("Txn Fetch Error:", error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Get Network Stats (L1/L2 donor counts)
+// @route   GET /api/wallet/stats
+router.get('/stats', protect, async (req, res) => {
+    try {
+        const User = require('../models/User');
+        const Donation = require('../models/Donation');
+
+        // 1. Level 1 Donors (Successful donations where user is Level 1)
+        const l1Count = await Donation.countDocuments({
+            level1UserId: req.user._id,
+            status: 'success'
+        });
+
+        // 2. Level 2 Donors (Successful donations where user is Level 2)
+        const l2Count = await Donation.countDocuments({
+            level2UserId: req.user._id,
+            status: 'success'
+        });
+
+        // 3. Wallet summary
+        const wallet = await Wallet.findOne({ user: req.user._id });
+
+        res.json({
+            l1Donors: l1Count,
+            l2Donors: l2Count,
+            totalEarned: wallet?.totalEarned || 0,
+            balance: wallet?.balance || 0
+        });
+    } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });

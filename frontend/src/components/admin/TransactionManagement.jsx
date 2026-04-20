@@ -86,6 +86,9 @@ const TransactionManagement = () => {
 
     // --- Breakdown Modal State ---
     const [selectedTransaction, setSelectedTransaction] = useState(null);
+    const [isEditingTax, setIsEditingTax] = useState(false);
+    const [editTaxForm, setEditTaxForm] = useState({ panNumber: '', aadhaarNumber: '' });
+    const [regenerating, setRegenerating] = useState(false);
 
     // Load History on Mount
     useEffect(() => {
@@ -364,6 +367,35 @@ const TransactionManagement = () => {
                 Status: txn.status
             };
         });
+    };
+
+    const handleUpdateTaxInfo = async (id) => {
+        try {
+            await api.put(`/donate/update-tax-info/${id}`, editTaxForm);
+            toast.success("Tax Info Updated");
+            setIsEditingTax(false);
+            // Refresh local transaction state
+            setSelectedTransaction({ ...selectedTransaction, ...editTaxForm });
+            fetchTransactions();
+        } catch (err) {
+            toast.error("Failed to update tax info");
+        }
+    };
+
+    const handleRegenerateCertificate = async (id) => {
+        setRegenerating(true);
+        try {
+            const res = await api.post(`/donate/regenerate-certificate/${id}`);
+            toast.success("Certificate Regenerated");
+            if (res.data.url) {
+                window.open(`${api.defaults.baseURL.replace('/api', '')}${res.data.url}`, '_blank');
+            }
+            fetchTransactions();
+        } catch (err) {
+            toast.error("Generation failed");
+        } finally {
+            setRegenerating(false);
+        }
     };
 
     const handleExport = (type) => {
@@ -904,9 +936,21 @@ const TransactionManagement = () => {
                     <div className="side-panel" onClick={e => e.stopPropagation()}>
                         <div className="panel-header">
                             <h3>Transaction Breakdown</h3>
-                            <button className="text-gray-400 hover:text-black" onClick={() => setSelectedTransaction(null)}>
-                                <X size={24} />
-                            </button>
+                            <div className="flex gap-2">
+                                {selectedTransaction.is80G && (
+                                    <button 
+                                        className="bg-green-100 text-green-700 p-2 rounded-lg hover:bg-green-200 transition-colors"
+                                        onClick={() => handleRegenerateCertificate(selectedTransaction._id)}
+                                        disabled={regenerating}
+                                        title="Regenerate 80G Certificate"
+                                    >
+                                        {regenerating ? '...' : <Download size={20} />}
+                                    </button>
+                                )}
+                                <button className="text-gray-400 hover:text-black" onClick={() => { setSelectedTransaction(null); setIsEditingTax(false); }}>
+                                    <X size={24} />
+                                </button>
+                            </div>
                         </div>
                         <div className="panel-content">
                             <div className="breakdown-card">
@@ -925,9 +969,51 @@ const TransactionManagement = () => {
                                 <div className="breakdown-row"><span>Mobile</span> <strong>{selectedTransaction.donorMobile}</strong></div>
                                 {selectedTransaction.is80G && (
                                     <>
-                                        <div className="breakdown-row pt-2 border-t border-slate-100 mt-2"><span className="text-green-600 font-bold flex items-center gap-1"><CheckCircle size={14} /> 80G Benefit</span> <strong className="text-green-600">Applied</strong></div>
-                                        {selectedTransaction.panNumber && <div className="breakdown-row"><span>PAN Number</span> <strong>{selectedTransaction.panNumber}</strong></div>}
-                                        {selectedTransaction.aadhaarNumber && <div className="breakdown-row"><span>Adhar Number</span> <strong>{selectedTransaction.aadhaarNumber}</strong></div>}
+                                        <div className="breakdown-row pt-2 border-t border-slate-100 mt-2">
+                                            <span className="text-green-600 font-bold flex items-center gap-1">
+                                                <CheckCircle size={14} /> 80G Benefit
+                                            </span> 
+                                            <button 
+                                                className="text-xs text-blue-600 font-bold hover:underline"
+                                                onClick={() => {
+                                                    setIsEditingTax(!isEditingTax);
+                                                    setEditTaxForm({
+                                                        panNumber: selectedTransaction.panNumber || '',
+                                                        aadhaarNumber: selectedTransaction.aadhaarNumber || ''
+                                                    });
+                                                }}
+                                            >
+                                                {isEditingTax ? 'Cancel' : 'Edit Info'}
+                                            </button>
+                                        </div>
+                                        
+                                        {isEditingTax ? (
+                                            <div className="p-3 bg-blue-50 rounded-lg mt-2 flex flex-col gap-2">
+                                                <input 
+                                                    className="p-2 border rounded text-xs"
+                                                    placeholder="PAN Number"
+                                                    value={editTaxForm.panNumber}
+                                                    onChange={e => setEditTaxForm({...editTaxForm, panNumber: e.target.value.toUpperCase()})}
+                                                />
+                                                <input 
+                                                    className="p-2 border rounded text-xs"
+                                                    placeholder="Aadhaar Number"
+                                                    value={editTaxForm.aadhaarNumber}
+                                                    onChange={e => setEditTaxForm({...editTaxForm, aadhaarNumber: e.target.value})}
+                                                />
+                                                <button 
+                                                    className="bg-blue-600 text-white p-2 rounded text-xs font-bold"
+                                                    onClick={() => handleUpdateTaxInfo(selectedTransaction._id)}
+                                                >
+                                                    Save & Apply
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {selectedTransaction.panNumber && <div className="breakdown-row"><span>PAN Number</span> <strong>{selectedTransaction.panNumber}</strong></div>}
+                                                {selectedTransaction.aadhaarNumber && <div className="breakdown-row"><span>Aadhaar Number</span> <strong>{selectedTransaction.aadhaarNumber}</strong></div>}
+                                            </>
+                                        )}
                                     </>
                                 )}
                             </div>
