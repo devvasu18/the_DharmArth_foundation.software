@@ -110,7 +110,9 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                 const { data } = await api.post('/payouts/request', { amount: withdrawAmount });
                 toast.success(data.message || "Withdrawal request submitted! Our team will process it soon.");
                 onClose();
-                window.location.reload(); // To update wallet balance in UI
+                setTimeout(() => {
+                    window.location.reload(); // To update wallet balance in UI
+                }, 1500);
             } catch (error) {
                 toast.error(error.response?.data?.message || "Failed to submit withdrawal request");
             }
