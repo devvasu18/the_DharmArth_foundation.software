@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import './UserDashboard.css'; 
-import successIllustration from '../assets/payout_success.png';
+const successIllustration = "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1713722565/dharmarth_foundation/payout_success.png"; 
 
 const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
     const [showConfirmStep, setShowConfirmStep] = useState(false);
