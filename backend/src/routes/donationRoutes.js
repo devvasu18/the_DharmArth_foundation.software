@@ -25,7 +25,10 @@ router.get('/', async (req, res) => {
             };
         }
 
-        const donations = await Donation.find(filter).sort({ createdAt: -1 });
+        const donations = await Donation.find(filter)
+            .populate('level1UserId', 'name mobile')
+            .populate('level2UserId', 'name mobile')
+            .sort({ createdAt: -1 });
         res.json(donations);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -123,8 +126,8 @@ router.post('/', async (req, res) => {
             });
 
             // Handle commission and certificates for first payment
-            if (motivatorMobile && !isSelfReferral) {
-                await processDonationCommission(amount, motivatorMobile, donation._id, donorName, donorMobile);
+            if (level1UserId && !isSelfReferral) {
+                await processDonationCommission(amount, motivatorMobile, donation._id, donorName, donorMobile, level1UserId);
             }
             if (donation.is80G) await certificateService.createCertificate(donation);
 
@@ -166,9 +169,12 @@ router.post('/', async (req, res) => {
 
         await donation.save();
 
-        // 3. Trigger Commission Logic
-        if (motivatorMobile && !isSelfReferral) {
-            await processDonationCommission(amount, motivatorMobile, donation._id, donorName, donorMobile);
+        // 5. PROCESS COMMISSION 
+        if (level1UserId && !isSelfReferral) {
+            console.log(`[ROUTE] Triggering commission for Donation: ${donation._id}, Motivator: ${level1UserId}`);
+            await processDonationCommission(amount, motivatorMobile, donation._id, donorName, donorMobile, level1UserId);
+        } else {
+            console.log(`[ROUTE] Skipping commission: level1UserId=${level1UserId}, isSelfReferral=${isSelfReferral}`);
         }
 
         // 4. Create Notification

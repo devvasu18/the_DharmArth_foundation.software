@@ -22,6 +22,12 @@ io.on('connection', (socket) => {
     socket.on('join_admin_notifications', () => {
         socket.join('admin_notifications');
     });
+
+    socket.on('join_user_notifications', (userId) => {
+        if (userId) {
+            socket.join(`user_${userId}`);
+        }
+    });
 });
 
 const PORT = process.env.PORT || 5000;

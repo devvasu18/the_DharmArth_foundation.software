@@ -57,7 +57,12 @@ const registerUser = async (req, res) => {
 
         let referredBy = null;
         if (req.body.referralCode) {
-            const referrer = await User.findOne({ mobile: req.body.referralCode });
+            const referrer = await User.findOne({ 
+                $or: [
+                    { mobile: req.body.referralCode },
+                    { referralCode: String(req.body.referralCode).toUpperCase() }
+                ]
+            });
             if (referrer) {
                 referredBy = referrer._id;
             }

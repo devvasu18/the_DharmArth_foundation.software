@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import AuthFooter from '../components/auth/AuthFooter';
 import api from '../services/api';
-import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, CreditCard, ShieldCheck, Send, ArrowRight, Download } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, Bell, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { io } from "socket.io-client";
+import { API_BASE_URL } from '../services/api';
 import './UserDashboard.css';
 import PayoutModal from './PayoutModal';
 import OnboardingModal from './OnboardingModal';
@@ -29,10 +31,19 @@ const UserDashboard = () => {
     // Filters (Default to current month/year)
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [selectedTxnDetails, setSelectedTxnDetails] = useState(null);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
     // New Filters
     const [txnTypeFilter, setTxnTypeFilter] = useState('All');
     const [commissionLevelFilter, setCommissionLevelFilter] = useState('All');
+
+    // Notifications
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const socketRef = React.useRef(null);
+    const notificationRef = React.useRef(null);
 
     // Fetch initial profile, balance and stats
     useEffect(() => {
@@ -72,6 +83,56 @@ const UserDashboard = () => {
         };
         fetchTransactions();
     }, [selectedMonth, selectedYear]);
+    
+    // Notification & Socket Logic
+    useEffect(() => {
+        if (!user || user.isSuperAdmin || (user.roles && user.roles.length > 0)) return;
+
+        const fetchNotifications = async () => {
+            try {
+                const res = await api.get('/notifications');
+                setNotifications(res.data.notifications || []);
+                setUnreadCount(res.data.unreadCount || 0);
+            } catch (err) {
+                console.error("Failed to fetch notifications", err);
+            }
+        };
+
+        fetchNotifications();
+
+        // Initialize Socket
+        socketRef.current = io(API_BASE_URL, {
+            withCredentials: true
+        });
+
+        socketRef.current.emit('join_user_notifications', user._id);
+
+        socketRef.current.on('payout_processed', (notif) => {
+            setNotifications(prev => [notif, ...prev]);
+            setUnreadCount(prev => prev + 1);
+            toast.success(notif.message, { duration: 6000, icon: '🔔' });
+        });
+
+        socketRef.current.on('payout_rejected', (notif) => {
+            setNotifications(prev => [notif, ...prev]);
+            setUnreadCount(prev => prev + 1);
+            toast.error(notif.message, { duration: 8000 });
+        });
+
+        return () => {
+            if (socketRef.current) socketRef.current.disconnect();
+        };
+    }, [user._id]);
+
+    const handleMarkAllRead = async () => {
+        try {
+            await api.put('/notifications/read-all');
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            setUnreadCount(0);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
 
     const shareLink = user?.referralCode
@@ -93,13 +154,64 @@ const UserDashboard = () => {
 
             <div className="dashboard-container">
                 <div className="dashboard-header">
+                    <div className="header-info">
+                        <h1 className="dashboard-title">Motivator Dashboard</h1>
+                        <p className="dashboard-subtitle">Manage your earnings, payouts, and referrals</p>
+                    </div>
 
-                    <p className="dashboard-subtitle">Manage your earnings, payouts, and referrals</p>
-                    {user?.isMotivator && user?.referralCode && (
-                        <div className="motivator-id-badge">
-                            Motivator ID: <strong>{user.referralCode}</strong>
+                    <div className="header-actions">
+                        <div className="notif-bell-container" ref={notificationRef}>
+                            <button 
+                                className={`notif-bell-btn ${unreadCount > 0 ? 'has-unread' : ''}`}
+                                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                            >
+                                <Bell size={22} />
+                                {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
+                            </button>
+
+                            <AnimatePresence>
+                                {isNotificationsOpen && (
+                                    <motion.div 
+                                        className="notif-dropdown"
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        <div className="notif-header">
+                                            <h3>Notifications</h3>
+                                            {unreadCount > 0 && (
+                                                <button onClick={handleMarkAllRead}>Mark all read</button>
+                                            )}
+                                        </div>
+                                        <div className="notif-list">
+                                            {notifications.length === 0 ? (
+                                                <div className="notif-empty">No notifications yet</div>
+                                            ) : (
+                                                notifications.map((notif, idx) => (
+                                                    <div key={idx} className={`notif-item ${!notif.isRead ? 'unread' : ''}`}>
+                                                        <div className="notif-icon">
+                                                            {notif.onModel === 'PayoutRequest' ? '💸' : notif.type === 'COMMISSION_EARNED' ? '💰' : '📢'}
+                                                        </div>
+                                                        <div className="notif-body">
+                                                            <p>{notif.message}</p>
+                                                            <span className="notif-time">{new Date(notif.createdAt).toLocaleDateString()}</span>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
-                    )}
+
+                        {user?.isMotivator && user?.referralCode && (
+                            <div className="motivator-id-badge">
+                                Motivator ID: <strong>{user.referralCode}</strong>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Only show Wallet & Share options to Normal Users (Not Admin/Role-based) */}
@@ -326,9 +438,41 @@ const UserDashboard = () => {
                                                     </td>
                                                     <td>
                                                         <div className="status-cell">
-                                                            <span className={`status-badge ${txn.type === 'credit' || txn.isDonation ? 'badge-credit' : 'badge-debit'}`}>
-                                                                {txn.type === 'credit' ? 'Commission' : (txn.isDonation ? 'Donation' : txn.type)}
+                                                            <span className={`status-badge ${
+                                                                txn.reason === 'payout' && txn.status === 'pending' ? 'badge-processing' : 
+                                                                txn.status === 'failed' ? 'badge-rejected' :
+                                                                txn.reason === 'payout' && (txn.status === 'success' || txn.status === 'completed') ? 'badge-completed' :
+                                                                txn.type === 'credit' || txn.isDonation ? 'badge-credit' : 'badge-debit'
+                                                            }`}>
+                                                                {txn.reason === 'payout' && txn.status === 'pending' ? 'IN PROCESS' : 
+                                                                 txn.status === 'failed' ? 'REJECTED' :
+                                                                 txn.type === 'credit' ? 'Commission' : (txn.isDonation ? 'Donation' : (txn.reason === 'payout' ? 'COMPLETED' : txn.type))}
                                                             </span>
+                                                            
+                                                            {txn.reason === 'payout' && (
+                                                                <button 
+                                                                    className="btn-txn-details" 
+                                                                    onClick={async () => {
+                                                                        // Fetch PayoutRequest details using the referenceId if it's a payout
+                                                                        try {
+                                                                            const res = await api.get(`/payouts/my`);
+                                                                            const payout = res.data.find(p => p._id === txn.referenceId || txn.description.includes(p._id.toString().slice(-6).toUpperCase()));
+                                                                             if (payout) {
+                                                                                setSelectedTxnDetails(payout);
+                                                                                setIsDetailsModalOpen(true);
+                                                                             } else {
+                                                                                toast.error("Payout details not found");
+                                                                             }
+                                                                        } catch (err) {
+                                                                            toast.error("Failed to load details");
+                                                                        }
+                                                                    }}
+                                                                    title="View Details"
+                                                                >
+                                                                    <Eye size={14} />
+                                                                </button>
+                                                            )}
+
                                                             {txn.certificateUrl && (
                                                                 <a
                                                                     href={`${api.defaults.baseURL.replace('/api', '')}${txn.certificateUrl}`}
@@ -372,6 +516,80 @@ const UserDashboard = () => {
                 user={user}
                 setUser={setUser}
             />
+
+            {/* Payout Details Modal */}
+            {isDetailsModalOpen && selectedTxnDetails && (
+                <div className="payout-modal-overlay" onClick={() => setIsDetailsModalOpen(false)}>
+                    <motion.div 
+                        className="payout-modal" 
+                        onClick={e => e.stopPropagation()}
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                    >
+                        <button className="payout-modal-close" onClick={() => setIsDetailsModalOpen(false)}><X size={24} /></button>
+                        
+                        <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' }}>
+                            <h2>Payout Details</h2>
+                            <p>Transaction reference and payment proof</p>
+                        </div>
+
+                        <div className="conditions-container" style={{ gap: '1.5rem', background: '#ffffff' }}>
+                            <div className="payout-status-banner" style={{ 
+                                padding: '1rem', 
+                                borderRadius: '12px', 
+                                background: selectedTxnDetails.status === 'completed' ? '#f0fdf4' : (selectedTxnDetails.status === 'rejected' ? '#fef2f2' : '#fff7ed'),
+                                color: selectedTxnDetails.status === 'completed' ? '#15803d' : (selectedTxnDetails.status === 'rejected' ? '#b91c1c' : '#c2410c'),
+                                textAlign: 'center',
+                                fontWeight: 800,
+                                fontSize: '1.1rem',
+                                border: '1px solid'
+                            }}>
+                                STATUS: {selectedTxnDetails.status.toUpperCase()}
+                            </div>
+
+                            <div className="details-card" style={{ padding: '1.25rem', border: '1px solid #e2e8f0', borderRadius: '16px' }}>
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Amount Requested</label>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b' }}>₹ {selectedTxnDetails.amount.toLocaleString()}</div>
+                                </div>
+
+                                {selectedTxnDetails.transactionId && (
+                                    <div style={{ marginBottom: '1rem' }}>
+                                        <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Transaction ID / Ref</label>
+                                        <div style={{ wordBreak: 'break-all', fontWeight: 600 }}>{selectedTxnDetails.transactionId}</div>
+                                    </div>
+                                )}
+
+                                {selectedTxnDetails.adminNotes && (
+                                    <div style={{ marginBottom: '1rem' }}>
+                                        <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Admin Message</label>
+                                        <div style={{ color: '#475569', fontStyle: 'italic' }}>{selectedTxnDetails.adminNotes}</div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {selectedTxnDetails.proofImage && (
+                                <div className="proof-section">
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Payment Proof (Screenshot)</label>
+                                    <a href={selectedTxnDetails.proofImage} target="_blank" rel="noreferrer" className="proof-image-link">
+                                        <div style={{ borderRadius: '12px', overflow: 'hidden', border: '2px solid #e2e8f0' }}>
+                                            <img src={selectedTxnDetails.proofImage} alt="Payment Proof" style={{ width: '100%', maxHeight: '300px', objectFit: 'contain' }} />
+                                        </div>
+                                    </a>
+                                </div>
+                            )}
+
+                            <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center' }}>
+                                Processed at: {selectedTxnDetails.processedAt ? new Date(selectedTxnDetails.processedAt).toLocaleString() : 'Pending'}
+                            </div>
+                        </div>
+
+                        <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9' }}>
+                            <button className="btn-proceed" onClick={() => setIsDetailsModalOpen(false)}>Close Details</button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 };

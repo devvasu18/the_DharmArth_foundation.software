@@ -30,10 +30,9 @@ const donationSchema = new mongoose.Schema({
 });
 
 // Encryption Hooks
-donationSchema.pre('save', function(next) {
+donationSchema.pre('save', async function() {
     if (this.isModified('panNumber')) this.panNumber = encrypt(this.panNumber);
     if (this.isModified('aadhaarNumber')) this.aadhaarNumber = encrypt(this.aadhaarNumber);
-    next();
 });
 
 donationSchema.post('init', function(doc) {

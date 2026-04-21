@@ -79,6 +79,24 @@ const AdminLayout = () => {
             setUnreadCount(prev => prev + 1);
         });
 
+        socketRef.current.on('new_payout_request', (newNotification) => {
+            // Play Sound
+            audioRef.current.play().catch(e => console.log('Audio play failed', e));
+
+            // Show Toast
+            toast.success(
+                <div onClick={() => setIsNotificationsOpen(true)} style={{ cursor: 'pointer' }}>
+                    <b>Payout Requested</b>
+                    <p style={{ margin: 0, fontSize: '0.9rem' }}>{newNotification.message}</p>
+                </div>,
+                { duration: 6000, icon: '💸' }
+            );
+
+            // Update State
+            setNotifications(prev => [newNotification, ...prev]);
+            setUnreadCount(prev => prev + 1);
+        });
+
         fetchNotifications();
 
         return () => {
@@ -155,8 +173,12 @@ const AdminLayout = () => {
 
     const handleNotificationClick = (notif) => {
         setIsNotificationsOpen(false);
-        // Navigate to transactions and open the breakdown
-        // Use referenceId (which typically holds the donation/transaction ID)
+        
+        if (notif.onModel === 'PayoutRequest') {
+            navigate('/admin/payouts');
+            return;
+        }
+
         if (notif.referenceId) {
             navigate('/admin/transaction-management', {
                 state: { openTransactionId: notif.referenceId }
@@ -451,7 +473,7 @@ const AdminLayout = () => {
                                                     onClick={() => handleNotificationClick(notif)}
                                                 >
                                                     <div className="notif-icon">
-                                                        {notif.type === 'DONATION' ? '💰' : '📢'}
+                                                        {notif.onModel === 'PayoutRequest' ? '💸' : notif.type === 'DONATION' ? '💰' : '📢'}
                                                     </div>
                                                     <div className="notif-content">
                                                         <p className="notif-msg">{notif.message}</p>

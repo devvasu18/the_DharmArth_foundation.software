@@ -34,8 +34,8 @@ const TransactionManagement = () => {
             sort: 'desc',
             limit: 20,
             dateRange: {
-                start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-                end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]
+                start: '',
+                end: ''
             }
         };
 
@@ -360,9 +360,9 @@ const TransactionManagement = () => {
                 "Donor Mobile": txn.donorMobile,
                 Amount: txn.amount,
                 Level: levelLabel,
-                "Motivated By": txn.level1UserId ? txn.level1UserId.name : (txn.motivatorMobile ? `(Mobile: ${txn.motivatorMobile})` : '-'),
+                "Motivated By": txn.level1UserId?.name || (txn.motivatorMobile ? `(Mobile: ${txn.motivatorMobile})` : '-'),
                 "L1 Commission": (txn.level1UserId || txn.motivatorMobile) ? (txn.amount * 0.10) : 'No',
-                "L2 Commission": txn.level2UserId ? (txn.amount * 0.03) : 'No',
+                "L2 Commission": txn.level2UserId?.name ? (txn.amount * 0.03) : 'No',
                 "80G": txn.is80G ? 'Yes' : 'No',
                 Status: txn.status
             };
@@ -905,7 +905,7 @@ const TransactionManagement = () => {
                                         <td><span className="col-amount">{formatCurrency(txn.amount)}</span></td>
                                         {filters.searchUser && <td>{levelLabel || <span className="text-gray-300">-</span>}</td>}
                                         <td>
-                                            {txn.level1UserId ? txn.level1UserId.name : (txn.motivatorMobile ? `(Mobile: ${txn.motivatorMobile})` : '-')}
+                                            {txn.level1UserId?.name || (txn.motivatorMobile ? `(Mobile: ${txn.motivatorMobile})` : '-')}
                                         </td>
                                         <td>{(txn.level1UserId || txn.motivatorMobile) ? formatCurrency(txn.amount * 0.10) : <span className="status-badge badge-neutral">No</span>}</td>
                                         <td>{txn.level2UserId ? formatCurrency(txn.amount * 0.03) : <span className="status-badge badge-neutral">No</span>}</td>

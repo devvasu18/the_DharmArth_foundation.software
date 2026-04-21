@@ -4,7 +4,12 @@ const notificationSchema = new mongoose.Schema({
     type: {
         type: String,
         required: true,
-        enum: ['DONATION', 'SYSTEM', 'USER']
+        enum: ['DONATION', 'SYSTEM', 'USER', 'COMMISSION_EARNED', 'SUBSCRIPTION_STOPPED', 'PAYOUT']
+    },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false
     },
     message: {
         type: String,
@@ -17,7 +22,7 @@ const notificationSchema = new mongoose.Schema({
     onModel: {
         type: String,
         required: false,
-        enum: ['Donation', 'User']
+        enum: ['Donation', 'User', 'PayoutRequest', 'Subscription']
     },
     isRead: {
         type: Boolean,

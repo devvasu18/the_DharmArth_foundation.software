@@ -103,7 +103,7 @@ const DonationForm = () => {
                 return;
             }
 
-            if (motivatorMobile.length === 10) {
+            if (motivatorMobile.length >= 4) {
                 try {
                     const { data } = await api.get(`/donate/validate-motivator/${motivatorMobile}`);
                     if (data.valid) {
@@ -111,17 +111,17 @@ const DonationForm = () => {
                         setErrors(prev => ({ ...prev, motivator: null }));
                     } else {
                         setMotivatorName('');
-                        setErrors(prev => ({ ...prev, motivator: "Invalid motivator number" }));
+                        setErrors(prev => ({ ...prev, motivator: "Invalid mobile number or code" }));
                     }
                 } catch (error) {
                     console.error("Error validating motivator:", error);
                     setMotivatorName('');
-                    setErrors(prev => ({ ...prev, motivator: "Error validating number" }));
+                    setErrors(prev => ({ ...prev, motivator: "Error validating identifier" }));
                 }
             } else {
                 setMotivatorName('');
                 if (motivatorMobile.length > 0) {
-                    // Check length (optional, maybe wait for 10)
+                    // Too short to validate yet
                 } else {
                     setErrors(prev => ({ ...prev, motivator: null }));
                 }
@@ -246,7 +246,8 @@ const DonationForm = () => {
                 name: fullName,
                 mobile: mobile,
                 email: email,
-                password: registerPassword
+                password: registerPassword,
+                referralCode: motivatorMobile
             });
 
             localStorage.setItem('user', JSON.stringify(data));
@@ -473,15 +474,15 @@ const DonationForm = () => {
                                         <Smartphone size={16} />
                                     </div>
                                     <input
-                                        type="tel"
+                                        type="text"
                                         className={`phone-field ${(errors.motivator) ? 'error-border' : ''}`}
-                                        placeholder="Enter 10-digit mobile number"
+                                        placeholder="Mobile Number or Referral Code"
                                         value={motivatorMobile}
                                         onChange={(e) => {
-                                            const val = e.target.value;
-                                            if (/^\d*$/.test(val) && val.length <= 10) setMotivatorMobile(val);
+                                            const val = e.target.value.toUpperCase();
+                                            if (val.length <= 15) setMotivatorMobile(val);
                                         }}
-                                        maxLength={10}
+                                        maxLength={15}
                                     />
                                 </div>
                                 {motivatorName && (

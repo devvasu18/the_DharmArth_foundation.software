@@ -5,6 +5,8 @@ const Wallet = require('../models/Wallet');
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
+const { upload } = require('../config/cloudinary');
+const notificationService = require('../services/notificationService');
 
 // @desc    Request a Payout
 // @route   POST /api/payouts/request
@@ -56,15 +58,23 @@ router.post('/request', protect, async (req, res) => {
         wallet.balance -= withdrawAmount;
         await wallet.save();
 
-        // Log transaction
+        // Log transaction as PENDING
         await Transaction.create({
             wallet: wallet._id,
             amount: withdrawAmount,
             type: 'debit',
             reason: 'payout',
             status: 'pending',
-            description: `Payout Request #${payoutRequest._id.toString().slice(-6)}`
+            referenceId: payoutRequest._id,
+            description: `Payout Request #${payoutRequest._id.toString().slice(-6).toUpperCase()}`
         });
+
+        // 4. Send Notification to Admins
+        const notification = await notificationService.notifyPayoutRequested(payoutRequest, user);
+        const io = req.app.get('io');
+        if (io) {
+            io.to('admin_notifications').emit('new_payout_request', notification);
+        }
 
         res.status(201).json({ message: 'Payout request submitted successfully', request: payoutRequest });
 
@@ -88,8 +98,49 @@ router.get('/my', protect, async (req, res) => {
 // @route   GET /api/payouts
 router.get('/', protect, checkPermission('Transaction Management', 'view'), async (req, res) => {
     try {
-        const requests = await PayoutRequest.find().populate('user', 'name mobile email').sort({ createdAt: -1 });
-        res.json(requests);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+        const { status, search } = req.query;
+
+        let query = {};
+        
+        // Handle multiple statuses if needed or a single one
+        if (status && status !== 'all') {
+            if (status === 'processed') {
+                query.status = { $in: ['completed', 'rejected'] };
+            } else {
+                query.status = status;
+            }
+        }
+
+        if (search) {
+            const users = await User.find({
+                $or: [
+                    { name: { $regex: search, $options: 'i' } },
+                    { mobile: { $regex: search, $options: 'i' } }
+                ]
+            }).select('_id');
+            const userIds = users.map(u => u._id);
+            query.user = { $in: userIds };
+        }
+
+        const total = await PayoutRequest.countDocuments(query);
+        const requests = await PayoutRequest.find(query)
+            .populate('user', 'name mobile email')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        res.json({
+            payouts: requests,
+            metadata: {
+                total,
+                page,
+                pages: Math.ceil(total / limit),
+                limit
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -97,11 +148,52 @@ router.get('/', protect, checkPermission('Transaction Management', 'view'), asyn
 
 // @desc    Admin: Process Payout
 // @route   PUT /api/payouts/:id
-router.put('/:id', protect, checkPermission('Transaction Management', 'edit'), async (req, res) => {
+router.put('/:id', protect, checkPermission('Transaction Management', 'edit'), upload.single('image'), async (req, res) => {
     const { status, adminNotes, transactionId } = req.body;
+    const proofImage = req.file ? req.file.path : req.body.proofImage;
     try {
         const request = await PayoutRequest.findById(req.params.id);
         if (!request) return res.status(404).json({ message: 'Request not found' });
+
+        // Handle sync-only requests (for fixing stuck transaction statuses)
+        if (req.body.syncOnly) {
+            const currentStatus = request.status;
+            const txnUpdateStatus = currentStatus === 'rejected' ? 'failed' : 'success';
+            
+            // 1. Aggressive search for matching transactions (by referenceId or description)
+            let transactions = await Transaction.find({
+                $or: [
+                    { referenceId: request._id },
+                    { description: new RegExp(request._id.toString().slice(-6), 'i') }
+                ]
+            });
+
+            // 2. Secondary fallback: Search by User's Wallet + Amount + Reason (if still not found)
+            if (transactions.length === 0) {
+                const wallet = await Wallet.findOne({ user: request.user });
+                if (wallet) {
+                    transactions = await Transaction.find({
+                        wallet: wallet._id,
+                        amount: request.amount,
+                        type: 'debit',
+                        reason: 'payout',
+                        status: 'pending' // Only look for the stuck one
+                    });
+                }
+            }
+
+            if (transactions.length > 0) {
+                for (let txn of transactions) {
+                    txn.status = txnUpdateStatus;
+                    if (!txn.referenceId) txn.referenceId = request._id; // Link it for future
+                    if (currentStatus === 'rejected') {
+                        txn.description = `Payout Rejected (Request #${request._id.toString().slice(-6).toUpperCase()})`;
+                    }
+                    await txn.save();
+                }
+            }
+            return res.json({ message: 'Transaction status synchronized', count: transactions.length });
+        }
 
         if (request.status !== 'pending') {
             return res.status(400).json({ message: 'Request already processed' });
@@ -110,8 +202,26 @@ router.put('/:id', protect, checkPermission('Transaction Management', 'edit'), a
         request.status = status;
         request.adminNotes = adminNotes;
         request.transactionId = transactionId;
+        if (proofImage) request.proofImage = proofImage;
         request.processedAt = Date.now();
         await request.save();
+
+        // Update transaction status
+        const finalTxnStatus = status === 'rejected' ? 'failed' : 'success';
+        const finalTxnDesc = status === 'rejected' ? `Payout Rejected (Request #${request._id.toString().slice(-6).toUpperCase()})` : null;
+
+        const transactionsToUpdate = await Transaction.find({
+            $or: [
+                { referenceId: request._id },
+                { description: new RegExp(request._id.toString().slice(-6), 'i') }
+            ]
+        });
+
+        for (let txn of transactionsToUpdate) {
+            txn.status = finalTxnStatus;
+            if (finalTxnDesc) txn.description = finalTxnDesc;
+            await txn.save();
+        }
 
         // If REJECTED, refund the wallet
         if (status === 'rejected') {
@@ -126,14 +236,15 @@ router.put('/:id', protect, checkPermission('Transaction Management', 'edit'), a
                 type: 'credit',
                 reason: 'payout',
                 status: 'success',
-                description: `Payout Refund (Request #${request._id.toString().slice(-6)})`
+                description: `Payout Refund (Request #${request._id.toString().slice(-6).toUpperCase()})`
             });
-        } else if (status === 'completed' || status === 'approved') {
-            // Update transaction status
-            await Transaction.findOneAndUpdate(
-                { description: new RegExp(request._id.toString().slice(-6)) },
-                { status: 'success' }
-            );
+        }
+
+        // 4. Send Notification to User
+        const userNotif = await notificationService.notifyPayoutProcessed(request, status);
+        const io = req.app.get('io');
+        if (io) {
+            io.to(`user_${request.user}`).emit('payout_processed', userNotif);
         }
 
         res.json({ message: `Payout request ${status}`, request });

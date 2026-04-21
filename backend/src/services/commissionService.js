@@ -4,12 +4,23 @@ const User = require('../models/User');
 const Setting = require('../models/Setting');
 const notificationService = require('./notificationService');
 
-const processDonationCommission = async (donationAmount, motivatorMobile, donationId, donorName, donorMobile) => {
-    if (!motivatorMobile) return;
+const processDonationCommission = async (donationAmount, motivatorIdentifier, donationId, donorName, donorMobile, level1UserId = null) => {
+    if (!motivatorIdentifier && !level1UserId) return;
 
     try {
         // 1. Find Level 1 Motivator
-        const motivator = await User.findOne({ mobile: motivatorMobile });
+        let motivator;
+        if (level1UserId) {
+            motivator = await User.findById(level1UserId);
+        } else {
+            motivator = await User.findOne({ 
+                $or: [
+                    { mobile: motivatorIdentifier },
+                    { referralCode: String(motivatorIdentifier).toUpperCase() }
+                ]
+            });
+        }
+
         if (!motivator) return;
 
         // Get Global Commission Rates

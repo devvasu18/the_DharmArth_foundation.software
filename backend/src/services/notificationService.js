@@ -76,6 +76,38 @@ class NotificationService {
             sms: motivator.mobile
         });
     }
+
+    /**
+     * Specialized: Payout Requested Alert for Admin
+     */
+    async notifyPayoutRequested(payoutRequest, user) {
+        const msg = `🔔 Payout Request: ₹${payoutRequest.amount} requested by ${user.name} (${user.mobile})`;
+        
+        return await this.notify({
+            userId: null, // For admins
+            type: 'PAYOUT',
+            message: msg,
+            referenceId: payoutRequest._id,
+            onModel: 'PayoutRequest'
+        });
+    }
+
+    /**
+     * Specialized: Payout Processed Alert for User
+     */
+    async notifyPayoutProcessed(payoutRequest, status) {
+        const msg = status === 'completed'
+            ? `✅ Your payout request of ₹${payoutRequest.amount} has been processed successfully.`
+            : `❌ Your payout request of ₹${payoutRequest.amount} was rejected. Note: ${payoutRequest.adminNotes || 'Contact support'}`;
+        
+        return await this.notify({
+            userId: payoutRequest.user,
+            type: 'PAYOUT',
+            message: msg,
+            referenceId: payoutRequest._id,
+            onModel: 'PayoutRequest'
+        });
+    }
 }
 
 module.exports = new NotificationService();
