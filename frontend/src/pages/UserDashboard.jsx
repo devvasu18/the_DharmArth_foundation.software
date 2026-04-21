@@ -68,11 +68,9 @@ const UserDashboard = () => {
                 setUser(updatedUser);
                 localStorage.setItem('user', JSON.stringify(updatedUser));
 
-                const wRes = await api.get('/wallet/my');
-                setWallet(wRes.data);
-
-                const sRes = await api.get('/wallet/stats');
-                setStats(sRes.data);
+                const summaryRes = await api.get('/wallet/summary');
+                setWallet(summaryRes.data.wallet);
+                setStats(summaryRes.data.stats);
             } catch (error) {
                 console.error("Error fetching initial dashboard data", error);
             }

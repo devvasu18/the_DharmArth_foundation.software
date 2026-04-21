@@ -4,15 +4,42 @@ const Wallet = require('../models/Wallet');
 const Transaction = require('../models/Transaction');
 const { protect } = require('../middlewares/authMiddleware');
 
-// @desc    Get My Wallet Balance & Stats
-// @route   GET /api/wallet/my
+// @desc    Get Wallet Summary (Balance, Stats, Total Earned)
+// @route   GET /api/wallet/summary
+router.get('/summary', protect, async (req, res) => {
+    try {
+        const Wallet = require('../models/Wallet');
+        const Donation = require('../models/Donation');
+
+        // 1. Get/Create Wallet
+        let wallet = await Wallet.findOne({ user: req.user._id });
+        if (!wallet) {
+            wallet = await Wallet.create({ user: req.user._id });
+        }
+
+        // 2. Get Network Stats in Parallel
+        const [l1Count, l2Count] = await Promise.all([
+            Donation.countDocuments({ level1UserId: req.user._id, status: 'success' }),
+            Donation.countDocuments({ level2UserId: req.user._id, status: 'success' })
+        ]);
+
+        res.json({
+            wallet,
+            stats: {
+                l1Donors: l1Count,
+                l2Donors: l2Count
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Keep /my for backward compatibility if needed, but internally it's consolidated in /summary
 router.get('/my', protect, async (req, res) => {
     try {
         let wallet = await Wallet.findOne({ user: req.user._id });
-        if (!wallet) {
-            // Create empty wallet if first time
-            wallet = await Wallet.create({ user: req.user._id });
-        }
+        if (!wallet) wallet = await Wallet.create({ user: req.user._id });
         res.json(wallet);
     } catch (error) {
         res.status(500).json({ message: error.message });
