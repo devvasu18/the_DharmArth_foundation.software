@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, CheckCircle, XCircle, Eye, Download, Clock, IndianRupee, User, ExternalLink, Image as ImageIcon, Trash2, Building, X } from 'lucide-react';
+import { Search, Filter, CheckCircle, XCircle, Eye, Download, Clock, IndianRupee, User, ExternalLink, Image as ImageIcon, Trash2, Building, X, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import './PayoutManagement.css';
@@ -45,14 +45,19 @@ const PayoutManagement = () => {
     const fetchPayouts = async () => {
         setLoading(true);
         try {
-            const { data } = await api.get('/payouts', {
-                params: {
-                    page,
-                    limit: 20,
-                    status: statusFilter, // Backend handles 'processed' too if we sent it, but here we send specific
-                    search: searchTerm
-                }
-            });
+            const params = {
+                page,
+                limit: 20,
+                search: searchTerm
+            };
+
+            if (activeTab === 'disputed') {
+                params.isDisputed = 'true';
+            } else {
+                params.status = statusFilter;
+            }
+
+            const { data } = await api.get('/payouts', { params });
             setPayouts(data.payouts);
             setMetadata(data.metadata);
         } catch (error) {
@@ -95,12 +100,14 @@ const PayoutManagement = () => {
         }
     };
 
-    const getStatusBadge = (status) => {
-        switch (status) {
+    const getStatusBadge = (p) => {
+        if (p.isDisputed) return <span className="payout-badge error" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fee2e2' }}><XCircle size={12} /> HELP REQUESTED</span>;
+        
+        switch (p.status) {
             case 'pending': return <span className="payout-badge pending"><Clock size={12} /> PENDING</span>;
             case 'completed': return <span className="payout-badge success"><CheckCircle size={12} /> COMPLETED</span>;
             case 'rejected': return <span className="payout-badge error"><XCircle size={12} /> REJECTED</span>;
-            default: return <span className="payout-badge">{status.toUpperCase()}</span>;
+            default: return <span className="payout-badge">{p.status.toUpperCase()}</span>;
         }
     };
 
@@ -128,6 +135,16 @@ const PayoutManagement = () => {
                     onClick={() => handleTabChange('processed')}
                 >
                     <CheckCircle size={16} /> Processed History
+                </button>
+                <button 
+                    className={`tab-btn ${activeTab === 'disputed' ? 'active' : ''}`}
+                    onClick={() => {
+                        setActiveTab('disputed');
+                        setPage(1);
+                        setStatusFilter('all'); // Filter strictly by isDisputed on backend
+                    }}
+                >
+                    <XCircle size={16} color="var(--error)" /> Needs Attention (Disputes)
                 </button>
             </div>
 
@@ -189,7 +206,7 @@ const PayoutManagement = () => {
                                     {p.payoutDetails?.bankName}<br/>
                                     <small>{p.payoutDetails?.accountNumber}</small>
                                 </td>
-                                <td>{getStatusBadge(p.status)}</td>
+                                <td>{getStatusBadge(p)}</td>
                                 <td>
                                     <button 
                                         className="btn-action-eye" 
@@ -368,7 +385,20 @@ const PayoutManagement = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="payout-history-info">
+                                 <div className="payout-history-info">
+                                    {selectedPayout.isDisputed && (
+                                        <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#fff5f5', border: '1px solid #feb2b2', borderRadius: '12px' }}>
+                                            <h4 style={{ color: '#c53030', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                                <AlertCircle size={18} /> USER REPORTED ISSUE
+                                            </h4>
+                                            <p style={{ color: '#742a2a', fontStyle: 'italic', fontSize: '0.95rem' }}>
+                                                "{selectedPayout.disputeMessage}"
+                                            </p>
+                                            <small style={{ color: '#9b2c2c', display: 'block', marginTop: '0.5rem' }}>
+                                                Reported on: {new Date(selectedPayout.disputedAt).toLocaleString()}
+                                            </small>
+                                        </div>
+                                    )}
                                     <div className={`final-status ${selectedPayout.status}`}>
                                         Status: {selectedPayout.status.toUpperCase()}
                                     </div>

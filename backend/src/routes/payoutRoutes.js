@@ -101,12 +101,13 @@ router.get('/', protect, checkPermission('Transaction Management', 'view'), asyn
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
-        const { status, search } = req.query;
+        const { status, search, isDisputed } = req.query;
 
         let query = {};
         
-        // Handle multiple statuses if needed or a single one
-        if (status && status !== 'all') {
+        if (isDisputed === 'true') {
+            query.isDisputed = true;
+        } else if (status && status !== 'all') {
             if (status === 'processed') {
                 query.status = { $in: ['completed', 'rejected'] };
             } else {
@@ -249,6 +250,45 @@ router.put('/:id', protect, checkPermission('Transaction Management', 'edit'), u
 
         res.json({ message: `Payout request ${status}`, request });
 
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    User: Report Issue / Dispute Payout
+// @route   POST /api/payouts/dispute/:id
+router.post('/dispute/:id', protect, async (req, res) => {
+    try {
+        const { message } = req.body;
+        const payout = await PayoutRequest.findOne({ _id: req.params.id, user: req.user._id });
+
+        if (!payout) {
+            return res.status(404).json({ message: 'Payout request not found' });
+        }
+
+        if (payout.status !== 'completed') {
+            return res.status(400).json({ message: 'Only completed payouts can be disputed' });
+        }
+
+        payout.isDisputed = true;
+        payout.disputeMessage = message;
+        payout.disputedAt = Date.now();
+        await payout.save();
+
+        // Notify Admin
+        const io = req.app.get('io');
+        const adminNotif = {
+            type: 'PAYOUT_DISPUTE',
+            message: `DISPUTE: ${req.user.name} reported issue with payout #${payout._id.toString().slice(-6).toUpperCase()}`,
+            referenceId: payout._id,
+            onModel: 'PayoutRequest'
+        };
+
+        if (io) {
+            io.to('admin_notifications').emit('payout_disputed', adminNotif);
+        }
+
+        res.json({ message: 'Help request submitted to Admin', payout });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

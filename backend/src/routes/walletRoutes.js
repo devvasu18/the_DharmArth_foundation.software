@@ -69,7 +69,19 @@ router.get('/transactions', protect, async (req, res) => {
             new Date(b.createdAt) - new Date(a.createdAt)
         );
 
-        res.json(allTransactions);
+        // 5. Pagination
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+        
+        const paginatedTransactions = allTransactions.slice(skip, skip + limit);
+        const hasMore = allTransactions.length > (skip + limit);
+
+        res.json({
+            transactions: paginatedTransactions,
+            hasMore,
+            totalCount: allTransactions.length
+        });
     } catch (error) {
         console.error("Txn Fetch Error:", error);
         res.status(500).json({ message: error.message });

@@ -45,6 +45,18 @@ const UserDashboard = () => {
     const socketRef = React.useRef(null);
     const notificationRef = React.useRef(null);
 
+    // Dispute Modal States
+    const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+    const [disputeMsg, setDisputeMsg] = useState('');
+    const [disputePayoutId, setDisputePayoutId] = useState('');
+    const [isDisputeSubmitting, setIsDisputeSubmitting] = useState(false);
+
+    // Infinite Scroll States
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const observer = React.useRef();
+
     // Fetch initial profile, balance and stats
     useEffect(() => {
         if (!user?.token || user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
@@ -69,20 +81,50 @@ const UserDashboard = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Fetch transaction history when filters change
-    useEffect(() => {
-        if (!user?.token || user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
+    const fetchTransactions = async (pageNum, isInitial = false) => {
+        if (!user?.token) return;
+        if (isInitial) {
+            setPage(1);
+            setHasMore(true);
+        }
+        
+        setIsLoadingMore(true);
+        try {
+            const tRes = await api.get(`/wallet/transactions?month=${selectedMonth}&year=${selectedYear}&page=${pageNum}&limit=20`);
+            const newTxns = tRes.data.transactions || [];
+            
+            setTransactions(prev => isInitial ? newTxns : [...prev, ...newTxns]);
+            setHasMore(tRes.data.hasMore);
+        } catch (error) {
+            console.error("Error fetching transactions", error);
+        } finally {
+            setIsLoadingMore(false);
+        }
+    };
 
-        const fetchTransactions = async () => {
-            try {
-                const tRes = await api.get(`/wallet/transactions?month=${selectedMonth}&year=${selectedYear}`);
-                setTransactions(tRes.data);
-            } catch (error) {
-                console.error("Error fetching transactions", error);
-            }
-        };
-        fetchTransactions();
+    // Initial fetch when filters change
+    useEffect(() => {
+        if (user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
+        fetchTransactions(1, true);
     }, [selectedMonth, selectedYear]);
+
+    // Intersection Observer for Infinite Scroll
+    const lastTxnRef = React.useCallback(node => {
+        if (isLoadingMore) return;
+        if (observer.current) observer.current.disconnect();
+        
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                setPage(prevPage => {
+                    const nextPage = prevPage + 1;
+                    fetchTransactions(nextPage);
+                    return nextPage;
+                });
+            }
+        }, { threshold: 0.1, rootMargin: '200px' }); // Pre-fetch when 200px from bottom (should catch around 15th-20th item)
+        
+        if (node) observer.current.observe(node);
+    }, [isLoadingMore, hasMore]);
     
     // Notification & Socket Logic
     useEffect(() => {
@@ -147,6 +189,35 @@ const UserDashboard = () => {
     };
 
     if (!user) return <div style={{ padding: '2rem', textAlign: 'center' }}>Please Login First</div>;
+
+    const triggerDispute = (payoutId) => {
+        setDisputePayoutId(payoutId);
+        setDisputeMsg('');
+        setIsDisputeModalOpen(true);
+    };
+
+    const handleDisputeSubmit = async () => {
+        if (!disputeMsg.trim()) {
+            toast.error("Please enter a reason for help.");
+            return;
+        }
+
+        setIsDisputeSubmitting(true);
+        try {
+            await api.post(`/payouts/dispute/${disputePayoutId}`, { message: disputeMsg });
+            toast.success("Help request sent to Admin successfully.");
+            setIsDisputeModalOpen(false);
+            setIsDetailsModalOpen(false);
+            
+            // Re-fetch transactions to show updated dispute status
+            // (Assuming fetchAllData is available, otherwise user might need to refresh)
+            window.location.reload(); 
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to send help request");
+        } finally {
+            setIsDisputeSubmitting(false);
+        }
+    };
 
     return (
         <div className="dashboard-page">
@@ -420,8 +491,8 @@ const UserDashboard = () => {
                                                     return true;
                                                 }
                                                 return true;
-                                            }).map(txn => (
-                                                <tr key={txn._id}>
+                                            }).map((txn, index) => (
+                                                <tr key={txn._id} ref={index === transactions.length - 1 ? lastTxnRef : null}>
                                                     <td style={{ color: 'var(--primary)', fontWeight: '600', fontSize: '0.9rem' }}>
                                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                             <span>{new Date(txn.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
@@ -489,6 +560,23 @@ const UserDashboard = () => {
                                             ))}
                                         </tbody>
                                     </table>
+                                    {isLoadingMore && (
+                                        <div style={{ padding: '1.5rem', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>
+                                            <motion.div
+                                                animate={{ rotate: 360 }}
+                                                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                                style={{ display: 'inline-block', marginRight: '8px' }}
+                                            >
+                                                <Clock size={16} />
+                                            </motion.div>
+                                            Loading more history...
+                                        </div>
+                                    )}
+                                    {!hasMore && transactions.length > 0 && (
+                                        <div style={{ padding: '1.5rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem', fontWeight: 500 }}>
+                                            You've reached the end of your history.
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </motion.div>
@@ -582,6 +670,28 @@ const UserDashboard = () => {
                             <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center' }}>
                                 Processed at: {selectedTxnDetails.processedAt ? new Date(selectedTxnDetails.processedAt).toLocaleString() : 'Pending'}
                             </div>
+
+                            {selectedTxnDetails.status === 'completed' && !selectedTxnDetails.isDisputed && (
+                                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', marginTop: '0.5rem', textAlign: 'center' }}>
+                                    <button 
+                                        style={{ color: '#ef4444', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'underline' }}
+                                        onClick={() => triggerDispute(selectedTxnDetails._id)}
+                                    >
+                                        Payment not received? Need Help
+                                    </button>
+                                </div>
+                            )}
+
+                            {selectedTxnDetails.isDisputed && (
+                                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', marginTop: '0.5rem', textAlign: 'center', color: '#ef4444', fontSize: '0.85rem', fontWeight: 600 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                                        <Clock size={14} /> Help Requested / Dispute Active
+                                    </div>
+                                    {selectedTxnDetails.disputeMessage && (
+                                        <div style={{ fontSize: '0.75rem', fontWeight: 400, marginTop: '0.25rem' }}>"{selectedTxnDetails.disputeMessage}"</div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9' }}>
@@ -590,6 +700,87 @@ const UserDashboard = () => {
                     </motion.div>
                 </div>
             )}
+
+            {/* Dispute Help Modal */}
+            <AnimatePresence>
+                {isDisputeModalOpen && (
+                    <div className="payout-modal-overlay" onClick={() => setIsDisputeModalOpen(false)}>
+                        <motion.div 
+                            className="payout-modal" 
+                            onClick={e => e.stopPropagation()}
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            style={{ maxWidth: '450px' }}
+                        >
+                            <button className="payout-modal-close" onClick={() => setIsDisputeModalOpen(false)}><X size={24} /></button>
+                            
+                            <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
+                                    <Info size={28} color="white" />
+                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>Need Help?</h2>
+                                </div>
+                                <p style={{ margin: '5px 0 0', opacity: 0.9 }}>Report an issue with your payout</p>
+                            </div>
+
+                            <div className="conditions-container" style={{ padding: '1.5rem', background: '#ffffff', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }}>
+                                <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem', textAlign: 'center', lineHeight: '1.5' }}>
+                                    If you haven't received your payment or found any discrepancy, please describe it below. Our team will review it immediately.
+                                </p>
+
+                                <div className="form-group" style={{ marginBottom: '1rem' }}>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>
+                                        Reason for Help Request
+                                    </label>
+                                    <textarea 
+                                        style={{ 
+                                            width: '100%', 
+                                            borderRadius: '12px', 
+                                            padding: '12px', 
+                                            border: '2px solid #e2e8f0',
+                                            minHeight: '120px',
+                                            fontSize: '0.95rem',
+                                            fontFamily: 'inherit',
+                                            resize: 'none',
+                                            outline: 'none'
+                                        }}
+                                        placeholder="e.g. Transaction ID is correct but money not received in my bank account..."
+                                        value={disputeMsg}
+                                        onChange={(e) => setDisputeMsg(e.target.value)}
+                                        autoFocus
+                                    ></textarea>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '12px', marginTop: '1.5rem' }}>
+                                    <button 
+                                        style={{ 
+                                            flex: 1, 
+                                            border: '1px solid #e2e8f0', 
+                                            background: 'white', 
+                                            borderRadius: '12px', 
+                                            padding: '12px', 
+                                            fontWeight: 700,
+                                            color: '#64748b',
+                                            cursor: 'pointer'
+                                        }}
+                                        onClick={() => setIsDisputeModalOpen(false)}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        className="btn-proceed" 
+                                        style={{ flex: 1, background: '#ef4444', margin: 0 }}
+                                        onClick={handleDisputeSubmit}
+                                        disabled={isDisputeSubmitting}
+                                    >
+                                        {isDisputeSubmitting ? 'Submitting...' : 'Submit Request'}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

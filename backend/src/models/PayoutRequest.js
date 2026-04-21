@@ -29,7 +29,13 @@ const payoutRequestSchema = new mongoose.Schema({
     adminNotes: String,
     transactionId: String, // Payment gateway Ref ID
     proofImage: String, // URL of payment proof screenshot
-    processedAt: Date
+    processedAt: Date,
+    isDisputed: {
+        type: Boolean,
+        default: false
+    },
+    disputeMessage: String,
+    disputedAt: Date
 }, {
     timestamps: true
 });
