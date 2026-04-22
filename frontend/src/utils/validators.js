@@ -60,3 +60,13 @@ export const validatePAN = (pan) => {
     const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
     return panRegex.test(pan.toUpperCase());
 };
+/**
+ * Validates an Email address using Regex.
+ * @param {string} email 
+ * @returns {boolean}
+ */
+export const validateEmail = (email) => {
+    if (!email) return false;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+};

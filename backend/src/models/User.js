@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
+        required: false, // Optional initially for guest donors
     },
     roles: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema({
     referralCode: {
         type: String,
         unique: true,
-        sparse: true // Only for motivators
+        sparse: true // Allows nulls while ensuring uniqueness for existing values
     },
     isMotivator: {
         type: Boolean,
@@ -59,6 +59,10 @@ const userSchema = new mongoose.Schema({
         default: 'hi',
         enum: ['en', 'hi']
     },
+    address: String,
+    city: String,
+    state: String,
+    lastMotivatorMobile: String,
     isSuspended: {
         type: Boolean,
         default: false
@@ -79,13 +83,32 @@ const userSchema = new mongoose.Schema({
 
 // Encrypt password and sensitive details
 userSchema.pre('save', async function () {
-    // Password
-    if (this.isModified('password')) {
+    // 1. Password Encryption
+    if (this.isModified('password') && this.password) {
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
     }
     
-    // Banking Credentials
+    // 2. Automated Referral Code Generation
+    if (!this.referralCode) {
+        try {
+            const namePart = (this.name || 'USER').split(' ')[0] || 'USER';
+            const prefix = namePart.substring(0, 4).toUpperCase();
+            const suffix = (this.mobile || '0000').slice(-4);
+            let code = `${prefix}${suffix}`;
+            
+            // Uniqueness check (Self-correction if duplicate)
+            const exists = await mongoose.model('User').findOne({ referralCode: code });
+            if (exists) {
+                code = `${prefix}${Math.floor(1000 + Math.random() * 9000)}`;
+            }
+            this.referralCode = code;
+        } catch (err) {
+            console.error("Referral Code Hook Error:", err);
+        }
+    }
+
+    // 3. Banking Credentials Encryption
     if (this.isModified('payoutCredentials.accountNumber') && this.payoutCredentials.accountNumber) {
         this.payoutCredentials.accountNumber = encrypt(this.payoutCredentials.accountNumber);
     }

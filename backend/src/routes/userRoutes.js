@@ -128,7 +128,10 @@ router.get('/staff', protect, async (req, res) => {
 // @access  Private
 router.get('/profile', protect, async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).select('-password');
+        const user = await User.findById(req.user._id)
+            .select('-password')
+            .populate('referredBy', 'name mobile referralCode');
+            
         if (user) {
             res.json(user);
         } else {
@@ -339,29 +342,8 @@ router.put('/become-motivator', protect, async (req, res) => {
 
         console.log(`Starting motivator registration for user: ${user.mobile} (${user.name})`);
 
-        // 1. Generate referralCode if not exists
-        if (!user.referralCode) {
-            try {
-                // Ensure name exists for prefix
-                const namePart = (user.name || 'USER').split(' ')[0] || 'USER';
-                const prefix = namePart.substring(0, 4).toUpperCase();
-                const suffix = (user.mobile || '0000').slice(-4);
-                let code = `${prefix}${suffix}`;
-                
-                // Check if code exists
-                const exists = await User.findOne({ referralCode: code });
-                if (exists) {
-                    // Force a unique code with random numbers
-                    code = `${prefix}${Math.floor(1000 + Math.random() * 9000)}`;
-                }
-                user.referralCode = code;
-                console.log(`Generated referral code: ${code}`);
-            } catch (err) {
-                console.error("Referral Code Generation Error:", err);
-                throw new Error("Failed to generate unique referral code");
-            }
-        }
-
+        // 1. Generate referralCode if not exists is now handled by User model pre('save') hook
+        
         user.isMotivator = true;
         user.payoutCredentials = {
             bankName: bankName || '',

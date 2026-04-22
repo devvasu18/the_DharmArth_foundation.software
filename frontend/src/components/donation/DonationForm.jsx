@@ -85,25 +85,63 @@ const DonationForm = ({ onSuccess }) => {
         fetchSettings();
 
         // Auto-fill user details if logged in
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-            try {
-                const user = JSON.parse(userStr);
-                setFullName(user.name || '');
-                setMobile(user.mobile || '');
-                setEmail(user.email || '');
-                setAddress(user.address || '');
-                setCity(user.city || '');
-                setState(user.state || '');
-                if (user.referredBy) {
-                    setMotivatorMobile(user.referredBy.mobile);
-                    setMotivatorName(user.referredBy.name);
-                    setIsMotivatorLocked(true);
+        const fetchLatestProfile = async () => {
+            const userStr = localStorage.getItem('user');
+            if (userStr && userStr !== "null" && userStr !== "undefined") {
+                try {
+                    // Start with what we have in localStorage
+                    let user = JSON.parse(userStr);
+                    setFullName(user.name || '');
+                    setMobile(user.mobile || '');
+                    setEmail(user.email || '');
+                    setAddress(user.address || '');
+                    setCity(user.city || '');
+                    setState(user.state || '');
+                    if (user.referredBy) {
+                        setMotivatorMobile(user.referredBy.mobile || user.referredBy.referralCode || '');
+                        setMotivatorName(user.referredBy.name || '');
+                        setIsMotivatorLocked(true);
+                    } else if (user.lastMotivatorMobile) {
+                        setMotivatorMobile(user.lastMotivatorMobile);
+                    }
+
+                    // Then fetch fresh data from server to catch any recent syncs
+                    const { data: freshUser } = await api.get('/users/profile');
+                    if (freshUser) {
+                        setFullName(freshUser.name || '');
+                        setMobile(freshUser.mobile || '');
+                        setEmail(freshUser.email || '');
+                        setAddress(freshUser.address || '');
+                        setCity(freshUser.city || '');
+                        setState(freshUser.state || '');
+                        
+                        // Handle populated referredBy
+                        if (freshUser.referredBy && typeof freshUser.referredBy === 'object') {
+                            const ref = freshUser.referredBy;
+                            setMotivatorMobile(ref.mobile || ref.referralCode || '');
+                            setMotivatorName(ref.name || '');
+                            setIsMotivatorLocked(true);
+                        } else if (freshUser.lastMotivatorMobile) {
+                            setMotivatorMobile(freshUser.lastMotivatorMobile);
+                        }
+                        
+                        // Sync localStorage
+                        localStorage.setItem('user', JSON.stringify(freshUser));
+                    }
+                } catch (e) {
+                    // Handle 401 (Unauthorized) - user session expired
+                    if (e.response?.status === 401) {
+                        console.warn("Session expired or unauthorized. Using local fallback.");
+                        // Optional: logout user if token is invalid
+                        // localStorage.removeItem('user');
+                    } else {
+                        console.error("Error syncing user profile:", e);
+                    }
                 }
-            } catch (e) {
-                console.error("Error parsing user from localstorage");
             }
-        }
+        };
+
+        fetchLatestProfile();
     }, []);
 
     // Check for referral link
@@ -182,6 +220,7 @@ const DonationForm = ({ onSuccess }) => {
 
             const { data } = await api.post('/donate', payload);
             setShowPanModal(false); 
+
             await showAlert(`Payment Successful! Donation ID: ${data.donationId}`);
             setDonationSuccess({
                 donationId: data.donationId,

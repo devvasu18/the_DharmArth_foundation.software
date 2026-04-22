@@ -49,9 +49,9 @@ const registerUser = async (req, res) => {
     const { name, mobile, email, password } = req.body;
 
     try {
-        const userExists = await User.findOne({ mobile });
+        let user = await User.findOne({ mobile });
 
-        if (userExists) {
+        if (user && user.password) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
@@ -68,22 +68,34 @@ const registerUser = async (req, res) => {
             }
         }
 
-        const user = await User.create({
-            name,
-            mobile,
-            email: email || undefined,
-            password,
-            referredBy
-        });
+        if (user) {
+            // "Claim" account (Existing guest donor with no password)
+            user.name = name || user.name;
+            user.email = email || user.email;
+            user.password = password; // pre('save') hook will hash this
+            if (referredBy) user.referredBy = referredBy;
+            await user.save();
+        } else {
+            // New Registration
+            user = await User.create({
+                name,
+                mobile,
+                email: email || undefined,
+                password,
+                referredBy
+            });
+        }
 
         if (user) {
             res.status(201).json({
                 _id: user._id,
                 name: user.name,
                 mobile: user.mobile,
-                referredBy: referredBy ? {
-                    name: (await User.findById(referredBy)).name,
-                    mobile: (await User.findById(referredBy)).mobile
+                email: user.email,
+                referralCode: user.referralCode,
+                referredBy: user.referredBy ? {
+                    name: (await User.findById(user.referredBy)).name,
+                    mobile: (await User.findById(user.referredBy)).mobile
                 } : null,
                 token: generateToken(user._id)
             });
@@ -91,6 +103,7 @@ const registerUser = async (req, res) => {
             res.status(400).json({ message: 'Invalid user data' });
         }
     } catch (error) {
+        console.error("Register/Claim Error:", error);
         res.status(500).json({ message: error.message });
     }
 };

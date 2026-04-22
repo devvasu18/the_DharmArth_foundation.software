@@ -144,6 +144,36 @@ router.post('/', async (req, res) => {
             // 5. Send WhatsApp Notification
             await whatsappService.sendDonationNotification(donorMobile, donorName, amount);
 
+            // 6. Send Email Notification if available
+            if (donorEmail) {
+                await whatsappService.sendDonationEmail(donorEmail, donorName, amount);
+            }
+            
+            // 7. Sync info to User Profile (Update even if not logged in, identified by mobile)
+            try {
+                let user = await User.findOne({ mobile: donorMobile });
+                if (user) {
+                    user.email = donorEmail || user.email;
+                    user.address = address || user.address;
+                    user.city = city || user.city;
+                    user.state = state || user.state;
+                    user.lastMotivatorMobile = motivatorMobile || user.lastMotivatorMobile;
+                } else {
+                    user = new User({
+                        name: donorName,
+                        mobile: donorMobile,
+                        email: donorEmail || undefined,
+                        address,
+                        city,
+                        state,
+                        lastMotivatorMobile: motivatorMobile
+                    });
+                }
+                await user.save(); // Triggers pre('save') for referralCode
+            } catch (err) {
+                console.error("User Profile Sync (Monthly) Failed:", err);
+            }
+
             return res.status(201).json({
                 message: 'Subscription Started Successfully',
                 subscriptionId: subscription._id,
@@ -209,6 +239,36 @@ router.post('/', async (req, res) => {
 
         // 6. Send WhatsApp Notification
         await whatsappService.sendDonationNotification(donorMobile, donorName, amount);
+
+        // 7. Send Email Notification if available
+        if (donorEmail) {
+            await whatsappService.sendDonationEmail(donorEmail, donorName, amount);
+        }
+
+        // 8. Sync info to User Profile for auto-fill next time
+        try {
+            let user = await User.findOne({ mobile: donorMobile });
+            if (user) {
+                user.email = donorEmail || user.email;
+                user.address = address || user.address;
+                user.city = city || user.city;
+                user.state = state || user.state;
+                user.lastMotivatorMobile = motivatorMobile || user.lastMotivatorMobile;
+            } else {
+                user = new User({
+                    name: donorName,
+                    mobile: donorMobile,
+                    email: donorEmail || undefined,
+                    address,
+                    city,
+                    state,
+                    lastMotivatorMobile: motivatorMobile
+                });
+            }
+            await user.save(); // Triggers pre('save') for referralCode
+        } catch (err) {
+            console.error("User Profile Sync Failed:", err);
+        }
 
         res.status(201).json({
             message: 'Donation Successful',

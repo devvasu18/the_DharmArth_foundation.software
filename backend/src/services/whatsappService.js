@@ -48,7 +48,62 @@ class WhatsappService {
     }
 
     /**
-     * Specialized: Send Donation Thank You Notification
+     * Send a general email via the communication bridge
+     * @param {string} to - Recipient email
+     * @param {string} subject - Email subject
+     * @param {Object} options - { text, html, name }
+     */
+    async sendEmail(to, subject, options = {}) {
+        try {
+            console.log(`[EMAIL] Sending email to ${to}...`);
+            const response = await fetch(`${this.baseUrl}/send-email`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to,
+                    subject,
+                    text: options.text,
+                    html: options.html,
+                    name: options.name
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Email bridge returned ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log(`[EMAIL] Email queued successfully: ${data.emailId}`);
+            return data;
+        } catch (error) {
+            console.error('[EMAIL SERVICE ERROR]', error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Specialized: Send Donation Thank You email
+     */
+    async sendDonationEmail(to, donorName, amount) {
+        const subject = "Thank you for your generous donation!";
+        const html = `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
+                <h2 style="color: #2c3e50; text-align: center;">🙏 Thank You, ${donorName}!</h2>
+                <p>We have successfully received your donation of <strong>₹${amount}</strong>.</p>
+                <p>Your contribution to <strong>The DharmArth Foundation</strong> helps us continue our mission of serving the community. We are deeply grateful for your support.</p>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                <p style="font-size: 0.9em; color: #777;">This is an automated receipt. If you have any questions, please contact us at support@dharmarth.org.</p>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="https://dharmarth.org" style="background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Visit Our Website</a>
+                </div>
+            </div>
+        `;
+        return this.sendEmail(to, subject, { html, name: donorName });
+    }
+
+    /**
+     * Specialized: Send Donation Thank You WhatsApp Notification
      */
     async sendDonationNotification(donorMobile, donorName, amount) {
         const message = `Dear ${donorName}, thank you for your generous donation of ₹${amount} to The DharmArth Foundation. Your support helps us make a big difference! 🙏`;

@@ -13,11 +13,31 @@ export { API_BASE_URL };
 
 // Add auth token to requests if available
 api.interceptors.request.use((config) => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user && user.token) {
-        config.headers.Authorization = `Bearer ${user.token}`;
+    const userStr = localStorage.getItem('user');
+    if (userStr && userStr !== "null" && userStr !== "undefined") {
+        try {
+            const user = JSON.parse(userStr);
+            if (user && user.token) {
+                config.headers.Authorization = `Bearer ${user.token}`;
+            }
+        } catch (e) {
+            localStorage.removeItem('user');
+        }
     }
     return config;
 });
+
+// Handle global responses (like 401)
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            console.warn("Unauthorized access - clearing session");
+            localStorage.removeItem('user');
+            // Optional: window.location.href = '/login'; 
+        }
+        return Promise.reject(error);
+    }
+);
 
 export default api;
