@@ -49,6 +49,7 @@ const AdminPrescriptions = lazy(() => import('./components/admin/AdminPrescripti
 const AdminDelivery = lazy(() => import('./components/admin/AdminDelivery'));
 const AdminDispatch = lazy(() => import('./components/admin/AdminDispatch'));
 const AdminPharmacyOrders = lazy(() => import('./components/admin/AdminPharmacyOrders'));
+const AdminWhatsApp = lazy(() => import('./components/admin/AdminWhatsApp'));
 const DeliveryBoyDashboard = lazy(() => import('./pages/DeliveryBoyDashboard'));
 const SharedCheckout = lazy(() => import('./pages/SharedCheckout'));
 const SharedTracker = lazy(() => import('./pages/SharedTracker'));
@@ -102,6 +103,7 @@ const router = createBrowserRouter(
         <Route path="pharmacy-orders" element={<AdminPharmacyOrders />} />
         <Route path="delivery" element={<AdminDelivery />} />
         <Route path="dispatch" element={<AdminDispatch />} />
+        <Route path="whatsapp" element={<AdminWhatsApp />} />
         <Route path="reports/commission" element={<CommissionReports />} />
       </Route>
 

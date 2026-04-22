@@ -3,13 +3,14 @@
  * Handles In-app, Email (Nodemailer), and SMS (Placeholder)
  */
 const Notification = require('../models/Notification');
+const whatsappService = require('./whatsappService');
 
 class NotificationService {
 
     /**
      * Send notification to a specific user or admin
      */
-    async notify({ userId, type, message, referenceId, onModel, email, sms }) {
+    async notify({ userId, type, message, referenceId, onModel, email, sms, whatsapp }) {
         try {
             // 1. Create In-App Notification (Database)
             const notification = await Notification.create({
@@ -21,21 +22,20 @@ class NotificationService {
                 isRead: false
             });
 
-            // 2. Push to Socket (Real-time UI update)
-            // Note: io is usually injected or globally accessible via app settings
-            // We'll trust the route to handle the immediate emit for now or 
-            // the consumer of this service should have access to io.
-
-            // 3. Send Email (Mocked for now, ready for Nodemailer)
+            // 2. Send Email (Mocked for now, ready for Nodemailer)
             if (email) {
                 console.log(`[EMAIL SENDING] To: ${email} | Subject: ${type} | Body: ${message}`);
-                // await this.sendActualEmail(email, type, message);
             }
 
-            // 4. Send SMS (Mocked for now, ready for Twilio/MSG91)
+            // 3. Send SMS (Mocked for now, ready for Twilio/MSG91)
             if (sms) {
                 console.log(`[SMS SENDING] To: ${sms} | Msg: ${message}`);
-                // await this.sendActualSMS(sms, message);
+            }
+
+            // 4. Send WhatsApp (Using whatsapp_service_backend)
+            if (whatsapp) {
+                console.log(`[WHATSAPP SENDING] To: ${whatsapp} | Msg: ${message}`);
+                await whatsappService.sendMessage(whatsapp, message);
             }
 
             return notification;

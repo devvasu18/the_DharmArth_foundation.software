@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Notification = require('../models/Notification');
 const { processDonationCommission } = require('../services/commissionService');
 const certificateService = require('../services/certificateService');
+const whatsappService = require('../services/whatsappService');
 const { protect } = require('../middlewares/authMiddleware');
 
 // @desc    Get All Donations (Admin)
@@ -140,6 +141,9 @@ router.post('/', async (req, res) => {
             }
             if (donation.is80G) await certificateService.createCertificate(donation);
 
+            // 5. Send WhatsApp Notification
+            await whatsappService.sendDonationNotification(donorMobile, donorName, amount);
+
             return res.status(201).json({
                 message: 'Subscription Started Successfully',
                 subscriptionId: subscription._id,
@@ -202,6 +206,9 @@ router.post('/', async (req, res) => {
         if (io) {
             io.to('admin_notifications').emit('new_donation', notification);
         }
+
+        // 6. Send WhatsApp Notification
+        await whatsappService.sendDonationNotification(donorMobile, donorName, amount);
 
         res.status(201).json({
             message: 'Donation Successful',

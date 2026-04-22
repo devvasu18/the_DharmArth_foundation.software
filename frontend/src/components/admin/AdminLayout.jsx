@@ -420,6 +420,10 @@ const AdminLayout = () => {
                         <Wallet size={20} title={isSidebarCollapsed ? "Payouts" : ""} />
                         <span className="admin-link-text">Payouts</span>
                     </NavLink>
+                    <NavLink to="/admin/whatsapp" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
+                        <MessageSquare size={20} title={isSidebarCollapsed ? "WhatsApp Scanner" : ""} />
+                        <span className="admin-link-text">WhatsApp Scanner</span>
+                    </NavLink>
                     <NavLink to="/admin/settings" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <Settings size={20} title={isSidebarCollapsed ? "Site Settings" : ""} />
                         <span className="admin-link-text">Site Settings</span>
