@@ -12,8 +12,11 @@ const DonationPage = () => {
     // Block navigation if not donated and trying to leave the page
     const blocker = useBlocker(
         ({ nextLocation }) =>
-            !isDonated && location.pathname !== nextLocation.pathname
+            !isDonated && 
+            location.pathname !== nextLocation.pathname &&
+            nextLocation.pathname !== '/login'
     );
+
 
 
     useEffect(() => {

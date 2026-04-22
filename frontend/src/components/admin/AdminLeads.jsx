@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api, { API_BASE_URL } from '../../services/api';
-import { Search, Loader, Phone, Calendar, MessageSquare, CheckCircle, Clock, XCircle, Send } from 'lucide-react';
+import { Search, Loader, Phone, Calendar, CheckCircle, Clock, XCircle } from 'lucide-react';
 import './AdminLeads.css'; // We'll assume some basic styles or reuse AdminUsers.css
 
 const AdminLeads = () => {
@@ -9,11 +9,7 @@ const AdminLeads = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [statusFilter, setStatusFilter] = useState('');
-    const [typeFilter, setTypeFilter] = useState('');
-
-    const [selectedChat, setSelectedChat] = useState(null);
-
-    const [replyText, setReplyText] = useState('');
+    const [typeFilter] = useState('donation_exit');
 
     useEffect(() => {
         fetchLeads();
@@ -33,39 +29,6 @@ const AdminLeads = () => {
         }
     };
 
-    const handleSendReply = async () => {
-        if (!replyText.trim() || !selectedChat) return;
-
-        try {
-            const newMessage = {
-                sender: 'support',
-                text: replyText,
-                timestamp: new Date()
-            };
-
-            await api.post(`/leads/${selectedChat._id}/messages`, {
-                message: newMessage
-            });
-
-            // Update local state
-            setSelectedChat(prev => ({
-                ...prev,
-                chatHistory: [...(prev.chatHistory || []), newMessage]
-            }));
-
-            // Allow time for state update or re-fetch if precise sync needed
-            // But local update is faster for UI
-
-            setReplyText('');
-            toast.success("Reply sent");
-
-            // Optionally update the main list 'leads' if needed, but chat history is deep in object
-        } catch (error) {
-            console.error("Failed to send reply", error);
-            toast.error("Failed to send reply");
-        }
-    };
-
     const handleStatusChange = async (id, newStatus) => {
         try {
             await api.put(`/leads/${id}`, { status: newStatus });
@@ -78,7 +41,7 @@ const AdminLeads = () => {
     return (
         <div className="admin-page-container">
             <div className="admin-header">
-                <h2>Leads & Chat Inquiries</h2>
+                <h2>Donation Reminders</h2>
                 <div className="admin-actions">
                     <select
                         className="admin-select"
@@ -90,15 +53,6 @@ const AdminLeads = () => {
                         <option value="contacted">Contacted</option>
                         <option value="converted">Converted</option>
                         <option value="closed">Closed</option>
-                    </select>
-                    <select
-                        className="admin-select"
-                        value={typeFilter}
-                        onChange={(e) => setTypeFilter(e.target.value)}
-                    >
-                        <option value="">All Types</option>
-                        <option value="chat">Chat Inquiries</option>
-                        <option value="donation_exit">Donation Exit</option>
                     </select>
                 </div>
             </div>
@@ -113,7 +67,6 @@ const AdminLeads = () => {
                                 <th>Name</th>
                                 <th>Mobile</th>
                                 <th>Language</th>
-                                <th>Type</th>
                                 <th>Status</th>
                                 <th>Date</th>
                                 <th>Actions</th>
@@ -122,7 +75,7 @@ const AdminLeads = () => {
                         <tbody>
                             {leads.length === 0 ? (
                                 <tr>
-                                    <td colSpan="7" className="text-center">No leads found</td>
+                                    <td colSpan="6" className="text-center">No reminders found</td>
                                 </tr>
                             ) : (
                                 leads.map(lead => (
@@ -140,11 +93,6 @@ const AdminLeads = () => {
                                             </span>
                                         </td>
                                         <td>
-                                            <span className={`type-badge type-${lead.type || 'chat'}`}>
-                                                {lead.type === 'donation_exit' ? 'Donation Exit' : 'Chat'}
-                                            </span>
-                                        </td>
-                                        <td>
                                             <span className={`status-badge status-${lead.status}`}>
                                                 {lead.status}
                                             </span>
@@ -152,13 +100,6 @@ const AdminLeads = () => {
                                         <td>{new Date(lead.createdAt).toLocaleString()}</td>
                                         <td>
                                             <div className="action-buttons">
-                                                <button
-                                                    className="btn-icon"
-                                                    title="View Chat"
-                                                    onClick={() => setSelectedChat(lead)}
-                                                >
-                                                    <MessageSquare size={18} color="#6366f1" />
-                                                </button>
                                                 {lead.status === 'new' && (
                                                     <button
                                                         className="btn-icon"
@@ -212,49 +153,6 @@ const AdminLeads = () => {
                 </button>
             </div>
 
-            {selectedChat && (
-                <div className="modal-overlay" onClick={() => setSelectedChat(null)}>
-                    <div className="modal-content chat-modal" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>Chat History - {selectedChat.name ? `${selectedChat.name} (${selectedChat.mobile})` : selectedChat.mobile}</h3>
-                            <button className="close-btn" onClick={() => setSelectedChat(null)}>
-                                <XCircle size={20} />
-                            </button>
-                        </div>
-                        <div className="modal-body chat-history-body">
-                            {selectedChat.chatHistory && selectedChat.chatHistory.length > 0 ? (
-                                selectedChat.chatHistory.filter(m => m.sender !== 'bot').length > 0 ? (
-                                    selectedChat.chatHistory.filter(m => m.sender !== 'bot').map((msg, idx) => (
-                                        <div key={idx} className={`chat-bubble ${msg.sender === 'user' ? 'chat-bubble-user' : 'chat-bubble-reply'}`}>
-                                            <div className={`chat-bubble-content ${msg.sender !== 'user' ? 'chat-reply-content' : ''}`}>
-                                                {msg.text || msg.translationKey}
-                                                <div className="chat-time">{new Date(msg.timestamp).toLocaleTimeString()}</div>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-muted text-center" style={{ padding: '20px' }}>No user messages found.</p>
-                                )
-                            ) : (
-                                <p className="text-muted text-center">No chat history available.</p>
-                            )}
-                        </div>
-                        <div className="modal-footer chat-input-footer">
-                            <input
-                                type="text"
-                                className="admin-chat-input"
-                                placeholder="Type a reply..."
-                                value={replyText}
-                                onChange={(e) => setReplyText(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && handleSendReply()}
-                            />
-                            <button className="btn-send-reply" onClick={handleSendReply}>
-                                <Send size={18} />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

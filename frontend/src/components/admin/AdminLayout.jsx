@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet, Calendar, FileText, Stethoscope } from 'lucide-react';
+import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet, Calendar, FileText, Stethoscope, MessageSquare } from 'lucide-react';
 import { io } from "socket.io-client";
 import toast from 'react-hot-toast';
 import api, { API_BASE_URL } from '../../services/api';
@@ -206,6 +206,10 @@ const AdminLayout = () => {
                     <NavLink to="/admin/users" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <Users size={20} title={isSidebarCollapsed ? "User Management" : ""} />
                         <span className="admin-link-text">User Management</span>
+                    </NavLink>
+                    <NavLink to="/admin/leads" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
+                        <MessageSquare size={20} title={isSidebarCollapsed ? "Leads & Inquiries" : ""} />
+                        <span className="admin-link-text">Leads & Inquiries</span>
                     </NavLink>
                     <NavLink to="/admin/sliders" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <Image size={20} title={isSidebarCollapsed ? "Hero Sliders" : ""} />
