@@ -147,7 +147,7 @@ router.get('/dashboard', async (req, res) => {
 
         // Fetch Data
         let donations = await Donation.find(query)
-            .select('donorName donorMobile amount motivatorMobile createdAt is80G level1UserId level2UserId status panNumber aadhaarNumber')
+            .select('donorName donorMobile amount address city state motivatorMobile createdAt is80G level1UserId level2UserId status panNumber aadhaarNumber')
             .populate({
                 path: 'level1UserId',
                 select: 'name mobile referredBy', // Fetch L2 Relation
@@ -477,6 +477,9 @@ router.get('/donations/:donationId/breakdown', async (req, res) => {
                 id: donation._id,
                 donorName: donation.donorName,
                 donorMobile: donation.donorMobile,
+                address: donation.address,
+                city: donation.city,
+                state: donation.state,
                 amount: donation.amount,
                 date: donation.createdAt
             },

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useConfirm } from '../../context/ConfirmContext';
@@ -25,6 +25,9 @@ const DonationForm = ({ onSuccess }) => {
     const [fullName, setFullName] = useState('');
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
+    const [address, setAddress] = useState('');
+    const [city, setCity] = useState('');
+    const [state, setState] = useState('');
     const [pan, setPan] = useState('');
     const [aadhaar, setAadhaar] = useState('');
     const [errors, setErrors] = useState({});
@@ -40,6 +43,25 @@ const DonationForm = ({ onSuccess }) => {
     const [registerPassword, setRegisterPassword] = useState('');
     const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
+ 
+    const isFormValid = useMemo(() => {
+        const finalAmount = customAmount ? Number(customAmount) : amount;
+        if (!fullName.trim()) return false;
+        if (!address.trim() || !city.trim() || !state.trim()) return false;
+        if (mobile.length !== 10) return false;
+        if (!finalAmount || finalAmount <= 0) return false;
+
+        if (need80G) {
+            if (!validatePAN(pan)) return false;
+            if (!validateAadhaar(aadhaar) || aadhaar.length !== 12) return false;
+        }
+
+        if (motivatorMobile) {
+            if (errors.motivator || !motivatorName) return false;
+        }
+
+        return true;
+    }, [fullName, mobile, address, city, state, amount, customAmount, need80G, pan, aadhaar, motivatorMobile, motivatorName, errors.motivator]);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -70,6 +92,9 @@ const DonationForm = ({ onSuccess }) => {
                 setFullName(user.name || '');
                 setMobile(user.mobile || '');
                 setEmail(user.email || '');
+                setAddress(user.address || '');
+                setCity(user.city || '');
+                setState(user.state || '');
                 if (user.referredBy) {
                     setMotivatorMobile(user.referredBy.mobile);
                     setMotivatorName(user.referredBy.name);
@@ -142,9 +167,13 @@ const DonationForm = ({ onSuccess }) => {
         try {
             const payload = {
                 amount: finalAmount,
+                fullName,
                 donorName: fullName,
                 donorMobile: mobile,
                 donorEmail: email,
+                address,
+                city,
+                state,
                 motivatorMobile: motivatorMobile || null,
                 referralSource: referralSource || null,
                 panNumber: need80G ? pan : null,
@@ -336,7 +365,9 @@ const DonationForm = ({ onSuccess }) => {
                                 onClick={handleRegister}
                                 disabled={isRegistering}
                             >
-                                {isRegistering ? t('donatePage.creatingAccount') : t('donatePage.createAccountBtn')}
+                                <span className="btn-content">
+                                    {isRegistering ? t('donatePage.creatingAccount') : t('donatePage.createAccountBtn')}
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -359,7 +390,8 @@ const DonationForm = ({ onSuccess }) => {
     }
 
     return (
-        <div className="donation-container">
+        <>
+            <div className="donation-container">
             <h2 className="donation-title">
                 <CreditCard size={28} className="text-primary" />
                 {t('donatePage.title')}
@@ -443,6 +475,46 @@ const DonationForm = ({ onSuccess }) => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
+                    </div>
+                </div>
+
+                <div className="donation-input-group">
+                    <label className="input-label">{t('donatePage.address')}</label>
+                    <div className="input-group-wrapper">
+                        <textarea
+                            className="form-control"
+                            placeholder={t('donatePage.addressPlaceholder')}
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            style={{ minHeight: '80px', paddingTop: '0.75rem' }}
+                        />
+                    </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="donation-input-group">
+                        <label className="input-label">{t('donatePage.city')}</label>
+                        <div className="input-group-wrapper">
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder={t('donatePage.cityPlaceholder')}
+                                value={city}
+                                onChange={(e) => setCity(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <div className="donation-input-group">
+                        <label className="input-label">{t('donatePage.state')}</label>
+                        <div className="input-group-wrapper">
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder={t('donatePage.statePlaceholder')}
+                                value={state}
+                                onChange={(e) => setState(e.target.value)}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -583,18 +655,24 @@ const DonationForm = ({ onSuccess }) => {
                 )}
             </div>
 
-            <button
-                className="donate-btn"
-                onClick={handleDonate}
-                disabled={loading}
-            >
-                {loading ? t('donatePage.processing') : `${t('donatePage.donateBtn')} ₹${(customAmount ? Number(customAmount) : amount).toLocaleString()}`}
-            </button>
+            </div>
 
-            <div className="text-center mt-3">
-                <small className="text-muted" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
-                    <CreditCard size={12} /> {t('donatePage.securePayment')}
-                </small>
+            <div className="fixed-bottom-bar">
+                <button
+                    className="donate-btn"
+                    onClick={handleDonate}
+                    disabled={!isFormValid || loading}
+                >
+                    <span className="btn-content">
+                        {loading ? t('donatePage.processing') : `${t('donatePage.donateBtn')} ₹${(customAmount ? Number(customAmount) : amount).toLocaleString()}`}
+                    </span>
+                </button>
+
+                <div className="text-center mt-2">
+                    <small className="text-muted" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                        <Lock size={12} /> {t('donatePage.securePayment')}
+                    </small>
+                </div>
             </div>
 
             {showPanModal && (
@@ -641,7 +719,7 @@ const DonationForm = ({ onSuccess }) => {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
 

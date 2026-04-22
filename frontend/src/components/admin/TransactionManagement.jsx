@@ -866,6 +866,7 @@ const TransactionManagement = () => {
                             <th>Amount</th>
                             {filters.searchUser && <th>Level</th>}
                             <th>Motivated By</th>
+                            <th>City/State</th>
                             <th>L1 Comm (10%)</th>
                             <th>L2 Comm (3%)</th>
                             <th>80G</th>
@@ -906,6 +907,11 @@ const TransactionManagement = () => {
                                         {filters.searchUser && <td>{levelLabel || <span className="text-gray-300">-</span>}</td>}
                                         <td>
                                             {txn.level1UserId?.name || (txn.motivatorMobile ? `(Mobile: ${txn.motivatorMobile})` : '-')}
+                                        </td>
+                                        <td>
+                                            <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                                                {txn.city}{txn.city && txn.state ? ', ' : ''}{txn.state}
+                                            </span>
                                         </td>
                                         <td>{(txn.level1UserId || txn.motivatorMobile) ? formatCurrency(txn.amount * 0.10) : <span className="status-badge badge-neutral">No</span>}</td>
                                         <td>{txn.level2UserId ? formatCurrency(txn.amount * 0.03) : <span className="status-badge badge-neutral">No</span>}</td>
@@ -967,6 +973,19 @@ const TransactionManagement = () => {
                                 </div>
                                 <div className="breakdown-row"><span>Date</span> <strong>{formatDate(selectedTransaction.createdAt)}</strong></div>
                                 <div className="breakdown-row"><span>Mobile</span> <strong>{selectedTransaction.donorMobile}</strong></div>
+                                {selectedTransaction.address && (
+                                    <div className="breakdown-row" style={{ alignItems: 'flex-start' }}>
+                                        <span>Address</span> 
+                                        <div style={{ textAlign: 'right', maxWidth: '60%' }}>
+                                            <strong>{selectedTransaction.address}</strong>
+                                            {(selectedTransaction.city || selectedTransaction.state) && (
+                                                <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>
+                                                    {selectedTransaction.city}{selectedTransaction.city && selectedTransaction.state ? ', ' : ''}{selectedTransaction.state}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                                 {selectedTransaction.is80G && (
                                     <>
                                         <div className="breakdown-row pt-2 border-t border-slate-100 mt-2">

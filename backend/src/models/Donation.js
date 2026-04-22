@@ -5,6 +5,9 @@ const donationSchema = new mongoose.Schema({
     donorName: { type: String, required: true },
     donorMobile: { type: String, required: true },
     donorEmail: { type: String },
+    address: { type: String },
+    city: { type: String },
+    state: { type: String },
     amount: { type: Number, required: true },
     status: { type: String, enum: ['pending', 'success', 'failed'], default: 'pending' },
 

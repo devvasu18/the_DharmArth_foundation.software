@@ -10,6 +10,7 @@
     /* Softer, layered shadow */
     position: relative;
     border: 1px solid #f0f0f0;
+    padding-bottom: 100px; /* Offset for fixed bottom button */
 }
 
 /* Premium Top Accent */
@@ -389,34 +390,47 @@
 /* Large Donate Button */
 .donate-btn {
     width: 100%;
-    padding: 1.125rem;
-    background: var(--primary);
+    max-width: 480px;
+    padding: 0.875rem 1.5rem;
+    background: var(--primary); /* Reverted to original teal */
     color: white;
     border: none;
-    border-radius: 16px;
-    font-size: 1.125rem;
-    font-weight: 700;
+    border-radius: 6px; /* Reduced radius for sharp 'slice' look */
+    font-size: 1.1rem;
+    font-weight: 800;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.6rem;
-    margin-top: 2.5rem;
+    margin-top: 0;
+    transform: skewX(-12deg); /* The 'Slice' effect */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.donate-btn .btn-content {
+    transform: skewX(12deg); /* Inverse skew to keep text upright */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
 }
 
 .donate-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.4);
-    filter: brightness(1.05);
+    transform: translateY(-2px) skewX(-12deg);
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.35);
+    filter: brightness(1.1);
 }
 
 .donate-btn:disabled {
-    opacity: 0.7;
+    background: #cbd5e1;
+    color: #94a3b8;
     cursor: not-allowed;
-    transform: none;
-    filter: grayscale(0.5);
+    transform: skewX(-12deg);
+    box-shadow: none;
 }
 
 /* Error/Success Texts */
@@ -485,6 +499,42 @@
     .donation-title {
         font-size: 1.5rem;
     }
+
+    .fixed-bottom-bar {
+        width: 92%;
+        bottom: 1rem;
+        padding: 0;
+    }
+
+    .donation-container {
+        padding-bottom: 85px;
+    }
+}
+
+.fixed-bottom-bar {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 500px;
+    background: rgba(255, 255, 255, 0.12); /* More transparent like water */
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    padding: 1rem 1.5rem;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.fixed-bottom-bar > * {
+    width: 100%;
+    display: flex;
+    justify-content: center;
 }
 
 /* Modal Styling Placeholder - kept simpler */

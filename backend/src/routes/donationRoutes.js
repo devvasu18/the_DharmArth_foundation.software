@@ -57,7 +57,10 @@ router.post('/', async (req, res) => {
         motivatorMobile,
         referralSource,
         panNumber,
-        aadhaarNumber
+        aadhaarNumber,
+        address,
+        city,
+        state
     } = req.body;
 
     // Validation
@@ -106,6 +109,9 @@ router.post('/', async (req, res) => {
                 is80G: !!(panNumber && panNumber.trim().length > 0),
                 panNumber,
                 aadhaarNumber,
+                address,
+                city,
+                state,
                 nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
             });
 
@@ -122,7 +128,10 @@ router.post('/', async (req, res) => {
                 level2UserId: isSelfReferral ? null : level2UserId,
                 is80G: !!(panNumber && panNumber.trim().length > 0),
                 panNumber,
-                aadhaarNumber
+                aadhaarNumber,
+                address,
+                city,
+                state
             });
 
             // Handle commission and certificates for first payment
@@ -148,6 +157,9 @@ router.post('/', async (req, res) => {
             referralSource,
             panNumber,
             aadhaarNumber,
+            address,
+            city,
+            state,
             status: 'pending',
             level1UserId: isSelfReferral ? null : level1UserId,
             level2UserId: isSelfReferral ? null : level2UserId,
