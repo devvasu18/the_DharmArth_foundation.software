@@ -7,7 +7,7 @@ import api from '../../services/api';
 import './DonationForm.css';
 import { validatePAN, validateAadhaar } from '../../utils/validators';
 
-const DonationForm = () => {
+const DonationForm = ({ onSuccess }) => {
     const { t } = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
@@ -158,6 +158,7 @@ const DonationForm = () => {
                 donationId: data.donationId,
                 amount: finalAmount
             });
+            if (onSuccess) onSuccess();
             // Don't navigate, show Success View to allow registration
             // navigate('/');
 

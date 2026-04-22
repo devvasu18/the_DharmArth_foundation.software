@@ -9,6 +9,7 @@ const AdminLeads = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [statusFilter, setStatusFilter] = useState('');
+    const [typeFilter, setTypeFilter] = useState('');
 
     const [selectedChat, setSelectedChat] = useState(null);
 
@@ -16,12 +17,12 @@ const AdminLeads = () => {
 
     useEffect(() => {
         fetchLeads();
-    }, [page, statusFilter]);
+    }, [page, statusFilter, typeFilter]);
 
     const fetchLeads = async () => {
         setLoading(true);
         try {
-            const res = await api.get(`/leads?page=${page}&limit=10${statusFilter ? `&status=${statusFilter}` : ''}`);
+            const res = await api.get(`/leads?page=${page}&limit=10${statusFilter ? `&status=${statusFilter}` : ''}${typeFilter ? `&type=${typeFilter}` : ''}`);
             setLeads(res.data.leads);
             setTotalPages(res.data.totalPages);
         } catch (error) {
@@ -90,6 +91,15 @@ const AdminLeads = () => {
                         <option value="converted">Converted</option>
                         <option value="closed">Closed</option>
                     </select>
+                    <select
+                        className="admin-select"
+                        value={typeFilter}
+                        onChange={(e) => setTypeFilter(e.target.value)}
+                    >
+                        <option value="">All Types</option>
+                        <option value="chat">Chat Inquiries</option>
+                        <option value="donation_exit">Donation Exit</option>
+                    </select>
                 </div>
             </div>
 
@@ -103,6 +113,7 @@ const AdminLeads = () => {
                                 <th>Name</th>
                                 <th>Mobile</th>
                                 <th>Language</th>
+                                <th>Type</th>
                                 <th>Status</th>
                                 <th>Date</th>
                                 <th>Actions</th>
@@ -111,7 +122,7 @@ const AdminLeads = () => {
                         <tbody>
                             {leads.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="text-center">No leads found</td>
+                                    <td colSpan="7" className="text-center">No leads found</td>
                                 </tr>
                             ) : (
                                 leads.map(lead => (
@@ -126,6 +137,11 @@ const AdminLeads = () => {
                                         <td>
                                             <span className={`badge ${lead.language === 'hi' ? 'badge-warning' : 'badge-info'}`}>
                                                 {lead.language.toUpperCase()}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className={`type-badge type-${lead.type || 'chat'}`}>
+                                                {lead.type === 'donation_exit' ? 'Donation Exit' : 'Chat'}
                                             </span>
                                         </td>
                                         <td>
