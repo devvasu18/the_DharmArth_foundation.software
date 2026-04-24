@@ -7,6 +7,7 @@ const Transaction = require('../models/Transaction');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 const { upload } = require('../config/cloudinary');
 const notificationService = require('../services/notificationService');
+const whatsappService = require('../services/whatsappService');
 
 // @desc    Request a Payout
 // @route   POST /api/payouts/request
@@ -153,7 +154,7 @@ router.put('/:id', protect, checkPermission('Transaction Management', 'edit'), u
     const { status, adminNotes, transactionId } = req.body;
     const proofImage = req.file ? req.file.path : req.body.proofImage;
     try {
-        const request = await PayoutRequest.findById(req.params.id);
+        const request = await PayoutRequest.findById(req.params.id).populate('user', 'name mobile');
         if (!request) return res.status(404).json({ message: 'Request not found' });
 
         // Handle sync-only requests (for fixing stuck transaction statuses)
@@ -245,7 +246,16 @@ router.put('/:id', protect, checkPermission('Transaction Management', 'edit'), u
         const userNotif = await notificationService.notifyPayoutProcessed(request, status);
         const io = req.app.get('io');
         if (io) {
-            io.to(`user_${request.user}`).emit('payout_processed', userNotif);
+            io.to(`user_${request.user._id || request.user}`).emit('payout_processed', userNotif);
+        }
+
+        // 5. Send WhatsApp Notification on completion
+        if (status === 'completed' && request.user && request.user.mobile) {
+            await whatsappService.sendWithdrawalNotification(
+                request.user.mobile,
+                request.user.name,
+                request.amount
+            );
         }
 
         res.json({ message: `Payout request ${status}`, request });

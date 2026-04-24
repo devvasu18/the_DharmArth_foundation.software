@@ -109,6 +109,14 @@ class WhatsappService {
         const message = `Dear ${donorName}, thank you for your generous donation of ₹${amount} to The DharmArth Foundation. Your support helps us make a big difference! 🙏`;
         return this.sendMessage(donorMobile, message);
     }
+
+    /**
+     * Specialized: Send Payout Completion WhatsApp Notification
+     */
+    async sendWithdrawalNotification(mobile, name, amount) {
+        const message = `Dear ${name}, your payout request of ₹${amount} has been successfully processed and completed. The funds have been transferred as per your provided details. Thank you for your continued support! 🙏`;
+        return this.sendMessage(mobile, message);
+    }
 }
 
 module.exports = new WhatsappService();

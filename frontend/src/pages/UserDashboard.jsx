@@ -2,11 +2,9 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import AuthFooter from '../components/auth/AuthFooter';
 import api from '../services/api';
-import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, Bell, ChevronDown } from 'lucide-react';
+import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { io } from "socket.io-client";
-import { API_BASE_URL } from '../services/api';
 import './UserDashboard.css';
 import PayoutModal from './PayoutModal';
 import OnboardingModal from './OnboardingModal';
@@ -38,12 +36,7 @@ const UserDashboard = () => {
     const [txnTypeFilter, setTxnTypeFilter] = useState('All');
     const [commissionLevelFilter, setCommissionLevelFilter] = useState('All');
 
-    // Notifications
-    const [notifications, setNotifications] = useState([]);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const socketRef = React.useRef(null);
-    const notificationRef = React.useRef(null);
 
     // Dispute Modal States
     const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
@@ -124,55 +117,6 @@ const UserDashboard = () => {
         if (node) observer.current.observe(node);
     }, [isLoadingMore, hasMore]);
     
-    // Notification & Socket Logic
-    useEffect(() => {
-        if (!user || user.isSuperAdmin || (user.roles && user.roles.length > 0)) return;
-
-        const fetchNotifications = async () => {
-            try {
-                const res = await api.get('/notifications');
-                setNotifications(res.data.notifications || []);
-                setUnreadCount(res.data.unreadCount || 0);
-            } catch (err) {
-                console.error("Failed to fetch notifications", err);
-            }
-        };
-
-        fetchNotifications();
-
-        // Initialize Socket
-        socketRef.current = io(API_BASE_URL, {
-            withCredentials: true
-        });
-
-        socketRef.current.emit('join_user_notifications', user._id);
-
-        socketRef.current.on('payout_processed', (notif) => {
-            setNotifications(prev => [notif, ...prev]);
-            setUnreadCount(prev => prev + 1);
-            toast.success(notif.message, { duration: 6000, icon: '🔔' });
-        });
-
-        socketRef.current.on('payout_rejected', (notif) => {
-            setNotifications(prev => [notif, ...prev]);
-            setUnreadCount(prev => prev + 1);
-            toast.error(notif.message, { duration: 8000 });
-        });
-
-        return () => {
-            if (socketRef.current) socketRef.current.disconnect();
-        };
-    }, [user._id]);
-
-    const handleMarkAllRead = async () => {
-        try {
-            await api.put('/notifications/read-all');
-            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-            setUnreadCount(0);
-        } catch (err) {
-            console.error(err);
-        }
-    };
 
 
     const shareLink = user?.referralCode
@@ -228,59 +172,11 @@ const UserDashboard = () => {
                         <p className="dashboard-subtitle">Manage your earnings, payouts, and referrals</p>
                     </div>
 
-                    <div className="header-actions">
-                        <div className="notif-bell-container" ref={notificationRef}>
-                            <button 
-                                className={`notif-bell-btn ${unreadCount > 0 ? 'has-unread' : ''}`}
-                                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                            >
-                                <Bell size={22} />
-                                {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
-                            </button>
-
-                            <AnimatePresence>
-                                {isNotificationsOpen && (
-                                    <motion.div 
-                                        className="notif-dropdown"
-                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        transition={{ duration: 0.2 }}
-                                    >
-                                        <div className="notif-header">
-                                            <h3>Notifications</h3>
-                                            {unreadCount > 0 && (
-                                                <button onClick={handleMarkAllRead}>Mark all read</button>
-                                            )}
-                                        </div>
-                                        <div className="notif-list">
-                                            {notifications.length === 0 ? (
-                                                <div className="notif-empty">No notifications yet</div>
-                                            ) : (
-                                                notifications.map((notif, idx) => (
-                                                    <div key={idx} className={`notif-item ${!notif.isRead ? 'unread' : ''}`}>
-                                                        <div className="notif-icon">
-                                                            {notif.onModel === 'PayoutRequest' ? '💸' : notif.type === 'COMMISSION_EARNED' ? '💰' : '📢'}
-                                                        </div>
-                                                        <div className="notif-body">
-                                                            <p>{notif.message}</p>
-                                                            <span className="notif-time">{new Date(notif.createdAt).toLocaleDateString()}</span>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                    {user?.isMotivator && user?.referralCode && (
+                        <div className="motivator-id-badge">
+                            Motivator ID: <strong>{user.referralCode}</strong>
                         </div>
-
-                        {user?.isMotivator && user?.referralCode && (
-                            <div className="motivator-id-badge">
-                                Motivator ID: <strong>{user.referralCode}</strong>
-                            </div>
-                        )}
-                    </div>
+                    )}
                 </div>
 
                 {/* Only show Wallet & Share options to Normal Users (Not Admin/Role-based) */}
