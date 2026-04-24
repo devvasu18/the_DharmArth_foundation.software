@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useConfirm } from '../../context/ConfirmContext';
+import toast from 'react-hot-toast';
 
 const AdminRoles = () => {
     const { showAlert } = useConfirm();
@@ -88,26 +89,26 @@ const AdminRoles = () => {
     };
 
     const handleSaveRole = async () => {
-        if (!roleName) return showAlert('error', 'Required', "Role Name required");
+        if (!roleName) return toast.error("Role Name required");
         const formattedPerms = Object.keys(selectedPermissions).map(mod => ({
             module: mod,
             actions: selectedPermissions[mod]
         })).filter(p => p.actions.length > 0);
 
-        if (formattedPerms.length === 0) return showAlert('error', 'Required', "Select at least one permission");
+        if (formattedPerms.length === 0) return toast.error("Select at least one permission");
 
         try {
             if (editingRoleId) {
                 await api.put(`/roles/${editingRoleId}`, { name: roleName, permissions: formattedPerms });
-                showAlert('success', 'Updated', "Role Updated!");
+                toast.success("Role Updated!");
             } else {
                 await api.post('/roles', { name: roleName, permissions: formattedPerms });
-                showAlert('success', 'Created', "Role Created!");
+                toast.success("Role Created!");
             }
             resetRoleForm();
             fetchData();
         } catch (error) {
-            showAlert('error', 'Failed', error.response?.data?.message || "Failed to save role");
+            toast.error(error.response?.data?.message || "Failed to save role");
         }
     };
 
@@ -118,16 +119,16 @@ const AdminRoles = () => {
 
     const handleCreateStaff = async () => {
         if (!staffFormData.name || !staffFormData.mobile || !staffFormData.password || !staffFormData.roleId) {
-            return showAlert('error', 'Missing Info', "Please fill all required fields");
+            return toast.error("Please fill all required fields");
         }
         try {
             await api.post('/users/staff', staffFormData);
-            showAlert('success', 'Success', "Staff Member Created Successfully!");
+            toast.success("Staff Member Created Successfully!");
             setIsCreatingStaff(false);
             setStaffFormData({ name: '', mobile: '', email: '', password: '', roleId: '' });
             fetchData();
         } catch (error) {
-            showAlert('error', 'Failed', error.response?.data?.message || "Failed to create staff");
+            toast.error(error.response?.data?.message || "Failed to create staff");
         }
     };
 

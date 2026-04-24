@@ -2484,4 +2484,74 @@
 .options-container::-webkit-scrollbar-thumb:hover {
     background: #cbd5e0;
 }
+
+.export-actions-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: 0.75rem;
+    padding-left: 0.75rem;
+    border-left: 1px solid #e2e8f0;
+}
+
+.btn-export-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+}
+
+.btn-export-icon.excel {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #dcfce7;
+}
+
+.btn-export-icon.excel:hover:not(:disabled) {
+    background: #dcfce7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(21, 128, 61, 0.1);
+}
+
+.btn-export-icon.pdf {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fee2e2;
+}
+
+.btn-export-icon.pdf:hover:not(:disabled) {
+    background: #fee2e2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(185, 28, 28, 0.1);
+}
+
+.btn-export-icon:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .section-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .txn-filters {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+    
+    .export-actions-row {
+        margin-left: 0;
+        padding-left: 0;
+        border-left: none;
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
 

@@ -18,12 +18,13 @@ import {
 } from 'lucide-react';
 import './AdminPharmacyOrders.css';
 import { useConfirm } from '../../context/ConfirmContext';
+import toast from 'react-hot-toast';
 
 const AdminPharmacyOrders = () => {
     const handleCopyTrackLink = (orderId) => {
         const url = `${window.location.origin}/track/${orderId}`;
         navigator.clipboard.writeText(url);
-        showAlert('success', 'Tracking Link Copied', 'The shareable order tracking link has been copied to your clipboard.');
+        toast.success('Tracking Link Copied!');
     };
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -85,10 +86,10 @@ const AdminPharmacyOrders = () => {
     const handleUpdateStatus = async (orderId, newStatus, note) => {
         try {
             await api.patch(`/orders/${orderId}/status`, { status: newStatus, note });
-            showAlert('success', 'Status Updated', `Order status changed to ${newStatus}`);
+            toast.success(`Order status changed to ${newStatus}`);
             fetchOrders();
         } catch (error) {
-            showAlert('error', 'Failed', 'Could not update order status');
+            toast.error('Could not update order status');
         }
     };
 

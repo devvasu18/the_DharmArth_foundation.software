@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useConfirm } from '../../context/ConfirmContext';
+import toast from 'react-hot-toast';
 
 const AdminSliders = () => {
     const { showAlert, showConfirm } = useConfirm();
@@ -52,7 +53,7 @@ const AdminSliders = () => {
             setFormData({ ...formData, imageUrl: data.imageUrl });
         } catch (error) {
             console.error('Upload failed', error);
-            showAlert('error', 'Upload Failed', 'Image upload failed');
+            toast.error('Image upload failed');
         } finally {
             setUploading(false);
         }
@@ -93,15 +94,15 @@ const AdminSliders = () => {
 
             if (editingId) {
                 await api.put(`/content/sliders/${editingId}`, payload);
-                showAlert('success', 'Updated', "Slider Updated!");
+                toast.success("Slider Updated!");
             } else {
                 await api.post('/content/sliders', payload);
-                showAlert('success', 'Created', "Slider Created!");
+                toast.success("Slider Created!");
             }
             resetForm();
             fetchSliders(); // Refresh
         } catch (error) {
-            showAlert('error', 'Failed', error.response?.data?.message || 'Failed to save slider');
+            toast.error(error.response?.data?.message || 'Failed to save slider');
         }
     };
 
@@ -113,11 +114,11 @@ const AdminSliders = () => {
         if (!deleteConfirmation) return;
         try {
             await api.delete(`/content/sliders/${deleteConfirmation}`);
-            showAlert('success', 'Deleted', "Item deleted!");
+            toast.success("Item deleted!");
             fetchSliders();
         } catch (error) {
             console.error("Delete failed", error);
-            showAlert('error', 'Failed', "Failed to delete item");
+            toast.error("Failed to delete item");
         } finally {
             setDeleteConfirmation(null);
         }

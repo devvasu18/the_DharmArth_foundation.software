@@ -100,6 +100,13 @@ router.get('/transactions', protect, async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
+
+        if (req.query.all === 'true') {
+            return res.json({
+                transactions: allTransactions,
+                totalCount: allTransactions.length
+            });
+        }
         
         const paginatedTransactions = allTransactions.slice(skip, skip + limit);
         const hasMore = allTransactions.length > (skip + limit);

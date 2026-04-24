@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useConfirm } from '../../context/ConfirmContext';
+import toast from 'react-hot-toast';
 
 const AdminSettings = () => {
     const { showAlert, showConfirm } = useConfirm();
@@ -81,10 +82,10 @@ const AdminSettings = () => {
             await api.put('/content/settings', updates);
             setSettings({ ...settings, ...updates });
             setConfigModalOpen(false);
-            showAlert('success', 'Saved', "Banner Configuration Saved!");
+            toast.success("Banner Configuration Saved!");
         } catch (error) {
             console.error("Save failed", error);
-            showAlert('error', 'Error', "Failed to save configuration");
+            toast.error("Failed to save configuration");
         }
     };
 
@@ -120,10 +121,10 @@ const AdminSettings = () => {
             // Update local settings state so it reflects immediately if we used it elsewhere (optional)
             setSettings({ ...settings, donation_config: donationConfig });
             setDonationModalOpen(false);
-            showAlert('success', 'Saved', "Donation Plans Saved!");
+            toast.success("Donation Plans Saved!");
         } catch (error) {
             console.error("Save failed", error);
-            showAlert('error', 'Error', "Failed to save donation plans");
+            toast.error("Failed to save donation plans");
         }
     };
 
@@ -145,7 +146,7 @@ const AdminSettings = () => {
                 <tbody>
                     {/* Banner Row */}
                     <tr>
-                        <td><strong>Show "Save a Life" Banner</strong> (Login Page)</td>
+                        <td><strong>Show "Save a Life" Banner</strong> (<a href="/login" target="_blank" rel="noopener noreferrer" style={{ color: '#3182ce', textDecoration: 'underline' }}>Login Page</a>)</td>
                         <td>
                             {settings.show_save_life_banner ?
                                 <span className="badge badge-green">Enabled</span> :
@@ -173,7 +174,7 @@ const AdminSettings = () => {
                     <tr>
                         <td><strong>Donation Plans</strong> (Amounts & Popular)</td>
                         <td>
-                            {donationConfig.plans.join(', ')} (Pop: {donationConfig.popularAmount})
+                            {donationConfig.plans.join(', ')} (Poppular: {donationConfig.popularAmount})
                         </td>
                         <td>
                             <button

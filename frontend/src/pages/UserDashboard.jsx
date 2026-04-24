@@ -2,7 +2,10 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import AuthFooter from '../components/auth/AuthFooter';
 import api from '../services/api';
-import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown } from 'lucide-react';
+import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown, FileSpreadsheet, FileText as FilePdf } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import './UserDashboard.css';
@@ -98,6 +101,77 @@ const UserDashboard = () => {
         if (user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
         fetchTransactions(1, true);
     }, [selectedMonth, selectedYear]);
+
+    const [isExporting, setIsExporting] = useState(false);
+
+    const fetchAllForExport = async () => {
+        setIsExporting(true);
+        try {
+            const res = await api.get(`/wallet/transactions?month=${selectedMonth}&year=${selectedYear}&all=true`);
+            // Apply current frontend filters to the exported data as well
+            let filtered = res.data.transactions || [];
+            if (txnTypeFilter === 'Donation') {
+                filtered = filtered.filter(t => t.isDonation);
+            } else if (txnTypeFilter === 'Commission') {
+                filtered = filtered.filter(t => t.type === 'credit');
+                if (commissionLevelFilter === 'Direct') {
+                    filtered = filtered.filter(t => !t.description?.toLowerCase().includes('l2'));
+                } else if (commissionLevelFilter === 'Indirect') {
+                    filtered = filtered.filter(t => t.description?.toLowerCase().includes('l2'));
+                }
+            }
+            return filtered;
+        } catch (error) {
+            toast.error("Failed to fetch data for export");
+            return [];
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const exportToExcel = async () => {
+        const data = await fetchAllForExport();
+        if (data.length === 0) return;
+
+        const worksheet = XLSX.utils.json_to_sheet(data.map(t => ({
+            Date: new Date(t.createdAt).toLocaleDateString(),
+            Time: new Date(t.createdAt).toLocaleTimeString(),
+            Description: t.description,
+            Amount: `₹${t.amount}`,
+            Type: t.type?.toUpperCase(),
+            Status: t.status?.toUpperCase()
+        })));
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+        XLSX.writeFile(workbook, `Transactions_${new Date().toLocaleDateString()}.xlsx`);
+        toast.success("Excel exported successfully!");
+    };
+
+    const exportToPDF = async () => {
+        const data = await fetchAllForExport();
+        if (data.length === 0) return;
+
+        const doc = new jsPDF();
+        doc.text("Transaction History Report", 14, 15);
+        
+        const tableColumn = ["Date", "Description", "Amount", "Status"];
+        const tableRows = data.map(t => [
+            new Date(t.createdAt).toLocaleDateString(),
+            t.description,
+            `₹${t.amount}`,
+            t.status?.toUpperCase()
+        ]);
+
+        doc.autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 20,
+        });
+        
+        doc.save(`Transactions_${new Date().toLocaleDateString()}.pdf`);
+        toast.success("PDF exported successfully!");
+    };
 
     // Intersection Observer for Infinite Scroll
     const lastTxnRef = React.useCallback(node => {
@@ -356,6 +430,24 @@ const UserDashboard = () => {
                                             return <option key={year} value={year}>{year}</option>;
                                         })}
                                     </select>
+                                    <div className="export-actions-row">
+                                        <button 
+                                            className="btn-export-icon excel" 
+                                            onClick={exportToExcel} 
+                                            disabled={isExporting}
+                                            title="Export to Excel"
+                                        >
+                                            <FileSpreadsheet size={16} />
+                                        </button>
+                                        <button 
+                                            className="btn-export-icon pdf" 
+                                            onClick={exportToPDF} 
+                                            disabled={isExporting}
+                                            title="Export to PDF"
+                                        >
+                                            <FilePdf size={16} />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 

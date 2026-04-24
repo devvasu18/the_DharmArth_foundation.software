@@ -4,11 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import './UserDashboard.css'; 
-const successIllustration = "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1713722565/dharmarth_foundation/payout_success.png"; 
-
 const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
     const [showConfirmStep, setShowConfirmStep] = useState(false);
-    const [showSuccessStep, setShowSuccessStep] = useState(false);
     const [withdrawAmount, setWithdrawAmount] = useState(0);
     const [timeLeft, setTimeLeft] = useState({});
 
@@ -44,7 +41,6 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
             setWithdrawAmount(currentBalance);
         } else {
             setShowConfirmStep(false);
-            setShowSuccessStep(false);
         }
     }, [isOpen, currentBalance]);
 
@@ -110,8 +106,8 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                 }
 
                 await api.post('/payouts/request', { amount: withdrawAmount });
-                setShowSuccessStep(true);
-                toast.success("Request Submitted!");
+                toast.success("Withdrawal Request Submitted Successfully!");
+                onClose();
             } catch (error) {
                 toast.error(error.response?.data?.message || "Failed to submit withdrawal request");
             }
@@ -133,38 +129,12 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                     <button className="payout-modal-close" onClick={onClose}><X size={24} /></button>
 
                     <div className="payout-modal-header">
-                        <h2>{showSuccessStep ? 'Request Sent!' : (showConfirmStep ? 'Confirm Withdrawal' : 'Withdrawal')}</h2>
-                        <p>{showSuccessStep ? 'Your withdrawal is being processed' : (showConfirmStep ? 'Please verify your details before proceeding' : 'Track your milestones and request payouts')}</p>
+                        <h2>{showConfirmStep ? 'Confirm Withdrawal' : 'Withdrawal'}</h2>
+                        <p>{showConfirmStep ? 'Please verify your details before proceeding' : 'Track your milestones and request payouts'}</p>
                     </div>
 
                     <div className="conditions-container">
-                        {showSuccessStep ? (
-                            <motion.div 
-                                className="success-step-ui"
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                            >
-                                <div className="success-illustration">
-                                    <div className="confetti-effect"></div>
-                                    <img src={successIllustration} alt="Success" />
-                                </div>
-                                <div className="success-content-card">
-                                    <h3>Excellent!</h3>
-                                    <p>We've received your request for <strong>₹{withdrawAmount.toLocaleString()}</strong>. Our team will verify and transfer the funds to your account within 24-48 working hours.</p>
-                                    
-                                    <div className="request-summary-box">
-                                        <div className="s-row">
-                                            <label>Receiving Via</label>
-                                            <strong>{user.payoutCredentials.bankName || 'UPI / Mobile Pay'}</strong>
-                                        </div>
-                                        <div className="s-row">
-                                            <label>Status</label>
-                                            <span className="s-badge">IN PROCESS</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ) : showConfirmStep ? (
+                        {showConfirmStep ? (
                             <motion.div 
                                 className="confirm-step-ui"
                                 initial={{ opacity: 0, x: 20 }}
@@ -373,11 +343,7 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                     </div>
 
                     <div className="modal-footer">
-                        {showSuccessStep ? (
-                            <button className="btn-proceed" onClick={() => window.location.reload()}>
-                                Great! Back to Dashboard
-                            </button>
-                        ) : canPayout ? (
+                        {canPayout ? (
                             <button className="btn-proceed" onClick={handleProceed}>
                                 {showConfirmStep ? 'Verify and Confirm' : `Next Step`}
                             </button>

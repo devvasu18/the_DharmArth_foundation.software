@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { Check, X, Eye, Package, Truck, Search, User, Phone, Calendar, AlertCircle, Trash2, Plus, Edit2, Lock, Share2 } from 'lucide-react';
 import { useConfirm } from '../../context/ConfirmContext';
+import toast from 'react-hot-toast';
 import './AdminPrescriptions.css';
 
 const AdminPrescriptions = () => {
@@ -18,7 +19,7 @@ const AdminPrescriptions = () => {
     const handleCopyLink = (prescriptionId) => {
         const url = `${window.location.origin}/checkout/${prescriptionId}`;
         navigator.clipboard.writeText(url);
-        showAlert('success', 'Link Copied', 'The shareable checkout link has been copied to your clipboard.');
+        toast.success('Checkout Link Copied!');
     };
 
     useEffect(() => {
@@ -102,7 +103,7 @@ const AdminPrescriptions = () => {
             setNote('');
             fetchPrescriptions();
         } catch (err) {
-            showAlert(err.response?.data?.message || 'Verification failed');
+            toast.error(err.response?.data?.message || 'Verification failed');
         }
     };
 

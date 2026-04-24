@@ -49,7 +49,7 @@ const AdminLayout = () => {
             navigate('/login');
             return;
         } else if (!storedUser.isSuperAdmin && (!storedUser.roles || storedUser.roles.length === 0)) {
-            showAlert('error', 'Access Denied', "Admins Only: You do not have permission to access this area.");
+            toast.error("Admins Only: You do not have permission to access this area.");
             navigate('/');
             return;
         }

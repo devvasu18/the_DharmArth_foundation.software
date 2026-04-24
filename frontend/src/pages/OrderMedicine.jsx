@@ -6,6 +6,7 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import SimplifyDosage from '../components/SimplifyDosage';
 import { useConfirm } from '../context/ConfirmContext';
+import toast from 'react-hot-toast';
 import './OrderMedicine.css';
 
 const VerifiedItemRow = ({ item }) => {
@@ -153,7 +154,7 @@ const OrderMedicine = () => {
     const handleCopyLink = (prescriptionId) => {
         const url = `${window.location.origin}/checkout/${prescriptionId}`;
         navigator.clipboard.writeText(url);
-        showAlert('success', 'Link Copied', 'Shareable checkout link copied! Send this to anyone to pay for your medicines.');
+        toast.success('Link Copied!');
     };
 
     const getOrderBadge = (status) => {
@@ -203,7 +204,7 @@ const OrderMedicine = () => {
     const openCheckoutModal = (prescription) => {
         const availableItems = prescription.verifiedItems?.filter(i => i.isAvailable) || [];
         if (availableItems.length === 0) {
-            showAlert('No verified items are available for checkout.');
+            toast.error('No verified items are available for checkout.');
             return;
         }
         setSelectedPrescription(prescription);

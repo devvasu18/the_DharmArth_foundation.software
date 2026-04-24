@@ -42,7 +42,7 @@ exports.createLead = async (req, res) => {
 // Get all leads (for admin)
 exports.getLeads = async (req, res) => {
     try {
-        const { page = 1, limit = 10, status } = req.query;
+        const { page = 1, limit = 10, status, search, all } = req.query;
 
         const query = {};
         if (status) {
@@ -50,6 +50,18 @@ exports.getLeads = async (req, res) => {
         }
         if (req.query.type) {
             query.type = req.query.type;
+        }
+        
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { mobile: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        if (all === 'true') {
+            const leads = await Lead.find(query).sort({ createdAt: -1 }).exec();
+            return res.status(200).json({ leads });
         }
 
         const leads = await Lead.find(query)

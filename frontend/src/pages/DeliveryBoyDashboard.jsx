@@ -3,6 +3,7 @@ import api, { API_BASE_URL } from '../services/api';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { useConfirm } from '../context/ConfirmContext';
+import toast from 'react-hot-toast';
 import { 
     Truck, MapPin, Phone, CheckCircle, Package, 
     Navigation, CreditCard, ClipboardList, Clock, 
@@ -46,10 +47,10 @@ const DeliveryBoyDashboard = () => {
 
         try {
             await api.patch(`/delivery/assignments/${id}/status`, { status });
-            showAlert('success', 'Status Updated', `Order is now ${status}`);
+            toast.success(`Order is now ${status}`);
             fetchAssignments();
         } catch (err) {
-            showAlert('error', 'Update Failed', 'Could not sync status with server.');
+            toast.error('Could not sync status with server.');
         }
     };
 

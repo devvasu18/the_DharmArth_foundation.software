@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useConfirm } from '../../context/ConfirmContext';
 import { User, Smartphone, Mail, MapPin, CreditCard, BadgeCheck, CheckCircle, Lock, ArrowRight } from 'lucide-react';
 import api from '../../services/api';
+import toast from 'react-hot-toast';
 import './DonationForm.css';
 import { validatePAN, validateAadhaar } from '../../utils/validators';
 
@@ -221,7 +222,7 @@ const DonationForm = ({ onSuccess }) => {
             const { data } = await api.post('/donate', payload);
             setShowPanModal(false); 
 
-            await showAlert(`Payment Successful! Donation ID: ${data.donationId}`);
+            toast.success(`Payment Successful! Donation ID: ${data.donationId}`);
             setDonationSuccess({
                 donationId: data.donationId,
                 amount: finalAmount
@@ -233,7 +234,7 @@ const DonationForm = ({ onSuccess }) => {
         } catch (error) {
             setShowPanModal(false);
             console.error("Donation failed:", error);
-            await showAlert("Donation failed. Please try again.");
+            toast.error("Donation failed. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -243,7 +244,7 @@ const DonationForm = ({ onSuccess }) => {
         const finalAmount = customAmount ? Number(customAmount) : amount;
 
         if (!fullName || !mobile || !finalAmount) {
-            await showAlert("Please fill in required fields.");
+            toast.error("Please fill in required fields.");
             return;
         }
 
@@ -272,11 +273,11 @@ const DonationForm = ({ onSuccess }) => {
         // Validate motivator if entered - independant check
         if (motivatorMobile) {
             if (errors.motivator) {
-                await showAlert(errors.motivator);
+                toast.error(errors.motivator);
                 return;
             }
             if (!motivatorName) {
-                await showAlert("Please enter a valid motivator number.");
+                toast.error("Please enter a valid motivator number.");
                 return;
             }
         }
@@ -301,11 +302,11 @@ const DonationForm = ({ onSuccess }) => {
 
     const handleRegister = async () => {
         if (!registerPassword || registerPassword.length < 6) {
-            await showAlert("Password must be at least 6 characters");
+            toast.error("Password must be at least 6 characters");
             return;
         }
         if (registerPassword !== registerConfirmPassword) {
-            await showAlert("Passwords do not match");
+            toast.error("Passwords do not match");
             return;
         }
 
@@ -320,11 +321,11 @@ const DonationForm = ({ onSuccess }) => {
             });
 
             localStorage.setItem('user', JSON.stringify(data));
-            await showAlert("Account Created Successfully!");
+            toast.success("Account Created Successfully!");
             navigate('/dashboard');
         } catch (error) {
             console.error("Registration failed:", error);
-            await showAlert(error.response?.data?.message || "Registration failed");
+            toast.error(error.response?.data?.message || "Registration failed");
         } finally {
             setIsRegistering(false);
         }
