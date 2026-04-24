@@ -173,7 +173,7 @@ const AdminLayout = () => {
 
     const handleNotificationClick = (notif) => {
         setIsNotificationsOpen(false);
-        
+
         if (notif.onModel === 'PayoutRequest') {
             navigate('/admin/payouts');
             return;
@@ -275,8 +275,8 @@ const AdminLayout = () => {
                         )}
                     </div>
 
-                    {/* Doctors Dropdown */}
-                    <div className="admin-link-dropdown-container">
+                    {/* Doctors Dropdown commented for now */}
+                    {/* <div className="admin-link-dropdown-container">
                         <div
                             className={`admin-link ${location.pathname.includes('/admin/doctors') ||
                                 location.pathname.includes('/admin/availability')
@@ -317,10 +317,10 @@ const AdminLayout = () => {
                                 </NavLink>
                             </div>
                         )}
-                    </div>
+                    </div> */}
 
-                    {/* Medical & Delivery Dropdown */}
-                    <div className="admin-link-dropdown-container">
+                    {/* Medical & Delivery Dropdown commented for now */}
+                    {/* <div className="admin-link-dropdown-container">
                         <div
                             className={`admin-link ${location.pathname.includes('/admin/prescriptions') ||
                                 location.pathname.includes('/admin/delivery') ||
@@ -375,7 +375,7 @@ const AdminLayout = () => {
                                 </NavLink>
                             </div>
                         )}
-                    </div>
+                    </div> */}
 
                     {/* Reports Dropdown */}
                     <div className="admin-link-dropdown-container">
@@ -403,7 +403,7 @@ const AdminLayout = () => {
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
-                                    Commission Reports
+                                    Donation Reports
                                 </NavLink>
                             </div>
                         )}
@@ -428,10 +428,10 @@ const AdminLayout = () => {
                         <Settings size={20} title={isSidebarCollapsed ? "Site Settings" : ""} />
                         <span className="admin-link-text">Site Settings</span>
                     </NavLink>
-                    <NavLink to="/admin/roles" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
+                    {/* <NavLink to="/admin/roles" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <Users size={20} title={isSidebarCollapsed ? "Staff & Roles" : ""} />
                         <span className="admin-link-text">Staff & Roles</span>
-                    </NavLink>
+                    </NavLink> */}
                 </nav>
             </div>
 

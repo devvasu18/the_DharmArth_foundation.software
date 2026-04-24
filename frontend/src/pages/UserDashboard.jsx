@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/layout/Navbar';
-import AuthFooter from '../components/auth/AuthFooter';
 import api from '../services/api';
-import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown, FileSpreadsheet, FileText as FilePdf } from 'lucide-react';
+import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown, FileSpreadsheet, FileText as FilePdf, CheckCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -503,6 +502,7 @@ const UserDashboard = () => {
                                                             }`}>
                                                                 {txn.reason === 'payout' && txn.status === 'pending' ? 'IN PROCESS' : 
                                                                  txn.status === 'failed' ? 'REJECTED' :
+                                                                 txn.isHelpResolved ? 'HELP RESOLVED' :
                                                                  txn.type === 'credit' ? 'Commission' : (txn.isDonation ? 'Donation' : (txn.reason === 'payout' ? 'COMPLETED' : txn.type))}
                                                             </span>
                                                             
@@ -575,7 +575,6 @@ const UserDashboard = () => {
                 )}
 
             </div>
-            <AuthFooter />
 
             <PayoutModal
                 isOpen={isPayoutModalOpen}
@@ -618,7 +617,7 @@ const UserDashboard = () => {
                                 fontSize: '1.1rem',
                                 border: '1px solid'
                             }}>
-                                STATUS: {selectedTxnDetails.status.toUpperCase()}
+                                STATUS: {selectedTxnDetails.isHelpResolved ? 'HELP RESOLVED' : selectedTxnDetails.status.toUpperCase()}
                             </div>
 
                             <div className="details-card" style={{ padding: '1.25rem', border: '1px solid #e2e8f0', borderRadius: '16px' }}>
@@ -669,12 +668,19 @@ const UserDashboard = () => {
                             )}
 
                             {selectedTxnDetails.isDisputed && (
-                                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', marginTop: '0.5rem', textAlign: 'center', color: '#ef4444', fontSize: '0.85rem', fontWeight: 600 }}>
+                                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', marginTop: '0.5rem', textAlign: 'center', color: selectedTxnDetails.isHelpResolved ? '#059669' : '#ef4444', fontSize: '0.85rem', fontWeight: 600 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                                        <Clock size={14} /> Help Requested / Dispute Active
+                                        {selectedTxnDetails.isHelpResolved ? <CheckCircle size={14} /> : <Clock size={14} />} 
+                                        {selectedTxnDetails.isHelpResolved ? 'HELP RESOLVED' : 'Help Requested / Dispute Active'}
                                     </div>
                                     {selectedTxnDetails.disputeMessage && (
-                                        <div style={{ fontSize: '0.75rem', fontWeight: 400, marginTop: '0.25rem' }}>"{selectedTxnDetails.disputeMessage}"</div>
+                                        <div style={{ fontSize: '0.75rem', fontWeight: 400, marginTop: '0.25rem', color: '#64748b' }}>Your Request: "{selectedTxnDetails.disputeMessage}"</div>
+                                    )}
+                                    {selectedTxnDetails.isHelpResolved && selectedTxnDetails.helpResolutionNotes && (
+                                        <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #dcfce7', textAlign: 'left' }}>
+                                            <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#059669', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Resolution Response</label>
+                                            <div style={{ color: '#15803d', fontWeight: 500 }}>{selectedTxnDetails.helpResolutionNotes}</div>
+                                        </div>
                                     )}
                                 </div>
                             )}

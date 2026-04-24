@@ -44,7 +44,7 @@ const DonationForm = ({ onSuccess }) => {
     const [registerPassword, setRegisterPassword] = useState('');
     const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
- 
+
     const isFormValid = useMemo(() => {
         const finalAmount = customAmount ? Number(customAmount) : amount;
         if (!fullName.trim()) return false;
@@ -115,7 +115,7 @@ const DonationForm = ({ onSuccess }) => {
                         setAddress(freshUser.address || '');
                         setCity(freshUser.city || '');
                         setState(freshUser.state || '');
-                        
+
                         // Handle populated referredBy
                         if (freshUser.referredBy && typeof freshUser.referredBy === 'object') {
                             const ref = freshUser.referredBy;
@@ -125,7 +125,7 @@ const DonationForm = ({ onSuccess }) => {
                         } else if (freshUser.lastMotivatorMobile) {
                             setMotivatorMobile(freshUser.lastMotivatorMobile);
                         }
-                        
+
                         // Sync localStorage
                         localStorage.setItem('user', JSON.stringify(freshUser));
                     }
@@ -220,7 +220,7 @@ const DonationForm = ({ onSuccess }) => {
             };
 
             const { data } = await api.post('/donate', payload);
-            setShowPanModal(false); 
+            setShowPanModal(false);
 
             toast.success(`Payment Successful! Donation ID: ${data.donationId}`);
             setDonationSuccess({
@@ -432,268 +432,269 @@ const DonationForm = ({ onSuccess }) => {
     return (
         <>
             <div className="donation-container">
-            <h2 className="donation-title">
-                <CreditCard size={28} className="text-primary" />
-                {t('donatePage.title')}
-            </h2>
+                <h2 className="donation-title">
+                    <CreditCard size={28} className="text-primary" />
+                    {t('donatePage.title')}
+                </h2>
 
-            <div className="amount-options">
-                {donationConfig.plans.map((planAmount) => (
-                    <button
-                        key={planAmount}
-                        className={`amount-btn ${amount === planAmount ? 'active' : ''}`}
-                        onClick={() => { setAmount(planAmount); setCustomAmount(planAmount); }}
-                    >
-                        {donationConfig.popularAmount === planAmount && (
-                            <span className="popular-tag">{t('donatePage.popular')}</span>
-                        )}
-                        ₹{planAmount.toLocaleString()}
-                    </button>
-                ))}
-            </div>
+                <div className="amount-options">
+                    {donationConfig.plans.map((planAmount) => (
+                        <button
+                            key={planAmount}
+                            className={`amount-btn ${amount === planAmount ? 'active' : ''}`}
+                            onClick={() => { setAmount(planAmount); setCustomAmount(planAmount); }}
+                        >
+                            {donationConfig.popularAmount === planAmount && (
+                                <span className="popular-tag">{t('donatePage.popular')}</span>
+                            )}
+                            ₹{planAmount.toLocaleString()}
+                        </button>
+                    ))}
+                </div>
 
-            <div className="custom-amount">
-                <span className="currency-symbol">₹</span>
-                <input
-                    type="number"
-                    placeholder={t('donatePage.customPlaceholder')}
-                    value={customAmount}
-                    onChange={(e) => { setCustomAmount(e.target.value); setAmount(0); }}
-                />
-            </div>
-
-            <label className="checkbox-item">
-                <input type="checkbox" defaultChecked />
-                <span>{t('donatePage.citizenConfirm')}</span>
-            </label>
-
-            <div className="form-section">
-                <h3 className="section-label">
-                    <User size={20} />
-                    {t('donatePage.personalDetails')}
-                </h3>
-
-                <label className="input-label">{t('donatePage.fullName')}</label>
-                <div className="input-group-wrapper">
-
+                <div className="custom-amount">
+                    <span className="currency-symbol">₹</span>
                     <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Ex. Raghu Kumar"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
+
+                        type="number"
+                        placeholder={t('donatePage.customPlaceholder')}
+                        value={customAmount}
+                        onChange={(e) => { setCustomAmount(e.target.value); setAmount(0); }}
                     />
                 </div>
 
-                <div className="donation-input-group">
-                    <label className="input-label">{t('donatePage.mobile')}</label>
-                    <div className="phone-wrapper">
-                        <div className="flag-addon"> +91</div>
-                        <input
-                            type="tel"
-                            className="phone-field"
-                            placeholder="9876543210"
-                            value={mobile}
-                            onChange={(e) => {
-                                const val = e.target.value;
-                                if (/^\d*$/.test(val) && val.length <= 10) setMobile(val);
-                            }}
-                            maxLength={10}
-                        />
-                    </div>
-                    <small className="mt-1 text-muted">{t('donatePage.whatsappNote')}</small>
-                </div>
+                <label className="checkbox-item">
+                    <input type="checkbox" defaultChecked />
+                    <span>{t('donatePage.citizenConfirm')}</span>
+                </label>
 
-                <div className="donation-input-group">
-                    <label className="input-label">{t('donatePage.email')}</label>
+                <div className="form-section">
+                    <h3 className="section-label">
+                        <User size={20} />
+                        {t('donatePage.personalDetails')}
+                    </h3>
+
+                    <label className="input-label">{t('donatePage.fullName')}</label>
                     <div className="input-group-wrapper">
 
                         <input
-                            type="email"
+                            type="text"
                             className="form-control"
-                            placeholder="mail@example.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Ex. Raghu Kumar"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
                         />
                     </div>
-                </div>
 
-                <div className="donation-input-group">
-                    <label className="input-label">{t('donatePage.address')}</label>
-                    <div className="input-group-wrapper">
-                        <textarea
-                            className="form-control"
-                            placeholder={t('donatePage.addressPlaceholder')}
-                            value={address}
-                            onChange={(e) => setAddress(e.target.value)}
-                            style={{ minHeight: '80px', paddingTop: '0.75rem' }}
-                        />
-                    </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div className="donation-input-group">
-                        <label className="input-label">{t('donatePage.city')}</label>
-                        <div className="input-group-wrapper">
+                        <label className="input-label">{t('donatePage.mobile')}</label>
+                        <div className="phone-wrapper">
+                            <div className="flag-addon"> +91</div>
                             <input
-                                type="text"
+                                type="tel"
+                                className="phone-field"
+                                placeholder="9876543210"
+                                value={mobile}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (/^\d*$/.test(val) && val.length <= 10) setMobile(val);
+                                }}
+                                maxLength={10}
+                            />
+                        </div>
+                        <small className="mt-1 text-muted">{t('donatePage.whatsappNote')}</small>
+                    </div>
+
+                    <div className="donation-input-group">
+                        <label className="input-label">{t('donatePage.email')}</label>
+                        <div className="input-group-wrapper">
+
+                            <input
+                                type="email"
                                 className="form-control"
-                                placeholder={t('donatePage.cityPlaceholder')}
-                                value={city}
-                                onChange={(e) => setCity(e.target.value)}
+                                placeholder="mail@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>
                     </div>
+
                     <div className="donation-input-group">
-                        <label className="input-label">{t('donatePage.state')}</label>
+                        <label className="input-label">{t('donatePage.address')}</label>
                         <div className="input-group-wrapper">
-                            <input
-                                type="text"
+                            <textarea
                                 className="form-control"
-                                placeholder={t('donatePage.statePlaceholder')}
-                                value={state}
-                                onChange={(e) => setState(e.target.value)}
+                                placeholder={t('donatePage.addressPlaceholder')}
+                                value={address}
+                                onChange={(e) => setAddress(e.target.value)}
+                                style={{ minHeight: '80px', paddingTop: '0.75rem' }}
                             />
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div className="form-section">
-                <h3 className="section-label">
-                    <Smartphone size={20} />
-                    {t('donatePage.motivatorTitle')}
-                </h3>
-
-                <div className="referral-box">
-                    <div className="donation-input-group mb-0">
-                        <label className="input-label">{t('donatePage.motivatedBy')} {isMotivatorLocked ? '' : '(Mobile Number)'}</label>
-                        {isMotivatorLocked ? (
-                            <div className="motivator-profile-chip verified">
-                                <div className="motivator-avatar">
-                                    <User size={24} />
-                                </div>
-                                <div className="motivator-info">
-                                    <span className="motivator-name">{motivatorName}</span>
-                                    <span className="motivator-status">
-                                        <BadgeCheck size={14} fill="var(--primary)" color="white" strokeWidth={2.5} /> Verified Motivator
-                                    </span>
-                                </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div className="donation-input-group">
+                            <label className="input-label">{t('donatePage.city')}</label>
+                            <div className="input-group-wrapper">
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder={t('donatePage.cityPlaceholder')}
+                                    value={city}
+                                    onChange={(e) => setCity(e.target.value)}
+                                />
                             </div>
-                        ) : (
-                            <>
-                                <div className="phone-wrapper">
-                                    <div className="flag-addon">
-                                        <Smartphone size={16} />
+                        </div>
+                        <div className="donation-input-group">
+                            <label className="input-label">{t('donatePage.state')}</label>
+                            <div className="input-group-wrapper">
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder={t('donatePage.statePlaceholder')}
+                                    value={state}
+                                    onChange={(e) => setState(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="form-section">
+                    <h3 className="section-label">
+                        <Smartphone size={20} />
+                        {t('donatePage.motivatorTitle')}
+                    </h3>
+
+                    <div className="referral-box">
+                        <div className="donation-input-group mb-0">
+                            <label className="input-label">{t('donatePage.motivatedBy')} {isMotivatorLocked ? '' : '(Mobile Number)'}</label>
+                            {isMotivatorLocked ? (
+                                <div className="motivator-profile-chip verified">
+                                    <div className="motivator-avatar">
+                                        <User size={24} />
+                                    </div>
+                                    <div className="motivator-info">
+                                        <span className="motivator-name">{motivatorName}</span>
+                                        <span className="motivator-status">
+                                            <BadgeCheck size={14} fill="var(--primary)" color="white" strokeWidth={2.5} /> Verified Motivator
+                                        </span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="phone-wrapper">
+                                        <div className="flag-addon">
+                                            <Smartphone size={16} />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            className={`phone-field ${(errors.motivator) ? 'error-border' : ''}`}
+                                            placeholder="Mobile Number or Referral Code"
+                                            value={motivatorMobile}
+                                            onChange={(e) => {
+                                                const val = e.target.value.toUpperCase();
+                                                if (val.length <= 15) setMotivatorMobile(val);
+                                            }}
+                                            maxLength={15}
+                                        />
+                                    </div>
+                                    {motivatorName && (
+                                        <div className="motivator-profile-chip verified">
+                                            <div className="motivator-avatar">
+                                                <User size={24} />
+                                            </div>
+                                            <div className="motivator-info">
+                                                <span className="motivator-name">{motivatorName}</span>
+                                                <span className="motivator-status">
+                                                    <BadgeCheck size={16} fill="var(--primary)" color="white" /> Verified Motivator
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {errors.motivator && <small className="error-text">{errors.motivator}</small>}
+                                </>
+                            )}
+                        </div>
+
+                        <div style={{ margin: '1rem 0' }}></div>
+
+                        <div className="donation-input-group mb-0">
+                            <div className="input-group-wrapper">
+
+                                <select
+                                    className="form-control"
+                                    value={referralSource}
+                                    onChange={(e) => setReferralSource(e.target.value)}
+                                >
+                                    <option value="">{t('donatePage.referralPlaceholder')}</option>
+                                    <option value="Instagram">Instagram</option>
+                                    <option value="Facebook">Facebook</option>
+                                    <option value="WhatsApp">WhatsApp</option>
+                                    <option value="Website">Website</option>
+                                    <option value="Friend">Friend</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="tax-section">
+                    <label className="checkbox-item" style={{ fontWeight: 600 }}>
+                        <input type="checkbox" checked={need80G} onChange={(e) => setNeed80G(e.target.checked)} />
+                        <span>{t('donatePage.need80G')}</span>
+                    </label>
+
+                    {need80G && (
+                        <div className="tax-benefits-box">
+                            <span className="tax-badge">{t('donatePage.saveTax')}</span>
+                            <div className="donation-input-group">
+                                <label className="input-label">PAN Number*</label>
+                                <div className="input-group-wrapper">
+                                    <div className="input-addon">
+                                        <CreditCard size={20} />
                                     </div>
                                     <input
                                         type="text"
-                                        className={`phone-field ${(errors.motivator) ? 'error-border' : ''}`}
-                                        placeholder="Mobile Number or Referral Code"
-                                        value={motivatorMobile}
+                                        className={`form-control ${errors.pan ? 'error-border' : ''}`}
+                                        placeholder="ABCDE1234F"
+                                        value={pan}
                                         onChange={(e) => {
-                                            const val = e.target.value.toUpperCase();
-                                            if (val.length <= 15) setMotivatorMobile(val);
+                                            setPan(e.target.value.toUpperCase());
+                                            if (errors.pan) setErrors({ ...errors, pan: null });
                                         }}
-                                        maxLength={15}
+                                        maxLength={10}
                                     />
                                 </div>
-                                {motivatorName && (
-                                    <div className="motivator-profile-chip verified">
-                                        <div className="motivator-avatar">
-                                            <User size={24} />
-                                        </div>
-                                        <div className="motivator-info">
-                                            <span className="motivator-name">{motivatorName}</span>
-                                            <span className="motivator-status">
-                                                <BadgeCheck size={16} fill="var(--primary)" color="white" /> Verified Motivator
-                                            </span>
-                                        </div>
+                                {errors.pan && <small className="error-text">{errors.pan}</small>}
+                            </div>
+                            <div className="donation-input-group mb-0">
+                                <label className="input-label">{t('donatePage.aadhaar')}</label>
+                                <div className="input-group-wrapper">
+                                    <div className="input-addon">
+                                        <CreditCard size={20} />
                                     </div>
-                                )}
-                                {errors.motivator && <small className="error-text">{errors.motivator}</small>}
-                            </>
-                        )}
-                    </div>
-
-                    <div style={{ margin: '1rem 0' }}></div>
-
-                    <div className="donation-input-group mb-0">
-                        <div className="input-group-wrapper">
-
-                            <select
-                                className="form-control"
-                                value={referralSource}
-                                onChange={(e) => setReferralSource(e.target.value)}
-                            >
-                                <option value="">{t('donatePage.referralPlaceholder')}</option>
-                                <option value="Instagram">Instagram</option>
-                                <option value="Facebook">Facebook</option>
-                                <option value="WhatsApp">WhatsApp</option>
-                                <option value="Website">Website</option>
-                                <option value="Friend">Friend</option>
-                                <option value="Other">Other</option>
-                            </select>
+                                    <input
+                                        type="text"
+                                        className={`form-control ${errors.aadhaar ? 'error-border' : ''}`}
+                                        placeholder="1234 5678 9012"
+                                        value={aadhaar}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (/^\d*$/.test(val) && val.length <= 12) {
+                                                setAadhaar(val);
+                                                if (errors.aadhaar) setErrors({ ...errors, aadhaar: null });
+                                            }
+                                        }}
+                                        maxLength={12}
+                                    />
+                                </div>
+                                {errors.aadhaar && <small className="error-text">{errors.aadhaar}</small>}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
-            </div>
-
-            <div className="tax-section">
-                <label className="checkbox-item" style={{ fontWeight: 600 }}>
-                    <input type="checkbox" checked={need80G} onChange={(e) => setNeed80G(e.target.checked)} />
-                    <span>{t('donatePage.need80G')}</span>
-                </label>
-
-                {need80G && (
-                    <div className="tax-benefits-box">
-                        <span className="tax-badge">{t('donatePage.saveTax')}</span>
-                        <div className="donation-input-group">
-                            <label className="input-label">PAN Number*</label>
-                            <div className="input-group-wrapper">
-                                <div className="input-addon">
-                                    <CreditCard size={20} />
-                                </div>
-                                <input
-                                    type="text"
-                                    className={`form-control ${errors.pan ? 'error-border' : ''}`}
-                                    placeholder="ABCDE1234F"
-                                    value={pan}
-                                    onChange={(e) => {
-                                        setPan(e.target.value.toUpperCase());
-                                        if (errors.pan) setErrors({ ...errors, pan: null });
-                                    }}
-                                    maxLength={10}
-                                />
-                            </div>
-                            {errors.pan && <small className="error-text">{errors.pan}</small>}
-                        </div>
-                        <div className="donation-input-group mb-0">
-                            <label className="input-label">{t('donatePage.aadhaar')}</label>
-                            <div className="input-group-wrapper">
-                                <div className="input-addon">
-                                    <CreditCard size={20} />
-                                </div>
-                                <input
-                                    type="text"
-                                    className={`form-control ${errors.aadhaar ? 'error-border' : ''}`}
-                                    placeholder="1234 5678 9012"
-                                    value={aadhaar}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        if (/^\d*$/.test(val) && val.length <= 12) {
-                                            setAadhaar(val);
-                                            if (errors.aadhaar) setErrors({ ...errors, aadhaar: null });
-                                        }
-                                    }}
-                                    maxLength={12}
-                                />
-                            </div>
-                            {errors.aadhaar && <small className="error-text">{errors.aadhaar}</small>}
-                        </div>
-                    </div>
-                )}
-            </div>
 
             </div>
 

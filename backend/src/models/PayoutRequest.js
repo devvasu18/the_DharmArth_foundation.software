@@ -35,7 +35,13 @@ const payoutRequestSchema = new mongoose.Schema({
         default: false
     },
     disputeMessage: String,
-    disputedAt: Date
+    disputedAt: Date,
+    isHelpResolved: {
+        type: Boolean,
+        default: false
+    },
+    helpResolutionNotes: String,
+    helpResolvedAt: Date
 }, {
     timestamps: true
 });

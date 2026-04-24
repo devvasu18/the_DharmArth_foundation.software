@@ -304,4 +304,36 @@ router.post('/dispute/:id', protect, async (req, res) => {
     }
 });
 
+// @desc    Admin: Resolve Dispute / Help Request
+// @route   PUT /api/payouts/resolve-dispute/:id
+router.put('/resolve-dispute/:id', protect, checkPermission('Transaction Management', 'edit'), async (req, res) => {
+    try {
+        const { notes } = req.body;
+        const payout = await PayoutRequest.findById(req.params.id);
+
+        if (!payout) {
+            return res.status(404).json({ message: 'Payout request not found' });
+        }
+
+        payout.isHelpResolved = true;
+        payout.helpResolutionNotes = notes;
+        payout.helpResolvedAt = Date.now();
+        await payout.save();
+
+        // Notify User
+        const io = req.app.get('io');
+        if (io) {
+            io.to(`user_${payout.user}`).emit('payout_help_resolved', {
+                message: `Your help request for payout #${payout._id.toString().slice(-6).toUpperCase()} has been resolved.`,
+                notes: notes,
+                payoutId: payout._id
+            });
+        }
+
+        res.json({ message: 'Help request marked as resolved', payout });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;

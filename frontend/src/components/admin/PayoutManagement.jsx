@@ -21,6 +21,7 @@ const PayoutManagement = () => {
     const [proofFile, setProofFile] = useState(null);
     const [proofPreview, setProofPreview] = useState('');
     const [processing, setProcessing] = useState(false);
+    const [resolutionNotes, setResolutionNotes] = useState('');
 
     useEffect(() => {
         fetchPayouts();
@@ -100,8 +101,30 @@ const PayoutManagement = () => {
         }
     };
 
+    const handleResolveHelp = async () => {
+        if (!resolutionNotes.trim()) {
+            toast.error("Please enter resolution comments.");
+            return;
+        }
+
+        setProcessing(true);
+        try {
+            await api.put(`/payouts/resolve-dispute/${selectedPayout._id}`, { notes: resolutionNotes });
+            toast.success("Help request resolved successfully.");
+            setIsModalOpen(false);
+            fetchPayouts();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to resolve help request");
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     const getStatusBadge = (p) => {
-        if (p.isDisputed) return <span className="payout-badge error" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fee2e2' }}><XCircle size={12} /> HELP REQUESTED</span>;
+        if (p.isDisputed) {
+            if (p.isHelpResolved) return <span className="payout-badge success" style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' }}><CheckCircle size={12} /> HELP RESOLVED</span>;
+            return <span className="payout-badge error" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fee2e2' }}><XCircle size={12} /> HELP REQUESTED</span>;
+        }
         
         switch (p.status) {
             case 'pending': return <span className="payout-badge pending"><Clock size={12} /> PENDING</span>;
@@ -214,6 +237,7 @@ const PayoutManagement = () => {
                                             setSelectedPayout(p);
                                             setAdminNotes(p.adminNotes || '');
                                             setTxnId(p.transactionId || '');
+                                            setResolutionNotes(p.helpResolutionNotes || '');
                                             setIsModalOpen(true);
                                         }}
                                     >
@@ -397,6 +421,38 @@ const PayoutManagement = () => {
                                             <small style={{ color: '#9b2c2c', display: 'block', marginTop: '0.5rem' }}>
                                                 Reported on: {new Date(selectedPayout.disputedAt).toLocaleString()}
                                             </small>
+
+                                            {selectedPayout.isHelpResolved ? (
+                                                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px dashed #feb2b2' }}>
+                                                    <h4 style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                                        <CheckCircle size={18} /> RESOLVED
+                                                    </h4>
+                                                    <p style={{ color: '#065f46', fontSize: '0.95rem' }}>{selectedPayout.helpResolutionNotes}</p>
+                                                    <small style={{ color: '#047857', display: 'block', marginTop: '0.5rem' }}>
+                                                        Resolved on: {new Date(selectedPayout.helpResolvedAt).toLocaleString()}
+                                                    </small>
+                                                </div>
+                                            ) : (
+                                                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px dashed #feb2b2' }}>
+                                                    <div className="form-group">
+                                                        <label>Resolution Comments (Visible to Motivator)</label>
+                                                        <textarea 
+                                                            rows="3" 
+                                                            placeholder="Describe how the issue was resolved..."
+                                                            value={resolutionNotes}
+                                                            onChange={(e) => setResolutionNotes(e.target.value)}
+                                                        ></textarea>
+                                                    </div>
+                                                    <button 
+                                                        className="btn-approve" 
+                                                        style={{ width: '100%', marginTop: '0.5rem' }}
+                                                        onClick={handleResolveHelp}
+                                                        disabled={processing}
+                                                    >
+                                                        {processing ? 'Processing...' : 'Mark as Resolved'}
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                     <div className={`final-status ${selectedPayout.status}`}>

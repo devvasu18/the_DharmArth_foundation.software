@@ -74,6 +74,26 @@ router.get('/transactions', protect, async (req, res) => {
         // 1. Fetch Wallet Transactions (Commissions, Payouts)
         const walletTxns = await Transaction.find(txnQuery).lean();
 
+        // 1.1 Enrich Payout Transactions with Help Resolution Status
+        const payoutIds = walletTxns
+            .filter(t => t.reason === 'payout' && t.referenceId)
+            .map(t => t.referenceId);
+
+        if (payoutIds.length > 0) {
+            const PayoutRequest = require('../models/PayoutRequest');
+            const payouts = await PayoutRequest.find({ _id: { $in: payoutIds } }).select('isHelpResolved').lean();
+            const payoutMap = payouts.reduce((acc, p) => {
+                acc[p._id.toString()] = p.isHelpResolved;
+                return acc;
+            }, {});
+
+            walletTxns.forEach(t => {
+                if (t.reason === 'payout' && t.referenceId && payoutMap[t.referenceId.toString()]) {
+                    t.isHelpResolved = true;
+                }
+            });
+        }
+
         // 2. Fetch User Donations (Donation by Me)
         const Donation = require('../models/Donation');
         const donations = await Donation.find(donationQuery).lean();
