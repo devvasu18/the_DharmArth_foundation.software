@@ -246,16 +246,17 @@ router.post('/', async (req, res) => {
         }
 
         // 8. Sync info to User Profile for auto-fill next time
+        let donorUser = null;
         try {
-            let user = await User.findOne({ mobile: donorMobile });
-            if (user) {
-                user.email = donorEmail || user.email;
-                user.address = address || user.address;
-                user.city = city || user.city;
-                user.state = state || user.state;
-                user.lastMotivatorMobile = motivatorMobile || user.lastMotivatorMobile;
+            donorUser = await User.findOne({ mobile: donorMobile });
+            if (donorUser) {
+                donorUser.email = donorEmail || donorUser.email;
+                donorUser.address = address || donorUser.address;
+                donorUser.city = city || donorUser.city;
+                donorUser.state = state || donorUser.state;
+                donorUser.lastMotivatorMobile = motivatorMobile || donorUser.lastMotivatorMobile;
             } else {
-                user = new User({
+                donorUser = new User({
                     name: donorName,
                     mobile: donorMobile,
                     email: donorEmail || undefined,
@@ -265,14 +266,15 @@ router.post('/', async (req, res) => {
                     lastMotivatorMobile: motivatorMobile
                 });
             }
-            await user.save(); // Triggers pre('save') for referralCode
+            await donorUser.save(); // Triggers pre('save') for referralCode
         } catch (err) {
             console.error("User Profile Sync Failed:", err);
         }
 
         res.status(201).json({
             message: 'Donation Successful',
-            donationId: donation._id
+            donationId: donation._id,
+            isAlreadyRegistered: !!(donorUser && donorUser.password)
         });
 
     } catch (error) {

@@ -52,6 +52,11 @@ const UserDashboard = () => {
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const observer = React.useRef();
 
+    // L1 Donors List States
+    const [isL1ModalOpen, setIsL1ModalOpen] = useState(false);
+    const [l1DonorsList, setL1DonorsList] = useState([]);
+    const [isLoadingL1, setIsLoadingL1] = useState(false);
+
     // Fetch initial profile, balance and stats
     useEffect(() => {
         if (!user?.token || user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
@@ -234,6 +239,20 @@ const UserDashboard = () => {
         }
     };
 
+    const fetchL1Donors = async () => {
+        setIsLoadingL1(true);
+        setIsL1ModalOpen(true);
+        try {
+            const res = await api.get('/wallet/l1-donors');
+            setL1DonorsList(res.data);
+        } catch (error) {
+            toast.error("Failed to load L1 donors list");
+            setIsL1ModalOpen(false);
+        } finally {
+            setIsLoadingL1(false);
+        }
+    };
+
     return (
         <div className="dashboard-page">
             <Navbar />
@@ -283,7 +302,16 @@ const UserDashboard = () => {
                                     </div>
                                     <div className="stat-row secondary">
                                         <div className="stat-item">
-                                            <span className="stat-val">{stats.l1Donors || 0}</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span className="stat-val">{stats.l1Donors || 0}</span>
+                                                <button 
+                                                    className="btn-view-l1" 
+                                                    onClick={fetchL1Donors}
+                                                    title="View L1 Donors"
+                                                >
+                                                    <Eye size={14} />
+                                                </button>
+                                            </div>
                                             <span className="stat-lbl">L1 Donors</span>
                                         </div>
                                         <div className="stat-item">
@@ -768,6 +796,80 @@ const UserDashboard = () => {
                                         {isDisputeSubmitting ? 'Submitting...' : 'Submit Request'}
                                     </button>
                                 </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* L1 Donors Modal */}
+            <AnimatePresence>
+                {isL1ModalOpen && (
+                    <div className="payout-modal-overlay" onClick={() => setIsL1ModalOpen(false)}>
+                        <motion.div 
+                            className="payout-modal" 
+                            onClick={e => e.stopPropagation()}
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            style={{ maxWidth: '450px' }}
+                        >
+                            <button className="payout-modal-close" onClick={() => setIsL1ModalOpen(false)}><X size={24} /></button>
+                            
+                            <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
+                                    <User size={28} color="white" />
+                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>L1 Donors</h2>
+                                </div>
+                                <p style={{ margin: '5px 0 0', opacity: 0.9 }}>People who donated via your link</p>
+                            </div>
+
+                            <div className="conditions-container" style={{ padding: '0', background: '#ffffff', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px', maxHeight: '60vh', overflowY: 'auto' }}>
+                                {isLoadingL1 ? (
+                                    <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+                                        <motion.div
+                                            animate={{ rotate: 360 }}
+                                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                            style={{ display: 'inline-block', marginBottom: '1rem' }}
+                                        >
+                                            <Clock size={32} />
+                                        </motion.div>
+                                        <p>Loading donors list...</p>
+                                    </div>
+                                ) : l1DonorsList.length === 0 ? (
+                                    <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+                                        <User size={40} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+                                        <p>No L1 donors found yet.</p>
+                                    </div>
+                                ) : (
+                                    <div className="l1-donors-list">
+                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                            <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
+                                                <tr>
+                                                    <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Donor Name</th>
+                                                    <th style={{ textAlign: 'right', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {l1DonorsList.map((donor, idx) => (
+                                                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                                        <td style={{ padding: '12px 20px' }}>
+                                                            <div style={{ fontWeight: 600, color: '#1e293b' }}>{donor.donorName}</div>
+                                                            <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{new Date(donor.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                                                        </td>
+                                                        <td style={{ padding: '12px 20px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>
+                                                            ₹{donor.amount.toLocaleString()}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9', padding: '1.25rem' }}>
+                                <button className="btn-proceed" style={{ margin: 0, width: '100%' }} onClick={() => setIsL1ModalOpen(false)}>Close</button>
                             </div>
                         </motion.div>
                     </div>

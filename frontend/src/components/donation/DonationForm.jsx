@@ -26,9 +26,6 @@ const DonationForm = ({ onSuccess }) => {
     const [fullName, setFullName] = useState('');
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
-    const [address, setAddress] = useState('');
-    const [city, setCity] = useState('');
-    const [state, setState] = useState('');
     const [pan, setPan] = useState('');
     const [aadhaar, setAadhaar] = useState('');
     const [errors, setErrors] = useState({});
@@ -48,13 +45,12 @@ const DonationForm = ({ onSuccess }) => {
     const isFormValid = useMemo(() => {
         const finalAmount = customAmount ? Number(customAmount) : amount;
         if (!fullName.trim()) return false;
-        if (!address.trim() || !city.trim() || !state.trim()) return false;
         if (mobile.length !== 10) return false;
         if (!finalAmount || finalAmount <= 0) return false;
 
         if (need80G) {
-            if (!validatePAN(pan)) return false;
-            if (!validateAadhaar(aadhaar) || aadhaar.length !== 12) return false;
+            if (!pan || pan.length !== 10) return false;
+            if (!aadhaar || aadhaar.length !== 12) return false;
         }
 
         if (motivatorMobile) {
@@ -62,7 +58,7 @@ const DonationForm = ({ onSuccess }) => {
         }
 
         return true;
-    }, [fullName, mobile, address, city, state, amount, customAmount, need80G, pan, aadhaar, motivatorMobile, motivatorName, errors.motivator]);
+    }, [fullName, mobile, amount, customAmount, need80G, pan, aadhaar, motivatorMobile, motivatorName, errors.motivator]);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -95,9 +91,6 @@ const DonationForm = ({ onSuccess }) => {
                     setFullName(user.name || '');
                     setMobile(user.mobile || '');
                     setEmail(user.email || '');
-                    setAddress(user.address || '');
-                    setCity(user.city || '');
-                    setState(user.state || '');
                     if (user.referredBy) {
                         setMotivatorMobile(user.referredBy.mobile || user.referredBy.referralCode || '');
                         setMotivatorName(user.referredBy.name || '');
@@ -112,9 +105,6 @@ const DonationForm = ({ onSuccess }) => {
                         setFullName(freshUser.name || '');
                         setMobile(freshUser.mobile || '');
                         setEmail(freshUser.email || '');
-                        setAddress(freshUser.address || '');
-                        setCity(freshUser.city || '');
-                        setState(freshUser.state || '');
 
                         // Handle populated referredBy
                         if (freshUser.referredBy && typeof freshUser.referredBy === 'object') {
@@ -126,8 +116,8 @@ const DonationForm = ({ onSuccess }) => {
                             setMotivatorMobile(freshUser.lastMotivatorMobile);
                         }
 
-                        // Sync localStorage
-                        localStorage.setItem('user', JSON.stringify(freshUser));
+                        // Sync localStorage while preserving token
+                        localStorage.setItem('user', JSON.stringify({ ...freshUser, token: user.token }));
                     }
                 } catch (e) {
                     // Handle 401 (Unauthorized) - user session expired
@@ -210,9 +200,6 @@ const DonationForm = ({ onSuccess }) => {
                 donorName: fullName,
                 donorMobile: mobile,
                 donorEmail: email,
-                address,
-                city,
-                state,
                 motivatorMobile: motivatorMobile || null,
                 referralSource: referralSource || null,
                 panNumber: need80G ? pan : null,
@@ -225,7 +212,8 @@ const DonationForm = ({ onSuccess }) => {
             toast.success(`Payment Successful! Donation ID: ${data.donationId}`);
             setDonationSuccess({
                 donationId: data.donationId,
-                amount: finalAmount
+                amount: finalAmount,
+                isAlreadyRegistered: data.isAlreadyRegistered
             });
             if (onSuccess) onSuccess();
             // Don't navigate, show Success View to allow registration
@@ -332,7 +320,9 @@ const DonationForm = ({ onSuccess }) => {
     };
 
     if (donationSuccess) {
-        const isLoggedIn = !!localStorage.getItem('user');
+        const userStr = localStorage.getItem('user');
+        const userObj = userStr && userStr !== 'null' && userStr !== 'undefined' ? JSON.parse(userStr) : null;
+        const isLoggedIn = !!(userObj && userObj.token);
 
         return (
             <div className="donation-container" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
@@ -363,53 +353,73 @@ const DonationForm = ({ onSuccess }) => {
                         padding: '2rem', marginTop: '1rem', background: '#fff',
                         boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
                     }}>
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--primary)' }}>
-                                {t('donatePage.claimAccount')}
-                            </h3>
-                            <p style={{ fontSize: '0.95rem', color: '#64748b' }} dangerouslySetInnerHTML={{ __html: t('donatePage.claimDesc') }}></p>
-                        </div>
-
-                        <div style={{ textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>
-                            <div className="donation-input-group" style={{ marginBottom: '1rem' }}>
-                                <label className="input-label">{t('donatePage.createPassword')}</label>
-                                <div className="input-wrapper">
-                                    <Lock size={18} className="input-icon" />
-                                    <input
-                                        type="password"
-                                        className="form-control"
-                                        placeholder="Min. 6 characters"
-                                        value={registerPassword}
-                                        onChange={(e) => setRegisterPassword(e.target.value)}
-                                    />
-                                </div>
+                        {donationSuccess.isAlreadyRegistered ? (
+                            <div style={{ textAlign: 'center' }}>
+                                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--primary)' }}>
+                                    Welcome Back!
+                                </h3>
+                                <p style={{ fontSize: '0.95rem', color: '#64748b', marginBottom: '1.5rem' }}>
+                                    You already have an account with us. Login to track this donation and access your certificates.
+                                </p>
+                                <button
+                                    className="donate-btn"
+                                    onClick={() => navigate('/login')}
+                                    style={{ marginTop: 0 }}
+                                >
+                                    <span className="btn-content">Login to Your Account</span>
+                                </button>
                             </div>
-
-                            <div className="donation-input-group" style={{ marginBottom: '1.5rem' }}>
-                                <label className="input-label">{t('donatePage.confirmPassword')}</label>
-                                <div className="input-wrapper">
-                                    <Lock size={18} className="input-icon" />
-                                    <input
-                                        type="password"
-                                        className="form-control"
-                                        placeholder="Re-enter password"
-                                        value={registerConfirmPassword}
-                                        onChange={(e) => setRegisterConfirmPassword(e.target.value)}
-                                    />
+                        ) : (
+                            <>
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--primary)' }}>
+                                        {t('donatePage.claimAccount')}
+                                    </h3>
+                                    <p style={{ fontSize: '0.95rem', color: '#64748b' }} dangerouslySetInnerHTML={{ __html: t('donatePage.claimDesc') }}></p>
                                 </div>
-                            </div>
 
-                            <button
-                                className="donate-btn"
-                                style={{ marginTop: 0 }}
-                                onClick={handleRegister}
-                                disabled={isRegistering}
-                            >
-                                <span className="btn-content">
-                                    {isRegistering ? t('donatePage.creatingAccount') : t('donatePage.createAccountBtn')}
-                                </span>
-                            </button>
-                        </div>
+                                <div style={{ textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>
+                                    <div className="donation-input-group" style={{ marginBottom: '1rem' }}>
+                                        <label className="input-label">{t('donatePage.createPassword')}</label>
+                                        <div className="input-wrapper">
+                                            <Lock size={18} className="input-icon" />
+                                            <input
+                                                type="password"
+                                                className="form-control"
+                                                placeholder="Min. 6 characters"
+                                                value={registerPassword}
+                                                onChange={(e) => setRegisterPassword(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="donation-input-group" style={{ marginBottom: '1.5rem' }}>
+                                        <label className="input-label">{t('donatePage.confirmPassword')}</label>
+                                        <div className="input-wrapper">
+                                            <Lock size={18} className="input-icon" />
+                                            <input
+                                                type="password"
+                                                className="form-control"
+                                                placeholder="Re-enter password"
+                                                value={registerConfirmPassword}
+                                                onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        className="donate-btn"
+                                        style={{ marginTop: 0 }}
+                                        onClick={handleRegister}
+                                        disabled={isRegistering}
+                                    >
+                                        <span className="btn-content">
+                                            {isRegistering ? t('donatePage.creatingAccount') : t('donatePage.createAccountBtn')}
+                                        </span>
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 )}
 
@@ -430,7 +440,7 @@ const DonationForm = ({ onSuccess }) => {
     }
 
     return (
-        <>
+        <React.Fragment>
             <div className="donation-container">
                 <h2 className="donation-title">
                     <CreditCard size={28} className="text-primary" />
@@ -518,46 +528,6 @@ const DonationForm = ({ onSuccess }) => {
                             />
                         </div>
                     </div>
-
-                    <div className="donation-input-group">
-                        <label className="input-label">{t('donatePage.address')}</label>
-                        <div className="input-group-wrapper">
-                            <textarea
-                                className="form-control"
-                                placeholder={t('donatePage.addressPlaceholder')}
-                                value={address}
-                                onChange={(e) => setAddress(e.target.value)}
-                                style={{ minHeight: '80px', paddingTop: '0.75rem' }}
-                            />
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <div className="donation-input-group">
-                            <label className="input-label">{t('donatePage.city')}</label>
-                            <div className="input-group-wrapper">
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder={t('donatePage.cityPlaceholder')}
-                                    value={city}
-                                    onChange={(e) => setCity(e.target.value)}
-                                />
-                            </div>
-                        </div>
-                        <div className="donation-input-group">
-                            <label className="input-label">{t('donatePage.state')}</label>
-                            <div className="input-group-wrapper">
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder={t('donatePage.statePlaceholder')}
-                                    value={state}
-                                    onChange={(e) => setState(e.target.value)}
-                                />
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div className="form-section">
@@ -582,7 +552,7 @@ const DonationForm = ({ onSuccess }) => {
                                     </div>
                                 </div>
                             ) : (
-                                <>
+                                <React.Fragment>
                                     <div className="phone-wrapper">
                                         <div className="flag-addon">
                                             <Smartphone size={16} />
@@ -613,7 +583,7 @@ const DonationForm = ({ onSuccess }) => {
                                         </div>
                                     )}
                                     {errors.motivator && <small className="error-text">{errors.motivator}</small>}
-                                </>
+                                </React.Fragment>
                             )}
                         </div>
 
@@ -760,7 +730,7 @@ const DonationForm = ({ onSuccess }) => {
                     </div>
                 </div>
             )}
-        </>
+        </React.Fragment>
     );
 };
 

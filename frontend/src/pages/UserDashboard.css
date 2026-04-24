@@ -771,6 +771,46 @@
     }
 }
 
+.btn-view-l1 {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-view-l1:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(1.1);
+}
+
+.l1-donors-list tr:hover {
+    background-color: #f8fafc;
+}
+
+.l1-donors-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.l1-donors-list::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.l1-donors-list::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+}
+
+.l1-donors-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
 .payout-modal {
     background: #ffffff;
     width: 95%;

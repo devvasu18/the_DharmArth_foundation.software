@@ -23,6 +23,13 @@ const AdminSettings = () => {
         popularAmount: 1000
     });
 
+    // WhatsApp Config State
+    const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
+    const [whatsappConfig, setWhatsappConfig] = useState({
+        donationTemplate: '',
+        withdrawalTemplate: ''
+    });
+
     useEffect(() => {
         fetchSettings();
     }, []);
@@ -41,6 +48,12 @@ const AdminSettings = () => {
                     setDonationConfig(config);
                 }
             }
+
+            // WhatsApp Config
+            setWhatsappConfig({
+                donationTemplate: data.whatsapp_donation_template || "Dear {name}, thank you for your generous donation of ₹{amount} to The DharmArth Foundation. Your support helps us make a big difference! 🙏",
+                withdrawalTemplate: data.whatsapp_withdrawal_template || "Dear {name}, your payout request of ₹{amount} has been successfully processed and completed. The funds have been transferred as per your provided details. Thank you for your continued support! 🙏"
+            });
         } catch (error) {
             console.error("Failed to fetch settings", error);
         } finally {
@@ -128,6 +141,27 @@ const AdminSettings = () => {
         }
     };
 
+    // --- WhatsApp Logic ---
+    const openWhatsappModal = () => {
+        setWhatsappModalOpen(true);
+    };
+
+    const handleSaveWhatsappConfig = async () => {
+        try {
+            const updates = {
+                whatsapp_donation_template: whatsappConfig.donationTemplate,
+                whatsapp_withdrawal_template: whatsappConfig.withdrawalTemplate
+            };
+            await api.put('/content/settings', updates);
+            setSettings({ ...settings, ...updates });
+            setWhatsappModalOpen(false);
+            toast.success("WhatsApp Templates Saved!");
+        } catch (error) {
+            console.error("Save failed", error);
+            toast.error("Failed to save WhatsApp templates");
+        }
+    };
+
     if (loading) return <div>Loading settings...</div>;
 
     return (
@@ -180,6 +214,22 @@ const AdminSettings = () => {
                             <button
                                 className="btn btn-outline"
                                 onClick={openDonationModal}
+                            >
+                                Configure
+                            </button>
+                        </td>
+                    </tr>
+
+                    {/* WhatsApp Row */}
+                    <tr>
+                        <td><strong>WhatsApp Notifications</strong> (Message Templates)</td>
+                        <td>
+                            Dynamic Templates Configured
+                        </td>
+                        <td>
+                            <button
+                                className="btn btn-outline"
+                                onClick={openWhatsappModal}
                             >
                                 Configure
                             </button>
@@ -312,7 +362,49 @@ const AdminSettings = () => {
                 </div>
             )}
 
-        </div >
+            {/* WhatsApp Config Modal */}
+            {whatsappModalOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', minWidth: '600px', maxWidth: '90%' }}>
+                        <h4>Configure WhatsApp Templates</h4>
+                        <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1.5rem' }}>
+                            Use <strong>{'{name}'}</strong> and <strong>{'{amount}'}</strong> as placeholders in your messages.
+                        </p>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Donation Thank You Template</label>
+                                <textarea
+                                    className="form-input"
+                                    style={{ width: '100%', minHeight: '100px', padding: '10px', fontSize: '0.95rem' }}
+                                    value={whatsappConfig.donationTemplate}
+                                    onChange={(e) => setWhatsappConfig({ ...whatsappConfig, donationTemplate: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Payout Completion Template</label>
+                                <textarea
+                                    className="form-input"
+                                    style={{ width: '100%', minHeight: '100px', padding: '10px', fontSize: '0.95rem' }}
+                                    value={whatsappConfig.withdrawalTemplate}
+                                    onChange={(e) => setWhatsappConfig({ ...whatsappConfig, withdrawalTemplate: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                            <button className="btn btn-outline" onClick={() => setWhatsappModalOpen(false)}>Cancel</button>
+                            <button className="btn bg-primary text-white" onClick={handleSaveWhatsappConfig}>Save Templates</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+        </div>
     );
 };
 

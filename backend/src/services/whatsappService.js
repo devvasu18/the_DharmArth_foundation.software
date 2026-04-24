@@ -106,7 +106,10 @@ class WhatsappService {
      * Specialized: Send Donation Thank You WhatsApp Notification
      */
     async sendDonationNotification(donorMobile, donorName, amount) {
-        const message = `Dear ${donorName}, thank you for your generous donation of ₹${amount} to The DharmArth Foundation. Your support helps us make a big difference! 🙏`;
+        const Setting = require('../models/Setting');
+        const setting = await Setting.findOne({ key: 'whatsapp_donation_template' });
+        const template = setting?.value || "Dear {name}, thank you for your generous donation of ₹{amount} to The DharmArth Foundation. Your support helps us make a big difference! 🙏";
+        const message = template.replace('{name}', donorName).replace('{amount}', amount);
         return this.sendMessage(donorMobile, message);
     }
 
@@ -114,7 +117,10 @@ class WhatsappService {
      * Specialized: Send Payout Completion WhatsApp Notification
      */
     async sendWithdrawalNotification(mobile, name, amount) {
-        const message = `Dear ${name}, your payout request of ₹${amount} has been successfully processed and completed. The funds have been transferred as per your provided details. Thank you for your continued support! 🙏`;
+        const Setting = require('../models/Setting');
+        const setting = await Setting.findOne({ key: 'whatsapp_withdrawal_template' });
+        const template = setting?.value || "Dear {name}, your payout request of ₹{amount} has been successfully processed and completed. The funds have been transferred as per your provided details. Thank you for your continued support! 🙏";
+        const message = template.replace('{name}', name).replace('{amount}', amount);
         return this.sendMessage(mobile, message);
     }
 }

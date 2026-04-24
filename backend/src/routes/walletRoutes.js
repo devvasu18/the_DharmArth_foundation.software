@@ -175,4 +175,22 @@ router.get('/stats', protect, async (req, res) => {
     }
 });
 
+// @desc    Get L1 Donors List (Names of people who donated via my link)
+// @route   GET /api/wallet/l1-donors
+router.get('/l1-donors', protect, async (req, res) => {
+    try {
+        const Donation = require('../models/Donation');
+        const donors = await Donation.find({
+            level1UserId: req.user._id,
+            status: 'success'
+        })
+        .select('donorName amount createdAt')
+        .sort({ createdAt: -1 });
+        
+        res.json(donors);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;
