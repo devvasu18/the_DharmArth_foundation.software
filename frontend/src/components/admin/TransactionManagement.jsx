@@ -866,7 +866,6 @@ const TransactionManagement = () => {
                             <th>Amount</th>
                             {filters.searchUser && <th>Level</th>}
                             <th>Motivated By</th>
-                            <th>City/State</th>
                             <th>L1 Comm (10%)</th>
                             <th>L2 Comm (3%)</th>
                             <th>80G</th>
@@ -899,19 +898,23 @@ const TransactionManagement = () => {
                                 }
 
                                 return (
-                                    <tr key={idx} onClick={() => setSelectedTransaction(txn)}>
-                                        <td className="text-xs text-gray-500 font-mono">{txn._id}</td>
+                                    <tr key={idx} onClick={() => setSelectedTransaction(txn)} className="cursor-pointer hover:bg-gray-50 transition-colors">
+                                        <td className="py-3 px-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-[11px] font-bold text-indigo-600 font-mono tracking-tight" title="Razorpay Payment ID">
+                                                    {txn.transactionId || '---'}
+                                                </span>
+                                                <span className="text-[9px] text-gray-400 font-mono" title="Razorpay Order ID">
+                                                    {txn.orderId || txn._id}
+                                                </span>
+                                            </div>
+                                        </td>
                                         <td>{formatDate(txn.createdAt)}</td>
                                         <td><strong>{txn.donorName}</strong></td>
                                         <td><span className="col-amount">{formatCurrency(txn.amount)}</span></td>
                                         {filters.searchUser && <td>{levelLabel || <span className="text-gray-300">-</span>}</td>}
                                         <td>
                                             {txn.level1UserId?.name || (txn.motivatorMobile ? `(Mobile: ${txn.motivatorMobile})` : '-')}
-                                        </td>
-                                        <td>
-                                            <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                                                {txn.city}{txn.city && txn.state ? ', ' : ''}{txn.state}
-                                            </span>
                                         </td>
                                         <td>{(txn.level1UserId || txn.motivatorMobile) ? formatCurrency(txn.amount * 0.10) : <span className="status-badge badge-neutral">No</span>}</td>
                                         <td>{txn.level2UserId ? formatCurrency(txn.amount * 0.03) : <span className="status-badge badge-neutral">No</span>}</td>
@@ -972,6 +975,14 @@ const TransactionManagement = () => {
                                     </strong>
                                 </div>
                                 <div className="breakdown-row"><span>Date</span> <strong>{formatDate(selectedTransaction.createdAt)}</strong></div>
+                                <div className="breakdown-row pt-2 border-t border-slate-100 mt-2">
+                                    <span className="text-[10px] uppercase font-bold text-slate-400">Razorpay Payment ID</span> 
+                                    <strong className="text-indigo-600 font-mono text-[11px]">{selectedTransaction.transactionId || '---'}</strong>
+                                </div>
+                                <div className="breakdown-row">
+                                    <span className="text-[10px] uppercase font-bold text-slate-400">Razorpay Order ID</span> 
+                                    <strong className="text-slate-500 font-mono text-[11px]">{selectedTransaction.orderId || selectedTransaction._id}</strong>
+                                </div>
                                 <div className="breakdown-row"><span>Mobile</span> <strong>{selectedTransaction.donorMobile}</strong></div>
                                 {selectedTransaction.address && (
                                     <div className="breakdown-row" style={{ alignItems: 'flex-start' }}>

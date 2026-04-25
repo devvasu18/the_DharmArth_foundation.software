@@ -147,7 +147,7 @@ router.get('/dashboard', async (req, res) => {
 
         // Fetch Data
         let donations = await Donation.find(query)
-            .select('donorName donorMobile amount address city state motivatorMobile createdAt is80G level1UserId level2UserId status panNumber aadhaarNumber')
+            .select('donorName donorMobile amount address city state motivatorMobile createdAt is80G level1UserId level2UserId status panNumber aadhaarNumber transactionId orderId')
             .populate({
                 path: 'level1UserId',
                 select: 'name mobile referredBy', // Fetch L2 Relation
@@ -741,7 +741,7 @@ router.get('/commission-reports', async (req, res) => {
         const skip = (page - 1) * limit;
 
         const tableDonations = await Donation.find({ status: 'success', ...dateQuery })
-            .select('amount createdAt transactionId status level1UserId level2UserId')
+            .select('amount createdAt transactionId orderId status level1UserId level2UserId')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
