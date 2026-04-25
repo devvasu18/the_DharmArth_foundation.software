@@ -91,11 +91,11 @@ class CertificateService {
                 // --- FOOTER ---
                 doc.end();
 
-                stream.on('finish', () => {
+                stream.on('finish', async () => {
                     // Update donation record
                     donation.receiptNumber = receiptNo;
                     donation.certificateUrl = `/public/certificates/${fileName}`;
-                    donation.save();
+                    await donation.save();
                     resolve(donation.certificateUrl);
                 });
 

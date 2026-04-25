@@ -10,6 +10,7 @@ const IV_LENGTH = 16;
  */
 function encrypt(text) {
     if (!text) return text;
+    if (String(text).includes(':')) return text; 
     try {
         const iv = crypto.randomBytes(IV_LENGTH);
         const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY.slice(0, 32)), iv);
@@ -36,6 +37,7 @@ function decrypt(text) {
         decrypted = Buffer.concat([decrypted, decipher.final()]);
         return decrypted.toString();
     } catch (err) {
+        console.error("Decryption Error:", err.message);
         // If decryption fails, it might be legacy plain text
         return text;
     }

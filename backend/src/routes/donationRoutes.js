@@ -7,6 +7,8 @@ const { processDonationCommission } = require('../services/commissionService');
 const certificateService = require('../services/certificateService');
 const whatsappService = require('../services/whatsappService');
 const { protect } = require('../middlewares/authMiddleware');
+const razorpay = require('../config/razorpay');
+const crypto = require('crypto');
 
 // @desc    Get All Donations (Admin)
 // @route   GET /api/donate
@@ -181,7 +183,7 @@ router.post('/', async (req, res) => {
             });
         }
 
-        // 1. One-time Donation Logic (Existing)
+        // 1. One-time Donation Logic (Create Pending Donation)
         const donation = await Donation.create({
             amount,
             donorName,
@@ -200,20 +202,46 @@ router.post('/', async (req, res) => {
             is80G: !!(panNumber && panNumber.trim().length > 0)
         });
 
-        // 2. MOCK PAYMENT SUCCESS
-        donation.status = 'success';
-        donation.transactionId = `MOCK_TXN_${Date.now()}`;
-        
-        // 4. Generate 80G Certificate if applicable
-        if (donation.is80G) {
-            try {
-                await certificateService.createCertificate(donation);
-            } catch (err) {
-                console.error("Certificate Generation Failed:", err);
-            }
-        }
+        // 2. CREATE RAZORPAY ORDER
+        const transaction_id = 'TXN_' + crypto.randomBytes(10).toString('hex').toUpperCase();
+        const options = {
+            amount: Math.round(amount * 100), // Razorpay expects amount in paise
+            currency: 'INR',
+            receipt: transaction_id,
+        };
 
+        const razorpayOrder = await razorpay.orders.create(options);
+
+        // Update donation with orderId
+        donation.orderId = razorpayOrder.id;
         await donation.save();
+
+        // Also create a record in Payment model for tracking
+        const Payment = require('../models/Payment');
+        await Payment.create({
+            userId: level1UserId || null, // Optional if we have a userId
+            amount,
+            currency: 'INR',
+            transaction_id,
+            order_id: razorpayOrder.id,
+            status: 'created',
+            email: donorEmail,
+            contact: donorMobile
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Donation Order Created',
+            donationId: donation._id,
+            order_id: razorpayOrder.id,
+            amount: options.amount,
+            currency: options.currency,
+            donorName,
+            donorEmail,
+            donorMobile
+        });
+        
+        return; // Important: exit here, don't run mock success logic below
 
         // 5. PROCESS COMMISSION 
         if (level1UserId && !isSelfReferral) {

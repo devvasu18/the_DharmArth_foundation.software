@@ -414,7 +414,7 @@ const AdminLayout = () => {
                     </NavLink>
                     <NavLink to="/admin/transaction-management" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <Wallet size={20} title={isSidebarCollapsed ? "Transactions" : ""} />
-                        <span className="admin-link-text">Transactions</span>
+                        <span className="admin-link-text">Donations</span>
                     </NavLink>
                     <NavLink to="/admin/payouts" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <Wallet size={20} title={isSidebarCollapsed ? "Payouts" : ""} />

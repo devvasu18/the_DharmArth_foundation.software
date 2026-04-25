@@ -7,7 +7,11 @@ const cookieParser = require('cookie-parser');
 const app = express();
 
 // Middleware
-app.use(express.json());
+app.use(express.json({
+    verify: (req, res, buf) => {
+        req.rawBody = buf;
+    }
+}));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
@@ -28,6 +32,7 @@ const walletRoutes = require('./routes/walletRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 const eventRoutes = require('./routes/eventRoutes');
 const eventHeaderRoutes = require('./routes/eventHeaderRoutes');
@@ -50,6 +55,7 @@ app.use('/api/roles', roleRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/payment', paymentRoutes);
 
 app.use('/api/events', eventRoutes);
 app.use('/api/event-headers', eventHeaderRoutes);

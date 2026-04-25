@@ -1,0 +1,187 @@
+const crypto = require('crypto');
+const razorpay = require('../config/razorpay');
+const Payment = require('../models/Payment');
+const donationService = require('../services/donationService');
+
+// Use a simple random generator if uuid not available, but let's check package.json again
+// Checking package.json... bcryptjs, cloudinary, mongoose... no uuid.
+// I'll use a simple generator or install uuid. I'll use crypto.randomBytes for now.
+
+const generateTransactionId = () => {
+    return 'TXN_' + crypto.randomBytes(10).toString('hex').toUpperCase();
+};
+
+/**
+ * @desc Create a new Razorpay Order
+ * @route POST /api/payment/create-order
+ */
+exports.createOrder = async (req, res) => {
+    try {
+        const { amount, currency = 'INR', userId, email, contact } = req.body;
+
+        if (!amount || !userId) {
+            return res.status(400).json({ success: false, message: 'Amount and userId are required' });
+        }
+
+        const transaction_id = generateTransactionId();
+
+        const options = {
+            amount: Math.round(amount * 100), // Razorpay expects amount in paise
+            currency,
+            receipt: transaction_id,
+        };
+
+        const order = await razorpay.orders.create(options);
+
+        // Store initial payment record in DB
+        const payment = new Payment({
+            userId,
+            amount,
+            currency,
+            transaction_id,
+            order_id: order.id,
+            status: 'created',
+            email,
+            contact
+        });
+
+        await payment.save();
+
+        res.status(201).json({
+            success: true,
+            order_id: order.id,
+            transaction_id,
+            amount: options.amount,
+            currency: options.currency
+        });
+    } catch (error) {
+        console.error('Error creating Razorpay order:', error);
+        res.status(500).json({ success: false, message: 'Failed to create payment order' });
+    }
+};
+
+/**
+ * @desc Verify Payment Signature (Frontend Call)
+ * @route POST /api/payment/verify-payment
+ */
+exports.verifyPayment = async (req, res) => {
+    try {
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            return res.status(400).json({ success: false, message: 'Missing required parameters' });
+        }
+
+        // HMAC_SHA256(order_id + "|" + payment_id, key_secret)
+        const body = razorpay_order_id + "|" + razorpay_payment_id;
+        const expectedSignature = crypto
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+            .update(body.toString())
+            .digest('hex');
+
+        const isAuthentic = expectedSignature === razorpay_signature;
+
+        if (isAuthentic) {
+            // Update DB status
+            const payment = await Payment.findOneAndUpdate(
+                { order_id: razorpay_order_id },
+                { 
+                    status: 'paid', 
+                    payment_id: razorpay_payment_id,
+                    // If frontend sends method/email/contact, we can update here too
+                    // but webhook is final source of truth
+                },
+                { new: true }
+            );
+
+            res.status(200).json({ success: true, message: 'Payment verified successfully', payment });
+
+            // Trigger post-payment donation logic
+            try {
+                const io = req.app.get('io');
+                await donationService.completeDonation(razorpay_order_id, razorpay_payment_id, io);
+            } catch (err) {
+                console.error("Post-payment completion failed (verify):", err);
+            }
+        } else {
+            await Payment.findOneAndUpdate({ order_id: razorpay_order_id }, { status: 'failed' });
+            res.status(400).json({ success: false, message: 'Signature mismatch. Payment verification failed.' });
+        }
+    } catch (error) {
+        console.error('Error verifying payment:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+/**
+ * @desc Razorpay Webhook Handler (Final Source of Truth)
+ * @route POST /api/payment/webhook
+ */
+exports.handleWebhook = async (req, res) => {
+    try {
+        const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+        
+        // Verification needs the RAW body
+        const signature = req.headers['x-razorpay-signature'];
+        
+        // Validate webhook signature
+        const expectedSignature = crypto
+            .createHmac('sha256', secret)
+            .update(req.rawBody) // req.rawBody must be populated by middleware
+            .digest('hex');
+
+        if (expectedSignature !== signature) {
+            console.error('Invalid Webhook Signature');
+            return res.status(400).send('Invalid signature');
+        }
+
+        const event = req.body.event;
+        const payload = req.body.payload;
+
+        console.log(`Processing Razorpay Webhook Event: ${event}`);
+
+        if (event === 'payment.captured' || event === 'order.paid') {
+            const paymentDetails = payload.payment ? payload.payment.entity : payload.order.entity;
+            const order_id = paymentDetails.order_id;
+            const payment_id = paymentDetails.id || (payload.payment ? payload.payment.entity.id : null);
+
+            // Find payment by order_id
+            const payment = await Payment.findOne({ order_id });
+
+            if (payment) {
+                // Idempotency check: only update if not already paid
+                if (payment.status !== 'paid') {
+                    payment.status = 'paid';
+                    payment.payment_id = payment_id;
+                    payment.payment_method = paymentDetails.method;
+                    payment.email = paymentDetails.email || payment.email;
+                    payment.contact = paymentDetails.contact || payment.contact;
+                    payment.raw_webhook_data = req.body;
+                    await payment.save();
+                    
+                    // Trigger post-payment donation logic (Idempotency is handled inside the service)
+                    try {
+                        const io = req.app.get('io');
+                        await donationService.completeDonation(order_id, payment_id, io);
+                    } catch (err) {
+                        console.error("Post-payment completion failed (webhook):", err);
+                    }
+                    
+                    console.log(`Payment confirmed for Order ${order_id}`);
+                } else {
+                    console.log(`Order ${order_id} already marked as paid. Skipping update.`);
+                }
+            } else {
+                console.warn(`Payment record not found for Order ID: ${order_id}`);
+            }
+        } else if (event === 'payment.failed') {
+             const order_id = payload.payment.entity.order_id;
+             await Payment.findOneAndUpdate({ order_id }, { status: 'failed', raw_webhook_data: req.body });
+        }
+
+        res.status(200).json({ status: 'ok' });
+    } catch (error) {
+        console.error('Webhook Error:', error);
+        res.status(500).send('Webhook Processing Failed');
+    }
+};

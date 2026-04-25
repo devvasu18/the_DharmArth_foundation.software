@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import {
     Search, Filter, Calendar, Download, ChevronDown, X,
-    ArrowRight, User, CheckCircle, Wallet, FileText
+    ArrowRight, User, CheckCircle, Wallet, FileText, Save
 } from 'lucide-react';
 import './TransactionManagement.css';
 import toast from 'react-hot-toast';
@@ -1007,24 +1007,41 @@ const TransactionManagement = () => {
                                         </div>
                                         
                                         {isEditingTax ? (
-                                            <div className="p-3 bg-blue-50 rounded-lg mt-2 flex flex-col gap-2">
-                                                <input 
-                                                    className="p-2 border rounded text-xs"
-                                                    placeholder="PAN Number"
-                                                    value={editTaxForm.panNumber}
-                                                    onChange={e => setEditTaxForm({...editTaxForm, panNumber: e.target.value.toUpperCase()})}
-                                                />
-                                                <input 
-                                                    className="p-2 border rounded text-xs"
-                                                    placeholder="Aadhaar Number"
-                                                    value={editTaxForm.aadhaarNumber}
-                                                    onChange={e => setEditTaxForm({...editTaxForm, aadhaarNumber: e.target.value})}
-                                                />
+                                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-3 space-y-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                                        <FileText size={18} />
+                                                    </div>
+                                                    <h5 className="font-bold text-slate-700 text-sm">Update Tax Information</h5>
+                                                </div>
+                                                
+                                                <div className="grid grid-cols-1 gap-3">
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1">PAN Card Number</label>
+                                                        <input 
+                                                            className="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                                            placeholder="ABCDE1234F"
+                                                            value={editTaxForm.panNumber}
+                                                            onChange={e => setEditTaxForm({...editTaxForm, panNumber: e.target.value.toUpperCase()})}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1">Aadhaar Number</label>
+                                                        <input 
+                                                            className="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                                            placeholder="12-digit Aadhaar Number"
+                                                            value={editTaxForm.aadhaarNumber}
+                                                            onChange={e => setEditTaxForm({...editTaxForm, aadhaarNumber: e.target.value})}
+                                                        />
+                                                    </div>
+                                                </div>
+
                                                 <button 
-                                                    className="bg-blue-600 text-white p-2 rounded text-xs font-bold"
+                                                    className="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white py-2.5 rounded-lg text-sm font-bold shadow-md shadow-blue-200 transition-all flex items-center justify-center gap-2"
                                                     onClick={() => handleUpdateTaxInfo(selectedTransaction._id)}
                                                 >
-                                                    Save & Apply
+                                                    <Save size={16} />
+                                                    Save & Apply Changes
                                                 </button>
                                             </div>
                                         ) : (

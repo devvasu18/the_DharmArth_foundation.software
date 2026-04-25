@@ -16,10 +16,17 @@ const donationSchema = new mongoose.Schema({
     referralSource: { type: String },
 
     // Tax Info
-    panNumber: { type: String },
-    aadhaarNumber: { type: String },
+    panNumber: { 
+        type: String, 
+        set: encrypt
+    },
+    aadhaarNumber: { 
+        type: String, 
+        set: encrypt
+    },
 
-    transactionId: { type: String }, // Gateway ID
+    transactionId: { type: String }, // Gateway ID (payment_id)
+    orderId: { type: String, index: true }, // Razorpay Order ID
     is80G: { type: Boolean, default: false, index: true },
     receiptNumber: { type: String, unique: true, sparse: true },
     certificateUrl: { type: String },
@@ -29,18 +36,21 @@ const donationSchema = new mongoose.Schema({
     level2UserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true }, // The Motivator's Referrer
 
 }, {
-    timestamps: true
-});
-
-// Encryption Hooks
-donationSchema.pre('save', async function() {
-    if (this.isModified('panNumber')) this.panNumber = encrypt(this.panNumber);
-    if (this.isModified('aadhaarNumber')) this.aadhaarNumber = encrypt(this.aadhaarNumber);
-});
-
-donationSchema.post('init', function(doc) {
-    if (doc.panNumber) doc.panNumber = decrypt(doc.panNumber);
-    if (doc.aadhaarNumber) doc.aadhaarNumber = decrypt(doc.aadhaarNumber);
+    timestamps: true,
+    toJSON: {
+        transform: (doc, ret) => {
+            if (ret.panNumber) ret.panNumber = decrypt(ret.panNumber);
+            if (ret.aadhaarNumber) ret.aadhaarNumber = decrypt(ret.aadhaarNumber);
+            return ret;
+        }
+    },
+    toObject: {
+        transform: (doc, ret) => {
+            if (ret.panNumber) ret.panNumber = decrypt(ret.panNumber);
+            if (ret.aadhaarNumber) ret.aadhaarNumber = decrypt(ret.aadhaarNumber);
+            return ret;
+        }
+    }
 });
 
 module.exports = mongoose.model('Donation', donationSchema);

@@ -196,7 +196,6 @@ const DonationForm = ({ onSuccess }) => {
         try {
             const payload = {
                 amount: finalAmount,
-                fullName,
                 donorName: fullName,
                 donorMobile: mobile,
                 donorEmail: email,
@@ -206,24 +205,72 @@ const DonationForm = ({ onSuccess }) => {
                 aadhaarNumber: need80G ? aadhaar : null
             };
 
-            const { data } = await api.post('/donate', payload);
-            setShowPanModal(false);
+            // 1. Create Order on Backend
+            const { data: orderData } = await api.post('/donate', payload);
+            
+            // 2. Configure Razorpay Options
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
+                amount: orderData.amount,
+                currency: orderData.currency,
+                name: "The DharmArth Foundation",
+                description: "Donation for Social Cause",
+                order_id: orderData.order_id,
+                handler: async (response) => {
+                    // 3. Verify Payment on Backend
+                    try {
+                        setLoading(true);
+                        const verifyPayload = {
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        };
+                        
+                        const { data: verifyData } = await api.post('/payment/verify-payment', verifyPayload);
+                        
+                        if (verifyData.success) {
+                            toast.success("Payment Successful!");
+                            setDonationSuccess({
+                                donationId: orderData.donationId,
+                                amount: finalAmount,
+                                isAlreadyRegistered: orderData.isAlreadyRegistered
+                            });
+                            if (onSuccess) onSuccess();
+                        } else {
+                            toast.error("Payment verification failed.");
+                        }
+                    } catch (err) {
+                        console.error("Verification error:", err);
+                        toast.error("Payment verification failed. Please contact support if amount was deducted.");
+                    } finally {
+                        setLoading(false);
+                    }
+                },
+                prefill: {
+                    name: fullName,
+                    email: email,
+                    contact: mobile
+                },
+                notes: {
+                    donation_id: orderData.donationId
+                },
+                theme: {
+                    color: "#7c3aed" // Matching your theme color
+                },
+                modal: {
+                    ondismiss: () => {
+                        setLoading(false);
+                        toast.error("Payment cancelled.");
+                    }
+                }
+            };
 
-            toast.success(`Payment Successful! Donation ID: ${data.donationId}`);
-            setDonationSuccess({
-                donationId: data.donationId,
-                amount: finalAmount,
-                isAlreadyRegistered: data.isAlreadyRegistered
-            });
-            if (onSuccess) onSuccess();
-            // Don't navigate, show Success View to allow registration
-            // navigate('/');
+            const rzp = new window.Razorpay(options);
+            rzp.open();
 
         } catch (error) {
-            setShowPanModal(false);
             console.error("Donation failed:", error);
-            toast.error("Donation failed. Please try again.");
-        } finally {
+            toast.error(error.response?.data?.message || "Donation initiation failed. Please try again.");
             setLoading(false);
         }
     };

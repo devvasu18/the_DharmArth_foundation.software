@@ -204,10 +204,12 @@ router.get('/dashboard', async (req, res) => {
         }
 
         // 80G Inference for Legacy Data (if PAN exists, treat as 80G)
-        // We do this purely for display if the field is missing/false but PAN is explicitly there.
-        // Assuming 'panNumber' was selected? Wait, we didn't select 'panNumber' in the query.
-        // We need to add 'panNumber' to the .select() above.
+        const { decrypt } = require('../utils/security');
         donations = donations.map(d => {
+            // Decrypt fields since .lean() bypasses getters
+            if (d.panNumber) d.panNumber = decrypt(d.panNumber);
+            if (d.aadhaarNumber) d.aadhaarNumber = decrypt(d.aadhaarNumber);
+
             if (!d.is80G && d.panNumber && d.panNumber.trim() !== '') {
                 return { ...d, is80G: true }; // Infer 80G if PAN is present but flag is false
             }
@@ -421,6 +423,7 @@ router.get('/users/:userId/transactions', async (req, res) => {
             status: 'success'
         }).lean();
 
+        const { decrypt } = require('../utils/security');
         const donationTransactions = rawPersonalDonations.map(d => ({
             _id: d._id,
             amount: d.amount,
@@ -429,6 +432,8 @@ router.get('/users/:userId/transactions', async (req, res) => {
             description: `Personal Donation to Foundation`,
             createdAt: d.createdAt,
             transactionId: d.transactionId,
+            panNumber: d.panNumber ? decrypt(d.panNumber) : null,
+            aadhaarNumber: d.aadhaarNumber ? decrypt(d.aadhaarNumber) : null,
             isDonation: true
         }));
 
@@ -481,7 +486,9 @@ router.get('/donations/:donationId/breakdown', async (req, res) => {
                 city: donation.city,
                 state: donation.state,
                 amount: donation.amount,
-                date: donation.createdAt
+                date: donation.createdAt,
+                panNumber: donation.panNumber, // Getters handle this since it's not .lean()
+                aadhaarNumber: donation.aadhaarNumber
             },
             commissions: transactions.map(txn => ({
                 recipient: txn.wallet.user,
