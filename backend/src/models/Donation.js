@@ -18,11 +18,13 @@ const donationSchema = new mongoose.Schema({
     // Tax Info
     panNumber: { 
         type: String, 
-        set: encrypt
+        set: encrypt,
+        get: decrypt
     },
     aadhaarNumber: { 
         type: String, 
-        set: encrypt
+        set: encrypt,
+        get: decrypt
     },
 
     transactionId: { type: String, unique: true, sparse: true }, // Gateway ID (payment_id) - UNIQUE to prevent double processing
@@ -38,16 +40,14 @@ const donationSchema = new mongoose.Schema({
 }, {
     timestamps: true,
     toJSON: {
+        getters: true,
         transform: (doc, ret) => {
-            if (ret.panNumber) ret.panNumber = decrypt(ret.panNumber);
-            if (ret.aadhaarNumber) ret.aadhaarNumber = decrypt(ret.aadhaarNumber);
             return ret;
         }
     },
     toObject: {
+        getters: true,
         transform: (doc, ret) => {
-            if (ret.panNumber) ret.panNumber = decrypt(ret.panNumber);
-            if (ret.aadhaarNumber) ret.aadhaarNumber = decrypt(ret.aadhaarNumber);
             return ret;
         }
     }

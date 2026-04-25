@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet, Calendar, FileText, Stethoscope, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet, Calendar, FileText, Stethoscope, MessageSquare, CreditCard } from 'lucide-react';
 import { io } from "socket.io-client";
 import toast from 'react-hot-toast';
 import api, { API_BASE_URL } from '../../services/api';
