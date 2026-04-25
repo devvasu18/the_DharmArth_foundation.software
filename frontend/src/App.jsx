@@ -38,6 +38,7 @@ const AdminEventHeaders = lazy(() => import('./components/admin/AdminEventHeader
 const AdminEventVideos = lazy(() => import('./components/admin/AdminEventVideos'));
 const AdminGalleries = lazy(() => import('./components/admin/AdminGalleries'));
 const CommissionReports = lazy(() => import('./components/admin/reports/CommissionReports'));
+const AdminSubscriptions = lazy(() => import('./components/admin/AdminSubscriptions'));
 const Gallery = lazy(() => import('./pages/Gallery'));
 const GalleryDetail = lazy(() => import('./pages/GalleryDetail'));
 const AdminLeads = lazy(() => import('./components/admin/AdminLeads'));
@@ -104,6 +105,7 @@ const router = createBrowserRouter(
         <Route path="delivery" element={<AdminDelivery />} />
         <Route path="dispatch" element={<AdminDispatch />} />
         <Route path="whatsapp" element={<AdminWhatsApp />} />
+        <Route path="subscriptions" element={<AdminSubscriptions />} />
         <Route path="reports/commission" element={<CommissionReports />} />
       </Route>
 

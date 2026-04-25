@@ -21,6 +21,7 @@ const DonationForm = ({ onSuccess }) => {
     const [motivatorName, setMotivatorName] = useState('');
     const [need80G, setNeed80G] = useState(false);
     const [isMotivatorLocked, setIsMotivatorLocked] = useState(false);
+    const [donationType, setDonationType] = useState('one-time'); // 'one-time' or 'monthly'
 
     // Form States
     const [fullName, setFullName] = useState('');
@@ -202,7 +203,8 @@ const DonationForm = ({ onSuccess }) => {
                 motivatorMobile: motivatorMobile || null,
                 referralSource: referralSource || null,
                 panNumber: need80G ? pan : null,
-                aadhaarNumber: need80G ? aadhaar : null
+                aadhaarNumber: need80G ? aadhaar : null,
+                donationType: donationType
             };
 
             // 1. Create Order on Backend
@@ -214,34 +216,49 @@ const DonationForm = ({ onSuccess }) => {
                 amount: orderData.amount,
                 currency: orderData.currency,
                 name: "The DharmArth Foundation",
-                description: "Donation for Social Cause",
-                order_id: orderData.order_id,
+                description: donationType === 'monthly' ? "Monthly Donation Subscription" : "Donation for Social Cause",
+                order_id: orderData.order_id || null,
+                subscription_id: orderData.subscriptionId || null,
                 handler: async (response) => {
                     // 3. Verify Payment on Backend
                     try {
                         setLoading(true);
-                        const verifyPayload = {
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature
-                        };
                         
-                        const { data: verifyData } = await api.post('/payment/verify-payment', verifyPayload);
+                        let verifyPayload, verifyUrl;
+                        
+                        if (donationType === 'monthly') {
+                            verifyUrl = '/payment/verify-subscription';
+                            verifyPayload = {
+                                razorpay_subscription_id: response.razorpay_subscription_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature
+                            };
+                        } else {
+                            verifyUrl = '/payment/verify-payment';
+                            verifyPayload = {
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature
+                            };
+                        }
+                        
+                        const { data: verifyData } = await api.post(verifyUrl, verifyPayload);
                         
                         if (verifyData.success) {
-                            toast.success("Payment Successful!");
+                            toast.success(donationType === 'monthly' ? "Subscription Activated!" : "Payment Successful!");
                             setDonationSuccess({
-                                donationId: orderData.donationId,
+                                donationId: orderData.subscriptionId || orderData.donationId,
                                 amount: finalAmount,
-                                isAlreadyRegistered: orderData.isAlreadyRegistered
+                                isAlreadyRegistered: orderData.isAlreadyRegistered,
+                                type: donationType
                             });
                             if (onSuccess) onSuccess();
                         } else {
-                            toast.error("Payment verification failed.");
+                            toast.error("Verification failed.");
                         }
                     } catch (err) {
                         console.error("Verification error:", err);
-                        toast.error("Payment verification failed. Please contact support if amount was deducted.");
+                        toast.error("Verification failed. Please contact support.");
                     } finally {
                         setLoading(false);
                     }
@@ -493,6 +510,21 @@ const DonationForm = ({ onSuccess }) => {
                     <CreditCard size={28} className="text-primary" />
                     {t('donatePage.title')}
                 </h2>
+
+                <div className="donation-type-toggle">
+                    <button 
+                        className={`type-btn ${donationType === 'one-time' ? 'active' : ''}`}
+                        onClick={() => setDonationType('one-time')}
+                    >
+                        One-time
+                    </button>
+                    <button 
+                        className={`type-btn ${donationType === 'monthly' ? 'active' : ''}`}
+                        onClick={() => setDonationType('monthly')}
+                    >
+                        Monthly (AutoPay)
+                    </button>
+                </div>
 
                 <div className="amount-options">
                     {donationConfig.plans.map((planAmount) => (

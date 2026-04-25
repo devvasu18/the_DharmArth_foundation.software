@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import './UserDashboard.css';
 import PayoutModal from './PayoutModal';
 import OnboardingModal from './OnboardingModal';
+import SubscriptionList from '../components/donation/SubscriptionList';
 
 const UserDashboard = () => {
     const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
@@ -45,6 +46,7 @@ const UserDashboard = () => {
     const [disputeMsg, setDisputeMsg] = useState('');
     const [disputePayoutId, setDisputePayoutId] = useState('');
     const [isDisputeSubmitting, setIsDisputeSubmitting] = useState(false);
+    const [activeTab, setActiveTab] = useState('transactions'); // 'transactions' or 'subscriptions'
 
     // Infinite Scroll States
     const [page, setPage] = useState(1);
@@ -400,15 +402,31 @@ const UserDashboard = () => {
                         </div>
 
 
-                        {/* TRANSACTIONS */}
-                        <motion.div
-                            className="transactions-section"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: 0.2 }}
-                        >
-                            <div className="section-header-row">
-                                <h3 className="section-title">Transaction History</h3>
+                        {/* TABS HEADER */}
+                        <div className="dashboard-tabs-header">
+                            <button 
+                                className={`tab-btn ${activeTab === 'transactions' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('transactions')}
+                            >
+                                <Clock size={18} /> Recent Activity
+                            </button>
+                            <button 
+                                className={`tab-btn ${activeTab === 'subscriptions' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('subscriptions')}
+                            >
+                                <CreditCard size={18} /> My Subscriptions
+                            </button>
+                        </div>
+
+                        {activeTab === 'transactions' ? (
+                            <motion.div
+                                className="transactions-section"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                key="transactions"
+                            >
+                                <div className="section-header-row">
+                                    <h3 className="section-title">Transaction History</h3>
                                 <div className="txn-filters">
                                     <select
                                         className="filter-select"
@@ -594,6 +612,19 @@ const UserDashboard = () => {
                                 </div>
                             )}
                         </motion.div>
+                        ) : (
+                            <motion.div
+                                className="subscriptions-section"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                key="subscriptions"
+                            >
+                                <div className="section-header-row">
+                                    <h3 className="section-title">My Monthly Donations</h3>
+                                </div>
+                                <SubscriptionList />
+                            </motion.div>
+                        )}
                     </>
                 ) : (
                     <div className="dashboard-card" style={{ textAlign: 'center', padding: '4rem' }}>

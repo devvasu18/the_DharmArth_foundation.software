@@ -57,6 +57,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/subscriptions', require('./routes/subscriptionRoutes'));
 
 app.use('/api/events', eventRoutes);
 app.use('/api/event-headers', eventHeaderRoutes);

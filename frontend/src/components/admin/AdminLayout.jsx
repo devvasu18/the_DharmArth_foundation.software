@@ -416,6 +416,10 @@ const AdminLayout = () => {
                         <Wallet size={20} title={isSidebarCollapsed ? "Transactions" : ""} />
                         <span className="admin-link-text">Donations</span>
                     </NavLink>
+                    <NavLink to="/admin/subscriptions" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
+                        <CreditCard size={20} title={isSidebarCollapsed ? "Subscriptions" : ""} />
+                        <span className="admin-link-text">Monthly Subscriptions</span>
+                    </NavLink>
                     <NavLink to="/admin/payouts" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <Wallet size={20} title={isSidebarCollapsed ? "Payouts" : ""} />
                         <span className="admin-link-text">Payouts</span>

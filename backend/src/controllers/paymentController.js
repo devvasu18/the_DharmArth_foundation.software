@@ -114,6 +114,47 @@ exports.verifyPayment = async (req, res) => {
 };
 
 /**
+ * @desc Verify Subscription Signature (First Payment)
+ * @route POST /api/payment/verify-subscription
+ */
+exports.verifySubscription = async (req, res) => {
+    try {
+        const { razorpay_subscription_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+        if (!razorpay_subscription_id || !razorpay_payment_id || !razorpay_signature) {
+            return res.status(400).json({ success: false, message: 'Missing required parameters' });
+        }
+
+        // HMAC_SHA256(payment_id + "|" + subscription_id, key_secret)
+        const body = razorpay_payment_id + "|" + razorpay_subscription_id;
+        const expectedSignature = crypto
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+            .update(body.toString())
+            .digest('hex');
+
+        const isAuthentic = expectedSignature === razorpay_signature;
+
+        if (isAuthentic) {
+            const subscriptionService = require('../services/subscriptionService');
+            const io = req.app.get('io');
+            
+            // Activate and process first payment
+            await subscriptionService.handleSubscriptionCharged(razorpay_subscription_id, razorpay_payment_id, {
+                payment: { entity: { id: razorpay_payment_id, amount: 0, order_id: null } }, // Service will fetch real amount if needed
+                subscription: { entity: { id: razorpay_subscription_id } }
+            }, io);
+
+            res.status(200).json({ success: true, message: 'Subscription verified and activated' });
+        } else {
+            res.status(400).json({ success: false, message: 'Signature mismatch. Subscription verification failed.' });
+        }
+    } catch (error) {
+        console.error('Error verifying subscription:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+/**
  * @desc Razorpay Webhook Handler (Final Source of Truth)
  * @route POST /api/payment/webhook
  */
@@ -145,9 +186,17 @@ exports.handleWebhook = async (req, res) => {
             const order_id = paymentDetails.order_id;
             const payment_id = paymentDetails.id || (payload.payment ? payload.payment.entity.id : null);
 
-            // Find payment by order_id
-            const payment = await Payment.findOne({ order_id });
+            // Check if it's a subscription payment (subscriptions don't have an order_id in some events, but have subscription_id)
+            if (paymentDetails.subscription_id) {
+                const subscriptionService = require('../services/subscriptionService');
+                const io = req.app.get('io');
+                await subscriptionService.handleSubscriptionCharged(paymentDetails.subscription_id, payment_id, payload, io);
+                return res.status(200).json({ status: 'ok' });
+            }
 
+            // Find payment by order_id (for one-time orders)
+            const payment = await Payment.findOne({ order_id });
+            // ... existing logic for one-time payments ...
             if (payment) {
                 // Idempotency check: only update if not already paid
                 if (payment.status !== 'paid') {
@@ -174,9 +223,30 @@ exports.handleWebhook = async (req, res) => {
             } else {
                 console.warn(`Payment record not found for Order ID: ${order_id}`);
             }
+        } else if (event === 'subscription.charged') {
+            const payment_id = payload.payment.entity.id;
+            const subscription_id = payload.subscription.entity.id;
+            const subscriptionService = require('../services/subscriptionService');
+            const io = req.app.get('io');
+            await subscriptionService.handleSubscriptionCharged(subscription_id, payment_id, payload, io);
+        } else if (event.startsWith('subscription.')) {
+            const subscription_id = payload.subscription.entity.id;
+            const status = payload.subscription.entity.status;
+            const subscriptionService = require('../services/subscriptionService');
+            await subscriptionService.handleSubscriptionStatusUpdate(subscription_id, status);
         } else if (event === 'payment.failed') {
-             const order_id = payload.payment.entity.order_id;
-             await Payment.findOneAndUpdate({ order_id }, { status: 'failed', raw_webhook_data: req.body });
+             const paymentDetails = payload.payment.entity;
+             const order_id = paymentDetails.order_id;
+             const subscription_id = paymentDetails.subscription_id;
+
+             if (subscription_id) {
+                 // Mark subscription as having a failing payment if needed
+                 console.log(`Payment failed for subscription: ${subscription_id}`);
+             }
+
+             if (order_id) {
+                await Payment.findOneAndUpdate({ order_id }, { status: 'failed', raw_webhook_data: req.body });
+             }
         }
 
         res.status(200).json({ status: 'ok' });

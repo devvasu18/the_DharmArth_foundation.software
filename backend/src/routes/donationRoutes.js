@@ -6,7 +6,7 @@ const Notification = require('../models/Notification');
 const { processDonationCommission } = require('../services/commissionService');
 const certificateService = require('../services/certificateService');
 const whatsappService = require('../services/whatsappService');
-const { protect } = require('../middlewares/authMiddleware');
+const { protect, optionalProtect } = require('../middlewares/authMiddleware');
 const razorpay = require('../config/razorpay');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
@@ -61,7 +61,7 @@ router.get('/my-donations', protect, async (req, res) => {
 
 // @desc    Initiate Donation (Razorpay Order)
 // @route   POST /api/donate
-router.post('/', donationLimiter, async (req, res) => {
+router.post('/', donationLimiter, optionalProtect, async (req, res) => {
     const { sanitizeString } = require('../utils/sanitizer');
     
     const {
@@ -119,6 +119,25 @@ router.post('/', donationLimiter, async (req, res) => {
 
         if (donationType === 'monthly') {
             const Subscription = require('../models/Subscription');
+            const { getOrCreatePlan } = require('../utils/razorpayUtils');
+
+            // 1. Get or Create Razorpay Plan
+            const planId = await getOrCreatePlan(amount);
+
+            // 2. Create Razorpay Subscription
+            const razorpaySubscription = await razorpay.subscriptions.create({
+                plan_id: planId,
+                total_count: 60, // 5 years max, or whatever your business logic dictates
+                quantity: 1,
+                customer_notify: 1,
+                // Add metadata for webhook tracking
+                notes: {
+                    donorMobile,
+                    motivatorMobile: isSelfReferral ? '' : (motivatorMobile || '')
+                }
+            });
+
+            // 3. Store in DB as 'created' (waiting for first payment)
             const subscription = await Subscription.create({
                 amount,
                 donorName,
@@ -127,78 +146,28 @@ router.post('/', donationLimiter, async (req, res) => {
                 motivatorMobile: isSelfReferral ? null : motivatorMobile,
                 level1UserId: isSelfReferral ? null : level1UserId,
                 level2UserId: isSelfReferral ? null : level2UserId,
-                status: 'active',
+                status: 'created',
                 is80G: !!(panNumber && panNumber.trim().length > 0),
                 panNumber,
                 aadhaarNumber,
                 address,
                 city,
                 state,
-                nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                planId: planId,
+                subscriptionId: razorpaySubscription.id,
+                totalCycles: 60,
+                donorUserId: req.user ? req.user._id : null
             });
-
-            // For subscriptions, we also create the FIRST donation record immediately
-            const donation = await Donation.create({
-                amount,
-                donorName,
-                donorMobile,
-                donorEmail,
-                motivatorMobile: isSelfReferral ? null : motivatorMobile,
-                status: 'success',
-                transactionId: `MOCK_SUB_FIRST_${Date.now()}`,
-                level1UserId: isSelfReferral ? null : level1UserId,
-                level2UserId: isSelfReferral ? null : level2UserId,
-                is80G: !!(panNumber && panNumber.trim().length > 0),
-                panNumber,
-                aadhaarNumber,
-                address,
-                city,
-                state
-            });
-
-            // Handle commission and certificates for first payment
-            if (level1UserId && !isSelfReferral) {
-                await processDonationCommission(amount, motivatorMobile, donation._id, donorName, donorMobile, level1UserId);
-            }
-            if (donation.is80G) await certificateService.createCertificate(donation);
-
-            // 5. Send WhatsApp Notification
-            await whatsappService.sendDonationNotification(donorMobile, donorName, amount);
-
-            // 6. Send Email Notification if available
-            if (donorEmail) {
-                await whatsappService.sendDonationEmail(donorEmail, donorName, amount);
-            }
-            
-            // 7. Sync info to User Profile (Update even if not logged in, identified by mobile)
-            try {
-                let user = await User.findOne({ mobile: donorMobile });
-                if (user) {
-                    user.email = donorEmail || user.email;
-                    user.address = address || user.address;
-                    user.city = city || user.city;
-                    user.state = state || user.state;
-                    user.lastMotivatorMobile = motivatorMobile || user.lastMotivatorMobile;
-                } else {
-                    user = new User({
-                        name: donorName,
-                        mobile: donorMobile,
-                        email: donorEmail || undefined,
-                        address,
-                        city,
-                        state,
-                        lastMotivatorMobile: motivatorMobile
-                    });
-                }
-                await user.save(); // Triggers pre('save') for referralCode
-            } catch (err) {
-                console.error("User Profile Sync (Monthly) Failed:", err);
-            }
 
             return res.status(201).json({
-                message: 'Subscription Started Successfully',
-                subscriptionId: subscription._id,
-                donationId: donation._id
+                success: true,
+                message: 'Monthly Subscription Initiated',
+                subscriptionId: razorpaySubscription.id,
+                amount: Math.round(amount * 100),
+                currency: 'INR',
+                donorName,
+                donorEmail,
+                donorMobile
             });
         }
 

@@ -33,6 +33,23 @@ const protect = async (req, res, next) => {
     }
 };
 
+// Populate user if token exists, but don't fail if not
+const optionalProtect = async (req, res, next) => {
+    if (
+        req.headers.authorization &&
+        req.headers.authorization.startsWith('Bearer')
+    ) {
+        try {
+            const token = req.headers.authorization.split(' ')[1];
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            req.user = await User.findById(decoded.id).select('-password');
+        } catch (error) {
+            // Silently fail for optional protect
+        }
+    }
+    next();
+};
+
 // Check for dynamic permissions
 // Usage: checkPermission('User Management', 'create')
 const checkPermission = (moduleName, action) => {
@@ -89,4 +106,4 @@ const adminOnly = async (req, res, next) => {
     }
 };
 
-module.exports = { protect, checkPermission, adminOnly };
+module.exports = { protect, optionalProtect, checkPermission, adminOnly };
