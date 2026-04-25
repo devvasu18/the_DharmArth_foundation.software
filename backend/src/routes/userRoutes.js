@@ -146,6 +146,7 @@ router.get('/profile', protect, async (req, res) => {
 // @route   POST /api/users/profile/addresses
 // @access  Private
 router.post('/profile/addresses', protect, async (req, res) => {
+    // Owner check is implicit because we use req.user._id
     try {
         const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ message: 'User not found' });
@@ -308,6 +309,7 @@ router.post('/assign-role', protect, checkPermission('Role Management', 'edit'),
 // @route   PUT /api/users/language
 // @access  Private
 router.put('/language', protect, async (req, res) => {
+    // Owner check implicit via req.user._id
     const { language } = req.body;
     console.log("Updating language for user:", req.user?._id, "to", language);
     if (!['en', 'hi'].includes(language)) {
@@ -334,6 +336,7 @@ router.put('/language', protect, async (req, res) => {
 // @route   PUT /api/users/become-motivator
 // @access  Private
 router.put('/become-motivator', protect, async (req, res) => {
+    // Owner check implicit via req.user._id
     try {
         const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ message: 'User not found' });

@@ -48,16 +48,23 @@ router.post('/request', protect, async (req, res) => {
             return res.status(400).json({ message: 'Please update your Payout Details (Bank or UPI) before requesting payout' });
         }
 
+        // ATOMIC DEDUCTION: This prevents Target #6 (Race Conditions)
+        const updatedWallet = await Wallet.findOneAndUpdate(
+            { user: req.user._id, balance: { $gte: withdrawAmount } },
+            { $inc: { balance: -withdrawAmount } },
+            { new: true }
+        );
+
+        if (!updatedWallet) {
+            return res.status(400).json({ message: 'Insufficient balance or concurrent transaction in progress. Please try again.' });
+        }
+
         const payoutRequest = await PayoutRequest.create({
             user: req.user._id,
             amount: withdrawAmount,
-            walletBalanceAtRequest: wallet.balance,
+            walletBalanceAtRequest: updatedWallet.balance + withdrawAmount, // original balance
             payoutDetails: user.payoutCredentials
         });
-
-        // Deduct only the requested amount
-        wallet.balance -= withdrawAmount;
-        await wallet.save();
 
         // Log transaction as PENDING
         await Transaction.create({
@@ -225,11 +232,12 @@ router.put('/:id', protect, checkPermission('Transaction Management', 'edit'), u
             await txn.save();
         }
 
-        // If REJECTED, refund the wallet
+        // If REJECTED, refund the wallet ATOMICALLY
         if (status === 'rejected') {
-            const wallet = await Wallet.findOne({ user: request.user });
-            wallet.balance += request.amount;
-            await wallet.save();
+            await Wallet.findOneAndUpdate(
+                { user: request.user },
+                { $inc: { balance: request.amount } }
+            );
 
             // Log refund
             await Transaction.create({

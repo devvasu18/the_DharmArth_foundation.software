@@ -6,11 +6,13 @@ const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
+        maxlength: 100,
     },
     email: {
         type: String,
         unique: true,
-        sparse: true // Allows null/unique
+        sparse: true, // Allows null/unique
+        maxlength: 100,
     },
     mobile: {
         type: String,
@@ -47,11 +49,11 @@ const userSchema = new mongoose.Schema({
         default: false
     },
     payoutCredentials: {
-        bankName: String,
-        accountHolder: String,
-        accountNumber: String,
-        ifscCode: String,
-        upiId: String,
+        bankName: { type: String, maxlength: 100 },
+        accountHolder: { type: String, maxlength: 100 },
+        accountNumber: { type: String, maxlength: 100 },
+        ifscCode: { type: String, maxlength: 50 },
+        upiId: { type: String, maxlength: 100 },
         isVerified: { type: Boolean, default: false }
     },
     language: {

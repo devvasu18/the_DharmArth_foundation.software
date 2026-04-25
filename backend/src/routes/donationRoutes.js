@@ -9,6 +9,16 @@ const whatsappService = require('../services/whatsappService');
 const { protect } = require('../middlewares/authMiddleware');
 const razorpay = require('../config/razorpay');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
+
+// Rate limiter for initiating donations: 5 attempts per hour per IP
+const donationLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, 
+    message: { message: 'Too many donation attempts from this IP, please try again after an hour.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 // @desc    Get All Donations (Admin)
 // @route   GET /api/donate
@@ -49,22 +59,31 @@ router.get('/my-donations', protect, async (req, res) => {
     }
 });
 
-// @desc    Initiate Donation (Mock Payment)
+// @desc    Initiate Donation (Razorpay Order)
 // @route   POST /api/donate
-router.post('/', async (req, res) => {
+router.post('/', donationLimiter, async (req, res) => {
+    const { sanitizeString } = require('../utils/sanitizer');
+    
     const {
         amount,
-        donorName,
+        donorName: rawName,
         donorMobile,
-        donorEmail,
+        donorEmail: rawEmail,
         motivatorMobile,
         referralSource,
         panNumber,
         aadhaarNumber,
-        address,
-        city,
-        state
+        address: rawAddress,
+        city: rawCity,
+        state: rawState
     } = req.body;
+
+    // Sanitize strings
+    const donorName = sanitizeString(rawName, 50);
+    const donorEmail = sanitizeString(rawEmail, 100);
+    const address = sanitizeString(rawAddress, 200);
+    const city = sanitizeString(rawCity, 50);
+    const state = sanitizeString(rawState, 50);
 
     // Validation
     if (!amount || !donorName || !donorMobile) {

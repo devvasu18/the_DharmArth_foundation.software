@@ -80,4 +80,13 @@ const checkPermission = (moduleName, action) => {
     };
 };
 
-module.exports = { protect, checkPermission };
+// High-level admin check (SuperAdmin or any Staff with roles)
+const adminOnly = async (req, res, next) => {
+    if (req.user && (req.user.isSuperAdmin || (req.user.roles && req.user.roles.length > 0))) {
+        next();
+    } else {
+        res.status(403).json({ message: 'Access denied: Admin only' });
+    }
+};
+
+module.exports = { protect, checkPermission, adminOnly };

@@ -8,6 +8,7 @@ const app = express();
 
 // Middleware
 app.use(express.json({
+    limit: '10kb', // Prevent "Billion Laughs" / Large Payload DoS
     verify: (req, res, buf) => {
         req.rawBody = buf;
     }

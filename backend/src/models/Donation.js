@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 const { encrypt, decrypt } = require('../utils/security');
 
 const donationSchema = new mongoose.Schema({
-    donorName: { type: String, required: true },
-    donorMobile: { type: String, required: true },
-    donorEmail: { type: String },
-    address: { type: String },
-    city: { type: String },
-    state: { type: String },
+    donorName: { type: String, required: true, maxlength: 100 },
+    donorMobile: { type: String, required: true, maxlength: 20 },
+    donorEmail: { type: String, maxlength: 100 },
+    address: { type: String, maxlength: 500 },
+    city: { type: String, maxlength: 100 },
+    state: { type: String, maxlength: 100 },
     amount: { type: Number, required: true },
     status: { type: String, enum: ['pending', 'success', 'failed'], default: 'pending' },
 
@@ -25,7 +25,7 @@ const donationSchema = new mongoose.Schema({
         set: encrypt
     },
 
-    transactionId: { type: String }, // Gateway ID (payment_id)
+    transactionId: { type: String, unique: true, sparse: true }, // Gateway ID (payment_id) - UNIQUE to prevent double processing
     orderId: { type: String, index: true }, // Razorpay Order ID
     is80G: { type: Boolean, default: false, index: true },
     receiptNumber: { type: String, unique: true, sparse: true },

@@ -11,7 +11,12 @@ const loginUser = async (req, res) => {
     try {
         const user = await User.findOne({ mobile }).populate('roles').populate('referredBy', 'name mobile');
 
-        if (user && (await user.matchPassword(password))) {
+        // NORMALIZING RESPONSE TIME: We check password even if user is not found
+        // This prevents Timing Attacks (Target #5)
+        const dummyPassword = "$2a$10$abcdefghijklmnopqrstuv"; // A fake hash
+        const isValid = user ? await user.matchPassword(password) : await require('bcryptjs').compare(password, dummyPassword);
+
+        if (user && isValid) {
             if (user.isSuspended) {
                 return res.status(403).json({ message: 'Account suspended. Please contact Support Team.' });
             }
@@ -34,6 +39,7 @@ const loginUser = async (req, res) => {
                 token: generateToken(user._id),
             });
         } else {
+            // GENERIC MESSAGE: Prevents User Enumeration (Target #4)
             res.status(401).json({ message: 'Invalid mobile or password' });
         }
     } catch (error) {
@@ -63,7 +69,9 @@ const registerUser = async (req, res) => {
                     { referralCode: String(req.body.referralCode).toUpperCase() }
                 ]
             });
-            if (referrer) {
+            
+            // PREVENT RECURSIVE/SELF REFERRAL (Target #1)
+            if (referrer && referrer.mobile !== mobile) {
                 referredBy = referrer._id;
             }
         }

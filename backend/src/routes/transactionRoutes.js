@@ -5,11 +5,12 @@ const Donation = require('../models/Donation');
 const Transaction = require('../models/Transaction');
 const Wallet = require('../models/Wallet');
 
+const { sanitizeString, escapeRegex } = require('../utils/sanitizer');
+const { protect, adminOnly } = require('../middlewares/authMiddleware');
+
 // @desc    Get Transactions Dashboard Data (Donations)
 // @route   GET /api/transactions/dashboard
-// @desc    Get Transactions Dashboard Data (Donations)
-// @route   GET /api/transactions/dashboard
-router.get('/dashboard', async (req, res) => {
+router.get('/dashboard', protect, adminOnly, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
@@ -52,7 +53,7 @@ router.get('/dashboard', async (req, res) => {
             const legacyMobileConditions = selectedUsers
                 .map(u => (u.mobile || '').replace(/\D/g, '').slice(-10))
                 .filter(m => m.length >= 10)
-                .map(m => ({ motivatorMobile: { $regex: new RegExp(m, 'i') } }));
+                .map(m => ({ motivatorMobile: { $regex: new RegExp(escapeRegex(m), 'i') } }));
 
             andConditions.push({
                 $or: [
@@ -92,7 +93,7 @@ router.get('/dashboard', async (req, res) => {
 
             if (searchUser) {
                 const cleanUserMobile = (searchUser.mobile || '').replace(/\D/g, '').slice(-10);
-                const userMobileRegex = new RegExp(cleanUserMobile, 'i');
+                const userMobileRegex = new RegExp(escapeRegex(cleanUserMobile), 'i');
 
                 // 1. Commission Conditions (User is Motivator or L2)
                 const commissionConditions = [];
@@ -109,7 +110,7 @@ router.get('/dashboard', async (req, res) => {
                 const downlineConditions = downlineUsers
                     .map(u => (u.mobile || '').replace(/\D/g, '').slice(-10))
                     .filter(m => m.length >= 10)
-                    .map(m => ({ motivatorMobile: { $regex: new RegExp(m, 'i') } }));
+                    .map(m => ({ motivatorMobile: { $regex: new RegExp(escapeRegex(m), 'i') } }));
 
                 if (downlineConditions.length > 0) {
                     commissionConditions.push(...downlineConditions);
