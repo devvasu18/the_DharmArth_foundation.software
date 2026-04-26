@@ -511,12 +511,12 @@
 
     .fixed-bottom-bar {
         width: 92%;
-        bottom: 1rem;
-        padding: 0;
+        bottom: calc(65px + 1rem) !important;
+        padding: 0.75rem 1rem !important;
     }
 
     .donation-container {
-        padding-bottom: 85px;
+        padding-bottom: 150px;
     }
 }
 

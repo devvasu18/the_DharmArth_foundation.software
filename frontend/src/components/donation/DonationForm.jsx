@@ -209,10 +209,10 @@ const DonationForm = ({ onSuccess }) => {
 
             // 1. Create Order on Backend
             const { data: orderData } = await api.post('/donate', payload);
-            
+
             // 2. Configure Razorpay Options
             const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                 amount: orderData.amount,
                 currency: orderData.currency,
                 name: "The DharmArth Foundation",
@@ -223,9 +223,9 @@ const DonationForm = ({ onSuccess }) => {
                     // 3. Verify Payment on Backend
                     try {
                         setLoading(true);
-                        
+
                         let verifyPayload, verifyUrl;
-                        
+
                         if (donationType === 'monthly') {
                             verifyUrl = '/payment/verify-subscription';
                             verifyPayload = {
@@ -241,9 +241,9 @@ const DonationForm = ({ onSuccess }) => {
                                 razorpay_signature: response.razorpay_signature
                             };
                         }
-                        
+
                         const { data: verifyData } = await api.post(verifyUrl, verifyPayload);
-                        
+
                         if (verifyData.success) {
                             toast.success(donationType === 'monthly' ? "Subscription Activated!" : "Payment Successful!");
                             setDonationSuccess({
@@ -512,13 +512,13 @@ const DonationForm = ({ onSuccess }) => {
                 </h2>
 
                 <div className="donation-type-toggle">
-                    <button 
+                    <button
                         className={`type-btn ${donationType === 'monthly' ? 'active' : ''}`}
                         onClick={() => setDonationType('monthly')}
                     >
                         Monthly (AutoPay)
                     </button>
-                    <button 
+                    <button
                         className={`type-btn ${donationType === 'one-time' ? 'active' : ''}`}
                         onClick={() => setDonationType('one-time')}
                     >
@@ -617,7 +617,7 @@ const DonationForm = ({ onSuccess }) => {
 
                     <div className="referral-box">
                         <div className="donation-input-group mb-0">
-                            <label className="input-label">{t('donatePage.motivatedBy')} {isMotivatorLocked ? '' : '(Mobile Number)'}</label>
+                            <label className="input-label">{t('donatePage.motivatedBy')} {isMotivatorLocked ? '' : '(Mobile Number/id)'}</label>
                             {isMotivatorLocked ? (
                                 <div className="motivator-profile-chip verified">
                                     <div className="motivator-avatar">
@@ -642,7 +642,7 @@ const DonationForm = ({ onSuccess }) => {
                                             placeholder="Mobile Number or Referral Code"
                                             value={motivatorMobile}
                                             onChange={(e) => {
-                                                const val = e.target.value.toUpperCase();
+                                                const val = e.target.value.toUpperCase().replace(/\s/g, '');
                                                 if (val.length <= 15) setMotivatorMobile(val);
                                             }}
                                             maxLength={15}
@@ -754,7 +754,7 @@ const DonationForm = ({ onSuccess }) => {
                     disabled={!isFormValid || loading}
                 >
                     <span className="btn-content">
-                        {loading ? t('donatePage.processing') : `${t('donatePage.donateBtn')} ₹${(customAmount ? Number(customAmount) : amount).toLocaleString()} ${donationType === 'monthly' ? '(Monthly)' : ''}`}
+                        {loading ? t('donatePage.processing') : `${t('donatePage.donateBtn')} ₹${(customAmount ? Number(customAmount) : amount).toLocaleString()}`}
                     </span>
                 </button>
 
