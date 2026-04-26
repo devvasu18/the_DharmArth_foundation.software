@@ -379,6 +379,11 @@ const UserDashboard = () => {
                                     Share this personalized link with your network. When someone donates using your link, you receive a <strong>10% commission</strong> instantly in your wallet!
                                 </p>
 
+                                <div className="referral-code-label">
+                                    <span>Referral Code: </span>
+                                    <strong>{user?.mobile} / {user?.referralCode}</strong>
+                                </div>
+
                                 <div className="share-input-group">
                                     <span className="share-link">{shareLink}</span>
                                     <button onClick={handleCopy} className="copy-btn">

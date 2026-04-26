@@ -138,4 +138,27 @@ const checkReferral = async (req, res) => {
     }
 };
 
-module.exports = { loginUser, registerUser, checkReferral };
+// @desc    Check user status (exists/claimed)
+// @route   POST /api/auth/check-status
+// @access  Public
+const checkUserStatus = async (req, res) => {
+    const { mobile } = req.body;
+
+    try {
+        const user = await User.findOne({ mobile });
+
+        if (!user) {
+            return res.json({ exists: false });
+        }
+
+        res.json({
+            exists: true,
+            hasPassword: !!user.password,
+            name: user.name
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { loginUser, registerUser, checkReferral, checkUserStatus };

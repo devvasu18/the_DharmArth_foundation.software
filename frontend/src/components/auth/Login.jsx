@@ -83,17 +83,20 @@ const Login = () => {
     };
 
     const handleInputChange = (e) => {
-        const val = e.target.value;
+        let val = e.target.value;
 
         if (loginMethod === 'password') {
-            // Strict Mobile: Numbers only, max 10
-            if (/^\d*$/.test(val) && val.length <= 10) {
-                setMobile(val);
+            // Strict Mobile: Clean input and take up to 10 digits
+            const numericVal = val.replace(/\D/g, '');
+            if (numericVal.length <= 10) {
+                setMobile(numericVal);
             }
         } else {
-            // OTP (Email/Mobile): If numeric, restrict to 10. If mixed/alpha, allow.
-            if (/^\d*$/.test(val)) {
-                if (val.length <= 10) setMobile(val);
+            // OTP (Email/Mobile): If looks like mobile (numeric), clean and restrict.
+            // If it has alpha chars, it's likely an email, allow as is.
+            if (/^\d*$/.test(val.replace(/\s/g, ''))) {
+                const numericVal = val.replace(/\D/g, '');
+                if (numericVal.length <= 10) setMobile(numericVal);
             } else {
                 setMobile(val);
             }

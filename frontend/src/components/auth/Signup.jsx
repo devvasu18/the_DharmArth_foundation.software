@@ -15,10 +15,8 @@ const Signup = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [referralCode, setReferralCode] = useState('');
-    const [referrerName, setReferrerName] = useState('');
-    const [referralError, setReferralError] = useState('');
-    const [verifyingReferral, setVerifyingReferral] = useState(false);
+    const [isClaiming, setIsClaiming] = useState(false);
+    const [verifyingStatus, setVerifyingStatus] = useState(false);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -34,10 +32,15 @@ const Signup = () => {
             return;
         }
 
+        if (name.trim().length < 4) {
+            setError("Full name must be at least 4 characters");
+            return;
+        }
+
         setError('');
         setLoading(true);
         try {
-            const { data } = await api.post('/auth/register', { name, mobile, email, password, referralCode });
+            const { data } = await api.post('/auth/register', { name, mobile, email, password });
 
             // Automatically login or redirect
             // For now, let's login (save token)
@@ -62,37 +65,34 @@ const Signup = () => {
         toast.info("Google Signup Logic initiated! (Requires Google Cloud Credentials setup)");
     };
 
-    const handleMobileChange = (e) => {
-        const val = e.target.value;
-        if (/^\d*$/.test(val) && val.length <= 10) {
+    const handleMobileChange = async (e) => {
+        const val = e.target.value.replace(/\D/g, '');
+        if (val.length <= 10) {
             setMobile(val);
-        }
-    };
-
-    const handleReferralChange = async (e) => {
-        const val = e.target.value;
-        if (/^\d*$/.test(val) && val.length <= 10) {
-            setReferralCode(val);
-            setReferrerName('');
-            setReferralError('');
+            setError('');
+            setIsClaiming(false);
 
             if (val.length === 10) {
-                setVerifyingReferral(true);
+                setVerifyingStatus(true);
                 try {
-                    const { data } = await api.post('/auth/check-referral', { referralCode: val });
-                    if (data.isValid) {
-                        setReferrerName(data.name);
-                        setReferralError('');
+                    const { data } = await api.post('/auth/check-status', { mobile: val });
+                    if (data.exists) {
+                        if (data.hasPassword) {
+                            setError('User already exists. Please login.');
+                        } else {
+                            setIsClaiming(true);
+                            if (data.name) setName(data.name);
+                        }
                     }
                 } catch (err) {
-                    setReferralError('Referral code invalid or user not found');
-                    setReferrerName('');
+                    console.error("Status check failed", err);
                 } finally {
-                    setVerifyingReferral(false);
+                    setVerifyingStatus(false);
                 }
             }
         }
     };
+
 
     return (
         <>
@@ -108,6 +108,22 @@ const Signup = () => {
 
                             {/* ERROR MESSAGE */}
                             {error && <div style={{ color: 'red', marginBottom: '10px', fontSize: '0.9rem' }}>{error}</div>}
+                            
+                            {isClaiming && (
+                                <div style={{ 
+                                    background: 'rgba(13, 170, 188, 0.1)', 
+                                    padding: '10px', 
+                                    borderRadius: '8px', 
+                                    marginBottom: '15px', 
+                                    fontSize: '0.85rem',
+                                    border: '1px solid var(--primary)',
+                                    color: '#0d7a8c'
+                                }}>
+                                    <strong>Account Found!</strong> We found your previous donations. Please create a password to secure your account.
+                                </div>
+                            )}
+
+                            {verifyingStatus && <div style={{ color: '#666', fontSize: '0.75rem', marginBottom: '10px' }}>Checking mobile status...</div>}
 
                             <label className="input-label" style={{ color: 'black' }}>
                                 Full Name *
@@ -117,7 +133,15 @@ const Signup = () => {
                                 className="input-field"
                                 placeholder="Enter Full Name"
                                 value={name}
-                                onChange={(e) => setName(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setName(val);
+                                    if (val.trim().length > 0 && val.trim().length < 4) {
+                                        setError('Full name must be at least 4 characters');
+                                    } else {
+                                        setError('');
+                                    }
+                                }}
                             />
 
                             <label className="input-label" style={{ color: 'black', marginTop: '1rem' }}>
@@ -172,31 +196,6 @@ const Signup = () => {
                                 </button>
                             </div>
 
-                            <label className="input-label" style={{ color: 'black', marginTop: '1rem' }}>
-                                Referral Code (Optional)
-                            </label>
-                            <input
-                                type="text"
-                                className="input-field"
-                                placeholder="Enter Referrer Mobile"
-                                value={referralCode}
-                                onChange={handleReferralChange}
-                            />
-                            {verifyingReferral && <div style={{ color: '#666', fontSize: '0.8rem', marginTop: '-15px', marginBottom: '10px' }}>Verifying...</div>}
-                            {referrerName && (
-                                <div className="motivator-profile-chip verified">
-                                    <div className="motivator-avatar">
-                                        <User size={24} />
-                                    </div>
-                                    <div className="motivator-info">
-                                        <span className="motivator-name">{referrerName}</span>
-                                        <span className="motivator-status">
-                                            <BadgeCheck size={16} fill="var(--primary)" color="white" /> Verified Referrer
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-                            {referralError && <span className="error-text">{referralError}</span>}
 
                             {/* ACTION BUTTON */}
                             <button
@@ -205,7 +204,7 @@ const Signup = () => {
                                 onClick={handleSignup}
                                 disabled={loading}
                             >
-                                {loading ? 'Creating Account...' : 'Sign Up'}
+                                {loading ? 'Creating Account...' : (isClaiming ? 'Claim Account' : 'Sign Up')}
                             </button>
 
                             {/* TOGGLE TO LOGIN */}
@@ -227,8 +226,11 @@ const Signup = () => {
             <SuccessModal
                 isOpen={showSuccessModal}
                 onClose={handleCloseSuccessModal}
-                title="Registration Successful!"
-                message={`Welcome ${name}! Your account has been successfully created. You can now start donating or fundraising.`}
+                title={isClaiming ? "Account Claimed!" : "Registration Successful!"}
+                message={isClaiming 
+                    ? `Welcome back ${name}! Your account has been secured and your previous donations are now linked.`
+                    : `Welcome ${name}! Your account has been successfully created. You can now start donating or fundraising.`
+                }
                 buttonText="Go to Dashboard"
             />
         </>

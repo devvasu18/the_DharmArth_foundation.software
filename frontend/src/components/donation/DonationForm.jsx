@@ -568,12 +568,21 @@ const DonationForm = ({ onSuccess }) => {
 
                         <input
                             type="text"
-                            className="form-control"
+                            className={`form-control ${errors.name ? 'error-border' : ''}`}
                             placeholder="Ex. Raghu Kumar"
                             value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setFullName(val);
+                                if (val.trim().length > 0 && val.trim().length < 4) {
+                                    setErrors(prev => ({ ...prev, name: 'Name must be at least 4 characters' }));
+                                } else {
+                                    setErrors(prev => ({ ...prev, name: '' }));
+                                }
+                            }}
                         />
                     </div>
+                    {errors.name && <small className="error-text" style={{ color: 'red', display: 'block', marginTop: '5px' }}>{errors.name}</small>}
 
                     <div className="donation-input-group">
                         <label className="input-label">{t('donatePage.mobile')}</label>
@@ -585,8 +594,8 @@ const DonationForm = ({ onSuccess }) => {
                                 placeholder="9876543210"
                                 value={mobile}
                                 onChange={(e) => {
-                                    const val = e.target.value;
-                                    if (/^\d*$/.test(val) && val.length <= 10) setMobile(val);
+                                    const val = e.target.value.replace(/\D/g, '');
+                                    if (val.length <= 10) setMobile(val);
                                 }}
                                 maxLength={10}
                             />
