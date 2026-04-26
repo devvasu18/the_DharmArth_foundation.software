@@ -12,8 +12,13 @@ export const ConfirmProvider = ({ children }) => {
     const resolveRef = useRef(null);
 
     const showConfirm = (title, msg) => {
-        setTitle(title);
-        setMessage(msg || '');
+        if (!msg) {
+            setTitle('Confirm Action');
+            setMessage(title);
+        } else {
+            setTitle(title);
+            setMessage(msg);
+        }
         setType('confirm');
         setIsOpen(true);
         return new Promise((resolve) => {
@@ -22,8 +27,13 @@ export const ConfirmProvider = ({ children }) => {
     };
 
     const showAlert = (title, msg) => {
-        setTitle(title);
-        setMessage(msg || '');
+        if (!msg) {
+            setTitle('Notification');
+            setMessage(title);
+        } else {
+            setTitle(title);
+            setMessage(msg);
+        }
         setType('alert');
         setIsOpen(true);
         return new Promise((resolve) => {
