@@ -58,6 +58,9 @@ const UserDashboard = () => {
     const [isL1ModalOpen, setIsL1ModalOpen] = useState(false);
     const [l1DonorsList, setL1DonorsList] = useState([]);
     const [isLoadingL1, setIsLoadingL1] = useState(false);
+    const [l1FilterMonth, setL1FilterMonth] = useState(new Date().getMonth() + 1);
+    const [l1FilterYear, setL1FilterYear] = useState(new Date().getFullYear());
+    const [l1Summary, setL1Summary] = useState({ lifetimeEarning: 0, prevMonthEarning: 0 });
 
     // Fetch initial profile, balance and stats
     useEffect(() => {
@@ -241,14 +244,16 @@ const UserDashboard = () => {
         }
     };
 
-    const fetchL1Donors = async () => {
+    const fetchL1Donors = async (m = l1FilterMonth, y = l1FilterYear) => {
         setIsLoadingL1(true);
         setIsL1ModalOpen(true);
         try {
-            const res = await api.get('/wallet/l1-donors');
-            setL1DonorsList(res.data);
+            const res = await api.get(`/wallet/l1-donors?month=${m}&year=${y}`);
+            setL1DonorsList(res.data.donors);
+            setL1Summary(res.data.summary);
         } catch (error) {
-            toast.error("Failed to load L1 donors list");
+            console.error("Error fetching L1 donors", error);
+            toast.error("Failed to load L1 donors");
             setIsL1ModalOpen(false);
         } finally {
             setIsLoadingL1(false);
@@ -847,15 +852,66 @@ const UserDashboard = () => {
                         >
                             <button className="payout-modal-close" onClick={() => setIsL1ModalOpen(false)}><X size={24} /></button>
                             
-                            <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)' }}>
+                            <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)', paddingBottom: '1.5rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
                                     <User size={28} color="white" />
-                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>L1 Donors</h2>
+                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>L1 Network</h2>
                                 </div>
-                                <p style={{ margin: '5px 0 0', opacity: 0.9 }}>People who donated via your link</p>
+                                <p style={{ margin: '5px 0 0', opacity: 0.9 }}>Track your direct referrals and earnings</p>
                             </div>
 
-                            <div className="conditions-container" style={{ padding: '0', background: '#ffffff', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px', maxHeight: '60vh', overflowY: 'auto' }}>
+                            <div style={{ background: '#f8fafc', padding: '1.25rem', borderBottom: '1px solid #e2e8f0' }}>
+                                {/* Summary Stats */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '1.25rem' }}>
+                                    <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderLeft: '4px solid #00bfa5' }}>
+                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Lifetime L1</p>
+                                        <p style={{ margin: '4px 0 0', fontSize: '1.2rem', fontWeight: 800, color: '#1e293b' }}>₹{l1Summary.lifetimeEarning.toFixed(2)}</p>
+                                    </div>
+                                    <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderLeft: '4px solid #f59e0b' }}>
+                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Last Month</p>
+                                        <p style={{ margin: '4px 0 0', fontSize: '1.2rem', fontWeight: 800, color: '#1e293b' }}>₹{l1Summary.prevMonthEarning.toFixed(2)}</p>
+                                    </div>
+                                </div>
+
+                                {/* Filters Row */}
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <div style={{ flex: 1, position: 'relative' }}>
+                                        <select 
+                                            value={l1FilterMonth}
+                                            onChange={(e) => {
+                                                const val = Number(e.target.value);
+                                                setL1FilterMonth(val);
+                                                fetchL1Donors(val, l1FilterYear);
+                                            }}
+                                            style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', appearance: 'none', background: 'white' }}
+                                        >
+                                            <option value={0}>Lifetime View</option>
+                                            {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((m, i) => (
+                                                <option key={m} value={i + 1}>{m}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown size={14} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748b' }} />
+                                    </div>
+                                    <div style={{ flex: 1, position: 'relative' }}>
+                                        <select 
+                                            value={l1FilterYear}
+                                            onChange={(e) => {
+                                                const val = Number(e.target.value);
+                                                setL1FilterYear(val);
+                                                fetchL1Donors(l1FilterMonth, val);
+                                            }}
+                                            style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', appearance: 'none', background: 'white' }}
+                                        >
+                                            {[2024, 2025, 2026].map(y => (
+                                                <option key={y} value={y}>{y}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown size={14} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748b' }} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="conditions-container" style={{ padding: '0', background: '#ffffff', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }}>
                                 {isLoadingL1 ? (
                                     <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
                                         <motion.div
@@ -873,12 +929,12 @@ const UserDashboard = () => {
                                         <p>No L1 donors found yet.</p>
                                     </div>
                                 ) : (
-                                    <div className="l1-donors-list">
+                                    <div className="l1-donors-list" style={{ maxHeight: '60vh', overflowY: 'auto', width: '100%' }}>
                                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                             <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
                                                 <tr>
                                                     <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Donor Name</th>
-                                                    <th style={{ textAlign: 'right', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Amount</th>
+                                                    <th style={{ textAlign: 'right', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Your Earning</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -886,10 +942,12 @@ const UserDashboard = () => {
                                                     <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                                         <td style={{ padding: '12px 20px' }}>
                                                             <div style={{ fontWeight: 600, color: '#1e293b' }}>{donor.donorName}</div>
-                                                            <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{new Date(donor.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                                                            <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                                                                Last Donation: {new Date(donor.lastDonation || donor.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                            </div>
                                                         </td>
                                                         <td style={{ padding: '12px 20px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>
-                                                            ₹{donor.amount.toLocaleString()}
+                                                            ₹{(donor.totalEarning || 0).toLocaleString()}
                                                         </td>
                                                     </tr>
                                                 ))}

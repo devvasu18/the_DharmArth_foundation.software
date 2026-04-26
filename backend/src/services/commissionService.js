@@ -54,7 +54,7 @@ const processDonationCommission = async (donationAmount, motivatorIdentifier, do
         console.log(`L1 Commission: ${comm1} credited to ${motivator.name}`);
         
         // Notify Motivator
-        await notificationService.notifyMotivatorDonation(motivator, donationAmount, donorName, 1);
+        await notificationService.notifyMotivatorDonation(motivator, donationAmount, donorName, donorMobile, 1);
 
         // --- LEVEL 2 COMMISSION ---
         // "This commission will be given to the motivator of the Level 1 motivator"
@@ -84,7 +84,7 @@ const processDonationCommission = async (donationAmount, motivatorIdentifier, do
                 console.log(`L2 Commission: ${comm2} credited to ${grandMotivator.name}`);
         
         // Notify Grand Motivator
-        await notificationService.notifyMotivatorDonation(grandMotivator, donationAmount, donorName, 2);
+        await notificationService.notifyMotivatorDonation(grandMotivator, donationAmount, donorName, donorMobile, 2, motivator);
             }
         }
 

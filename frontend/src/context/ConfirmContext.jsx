@@ -6,12 +6,14 @@ export const useConfirm = () => useContext(ConfirmContext);
 
 export const ConfirmProvider = ({ children }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [title, setTitle] = useState('');
     const [message, setMessage] = useState('');
     const [type, setType] = useState('confirm'); // 'confirm' or 'alert'
     const resolveRef = useRef(null);
 
-    const confirm = (msg) => {
-        setMessage(msg);
+    const showConfirm = (title, msg) => {
+        setTitle(title);
+        setMessage(msg || '');
         setType('confirm');
         setIsOpen(true);
         return new Promise((resolve) => {
@@ -19,8 +21,9 @@ export const ConfirmProvider = ({ children }) => {
         });
     };
 
-    const showAlert = (msg) => {
-        setMessage(msg);
+    const showAlert = (title, msg) => {
+        setTitle(title);
+        setMessage(msg || '');
         setType('alert');
         setIsOpen(true);
         return new Promise((resolve) => {
@@ -39,7 +42,7 @@ export const ConfirmProvider = ({ children }) => {
     };
 
     return (
-        <ConfirmContext.Provider value={{ confirm, showAlert }}>
+        <ConfirmContext.Provider value={{ showConfirm, showAlert }}>
             {children}
             {isOpen && (
                 <div style={{
@@ -49,7 +52,7 @@ export const ConfirmProvider = ({ children }) => {
                 }}>
                     <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', minWidth: '350px', maxWidth: '90%', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
                         <h4 style={{ marginTop: 0, marginBottom: '1rem', color: '#333' }}>
-                            {type === 'alert' ? 'Notification' : 'Confirm Action'}
+                            {title || (type === 'alert' ? 'Notification' : 'Confirm Action')}
                         </h4>
                         <p style={{ marginBottom: '2rem', color: '#666', fontSize: '1rem', whiteSpace: 'pre-wrap' }}>{message}</p>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>

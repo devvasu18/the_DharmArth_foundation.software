@@ -123,6 +123,44 @@ class WhatsappService {
         const message = template.replace('{name}', name).replace('{amount}', amount);
         return this.sendMessage(mobile, message);
     }
+
+    /**
+     * Specialized: Send L1 Motivator Commission Notification
+     */
+    async sendL1MotivatorNotification(motivatorMobile, data) {
+        const Setting = require('../models/Setting');
+        const setting = await Setting.findOne({ key: 'whatsapp_motivator_l1_template' });
+        const template = setting?.value || "Congratulations {motivator_name}! You received ₹{commission} commission for a donation of ₹{donation_amount} from {donor_name} ({donor_mobile}). Level: 1 🙏";
+        
+        const message = template
+            .replace(/{motivator_name}/g, data.motivatorName)
+            .replace(/{commission}/g, data.commission)
+            .replace(/{donation_amount}/g, data.donationAmount)
+            .replace(/{donor_name}/g, data.donorName)
+            .replace(/{donor_mobile}/g, data.donorMobile);
+            
+        return this.sendMessage(motivatorMobile, message);
+    }
+
+    /**
+     * Specialized: Send L2 Motivator Commission Notification
+     */
+    async sendL2MotivatorNotification(motivatorMobile, data) {
+        const Setting = require('../models/Setting');
+        const setting = await Setting.findOne({ key: 'whatsapp_motivator_l2_template' });
+        const template = setting?.value || "Level 2 Bonus! {motivator_name}, you received ₹{commission} commission via {l1_motivator_name} ({l1_motivator_mobile}) for a donation from {donor_name} ({donor_mobile}). Level: 2 🙏";
+        
+        const message = template
+            .replace(/{motivator_name}/g, data.motivatorName)
+            .replace(/{commission}/g, data.commission)
+            .replace(/{donation_amount}/g, data.donationAmount)
+            .replace(/{donor_name}/g, data.donorName)
+            .replace(/{donor_mobile}/g, data.donorMobile)
+            .replace(/{l1_motivator_name}/g, data.l1MotivatorName)
+            .replace(/{l1_motivator_mobile}/g, data.l1MotivatorMobile);
+            
+        return this.sendMessage(motivatorMobile, message);
+    }
 }
 
 module.exports = new WhatsappService();

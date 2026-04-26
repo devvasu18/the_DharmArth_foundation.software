@@ -21,7 +21,7 @@ const DonationForm = ({ onSuccess }) => {
     const [motivatorName, setMotivatorName] = useState('');
     const [need80G, setNeed80G] = useState(false);
     const [isMotivatorLocked, setIsMotivatorLocked] = useState(false);
-    const [donationType, setDonationType] = useState('one-time'); // 'one-time' or 'monthly'
+    const [donationType, setDonationType] = useState('monthly'); // 'one-time' or 'monthly'
 
     // Form States
     const [fullName, setFullName] = useState('');
@@ -513,16 +513,16 @@ const DonationForm = ({ onSuccess }) => {
 
                 <div className="donation-type-toggle">
                     <button 
-                        className={`type-btn ${donationType === 'one-time' ? 'active' : ''}`}
-                        onClick={() => setDonationType('one-time')}
-                    >
-                        One-time
-                    </button>
-                    <button 
                         className={`type-btn ${donationType === 'monthly' ? 'active' : ''}`}
                         onClick={() => setDonationType('monthly')}
                     >
                         Monthly (AutoPay)
+                    </button>
+                    <button 
+                        className={`type-btn ${donationType === 'one-time' ? 'active' : ''}`}
+                        onClick={() => setDonationType('one-time')}
+                    >
+                        One-time
                     </button>
                 </div>
 
@@ -754,7 +754,7 @@ const DonationForm = ({ onSuccess }) => {
                     disabled={!isFormValid || loading}
                 >
                     <span className="btn-content">
-                        {loading ? t('donatePage.processing') : `${t('donatePage.donateBtn')} ₹${(customAmount ? Number(customAmount) : amount).toLocaleString()}`}
+                        {loading ? t('donatePage.processing') : `${t('donatePage.donateBtn')} ₹${(customAmount ? Number(customAmount) : amount).toLocaleString()} ${donationType === 'monthly' ? '(Monthly)' : ''}`}
                     </span>
                 </button>
 

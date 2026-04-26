@@ -17,17 +17,17 @@ router.get('/summary', protect, async (req, res) => {
             wallet = await Wallet.create({ user: req.user._id });
         }
 
-        // 2. Get Network Stats in Parallel
-        const [l1Count, l2Count] = await Promise.all([
-            Donation.countDocuments({ level1UserId: req.user._id, status: 'success' }),
-            Donation.countDocuments({ level2UserId: req.user._id, status: 'success' })
+        // 2. Get Network Stats in Parallel (Unique Donors)
+        const [l1Donors, l2Donors] = await Promise.all([
+            Donation.distinct('donorMobile', { level1UserId: req.user._id, status: 'success' }),
+            Donation.distinct('donorMobile', { level2UserId: req.user._id, status: 'success' })
         ]);
 
         res.json({
             wallet,
             stats: {
-                l1Donors: l1Count,
-                l2Donors: l2Count
+                l1Donors: l1Donors.length,
+                l2Donors: l2Donors.length
             }
         });
     } catch (error) {
@@ -149,14 +149,14 @@ router.get('/stats', protect, async (req, res) => {
         const User = require('../models/User');
         const Donation = require('../models/Donation');
 
-        // 1. Level 1 Donors (Successful donations where user is Level 1)
-        const l1Count = await Donation.countDocuments({
+        // 1. Level 1 Donors (Unique successful donors where user is Level 1)
+        const l1Donors = await Donation.distinct('donorMobile', {
             level1UserId: req.user._id,
             status: 'success'
         });
 
-        // 2. Level 2 Donors (Successful donations where user is Level 2)
-        const l2Count = await Donation.countDocuments({
+        // 2. Level 2 Donors (Unique successful donors where user is Level 2)
+        const l2Donors = await Donation.distinct('donorMobile', {
             level2UserId: req.user._id,
             status: 'success'
         });
@@ -165,8 +165,8 @@ router.get('/stats', protect, async (req, res) => {
         const wallet = await Wallet.findOne({ user: req.user._id });
 
         res.json({
-            l1Donors: l1Count,
-            l2Donors: l2Count,
+            l1Donors: l1Donors.length,
+            l2Donors: l2Donors.length,
             totalEarned: wallet?.totalEarned || 0,
             balance: wallet?.balance || 0
         });
@@ -175,19 +175,89 @@ router.get('/stats', protect, async (req, res) => {
     }
 });
 
-// @desc    Get L1 Donors List (Names of people who donated via my link)
+// @desc    Get L1 Donors List (Aggregated by donor with total earnings + Filters)
 // @route   GET /api/wallet/l1-donors
 router.get('/l1-donors', protect, async (req, res) => {
     try {
         const Donation = require('../models/Donation');
-        const donors = await Donation.find({
+        const Setting = require('../models/Setting');
+
+        const { month, year } = req.query;
+
+        // Fetch L1 Commission Rate
+        const l1RateSetting = await Setting.findOne({ key: 'commission_level_1' });
+        const l1Rate = l1RateSetting ? l1RateSetting.value : 10;
+
+        // 1. Calculate Summary Stats (Lifetime and Previous Month)
+        const now = new Date();
+        const firstOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const firstOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+        const [lifetimeStats, prevMonthStats] = await Promise.all([
+            Donation.aggregate([
+                { $match: { level1UserId: req.user._id, status: 'success' } },
+                { $group: { _id: null, total: { $sum: "$amount" } } }
+            ]),
+            Donation.aggregate([
+                { 
+                    $match: { 
+                        level1UserId: req.user._id, 
+                        status: 'success',
+                        createdAt: { $gte: firstOfPrevMonth, $lte: lastOfPrevMonth }
+                    } 
+                },
+                { $group: { _id: null, total: { $sum: "$amount" } } }
+            ])
+        ]);
+
+        const summary = {
+            lifetimeEarning: (lifetimeStats[0]?.total || 0) * (l1Rate / 100),
+            prevMonthEarning: (prevMonthStats[0]?.total || 0) * (l1Rate / 100)
+        };
+
+        // 2. Prepare Aggregation Pipeline for the List
+        let matchQuery = {
             level1UserId: req.user._id,
             status: 'success'
-        })
-        .select('donorName amount createdAt')
-        .sort({ createdAt: -1 });
+        };
+
+        if (month && year && Number(month) > 0) {
+            const start = new Date(year, month - 1, 1);
+            const end = new Date(year, month, 1);
+            matchQuery.createdAt = { $gte: start, $lt: end };
+        } else if (year) {
+            const start = new Date(year, 0, 1);
+            const end = new Date(Number(year) + 1, 0, 1);
+            matchQuery.createdAt = { $gte: start, $lt: end };
+        }
+
+        const donors = await Donation.aggregate([
+            { $match: matchQuery },
+            {
+                $group: {
+                    _id: { name: "$donorName", mobile: "$donorMobile" },
+                    totalAmount: { $sum: "$amount" },
+                    lastDonation: { $max: "$createdAt" }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    donorName: "$_id.name",
+                    donorMobile: "$_id.mobile",
+                    totalAmount: 1,
+                    totalEarning: { $multiply: ["$totalAmount", l1Rate / 100] },
+                    lastDonation: 1
+                }
+            },
+            { $sort: { lastDonation: -1 } }
+        ]);
         
-        res.json(donors);
+        res.json({
+            summary,
+            donors
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useConfirm } from '../../context/ConfirmContext';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MessageSquare, Info, X, Save, Zap, HelpCircle } from 'lucide-react';
 
 const AdminSettings = () => {
     const { showAlert, showConfirm } = useConfirm();
@@ -27,7 +29,9 @@ const AdminSettings = () => {
     const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
     const [whatsappConfig, setWhatsappConfig] = useState({
         donationTemplate: '',
-        withdrawalTemplate: ''
+        withdrawalTemplate: '',
+        l1MotivatorTemplate: '',
+        l2MotivatorTemplate: ''
     });
 
     useEffect(() => {
@@ -52,7 +56,9 @@ const AdminSettings = () => {
             // WhatsApp Config
             setWhatsappConfig({
                 donationTemplate: data.whatsapp_donation_template || "Dear {name}, thank you for your generous donation of ₹{amount} to The DharmArth Foundation. Your support helps us make a big difference! 🙏",
-                withdrawalTemplate: data.whatsapp_withdrawal_template || "Dear {name}, your payout request of ₹{amount} has been successfully processed and completed. The funds have been transferred as per your provided details. Thank you for your continued support! 🙏"
+                withdrawalTemplate: data.whatsapp_withdrawal_template || "Dear {name}, your payout request of ₹{amount} has been successfully processed and completed. The funds have been transferred as per your provided details. Thank you for your continued support! 🙏",
+                l1MotivatorTemplate: data.whatsapp_motivator_l1_template || "Congratulations {motivator_name}! You received ₹{commission} commission for a donation of ₹{donation_amount} from {donor_name} ({donor_mobile}). Level: 1 🙏",
+                l2MotivatorTemplate: data.whatsapp_motivator_l2_template || "Level 2 Bonus! {motivator_name}, you received ₹{commission} commission via {l1_motivator_name} ({l1_motivator_mobile}) for a donation from {donor_name} ({donor_mobile}). Level: 2 🙏"
             });
         } catch (error) {
             console.error("Failed to fetch settings", error);
@@ -150,7 +156,9 @@ const AdminSettings = () => {
         try {
             const updates = {
                 whatsapp_donation_template: whatsappConfig.donationTemplate,
-                whatsapp_withdrawal_template: whatsappConfig.withdrawalTemplate
+                whatsapp_withdrawal_template: whatsappConfig.withdrawalTemplate,
+                whatsapp_motivator_l1_template: whatsappConfig.l1MotivatorTemplate,
+                whatsapp_motivator_l2_template: whatsappConfig.l2MotivatorTemplate
             };
             await api.put('/content/settings', updates);
             setSettings({ ...settings, ...updates });
@@ -363,46 +371,190 @@ const AdminSettings = () => {
             )}
 
             {/* WhatsApp Config Modal */}
-            {whatsappModalOpen && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    zIndex: 1000
-                }}>
-                    <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', minWidth: '600px', maxWidth: '90%' }}>
-                        <h4>Configure WhatsApp Templates</h4>
-                        <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1.5rem' }}>
-                            Use <strong>{'{name}'}</strong> and <strong>{'{amount}'}</strong> as placeholders in your messages.
-                        </p>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Donation Thank You Template</label>
-                                <textarea
-                                    className="form-input"
-                                    style={{ width: '100%', minHeight: '100px', padding: '10px', fontSize: '0.95rem' }}
-                                    value={whatsappConfig.donationTemplate}
-                                    onChange={(e) => setWhatsappConfig({ ...whatsappConfig, donationTemplate: e.target.value })}
-                                />
+            <AnimatePresence>
+                {whatsappModalOpen && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                        zIndex: 2000, backdropFilter: 'blur(8px)', padding: '20px'
+                    }}>
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            style={{ 
+                                background: '#f8fafc', 
+                                borderRadius: '24px', 
+                                width: '100%',
+                                maxWidth: '800px', 
+                                maxHeight: '95vh',
+                                overflow: 'hidden',
+                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                                display: 'flex',
+                                flexDirection: 'column'
+                            }}
+                        >
+                            {/* Modal Header */}
+                            <div style={{ 
+                                background: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)', 
+                                padding: '2rem', 
+                                color: 'white',
+                                position: 'relative'
+                            }}>
+                                <button 
+                                    onClick={() => setWhatsappModalOpen(false)}
+                                    style={{ 
+                                        position: 'absolute', top: '1.5rem', right: '1.5rem', 
+                                        background: 'rgba(255,255,255,0.2)', border: 'none', 
+                                        borderRadius: '50%', width: '36px', height: '36px', 
+                                        color: 'white', cursor: 'pointer', display: 'flex', 
+                                        alignItems: 'center', justifyContent: 'center' 
+                                    }}
+                                >
+                                    <X size={20} />
+                                </button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                    <div style={{ background: 'rgba(255,255,255,0.2)', padding: '12px', borderRadius: '16px' }}>
+                                        <MessageSquare size={32} />
+                                    </div>
+                                    <div>
+                                        <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800 }}>WhatsApp Templates</h2>
+                                        <p style={{ margin: '5px 0 0', opacity: 0.9, fontSize: '0.95rem' }}>Configure dynamic messages for donors and motivators</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Payout Completion Template</label>
-                                <textarea
-                                    className="form-input"
-                                    style={{ width: '100%', minHeight: '100px', padding: '10px', fontSize: '0.95rem' }}
-                                    value={whatsappConfig.withdrawalTemplate}
-                                    onChange={(e) => setWhatsappConfig({ ...whatsappConfig, withdrawalTemplate: e.target.value })}
-                                />
-                            </div>
-                        </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
-                            <button className="btn btn-outline" onClick={() => setWhatsappModalOpen(false)}>Cancel</button>
-                            <button className="btn bg-primary text-white" onClick={handleSaveWhatsappConfig}>Save Templates</button>
-                        </div>
+                            {/* Modal Body */}
+                            <div style={{ padding: '2rem', overflowY: 'auto', flex: 1 }}>
+                                {/* Placeholders Info */}
+                                <div style={{ 
+                                    background: '#ffffff', 
+                                    border: '1px solid #e2e8f0', 
+                                    borderRadius: '16px', 
+                                    padding: '1.25rem', 
+                                    marginBottom: '2rem',
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#1e293b' }}>
+                                        <Zap size={18} color="#00bfa5" fill="#00bfa5" />
+                                        <span style={{ fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Available Placeholders</span>
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                        {['{name}', '{amount}', '{commission}', '{motivator_name}', '{donor_name}', '{donor_mobile}', '{l1_motivator_name}', '{l1_motivator_mobile}'].map(tag => (
+                                            <span key={tag} style={{ 
+                                                background: '#f1f5f9', 
+                                                color: '#475569', 
+                                                padding: '4px 10px', 
+                                                borderRadius: '8px', 
+                                                fontSize: '0.8rem', 
+                                                fontWeight: 600,
+                                                border: '1px solid #e2e8f0',
+                                                cursor: 'default',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => { e.target.style.background = '#e2e8f0'; e.target.style.color = '#1e293b'; }}
+                                            onMouseLeave={(e) => { e.target.style.background = '#f1f5f9'; e.target.style.color = '#475569'; }}
+                                            >
+                                                {tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    <p style={{ marginTop: '12px', fontSize: '0.8rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <Info size={14} /> Use these tags to automatically insert donation and motivator details.
+                                    </p>
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                    {/* Primary Templates */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                        <div className="template-card">
+                                            <label style={{ display: 'block', marginBottom: '10px', fontWeight: 700, color: '#334155', fontSize: '0.9rem' }}>Donation Thank You</label>
+                                            <textarea
+                                                className="form-input"
+                                                style={{ width: '100%', minHeight: '120px', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.95rem', background: 'white', lineHeight: '1.5' }}
+                                                value={whatsappConfig.donationTemplate}
+                                                onChange={(e) => setWhatsappConfig({ ...whatsappConfig, donationTemplate: e.target.value })}
+                                                placeholder="Enter thank you message..."
+                                            />
+                                        </div>
+                                        <div className="template-card">
+                                            <label style={{ display: 'block', marginBottom: '10px', fontWeight: 700, color: '#334155', fontSize: '0.9rem' }}>Payout Completion</label>
+                                            <textarea
+                                                className="form-input"
+                                                style={{ width: '100%', minHeight: '120px', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.95rem', background: 'white', lineHeight: '1.5' }}
+                                                value={whatsappConfig.withdrawalTemplate}
+                                                onChange={(e) => setWhatsappConfig({ ...whatsappConfig, withdrawalTemplate: e.target.value })}
+                                                placeholder="Enter payout confirmation message..."
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Motivator Alerts */}
+                                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                                        <h4 style={{ margin: '0 0 1.5rem 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Zap size={20} color="#00bfa5" /> Motivator Notifications
+                                        </h4>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                            <div>
+                                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>L1 Commission Alert</label>
+                                                <textarea
+                                                    className="form-input"
+                                                    style={{ width: '100%', minHeight: '120px', padding: '12px', borderRadius: '12px', fontSize: '0.9rem', border: '1px solid #cbd5e1' }}
+                                                    value={whatsappConfig.l1MotivatorTemplate}
+                                                    onChange={(e) => setWhatsappConfig({ ...whatsappConfig, l1MotivatorTemplate: e.target.value })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>L2 Commission Alert</label>
+                                                <textarea
+                                                    className="form-input"
+                                                    style={{ width: '100%', minHeight: '120px', padding: '12px', borderRadius: '12px', fontSize: '0.9rem', border: '1px solid #cbd5e1' }}
+                                                    value={whatsappConfig.l2MotivatorTemplate}
+                                                    onChange={(e) => setWhatsappConfig({ ...whatsappConfig, l2MotivatorTemplate: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div style={{ 
+                                padding: '1.5rem 2rem', 
+                                background: 'white', 
+                                borderTop: '1px solid #e2e8f0',
+                                display: 'flex', 
+                                justifyContent: 'flex-end', 
+                                gap: '1rem' 
+                            }}>
+                                <button 
+                                    className="btn btn-outline" 
+                                    onClick={() => setWhatsappModalOpen(false)}
+                                    style={{ padding: '10px 24px', borderRadius: '10px' }}
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    className="btn bg-primary text-white" 
+                                    onClick={handleSaveWhatsappConfig}
+                                    style={{ 
+                                        padding: '10px 28px', 
+                                        borderRadius: '10px', 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: '8px',
+                                        background: '#00bfa5',
+                                        fontWeight: 700
+                                    }}
+                                >
+                                    <Save size={18} />
+                                    Save Templates
+                                </button>
+                            </div>
+                        </motion.div>
                     </div>
-                </div>
-            )}
+                )}
+            </AnimatePresence>
 
         </div>
     );

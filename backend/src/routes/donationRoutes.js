@@ -91,7 +91,9 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
     }
 
     try {
+        console.log('[DEBUG] Full Request Body:', JSON.stringify(req.body, null, 2));
         const { donationType = 'one-time' } = req.body;
+        console.log(`[DEBUG] Incoming Donation Request: type=${donationType}, mobile=${donorMobile}, amount=${amount}`);
 
         // Prepare Commission Fields
         let level1UserId = null;

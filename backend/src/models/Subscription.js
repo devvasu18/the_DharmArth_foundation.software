@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { encrypt, decrypt } = require('../utils/security');
 
 const subscriptionSchema = new mongoose.Schema({
     donorName: { type: String, required: true, maxlength: 100 },
@@ -26,24 +27,20 @@ const subscriptionSchema = new mongoose.Schema({
     lastPaymentId: { type: String },
     
     is80G: { type: Boolean, default: false },
-    panNumber: { type: String },
-    aadhaarNumber: { type: String }
+    panNumber: { 
+        type: String, 
+        set: encrypt,
+        get: decrypt
+    },
+    aadhaarNumber: { 
+        type: String, 
+        set: encrypt,
+        get: decrypt
+    }
 }, {
-    timestamps: true
-});
-
-// Reuse encryption hooks from Donation model
-const { encrypt, decrypt } = require('../utils/security');
-
-subscriptionSchema.pre('save', function(next) {
-    if (this.isModified('panNumber')) this.panNumber = encrypt(this.panNumber);
-    if (this.isModified('aadhaarNumber')) this.aadhaarNumber = encrypt(this.aadhaarNumber);
-    next();
-});
-
-subscriptionSchema.post('init', function(doc) {
-    if (doc.panNumber) doc.panNumber = decrypt(doc.panNumber);
-    if (doc.aadhaarNumber) doc.aadhaarNumber = decrypt(doc.aadhaarNumber);
+    timestamps: true,
+    toJSON: { getters: true },
+    toObject: { getters: true }
 });
 
 module.exports = mongoose.model('Subscription', subscriptionSchema);

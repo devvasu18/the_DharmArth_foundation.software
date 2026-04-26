@@ -47,12 +47,13 @@ class NotificationService {
     /**
      * Specialized: New Donation Alert for Motivator
      */
-    async notifyMotivatorDonation(motivator, amount, donorName, level = 1) {
+    async notifyMotivatorDonation(motivator, amount, donorName, donorMobile, level = 1, l1Motivator = null) {
         const commission = level === 1 ? amount * 0.1 : amount * 0.03;
         const msg = level === 1 
             ? `Congratulations! You earned ₹${commission.toFixed(2)} commission from ${donorName}'s donation.`
             : `Level 2 Bonus! You earned ₹${commission.toFixed(2)} from ${donorName} (via your network).`;
 
+        // 1. Send In-App, Email, SMS (via generic notify)
         await this.notify({
             userId: motivator._id,
             type: 'COMMISSION_EARNED',
@@ -60,6 +61,27 @@ class NotificationService {
             email: motivator.email,
             sms: motivator.mobile
         });
+
+        // 2. Send Specialized WhatsApp
+        if (level === 1) {
+            await whatsappService.sendL1MotivatorNotification(motivator.mobile, {
+                motivatorName: motivator.name,
+                commission: commission.toFixed(2),
+                donationAmount: amount,
+                donorName,
+                donorMobile
+            });
+        } else if (level === 2 && l1Motivator) {
+            await whatsappService.sendL2MotivatorNotification(motivator.mobile, {
+                motivatorName: motivator.name,
+                commission: commission.toFixed(2),
+                donationAmount: amount,
+                donorName,
+                donorMobile,
+                l1MotivatorName: l1Motivator.name,
+                l1MotivatorMobile: l1Motivator.mobile
+            });
+        }
     }
 
     /**
