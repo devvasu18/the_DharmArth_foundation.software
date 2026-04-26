@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Search, ChevronDown, Menu, X } from 'lucide-react';
+import { Bell, Search, ChevronDown, Menu, X, Heart, Calendar, Stethoscope, User as UserIcon, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -278,16 +278,12 @@ const Navbar = () => {
                 <div className="mobile-menu">
                     {!isDeliveryPartner && (
                         <>
-                            <NavLink to="/donate" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.browseDonations')}</NavLink>
-                            <NavLink to="/events" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.fundraiseFor')}</NavLink>
-                            <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.doctorAvailability')}</NavLink>
-                            <NavLink to="/order-medicine" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>Order Medicine</NavLink>
+                            {/* <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.doctorAvailability')}</NavLink> */}
                             <NavLink to="/how-it-works" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.howItWorks')}</NavLink>
                         </>
                     )}
                     
                     {user && user.isSuperAdmin && <NavLink to="/admin" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.admin')}</NavLink>}
-                    {user && !user.isSuperAdmin && !isDeliveryPartner && <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.userDashboard')}</NavLink>}
                     
                     {isDeliveryPartner && (
                         <NavLink to="/delivery-boy" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>Delivery Feed</NavLink>
@@ -301,6 +297,25 @@ const Navbar = () => {
                     {!isDeliveryPartner && <Link to="/donate" className="btn btn-outline" style={{ width: '100%', textAlign: 'center' }} onClick={() => setIsOpen(false)}>{t('navbar.donate')}</Link>}
                 </div>
             )}
+            {/* Mobile Bottom Navigation */}
+            <div className="bottom-navbar show-mobile">
+                <NavLink to="/" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`} end>
+                    <Home size={20} className="nav-icon" />
+                    <span>Home</span>
+                </NavLink>
+                <NavLink to="/donate" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                    <Heart size={20} className="nav-icon" />
+                    <span>{t('navbar.browseDonations')}</span>
+                </NavLink>
+                <NavLink to="/events" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                    <Calendar size={20} className="nav-icon" />
+                    <span>{t('navbar.fundraiseFor')}</span>
+                </NavLink>
+                <NavLink to={user ? "/dashboard" : "/login"} className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                    <UserIcon size={20} className="nav-icon" />
+                    <span>{user ? t('navbar.userDashboard') : t('navbar.signIn')}</span>
+                </NavLink>
+            </div>
         </nav>
     );
 };
