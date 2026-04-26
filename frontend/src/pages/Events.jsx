@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import api, { API_BASE_URL } from '../services/api';
 import { Link } from 'react-router-dom';
 import { Search, Calendar, MapPin, ArrowRight, Loader2, Mail, Heart, Users, CheckCircle, Smartphone, PlayCircle, Eye, Image } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import './Events.css';
 
 const Events = () => {
+    const { t, i18n } = useTranslation();
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all'); // all, upcoming, past
@@ -108,12 +110,22 @@ const Events = () => {
                                 )}
                                 <div className="slider-overlay"></div>
                                 <div className="slider-content">
-                                    <h1 className="event-slide-up" style={{ color: slide.titleColor || '#ffffff' }}>{slide.title || 'Our Impact & Events'}</h1>
-                                    {slide.subtitle && <h3 className="event-slide-up delay-1">{slide.subtitle}</h3>}
-                                    {slide.description && <p className="event-slide-up delay-2" style={{ color: slide.descriptionColor || '#ffffff' }}>{slide.description}</p>}
+                                    <h1 className="event-slide-up" style={{ color: slide.titleColor || '#ffffff' }}>
+                                        {(i18n.language === 'hi' && slide.title_hi) ? slide.title_hi : (slide.title || 'Our Impact & Events')}
+                                    </h1>
+                                    {((i18n.language === 'hi' && slide.subtitle_hi) || slide.subtitle) && (
+                                        <h3 className="event-slide-up delay-1">
+                                            {(i18n.language === 'hi' && slide.subtitle_hi) ? slide.subtitle_hi : slide.subtitle}
+                                        </h3>
+                                    )}
+                                    {((i18n.language === 'hi' && slide.description_hi) || slide.description) && (
+                                        <p className="event-slide-up delay-2" style={{ color: slide.descriptionColor || '#ffffff' }}>
+                                            {(i18n.language === 'hi' && slide.description_hi) ? slide.description_hi : slide.description}
+                                        </p>
+                                    )}
                                     {slide.ctaLink && (
                                         <Link to={slide.ctaLink} className="btn-primary event-slide-up delay-3">
-                                            {slide.ctaText || 'Learn More'}
+                                            {(i18n.language === 'hi' && slide.ctaText_hi) ? slide.ctaText_hi : (slide.ctaText || 'Learn More')}
                                         </Link>
                                     )}
                                 </div>
@@ -123,8 +135,8 @@ const Events = () => {
                 ) : (
                     <div className="static-header-fallback" style={{ background: 'linear-gradient(to right, #1a202c, #2d3748)', padding: '100px 0', color: 'white', textAlign: 'center' }}>
                         <div className="container">
-                            <h1>Our Impact & Events</h1>
-                            <p>Join us in making a difference. Check out our upcoming drives and past activities.</p>
+                            <h1>{(i18n.language === 'hi') ? 'हमारा प्रभाव और कार्यक्रम' : 'Our Impact & Events'}</h1>
+                            <p>{(i18n.language === 'hi') ? 'बदलाव लाने में हमारे साथ जुड़ें। हमारे आगामी अभियानों और पिछली गतिविधियों को देखें।' : 'Join us in making a difference. Check out our upcoming drives and past activities.'}</p>
                         </div>
                     </div>
                 )}
@@ -136,17 +148,17 @@ const Events = () => {
                         <button
                             className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
                             onClick={() => setFilter('all')}
-                        >All Events</button>
+                        >{(i18n.language === 'hi') ? 'सभी कार्यक्रम' : 'All Events'}</button>
                         <button
                             className={`filter-tab ${filter === 'upcoming' ? 'active' : ''}`}
                             onClick={() => setFilter('upcoming')}
-                        >Upcoming</button>
+                        >{(i18n.language === 'hi') ? 'आगामी' : 'Upcoming'}</button>
                         <button
                             className={`filter-tab ${filter === 'past' ? 'active' : ''}`}
                             onClick={() => setFilter('past')}
-                        >Past Events</button>
+                        >{(i18n.language === 'hi') ? 'पिछले कार्यक्रम' : 'Past Events'}</button>
                         <Link to="/gallery" className="filter-tab gallery-link" style={{ marginLeft: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <Image size={16} /> Gallery
+                            <Image size={16} /> {(i18n.language === 'hi') ? 'गैलरी' : 'Gallery'}
                         </Link>
                     </div>
 
@@ -154,7 +166,7 @@ const Events = () => {
                         <input
                             type="text"
                             className="search-input"
-                            placeholder="Search events..."
+                            placeholder={(i18n.language === 'hi') ? 'कार्यक्रम खोजें...' : 'Search events...'}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -170,7 +182,7 @@ const Events = () => {
                     </div>
                 ) : filteredEvents.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: 50, color: '#666' }}>
-                        <h3>No events found matching your criteria.</h3>
+                        <h3>{(i18n.language === 'hi') ? 'आपके मानदंडों से मेल खाने वाला कोई कार्यक्रम नहीं मिला।' : 'No events found matching your criteria.'}</h3>
                     </div>
                 ) : (
                     <div className="events-grid">
@@ -185,30 +197,34 @@ const Events = () => {
                                         </div>
                                     )}
                                     <span className={`event-status-tag ${event.status}`}>
-                                        {event.status === 'upcoming' ? 'Upcoming' : event.status === 'ongoing' ? 'Happening Now' : 'Completed'}
+                                        {event.status === 'upcoming' ? (i18n.language === 'hi' ? 'आगामी' : 'Upcoming') :
+                                            event.status === 'ongoing' ? (i18n.language === 'hi' ? 'अभी हो रहा है' : 'Happening Now') :
+                                                (i18n.language === 'hi' ? 'पूर्ण' : 'Completed')}
                                     </span>
                                 </Link>
                                 <div className="event-card-content">
                                     <span className="event-meta-row">
                                         <span className="meta-item timestamp">
-                                            {event.date ? new Date(event.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : 'TBA'}
+                                            {event.date ? new Date(event.date).toLocaleDateString(i18n.language === 'hi' ? 'hi-IN' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : 'TBA'}
                                         </span>
                                         <span className="meta-dot">•</span>
                                         <span className="meta-item location">
-                                            {event.location || 'Online'}
+                                            {(i18n.language === 'hi' && event.location_hi) ? event.location_hi : (event.location || 'Online')}
                                         </span>
                                     </span>
 
                                     <h3 className="event-title">
                                         <Link to={`/events/${event.slug}`}>
-                                            {event.title}
+                                            {(i18n.language === 'hi' && event.title_hi) ? event.title_hi : event.title}
                                         </Link>
                                     </h3>
 
                                     <p className="event-desc">
-                                        {event.shortDescription ?
-                                            (event.shortDescription.length > 100 ? event.shortDescription.substring(0, 100) + '...' : event.shortDescription)
-                                            : 'Join us for this special event.'}
+                                        {(i18n.language === 'hi' && event.shortDescription_hi) ?
+                                            (event.shortDescription_hi.length > 100 ? event.shortDescription_hi.substring(0, 100) + '...' : event.shortDescription_hi) :
+                                            (event.shortDescription ?
+                                                (event.shortDescription.length > 100 ? event.shortDescription.substring(0, 100) + '...' : event.shortDescription)
+                                                : (i18n.language === 'hi' ? 'इस विशेष कार्यक्रम के लिए हमसे जुड़ें।' : 'Join us for this special event.'))}
                                     </p>
                                 </div>
                             </div>

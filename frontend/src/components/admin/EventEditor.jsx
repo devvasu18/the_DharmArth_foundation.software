@@ -18,6 +18,7 @@ const EventEditor = () => {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [blockTabs, setBlockTabs] = useState({}); // To track active language tab for each block
+    const [globalLang, setGlobalLang] = useState('en');
 
     const [formData, setFormData] = useState({
         title: '',
@@ -199,15 +200,65 @@ const EventEditor = () => {
                 </div>
 
                 <div className="editor-section">
-                    <h3>Basic Information</h3>
-                    <div className="form-grid">
-                        <div className="form-group full-width">
-                            <label>Event Title</label>
-                            <input
-                                type="text" name="title" className="form-control" required
-                                value={formData.title} onChange={handleInputChange}
-                            />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                        <h3>Basic Information</h3>
+                        <div style={{ background: '#f0f0f0', padding: 4, borderRadius: 20, display: 'flex' }}>
+                            <button type="button" onClick={() => setGlobalLang('en')} style={{ padding: '5px 20px', borderRadius: 16, border: 'none', background: globalLang === 'en' ? 'white' : 'transparent', fontWeight: globalLang === 'en' ? 600 : 400, cursor: 'pointer' }}>English</button>
+                            <button type="button" onClick={() => setGlobalLang('hi')} style={{ padding: '5px 20px', borderRadius: 16, border: 'none', background: globalLang === 'hi' ? 'white' : 'transparent', fontWeight: globalLang === 'hi' ? 600 : 400, cursor: 'pointer' }}>Hindi</button>
                         </div>
+                    </div>
+
+                    <div className="form-grid">
+                        {globalLang === 'en' ? (
+                            <>
+                                <div className="form-group full-width">
+                                    <label>Event Title (EN)</label>
+                                    <input
+                                        type="text" name="title" className="form-control" required
+                                        value={formData.title} onChange={handleInputChange}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Location (EN)</label>
+                                    <input
+                                        type="text" name="location" className="form-control"
+                                        value={formData.location} onChange={handleInputChange}
+                                    />
+                                </div>
+                                <div className="form-group full-width">
+                                    <label>Short Description (EN)</label>
+                                    <textarea
+                                        name="shortDescription" className="form-control" rows="3"
+                                        value={formData.shortDescription} onChange={handleInputChange}
+                                    ></textarea>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="form-group full-width">
+                                    <label>Event Title (HI)</label>
+                                    <input
+                                        type="text" name="title_hi" className="form-control"
+                                        value={formData.title_hi || ''} onChange={handleInputChange}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Location (HI)</label>
+                                    <input
+                                        type="text" name="location_hi" className="form-control"
+                                        value={formData.location_hi || ''} onChange={handleInputChange}
+                                    />
+                                </div>
+                                <div className="form-group full-width">
+                                    <label>Short Description (HI)</label>
+                                    <textarea
+                                        name="shortDescription_hi" className="form-control" rows="3"
+                                        value={formData.shortDescription_hi || ''} onChange={handleInputChange}
+                                    ></textarea>
+                                </div>
+                            </>
+                        )}
+
                         <div className="form-group">
                             <label>Slug (URL Friendly)</label>
                             <input
@@ -230,13 +281,6 @@ const EventEditor = () => {
                                 type="date" name="date" className="form-control"
                                 max={formData.status === 'completed' ? new Date().toLocaleDateString('en-CA') : undefined}
                                 value={formData.date ? new Date(formData.date).toISOString().slice(0, 10) : ''} onChange={handleInputChange}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Location</label>
-                            <input
-                                type="text" name="location" className="form-control"
-                                value={formData.location} onChange={handleInputChange}
                             />
                         </div>
                         <div className="form-group full-width">

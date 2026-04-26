@@ -196,11 +196,11 @@ const EventDetail = () => {
 
                     <div className="hero-text-content">
                         <div className="hero-tags">
-                            {event.status && <span className={`status-pill ${event.status}`}>{event.status}</span>}
-                            {event.date && <span className="date-pill"><Calendar size={14} /> {new Date(event.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>}
+                            {event.status && <span className={`status-pill ${event.status}`}>{event.status === 'upcoming' ? (i18n.language === 'hi' ? 'आगामी' : 'Upcoming') : event.status === 'ongoing' ? (i18n.language === 'hi' ? 'अभी हो रहा है' : 'Happening Now') : (i18n.language === 'hi' ? 'पूर्ण' : 'Completed')}</span>}
+                            {event.date && <span className="date-pill"><Calendar size={14} /> {new Date(event.date).toLocaleDateString(i18n.language === 'hi' ? 'hi-IN' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>}
                         </div>
-                        <h1 className="hero-title">{event.title}</h1>
-                        {event.location && <p className="hero-location"><MapPin size={18} /> {event.location}</p>}
+                        <h1 className="hero-title">{(i18n.language === 'hi' && event.title_hi) ? event.title_hi : event.title}</h1>
+                        {(event.location || event.location_hi) && <p className="hero-location"><MapPin size={18} /> {(i18n.language === 'hi' && event.location_hi) ? event.location_hi : event.location}</p>}
                     </div>
 
                     {/* Slider Nav if multiple */}
@@ -224,9 +224,9 @@ const EventDetail = () => {
                     {/* LEFT COLUMN: Main Articles */}
                     <article className="main-article-column">
                         {/* Intro / Lead */}
-                        {event.shortDescription && (
+                        {(event.shortDescription || event.shortDescription_hi) && (
                             <div className="article-lead">
-                                <p>{event.shortDescription}</p>
+                                <p>{(i18n.language === 'hi' && event.shortDescription_hi) ? event.shortDescription_hi : event.shortDescription}</p>
                             </div>
                         )}
 

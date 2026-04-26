@@ -18,12 +18,15 @@ const contentBlockSchema = new mongoose.Schema({
 
 const eventSchema = new mongoose.Schema({
     title: { type: String, required: true },
+    title_hi: { type: String },
     slug: { type: String, unique: true, required: true },
     coverImage: { type: String }, // URL
     heroImages: [{ type: String }], // Array of URLs for hero slider
     date: { type: Date },
     location: { type: String },
+    location_hi: { type: String },
     shortDescription: { type: String },
+    shortDescription_hi: { type: String },
     status: {
         type: String,
         enum: ['upcoming', 'ongoing', 'completed'],

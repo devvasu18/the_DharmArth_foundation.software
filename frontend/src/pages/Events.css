@@ -1074,9 +1074,9 @@
     .video-section-header h2,
     .engagement-header h2 {
         font-size: 1.8rem !important;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
         width: 100%;
         max-width: 100%;
     }
