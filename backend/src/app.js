@@ -3,6 +3,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const mongoSanitize = require('express-mongo-sanitize');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
@@ -21,6 +23,21 @@ app.use(cors({
 }));
 app.use(helmet());
 app.use(morgan('dev'));
+
+// Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again after 15 minutes',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Apply rate limiter to all routes
+app.use('/api/', limiter);
+
+// Data sanitization against NoSQL query injection
+app.use(mongoSanitize());
 const path = require('path');
 app.use('/public', express.static(path.join(__dirname, '../public')));
 

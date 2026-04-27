@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import './EventDetail.css';
+import DOMPurify from 'dompurify';
 
 const EventDetail = () => {
     const { slug } = useParams();
@@ -141,7 +142,7 @@ const EventDetail = () => {
                 const htmlContent = (i18n.language === 'hi' && block.content.htmlHi) ? block.content.htmlHi : block.content.html;
                 return (
                     <div key={index} className="detail-block text-block animate-up">
-                        <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlContent) }} />
                     </div>
                 );
             case 'image':

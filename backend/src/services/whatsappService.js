@@ -24,7 +24,8 @@ class WhatsappService {
             const response = await fetch(`${this.baseUrl}/send`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'x-api-key': process.env.WHATSAPP_SERVICE_API_KEY
                 },
                 body: JSON.stringify({
                     number: cleanNumber,
@@ -58,7 +59,10 @@ class WhatsappService {
             console.log(`[EMAIL] Sending email to ${to}...`);
             const response = await fetch(`${this.baseUrl}/send-email`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-api-key': process.env.WHATSAPP_SERVICE_API_KEY
+                },
                 body: JSON.stringify({
                     to,
                     subject,

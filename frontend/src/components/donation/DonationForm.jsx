@@ -7,6 +7,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import './DonationForm.css';
 import { validatePAN, validateAadhaar } from '../../utils/validators';
+import DOMPurify from 'dompurify';
 
 const DonationForm = ({ onSuccess }) => {
     const { t } = useTranslation();
@@ -439,7 +440,7 @@ const DonationForm = ({ onSuccess }) => {
                                     <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--primary)' }}>
                                         {t('donatePage.claimAccount')}
                                     </h3>
-                                    <p style={{ fontSize: '0.95rem', color: '#64748b' }} dangerouslySetInnerHTML={{ __html: t('donatePage.claimDesc') }}></p>
+                                    <p style={{ fontSize: '0.95rem', color: '#64748b' }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t('donatePage.claimDesc')) }}></p>
                                 </div>
 
                                 <div style={{ textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>

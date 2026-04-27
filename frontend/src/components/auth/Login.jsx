@@ -7,6 +7,7 @@ import AuthFooter from './AuthFooter';
 import api from '../../services/api';
 import { useNavigate, Link } from 'react-router-dom';
 import './Auth.css';
+import DOMPurify from 'dompurify';
 
 const Login = () => {
     const { i18n } = useTranslation();
@@ -126,7 +127,7 @@ const Login = () => {
                                         <span>
                                             {parts.map((part, index) => (
                                                 <React.Fragment key={index}>
-                                                    <span dangerouslySetInnerHTML={{ __html: part }}></span>
+                                                    <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(part) }}></span>
                                                     {index < parts.length - 1 && (
                                                         <Link
                                                             to={link}
@@ -143,7 +144,7 @@ const Login = () => {
                                     // Fallback if substring not found
                                     return (
                                         <>
-                                            <span dangerouslySetInnerHTML={{ __html: text }}></span>
+                                            <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(text) }}></span>
                                             {btnText && (
                                                 <Link
                                                     to={link}
