@@ -6,9 +6,10 @@ const Event = require('../models/Event');
 // Public Routes
 router.get('/', async (req, res) => {
     try {
-        const { status, limit, page = 1 } = req.query;
+        const { status, category, limit, page = 1 } = req.query;
         let query = { isPublished: true };
         if (status) query.status = status;
+        if (category) query.category = category;
 
         const limitVal = parseInt(limit) || 10;
         const skipObs = (parseInt(page) - 1) * limitVal;
@@ -32,6 +33,40 @@ router.get('/slug/:slug', async (req, res) => {
         if (!event) return res.status(404).json({ message: 'Event not found' });
         res.json(event);
     } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Event Registration / Interest
+router.post('/register', async (req, res) => {
+    try {
+        const { eventId, name, mobile, email, userId } = req.body;
+
+        if (!eventId || !name || !mobile) {
+            return res.status(400).json({ message: 'Event ID, name and mobile are required' });
+        }
+
+        const EventRegistration = require('../models/EventRegistration');
+
+        // Check if already registered
+        const existing = await EventRegistration.findOne({ event: eventId, mobile });
+        if (existing) {
+            return res.status(400).json({ message: 'You have already registered for this event with this mobile number.' });
+        }
+
+        const registration = new EventRegistration({
+            event: eventId,
+            user: userId || null,
+            name,
+            mobile,
+            email,
+            status: 'pending'
+        });
+
+        await registration.save();
+        res.status(201).json({ message: 'Interest registered successfully. We will contact you soon!' });
+    } catch (error) {
+        console.error(error);
         res.status(500).json({ message: error.message });
     }
 });

@@ -12,6 +12,7 @@ const Events = () => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all'); // all, upcoming, past
+    const [categoryFilter, setCategoryFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [headerSlides, setHeaderSlides] = useState([]);
     const [eventVideos, setEventVideos] = useState([]);
@@ -60,11 +61,16 @@ const Events = () => {
         return () => clearInterval(timer);
     }, [headerSlides]);
 
+    useEffect(() => {
+        fetchEvents();
+    }, [filter, categoryFilter]);
+
     const fetchEvents = async () => {
         try {
-            // Fetch all for now and filter status client side or server side
-            // Ideally server side, but for MVP fetching default is okay
-            const res = await api.get('/events');
+            setLoading(true);
+            const statusParam = filter === 'all' ? '' : filter;
+            const categoryParam = categoryFilter === 'all' ? '' : categoryFilter;
+            const res = await api.get(`/events?status=${statusParam}&category=${categoryParam}`);
             setEvents(res.data.events || []);
         } catch (error) {
             console.error('Failed to fetch events');
@@ -144,33 +150,58 @@ const Events = () => {
 
             <div className="events-filters">
                 <div className="filter-wrapper">
-                    <div className="filter-tabs">
-                        <button
-                            className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
-                            onClick={() => setFilter('all')}
-                        >{(i18n.language === 'hi') ? 'सभी कार्यक्रम' : 'All Events'}</button>
-                        <button
-                            className={`filter-tab ${filter === 'upcoming' ? 'active' : ''}`}
-                            onClick={() => setFilter('upcoming')}
-                        >{(i18n.language === 'hi') ? 'आगामी' : 'Upcoming'}</button>
-                        <button
-                            className={`filter-tab ${filter === 'past' ? 'active' : ''}`}
-                            onClick={() => setFilter('past')}
-                        >{(i18n.language === 'hi') ? 'पिछले कार्यक्रम' : 'Past Events'}</button>
-                        <Link to="/gallery" className="filter-tab gallery-link" style={{ marginLeft: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <Image size={16} /> {(i18n.language === 'hi') ? 'गैलरी' : 'Gallery'}
-                        </Link>
+                    <div className="status-filter-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                        <div className="filter-tabs">
+                            <button
+                                className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
+                                onClick={() => setFilter('all')}
+                            >{(i18n.language === 'hi') ? 'सभी' : 'All'}</button>
+                            <button
+                                className={`filter-tab ${filter === 'upcoming' ? 'active' : ''}`}
+                                onClick={() => setFilter('upcoming')}
+                            >{(i18n.language === 'hi') ? 'आगामी' : 'Upcoming'}</button>
+                            <button
+                                className={`filter-tab ${filter === 'past' ? 'active' : ''}`}
+                                onClick={() => setFilter('past')}
+                            >{(i18n.language === 'hi') ? 'पूर्ण' : 'Past'}</button>
+                        </div>
+
+                        <div className="search-box" style={{ width: '300px' }}>
+                            <input
+                                type="text"
+                                className="search-input"
+                                placeholder={(i18n.language === 'hi') ? 'कार्यक्रम खोजें...' : 'Search events...'}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            <Search size={18} style={{ position: 'absolute', right: 15, top: 12, color: '#999' }} />
+                        </div>
                     </div>
 
-                    <div className="search-box">
-                        <input
-                            type="text"
-                            className="search-input"
-                            placeholder={(i18n.language === 'hi') ? 'कार्यक्रम खोजें...' : 'Search events...'}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        <Search size={18} style={{ position: 'absolute', right: 15, top: 12, color: '#999' }} />
+                    <div className="category-filter-row" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#666', alignSelf: 'center', marginRight: '5px' }}>
+                            {(i18n.language === 'hi' ? 'श्रेणी:' : 'Category:')}
+                        </span>
+                        {['all', 'Health Blog', 'Medical Camp', 'Social Event', 'Success Story'].map(cat => (
+                            <button
+                                key={cat}
+                                className={`cat-pill ${categoryFilter === cat ? 'active' : ''}`}
+                                onClick={() => setCategoryFilter(cat)}
+                                style={{
+                                    padding: '6px 16px',
+                                    borderRadius: '20px',
+                                    border: '1px solid #ddd',
+                                    background: categoryFilter === cat ? '#2563eb' : 'white',
+                                    color: categoryFilter === cat ? 'white' : '#666',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem',
+                                    fontWeight: '500',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                {cat === 'all' ? (i18n.language === 'hi' ? 'सभी श्रेणियां' : 'All Categories') : cat}
+                            </button>
+                        ))}
                     </div>
                 </div>
             </div>
@@ -196,11 +227,18 @@ const Events = () => {
                                             <Calendar size={40} color="#ccc" />
                                         </div>
                                     )}
-                                    <span className={`event-status-tag ${event.status}`}>
-                                        {event.status === 'upcoming' ? (i18n.language === 'hi' ? 'आगामी' : 'Upcoming') :
-                                            event.status === 'ongoing' ? (i18n.language === 'hi' ? 'अभी हो रहा है' : 'Happening Now') :
-                                                (i18n.language === 'hi' ? 'पूर्ण' : 'Completed')}
-                                    </span>
+                                    <div className="event-card-badges">
+                                        <span className={`event-status-tag ${event.status}`}>
+                                            {event.status === 'upcoming' ? (i18n.language === 'hi' ? 'आगामी' : 'Upcoming') :
+                                                event.status === 'ongoing' ? (i18n.language === 'hi' ? 'अभी हो रहा है' : 'Happening Now') :
+                                                    (i18n.language === 'hi' ? 'पूर्ण' : 'Completed')}
+                                        </span>
+                                        {event.category && (
+                                            <span className="event-category-badge">
+                                                {event.category}
+                                            </span>
+                                        )}
+                                    </div>
                                 </Link>
                                 <div className="event-card-content">
                                     <span className="event-meta-row">

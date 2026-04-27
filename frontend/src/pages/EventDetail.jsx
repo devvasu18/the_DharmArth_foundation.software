@@ -14,12 +14,27 @@ const EventDetail = () => {
     const [recentEvents, setRecentEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
+    const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+    const [registerFormData, setRegisterFormData] = useState({
+        name: '',
+        mobile: '',
+        email: ''
+    });
+    const [registering, setRegistering] = useState(false);
     const { i18n } = useTranslation();
 
     useEffect(() => {
         window.scrollTo(0, 0);
         fetchEvent();
         fetchRecentEvents();
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            setRegisterFormData({
+                name: user.name || '',
+                mobile: user.mobile || '',
+                email: user.email || ''
+            });
+        }
     }, [slug]);
 
     useEffect(() => {
@@ -50,10 +65,29 @@ const EventDetail = () => {
                 // Get 6 events: 3 for sidebar, 3 for related grid
                 setRecentEvents(res.data.events.filter(e => e.slug !== slug).slice(0, 6));
             }
-        } catch (err) {
-            console.error(err);
+        } catch (error) {
+            console.error('Failed to load recent events');
         }
-    }
+    };
+
+    const handleRegisterInterest = async (e) => {
+        e.preventDefault();
+        setRegistering(true);
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const res = await api.post('/events/register', {
+                eventId: event._id,
+                ...registerFormData,
+                userId: user ? user._id : null
+            });
+            toast.success(res.data.message);
+            setIsRegisterModalOpen(false);
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to register interest');
+        } finally {
+            setRegistering(false);
+        }
+    };
 
     // Instagram Embed Script
     useEffect(() => {
@@ -280,16 +314,24 @@ const EventDetail = () => {
                         </div>
 
                         <div className="sidebar-widget highlight">
-                            <h3>Support Our Cause</h3>
-                            <p>Your contribution can bring a smile to someone's face today.</p>
-                            <Link to="/donate" className="sidebar-donate-btn">Donate Now</Link>
+                            <h3>{(i18n.language === 'hi' ? 'इस कार्यक्रम में रुचि है?' : 'Interested in this event?')}</h3>
+                            <p>{(i18n.language === 'hi' ? 'पंजीकरण करें और जब यह शुरू हो तो एक अनुस्मारक प्राप्त करें।' : 'Register and get a reminder when it starts.')}</p>
+                            <button
+                                className="sidebar-donate-btn"
+                                onClick={() => setIsRegisterModalOpen(true)}
+                                style={{ border: 'none', width: '100%' }}
+                            >
+                                {(i18n.language === 'hi' ? 'अभी पंजीकरण करें' : 'Register Interest')}
+                            </button>
                         </div>
 
                         <div className="sidebar-widget">
                             <h3>Share This</h3>
                             <div className="sidebar-share-row">
-                                <button className="side-share-icon fb"><Share2 size={18} /></button>
-                                {/* Add real share links if needed */}
+                                <button className="side-share-icon fb" onClick={() => {
+                                    navigator.clipboard.writeText(window.location.href);
+                                    toast.success('Link copied to clipboard!');
+                                }}><Share2 size={18} /></button>
                             </div>
                         </div>
                     </aside>
@@ -336,6 +378,54 @@ const EventDetail = () => {
                 </section>
 
             </main>
+
+            {/* Registration Modal */}
+            {isRegisterModalOpen && (
+                <div className="registration-modal-overlay">
+                    <div className="registration-modal-card">
+                        <button className="modal-close-btn" onClick={() => setIsRegisterModalOpen(false)}>×</button>
+                        <div className="modal-header">
+                            <h2>{(i18n.language === 'hi' ? 'अपनी रुचि दर्ज करें' : 'Register Your Interest')}</h2>
+                            <p>{(i18n.language === 'hi' ? 'हमें अपना विवरण दें, हम आपको आगामी स्वास्थ्य शिविरों और कार्यक्रमों के बारे में सूचित करेंगे।' : 'Give us your details, we will notify you about upcoming health camps and events.')}</p>
+                        </div>
+                        <form onSubmit={handleRegisterInterest} className="registration-form">
+                            <div className="form-group">
+                                <label>{(i18n.language === 'hi' ? 'पूरा नाम' : 'Full Name')}</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={registerFormData.name}
+                                    onChange={(e) => setRegisterFormData({ ...registerFormData, name: e.target.value })}
+                                    placeholder={(i18n.language === 'hi' ? 'अपना नाम दर्ज करें' : 'Enter your name')}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>{(i18n.language === 'hi' ? 'मोबाइल नंबर' : 'Mobile Number')}</label>
+                                <input
+                                    type="tel"
+                                    required
+                                    pattern="[0-9]{10}"
+                                    value={registerFormData.mobile}
+                                    onChange={(e) => setRegisterFormData({ ...registerFormData, mobile: e.target.value })}
+                                    placeholder="10 digit mobile number"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>{(i18n.language === 'hi' ? 'ईमेल (वैकल्पिक)' : 'Email (Optional)')}</label>
+                                <input
+                                    type="email"
+                                    value={registerFormData.email}
+                                    onChange={(e) => setRegisterFormData({ ...registerFormData, email: e.target.value })}
+                                    placeholder="your@email.com"
+                                />
+                            </div>
+                            <button type="submit" className="btn-modal-submit" disabled={registering}>
+                                {registering ? (i18n.language === 'hi' ? 'पंजीकरण हो रहा है...' : 'Registering...') : (i18n.language === 'hi' ? 'पंजीकरण सबमिट करें' : 'Submit Registration')}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             <Footer />
         </div>

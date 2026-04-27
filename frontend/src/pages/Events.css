@@ -350,22 +350,38 @@
 }
 
 /* Tag style like the reference image */
-.event-status-tag {
+.event-card-badges {
     position: absolute;
-    top: 20px;
-    left: 20px;
-    padding: 6px 14px;
-    border-radius: 8px;
-    /* Slightly rounded rect */
-    color: white;
+    top: 15px;
+    left: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 2;
+}
+
+.event-status-tag {
+    padding: 5px 12px;
+    border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     background: var(--accent);
     /* Using accent (Orange) for pop, similar to Red */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    z-index: 2;
+    color: white;
+}
+
+.event-category-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.9);
+    color: #1a202c;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Status variants if needed, or stick to uniform look */

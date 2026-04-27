@@ -32,6 +32,11 @@ const eventSchema = new mongoose.Schema({
         enum: ['upcoming', 'ongoing', 'completed'],
         default: 'upcoming'
     },
+    category: {
+        type: String,
+        enum: ['Health Blog', 'Medical Camp', 'Social Event', 'Success Story'],
+        default: 'Social Event'
+    },
     blocks: [contentBlockSchema],
     metaTitle: { type: String },
     metaDescription: { type: String },

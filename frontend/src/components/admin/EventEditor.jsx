@@ -276,6 +276,15 @@ const EventEditor = () => {
                             </select>
                         </div>
                         <div className="form-group">
+                            <label>Category</label>
+                            <select name="category" className="form-control" value={formData.category || 'Social Event'} onChange={handleInputChange}>
+                                <option value="Social Event">Social Event</option>
+                                <option value="Health Blog">Health Blog</option>
+                                <option value="Medical Camp">Medical Camp</option>
+                                <option value="Success Story">Success Story</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
                             <label>Event Date</label>
                             <input
                                 type="date" name="date" className="form-control"
