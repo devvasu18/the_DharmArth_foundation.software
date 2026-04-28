@@ -49,13 +49,11 @@ exports.completeDonation = async (orderId, paymentId, io) => {
             await processDonationCommission(amount, motivatorMobile, donation._id, donorName, donorMobile, level1UserId);
         }
 
-        // 4. Generate 80G Certificate
-        if (is80G) {
-            try {
-                await certificateService.createCertificate(donation);
-            } catch (err) {
-                console.error("Certificate Generation Failed:", err);
-            }
+        // 4. Generate Receipt
+        try {
+            await certificateService.createCertificate(donation);
+        } catch (err) {
+            console.error("Receipt Generation Failed:", err);
         }
 
         // 5. Create Notification for Admin Dashboard

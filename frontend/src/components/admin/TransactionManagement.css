@@ -300,6 +300,13 @@
     font-size: 0.65rem;
 }
 
+.status-badge.badge-80g-pending {
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #ffedd5;
+    font-size: 0.65rem;
+}
+
 .status-badge.badge-80g-no {
     background: #fef2f2;
     color: #dc2626;

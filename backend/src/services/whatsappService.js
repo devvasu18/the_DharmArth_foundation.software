@@ -253,6 +253,14 @@ class WhatsappService {
 
         return this.sendMessage(motivatorMobile, message, { type: 'commission_l2' });
     }
+    /**
+     * Specialized: Send 80G Certificate Ready Notification
+     */
+    async send80GCertificateNotification(mobile, name, certificateUrl) {
+        const fullUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}${certificateUrl}`;
+        const message = `Dear ${name}, your 80G certificate is ready. 🙏\n\nYou can download it here: ${fullUrl}`;
+        return this.sendMessage(mobile, message, { type: '80g_certificate' });
+    }
 }
 
 module.exports = new WhatsappService();

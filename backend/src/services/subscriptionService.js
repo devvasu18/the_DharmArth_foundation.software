@@ -82,13 +82,11 @@ const handleSubscriptionCharged = async (subscriptionId, paymentId, payload, io)
             );
         }
 
-        // 7. Generate Certificate
-        if (donation.is80G) {
-            try {
-                await certificateService.createCertificate(donation);
-            } catch (err) {
-                console.error("Subscription Certificate Failed:", err);
-            }
+        // 7. Generate Receipt
+        try {
+            await certificateService.createCertificate(donation);
+        } catch (err) {
+            console.error("Subscription Receipt Failed:", err);
         }
 
         // 8. Notifications

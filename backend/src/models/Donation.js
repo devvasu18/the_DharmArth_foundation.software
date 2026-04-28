@@ -31,7 +31,10 @@ const donationSchema = new mongoose.Schema({
     orderId: { type: String, index: true }, // Razorpay Order ID
     is80G: { type: Boolean, default: false, index: true },
     receiptNumber: { type: String, unique: true, sparse: true },
-    certificateUrl: { type: String },
+    receiptUrl: { type: String }, // Normal receipt
+    is80GUploaded: { type: Boolean, default: false }, // Manual upload status
+    certificate80GUrl: { type: String }, // Manually uploaded 80G PDF
+    certificateUrl: { type: String }, // Deprecated or for legacy
 
     // Optimized Filtering Fields
     level1UserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true }, // The Motivator

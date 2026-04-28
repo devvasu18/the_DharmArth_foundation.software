@@ -46,7 +46,7 @@ const UserDashboard = () => {
     const [disputeMsg, setDisputeMsg] = useState('');
     const [disputePayoutId, setDisputePayoutId] = useState('');
     const [isDisputeSubmitting, setIsDisputeSubmitting] = useState(false);
-    const [activeTab, setActiveTab] = useState('transactions'); // 'transactions' or 'subscriptions'
+
 
     // Infinite Scroll States
     const [page, setPage] = useState(1);
@@ -65,7 +65,7 @@ const UserDashboard = () => {
     // Fetch initial profile, balance and stats
     useEffect(() => {
         if (!user?.token || user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
-        
+
         const fetchInitialData = async () => {
             try {
                 const uRes = await api.get('/users/profile');
@@ -90,12 +90,12 @@ const UserDashboard = () => {
             setPage(1);
             setHasMore(true);
         }
-        
+
         setIsLoadingMore(true);
         try {
             const tRes = await api.get(`/wallet/transactions?month=${selectedMonth}&year=${selectedYear}&page=${pageNum}&limit=20`);
             const newTxns = tRes.data.transactions || [];
-            
+
             setTransactions(prev => isInitial ? newTxns : [...prev, ...newTxns]);
             setHasMore(tRes.data.hasMore);
         } catch (error) {
@@ -163,7 +163,7 @@ const UserDashboard = () => {
 
         const doc = new jsPDF();
         doc.text("Transaction History Report", 14, 15);
-        
+
         const tableColumn = ["Date", "Description", "Amount", "Status"];
         const tableRows = data.map(t => [
             new Date(t.createdAt).toLocaleDateString(),
@@ -177,7 +177,7 @@ const UserDashboard = () => {
             body: tableRows,
             startY: 20,
         });
-        
+
         doc.save(`Transactions_${new Date().toLocaleDateString()}.pdf`);
         toast.success("PDF exported successfully!");
     };
@@ -186,7 +186,7 @@ const UserDashboard = () => {
     const lastTxnRef = React.useCallback(node => {
         if (isLoadingMore) return;
         if (observer.current) observer.current.disconnect();
-        
+
         observer.current = new IntersectionObserver(entries => {
             if (entries[0].isIntersecting && hasMore) {
                 setPage(prevPage => {
@@ -196,10 +196,10 @@ const UserDashboard = () => {
                 });
             }
         }, { threshold: 0.1, rootMargin: '200px' }); // Pre-fetch when 200px from bottom (should catch around 15th-20th item)
-        
+
         if (node) observer.current.observe(node);
     }, [isLoadingMore, hasMore]);
-    
+
 
 
     const shareLink = user?.referralCode
@@ -233,10 +233,10 @@ const UserDashboard = () => {
             toast.success("Help request sent to Admin successfully.");
             setIsDisputeModalOpen(false);
             setIsDetailsModalOpen(false);
-            
+
             // Re-fetch transactions to show updated dispute status
             // (Assuming fetchAllData is available, otherwise user might need to refresh)
-            window.location.reload(); 
+            window.location.reload();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to send help request");
         } finally {
@@ -311,8 +311,8 @@ const UserDashboard = () => {
                                         <div className="stat-item">
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 <span className="stat-val">{stats.l1Donors || 0}</span>
-                                                <button 
-                                                    className="btn-view-l1" 
+                                                <button
+                                                    className="btn-view-l1"
                                                     onClick={fetchL1Donors}
                                                     title="View L1 Donors"
                                                 >
@@ -329,7 +329,7 @@ const UserDashboard = () => {
                                 </div>
 
 
-                                <button 
+                                <button
                                     className="payout-btn"
                                     onClick={() => {
                                         const hasPayoutDetails = user?.payoutCredentials && (user?.payoutCredentials.accountNumber || user?.payoutCredentials.upiId);
@@ -414,29 +414,17 @@ const UserDashboard = () => {
 
                         {/* TABS HEADER */}
                         <div className="dashboard-tabs-header">
-                            <button 
-                                className={`tab-btn ${activeTab === 'transactions' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('transactions')}
-                            >
-                                <Clock size={18} /> Recent Activity
-                            </button>
-                            <button 
-                                className={`tab-btn ${activeTab === 'subscriptions' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('subscriptions')}
-                            >
-                                <CreditCard size={18} /> My Subscriptions
-                            </button>
+                            <h3 className="section-title" style={{ padding: '0 1rem', margin: '0' }}>Recent Activity</h3>
                         </div>
 
-                        {activeTab === 'transactions' ? (
-                            <motion.div
-                                className="transactions-section"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                key="transactions"
-                            >
-                                <div className="section-header-row">
-                                    <h3 className="section-title">Transaction History</h3>
+                        <motion.div
+                            className="transactions-section"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            key="transactions"
+                        >
+                            <div className="section-header-row">
+                                <h3 className="section-title">Transaction History</h3>
                                 <div className="txn-filters">
                                     <select
                                         className="filter-select"
@@ -486,17 +474,17 @@ const UserDashboard = () => {
                                         })}
                                     </select>
                                     <div className="export-actions-row">
-                                        <button 
-                                            className="btn-export-icon excel" 
-                                            onClick={exportToExcel} 
+                                        <button
+                                            className="btn-export-icon excel"
+                                            onClick={exportToExcel}
                                             disabled={isExporting}
                                             title="Export to Excel"
                                         >
                                             <FileSpreadsheet size={16} />
                                         </button>
-                                        <button 
-                                            className="btn-export-icon pdf" 
-                                            onClick={exportToPDF} 
+                                        <button
+                                            className="btn-export-icon pdf"
+                                            onClick={exportToPDF}
                                             disabled={isExporting}
                                             title="Export to PDF"
                                         >
@@ -520,6 +508,8 @@ const UserDashboard = () => {
                                                 <th>Description</th>
                                                 <th>Amount</th>
                                                 <th>Status</th>
+                                                <th>Receipt</th>
+                                                <th>80G Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -550,32 +540,30 @@ const UserDashboard = () => {
                                                     </td>
                                                     <td>
                                                         <div className="status-cell">
-                                                            <span className={`status-badge ${
-                                                                txn.reason === 'payout' && txn.status === 'pending' ? 'badge-processing' : 
-                                                                txn.status === 'failed' ? 'badge-rejected' :
-                                                                txn.reason === 'payout' && (txn.status === 'success' || txn.status === 'completed') ? 'badge-completed' :
-                                                                txn.type === 'credit' || txn.isDonation ? 'badge-credit' : 'badge-debit'
-                                                            }`}>
-                                                                {txn.reason === 'payout' && txn.status === 'pending' ? 'IN PROCESS' : 
-                                                                 txn.status === 'failed' ? 'REJECTED' :
-                                                                 txn.isHelpResolved ? 'HELP RESOLVED' :
-                                                                 txn.type === 'credit' ? 'Commission' : (txn.isDonation ? 'Donation' : (txn.reason === 'payout' ? 'COMPLETED' : txn.type))}
+                                                            <span className={`status-badge ${txn.reason === 'payout' && txn.status === 'pending' ? 'badge-processing' :
+                                                                    txn.status === 'failed' ? 'badge-rejected' :
+                                                                        txn.reason === 'payout' && (txn.status === 'success' || txn.status === 'completed') ? 'badge-completed' :
+                                                                            txn.type === 'credit' || txn.isDonation ? 'badge-credit' : 'badge-debit'
+                                                                }`}>
+                                                                {txn.reason === 'payout' && txn.status === 'pending' ? 'IN PROCESS' :
+                                                                    txn.status === 'failed' ? 'REJECTED' :
+                                                                        txn.isHelpResolved ? 'HELP RESOLVED' :
+                                                                            txn.type === 'credit' ? 'Commission' : (txn.isDonation ? 'Donation' : (txn.reason === 'payout' ? 'COMPLETED' : txn.type))}
                                                             </span>
-                                                            
+
                                                             {txn.reason === 'payout' && (
-                                                                <button 
-                                                                    className="btn-txn-details" 
+                                                                <button
+                                                                    className="btn-txn-details"
                                                                     onClick={async () => {
-                                                                        // Fetch PayoutRequest details using the referenceId if it's a payout
                                                                         try {
                                                                             const res = await api.get(`/payouts/my`);
                                                                             const payout = res.data.find(p => p._id === txn.referenceId || txn.description.includes(p._id.toString().slice(-6).toUpperCase()));
-                                                                             if (payout) {
+                                                                            if (payout) {
                                                                                 setSelectedTxnDetails(payout);
                                                                                 setIsDetailsModalOpen(true);
-                                                                             } else {
+                                                                            } else {
                                                                                 toast.error("Payout details not found");
-                                                                             }
+                                                                            }
                                                                         } catch (err) {
                                                                             toast.error("Failed to load details");
                                                                         }
@@ -585,18 +573,51 @@ const UserDashboard = () => {
                                                                     <Eye size={14} />
                                                                 </button>
                                                             )}
-
-                                                            {txn.certificateUrl && (
-                                                                <a
-                                                                    href={`${api.defaults.baseURL.replace('/api', '')}${txn.certificateUrl}`}
-                                                                    target="_blank"
-                                                                    className="btn-download-receipt"
-                                                                    title="Download 80G Receipt"
-                                                                >
-                                                                    <Download size={12} /> Receipt
-                                                                </a>
-                                                            )}
                                                         </div>
+                                                    </td>
+                                                    <td>
+                                                        {txn.isDonation && (txn.receiptUrl || txn.certificateUrl) ? (
+                                                            <a
+                                                                href={`${api.defaults.baseURL.replace('/api', '')}${txn.receiptUrl || txn.certificateUrl}`}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="btn-download-receipt"
+                                                                title="Download Receipt"
+                                                            >
+                                                                <Download size={12} /> Receipt
+                                                            </a>
+                                                        ) : (
+                                                            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>-</span>
+                                                        )}
+                                                    </td>
+                                                    <td>
+                                                        {txn.isDonation ? (
+                                                            <>
+                                                                {txn.is80GUploaded && txn.certificate80GUrl ? (
+                                                                    <a
+                                                                        href={`${api.defaults.baseURL.replace('/api', '')}${txn.certificate80GUrl}`}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        className="btn-download-receipt"
+                                                                        style={{ background: '#f0fdf4', color: '#16a34a', border: '1px solid #dcfce7' }}
+                                                                        title="Download 80G Certificate"
+                                                                    >
+                                                                        <FilePdf size={12} /> 80G
+                                                                    </a>
+                                                                ) : txn.is80G ? (
+                                                                    <span
+                                                                        className="status-badge"
+                                                                        style={{ background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5', fontSize: '10px', padding: '2px 6px' }}
+                                                                    >
+                                                                        Pending
+                                                                    </span>
+                                                                ) : (
+                                                                    <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>No</span>
+                                                                )}
+                                                            </>
+                                                        ) : (
+                                                            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>-</span>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -622,19 +643,6 @@ const UserDashboard = () => {
                                 </div>
                             )}
                         </motion.div>
-                        ) : (
-                            <motion.div
-                                className="subscriptions-section"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                key="subscriptions"
-                            >
-                                <div className="section-header-row">
-                                    <h3 className="section-title">My Monthly Donations</h3>
-                                </div>
-                                <SubscriptionList />
-                            </motion.div>
-                        )}
                     </>
                 ) : (
                     <div className="dashboard-card" style={{ textAlign: 'center', padding: '4rem' }}>
@@ -662,23 +670,23 @@ const UserDashboard = () => {
             {/* Payout Details Modal */}
             {isDetailsModalOpen && selectedTxnDetails && (
                 <div className="payout-modal-overlay" onClick={() => setIsDetailsModalOpen(false)}>
-                    <motion.div 
-                        className="payout-modal" 
+                    <motion.div
+                        className="payout-modal"
                         onClick={e => e.stopPropagation()}
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                     >
                         <button className="payout-modal-close" onClick={() => setIsDetailsModalOpen(false)}><X size={24} /></button>
-                        
+
                         <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' }}>
                             <h2>Payout Details</h2>
                             <p>Transaction reference and payment proof</p>
                         </div>
 
                         <div className="conditions-container" style={{ gap: '1.5rem', background: '#ffffff' }}>
-                            <div className="payout-status-banner" style={{ 
-                                padding: '1rem', 
-                                borderRadius: '12px', 
+                            <div className="payout-status-banner" style={{
+                                padding: '1rem',
+                                borderRadius: '12px',
                                 background: selectedTxnDetails.status === 'completed' ? '#f0fdf4' : (selectedTxnDetails.status === 'rejected' ? '#fef2f2' : '#fff7ed'),
                                 color: selectedTxnDetails.status === 'completed' ? '#15803d' : (selectedTxnDetails.status === 'rejected' ? '#b91c1c' : '#c2410c'),
                                 textAlign: 'center',
@@ -727,7 +735,7 @@ const UserDashboard = () => {
 
                             {selectedTxnDetails.status === 'completed' && !selectedTxnDetails.isDisputed && (
                                 <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', marginTop: '0.5rem', textAlign: 'center' }}>
-                                    <button 
+                                    <button
                                         style={{ color: '#ef4444', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'underline' }}
                                         onClick={() => triggerDispute(selectedTxnDetails._id)}
                                     >
@@ -739,7 +747,7 @@ const UserDashboard = () => {
                             {selectedTxnDetails.isDisputed && (
                                 <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', marginTop: '0.5rem', textAlign: 'center', color: selectedTxnDetails.isHelpResolved ? '#059669' : '#ef4444', fontSize: '0.85rem', fontWeight: 600 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                                        {selectedTxnDetails.isHelpResolved ? <CheckCircle size={14} /> : <Clock size={14} />} 
+                                        {selectedTxnDetails.isHelpResolved ? <CheckCircle size={14} /> : <Clock size={14} />}
                                         {selectedTxnDetails.isHelpResolved ? 'HELP RESOLVED' : 'Help Requested / Dispute Active'}
                                     </div>
                                     {selectedTxnDetails.disputeMessage && (
@@ -766,8 +774,8 @@ const UserDashboard = () => {
             <AnimatePresence>
                 {isDisputeModalOpen && (
                     <div className="payout-modal-overlay" onClick={() => setIsDisputeModalOpen(false)}>
-                        <motion.div 
-                            className="payout-modal" 
+                        <motion.div
+                            className="payout-modal"
                             onClick={e => e.stopPropagation()}
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -775,7 +783,7 @@ const UserDashboard = () => {
                             style={{ maxWidth: '450px' }}
                         >
                             <button className="payout-modal-close" onClick={() => setIsDisputeModalOpen(false)}><X size={24} /></button>
-                            
+
                             <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
                                     <Info size={28} color="white" />
@@ -793,11 +801,11 @@ const UserDashboard = () => {
                                     <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>
                                         Reason for Help Request
                                     </label>
-                                    <textarea 
-                                        style={{ 
-                                            width: '100%', 
-                                            borderRadius: '12px', 
-                                            padding: '12px', 
+                                    <textarea
+                                        style={{
+                                            width: '100%',
+                                            borderRadius: '12px',
+                                            padding: '12px',
                                             border: '2px solid #e2e8f0',
                                             minHeight: '120px',
                                             fontSize: '0.95rem',
@@ -813,13 +821,13 @@ const UserDashboard = () => {
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '12px', marginTop: '1.5rem' }}>
-                                    <button 
-                                        style={{ 
-                                            flex: 1, 
-                                            border: '1px solid #e2e8f0', 
-                                            background: 'white', 
-                                            borderRadius: '12px', 
-                                            padding: '12px', 
+                                    <button
+                                        style={{
+                                            flex: 1,
+                                            border: '1px solid #e2e8f0',
+                                            background: 'white',
+                                            borderRadius: '12px',
+                                            padding: '12px',
                                             fontWeight: 700,
                                             color: '#64748b',
                                             cursor: 'pointer'
@@ -828,8 +836,8 @@ const UserDashboard = () => {
                                     >
                                         Cancel
                                     </button>
-                                    <button 
-                                        className="btn-proceed" 
+                                    <button
+                                        className="btn-proceed"
                                         style={{ flex: 1, background: '#ef4444', margin: 0 }}
                                         onClick={handleDisputeSubmit}
                                         disabled={isDisputeSubmitting}
@@ -847,8 +855,8 @@ const UserDashboard = () => {
             <AnimatePresence>
                 {isL1ModalOpen && (
                     <div className="payout-modal-overlay" onClick={() => setIsL1ModalOpen(false)}>
-                        <motion.div 
-                            className="payout-modal" 
+                        <motion.div
+                            className="payout-modal"
                             onClick={e => e.stopPropagation()}
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -856,7 +864,7 @@ const UserDashboard = () => {
                             style={{ maxWidth: '450px' }}
                         >
                             <button className="payout-modal-close" onClick={() => setIsL1ModalOpen(false)}><X size={24} /></button>
-                            
+
                             <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)', paddingBottom: '1.5rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
                                     <User size={28} color="white" />
@@ -881,7 +889,7 @@ const UserDashboard = () => {
                                 {/* Filters Row */}
                                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                                     <div style={{ flex: 1, position: 'relative' }}>
-                                        <select 
+                                        <select
                                             value={l1FilterMonth}
                                             onChange={(e) => {
                                                 const val = Number(e.target.value);
@@ -898,7 +906,7 @@ const UserDashboard = () => {
                                         <ChevronDown size={14} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748b' }} />
                                     </div>
                                     <div style={{ flex: 1, position: 'relative' }}>
-                                        <select 
+                                        <select
                                             value={l1FilterYear}
                                             onChange={(e) => {
                                                 const val = Number(e.target.value);
@@ -961,7 +969,7 @@ const UserDashboard = () => {
                                     </div>
                                 )}
                             </div>
-                            
+
                             <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9', padding: '1.25rem' }}>
                                 <button className="btn-proceed" style={{ margin: 0, width: '100%' }} onClick={() => setIsL1ModalOpen(false)}>Close</button>
                             </div>

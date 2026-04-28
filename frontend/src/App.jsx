@@ -18,6 +18,7 @@ const Footer = lazy(() => import('./components/layout/Footer'));
 const DonationPage = lazy(() => import('./pages/DonationPage'));
 const StartFundraiser = lazy(() => import('./pages/StartFundraiser'));
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
+const MySubscriptions = lazy(() => import('./pages/MySubscriptions'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Events = lazy(() => import('./pages/Events'));
 const EventDetail = lazy(() => import('./pages/EventDetail'));
@@ -72,6 +73,7 @@ const router = createBrowserRouter(
       <Route path="/donate" element={<DonationPage />} />
       <Route path="/start-fundraiser" element={<StartFundraiser />} />
       <Route path="/dashboard" element={<UserDashboard />} />
+      <Route path="/my-subscriptions" element={<MySubscriptions />} />
       <Route path="/events" element={<Events />} />
       <Route path="/events/:slug" element={<EventDetail />} />
       <Route path="/gallery" element={<Gallery />} />

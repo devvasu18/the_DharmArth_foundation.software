@@ -16,7 +16,7 @@ router.get('/dashboard', protect, adminOnly, async (req, res) => {
         const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
 
-        const { searchUserId, specificMotivatorIds, is80G, startDate, endDate, sort, _id } = req.query;
+        const { searchUserId, specificMotivatorIds, is80G, pending80G, startDate, endDate, sort, _id } = req.query;
 
         const query = { status: 'success' };
         if (_id) {
@@ -32,13 +32,19 @@ router.get('/dashboard', protect, adminOnly, async (req, res) => {
             };
         }
 
-        // 80G Filter
+        // 80G Filter (Strictly Uploaded)
         if (is80G === 'true') {
-            andConditions.push({
-                $or: [
-                    { is80G: true },
-                    { panNumber: { $exists: true, $regex: /\S/ } }
-                ]
+            andConditions.push({ 
+                is80G: true, 
+                is80GUploaded: true 
+            });
+        }
+
+        // Pending 80G Filter
+        if (pending80G === 'true') {
+            andConditions.push({ 
+                is80G: true, 
+                is80GUploaded: { $ne: true }
             });
         }
 
@@ -148,7 +154,7 @@ router.get('/dashboard', protect, adminOnly, async (req, res) => {
 
         // Fetch Data
         let donations = await Donation.find(query)
-            .select('donorName donorMobile amount address city state motivatorMobile createdAt is80G level1UserId level2UserId status panNumber aadhaarNumber transactionId orderId')
+            .select('donorName donorMobile amount address city state motivatorMobile createdAt is80G is80GUploaded certificate80GUrl level1UserId level2UserId status panNumber aadhaarNumber transactionId orderId')
             .populate({
                 path: 'level1UserId',
                 select: 'name mobile referredBy', // Fetch L2 Relation

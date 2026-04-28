@@ -363,15 +363,7 @@ router.put('/become-motivator', protect, async (req, res) => {
         const sanitizedUser = user.toObject();
         delete sanitizedUser.password;
         
-        // Ensure decrypted values are sent back to frontend
-        if (sanitizedUser.payoutCredentials?.accountNumber) {
-            const { decrypt } = require('../utils/security');
-            sanitizedUser.payoutCredentials.accountNumber = decrypt(sanitizedUser.payoutCredentials.accountNumber);
-        }
-        if (sanitizedUser.payoutCredentials?.ifscCode) {
-            const { decrypt } = require('../utils/security');
-            sanitizedUser.payoutCredentials.ifscCode = decrypt(sanitizedUser.payoutCredentials.ifscCode);
-        }
+
 
         res.json({
             message: 'Successfully registered as Motivator',

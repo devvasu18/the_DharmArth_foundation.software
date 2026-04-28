@@ -233,7 +233,7 @@ const AdminLayout = () => {
                             style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                         >
                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <Calendar size={20} title={isSidebarCollapsed ? "Events" : ""} />
+                                <Calendar size={20} title={isSidebarCollapsed ? "Event Management" : ""} />
                                 <span className="admin-link-text">Events</span>
                             </div>
                             {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isEventsDropdownOpen || location.pathname === '/admin/events' || location.pathname.includes('/admin/events-header') || location.pathname.includes('/admin/event-videos') || location.pathname.includes('/admin/galleries') ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
@@ -246,19 +246,18 @@ const AdminLayout = () => {
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
-                                    Blog Pages
+                                    create event
                                 </NavLink>
                                 <NavLink
                                     to="/admin/events-header"
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
-                                    Events Header
+                                    Events slider
                                 </NavLink>
                                 <NavLink
                                     to="/admin/event-videos"
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
-                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     YouTube Videos
@@ -266,7 +265,6 @@ const AdminLayout = () => {
                                 <NavLink
                                     to="/admin/galleries"
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
-                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Galleries

@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import {
     Search, Filter, Calendar, Download, ChevronDown, X,
-    ArrowRight, User, CheckCircle, Wallet, FileText, Save
+    ArrowRight, User, CheckCircle, Wallet, FileText, Save, Upload, Eye
 } from 'lucide-react';
 import './TransactionManagement.css';
 import toast from 'react-hot-toast';
@@ -31,6 +31,7 @@ const TransactionManagement = () => {
             commissionFilter: 'ALL',
             transactionType: 'ALL',
             is80G: false,
+            pending80G: false,
             sort: 'desc',
             limit: 20,
             dateRange: {
@@ -73,6 +74,8 @@ const TransactionManagement = () => {
 
     const [activeDropdown, setActiveDropdown] = useState(null); // 'USER', 'LEVEL', 'DATE'
     const dropdownRef = useRef(null);
+    const fileInputRef = useRef(null);
+    const [uploadingTxnId, setUploadingTxnId] = useState(null);
 
     // --- Search User Dropdown State ---
     const [userSearchQuery, setUserSearchQuery] = useState('');
@@ -148,6 +151,7 @@ const TransactionManagement = () => {
                 page,
                 limit: filters.limit,
                 is80G: filters.is80G,
+                pending80G: filters.pending80G,
                 startDate: filters.dateRange.start,
                 endDate: filters.dateRange.end,
                 sort: filters.sort === 'asc' ? 'oldest' : 'newest',
@@ -320,6 +324,7 @@ const TransactionManagement = () => {
         if (key === 'comm') setFilters(prev => ({ ...prev, commissionFilter: 'ALL' }));
         if (key === 'type') setFilters(prev => ({ ...prev, transactionType: 'ALL' }));
         if (key === '80g') setFilters(prev => ({ ...prev, is80G: false }));
+        if (key === 'pending80g') setFilters(prev => ({ ...prev, pending80G: false }));
         if (key === 'date') setFilters(prev => ({ ...prev, dateRange: { start: '', end: '' } }));
         if (key === 'level') setFilters(prev => ({ ...prev, levelFilter: 'ALL', specificMotivatorIds: [] }));
     };
@@ -395,6 +400,26 @@ const TransactionManagement = () => {
             toast.error("Generation failed");
         } finally {
             setRegenerating(false);
+        }
+    };
+
+    const handleUpload80G = async (id, file) => {
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('certificate', file);
+
+        setLoading(true);
+        try {
+            const res = await api.post(`/donate/upload-80g/${id}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            toast.success("80G Certificate Uploaded!");
+            fetchTransactions();
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.message || "Upload failed");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -666,11 +691,20 @@ const TransactionManagement = () => {
                 {/* 3. 80G Filter */}
                 <button
                     className={`filter-btn ${filters.is80G ? 'active' : ''}`}
-                    onClick={() => setFilters(prev => ({ ...prev, is80G: !prev.is80G }))}
+                    onClick={() => setFilters(prev => ({ ...prev, is80G: !prev.is80G, pending80G: false }))}
                 >
                     <FileText size={16} />
                     80G Donations
                     {filters.is80G && <CheckCircle size={14} />}
+                </button>
+
+                <button
+                    className={`filter-btn ${filters.pending80G ? 'active' : ''}`}
+                    onClick={() => setFilters(prev => ({ ...prev, pending80G: !prev.pending80G, is80G: false }))}
+                >
+                    <Upload size={16} />
+                    Pending 80G
+                    {filters.pending80G && <CheckCircle size={14} />}
                 </button>
 
                 {/* 4. Date Filter */}
@@ -826,7 +860,7 @@ const TransactionManagement = () => {
             </div>
 
             {/* Filter Chips */}
-            {(filters.searchUser || filters.is80G || filters.dateRange.start || filters.levelFilter !== 'ALL' || filters.specificMotivatorIds.length > 0) && (
+            {(filters.searchUser || filters.is80G || filters.pending80G || filters.dateRange.start || filters.levelFilter !== 'ALL' || filters.specificMotivatorIds.length > 0) && (
                 <div className="filter-chips">
                     {filters.searchUser && (
                         <span className="chip">User: {filters.searchUser.name} <X size={12} className="chip-remove" onClick={() => removeFilter('user')} /></span>
@@ -847,7 +881,10 @@ const TransactionManagement = () => {
                         </span>
                     )}
                     {filters.is80G && (
-                        <span className="chip">80G Only <X size={12} className="chip-remove" onClick={() => removeFilter('80g')} /></span>
+                        <span className="chip">80G Uploaded <X size={12} className="chip-remove" onClick={() => removeFilter('80g')} /></span>
+                    )}
+                    {filters.pending80G && (
+                        <span className="chip">80G Pending <X size={12} className="chip-remove" onClick={() => removeFilter('pending80g')} /></span>
                     )}
                     {filters.dateRange.start && (
                         <span className="chip">Date Filter <X size={12} className="chip-remove" onClick={() => removeFilter('date')} /></span>
@@ -918,7 +955,42 @@ const TransactionManagement = () => {
                                         </td>
                                         <td>{(txn.level1UserId || txn.motivatorMobile) ? formatCurrency(txn.amount * 0.10) : <span className="status-badge badge-neutral">No</span>}</td>
                                         <td>{txn.level2UserId ? formatCurrency(txn.amount * 0.03) : <span className="status-badge badge-neutral">No</span>}</td>
-                                        <td>{txn.is80G ? <span className="status-badge badge-80g">Yes</span> : <span className="status-badge badge-80g-no">No</span>}</td>
+                                        <td onClick={(e) => e.stopPropagation()}>
+                                            <div className="flex items-center gap-2">
+                                                {txn.is80G ? (
+                                                    <>
+                                                        {txn.is80GUploaded ? (
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="status-badge badge-80g">Uploaded</span>
+                                                                <button
+                                                                    className="btn-txn-details text-blue-600 hover:bg-blue-50"
+                                                                    onClick={() => window.open(`${api.defaults.baseURL.replace('/api', '')}${txn.certificate80GUrl}`, '_blank')}
+                                                                    title="View 80G"
+                                                                >
+                                                                    <Eye size={14} />
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="status-badge badge-80g-pending">Pending</span>
+                                                                <button
+                                                                    className="btn-txn-details text-orange-600 hover:bg-orange-50"
+                                                                    onClick={() => {
+                                                                        setUploadingTxnId(txn._id);
+                                                                        fileInputRef.current.click();
+                                                                    }}
+                                                                    title="Upload 80G"
+                                                                >
+                                                                    <Upload size={14} />
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    <span className="status-badge badge-80g-no">No</span>
+                                                )}
+                                            </div>
+                                        </td>
                                         <td>
                                             <span className={`status-badge ${txn.status}`}>
                                                 {txn.status === 'success' ? 'Success' : 'Pending'}
@@ -975,6 +1047,12 @@ const TransactionManagement = () => {
                                     </strong>
                                 </div>
                                 <div className="breakdown-row"><span>Date</span> <strong>{formatDate(selectedTransaction.createdAt)}</strong></div>
+                                <div className="breakdown-row">
+                                    <span>Mode</span> 
+                                    <strong>
+                                        {selectedTransaction.orderId ? 'One-time' : 'Monthly (AutoPay)'}
+                                    </strong>
+                                </div>
                                 <div className="breakdown-row pt-2 border-t border-slate-100 mt-2">
                                     <span className="text-[10px] uppercase font-bold text-slate-400">Razorpay Payment ID</span> 
                                     <strong className="text-indigo-600 font-mono text-[11px]">{selectedTransaction.transactionId || '---'}</strong>
@@ -1135,6 +1213,19 @@ const TransactionManagement = () => {
                     </div>
                 </div>
             )}
+            {/* Hidden File Input for 80G Upload */}
+            <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                accept="application/pdf"
+                onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                        handleUpload80G(uploadingTxnId, e.target.files[0]);
+                        e.target.value = null; // Clear for next upload
+                    }
+                }}
+            />
         </div>
     );
 };

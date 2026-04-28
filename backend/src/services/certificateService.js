@@ -27,7 +27,7 @@ class CertificateService {
         );
 
         const sequence = counter.seq.toString().padStart(4, '0');
-        return `TDF/80G/${financialYear}/${sequence}`;
+        return `TDF/REC/${financialYear}/${sequence}`;
     }
 
     /**
@@ -53,14 +53,14 @@ class CertificateService {
     }
 
     /**
-     * Create the PDF Certificate
+     * Create the PDF Receipt (Normal)
      */
     async createCertificate(donation) {
         return new Promise(async (resolve, reject) => {
             try {
                 const receiptNo = await this.generateReceiptNumber();
-                const fileName = `80G_${receiptNo.replace(/\//g, '_')}.pdf`;
-                const filePath = path.join(__dirname, '../../public/certificates', fileName);
+                const fileName = `Receipt_${receiptNo.replace(/\//g, '_')}.pdf`;
+                const filePath = path.join(__dirname, '../../public/receipts', fileName);
 
                 // Ensure directory exists
                 const dir = path.dirname(filePath);
@@ -82,7 +82,7 @@ class CertificateService {
 
                 // Title Bar
                 doc.rect(40, doc.y, 515, 25).fill(themeColor);
-                doc.fillColor('#FFFFFF').fontSize(12).font('Helvetica-Bold').text('80G DONATION RECEIPT / CERTIFICATE', 40, doc.y + 7, { align: 'center', width: 515 });
+                doc.fillColor('#FFFFFF').fontSize(12).font('Helvetica-Bold').text('DONATION RECEIPT', 40, doc.y + 7, { align: 'center', width: 515 });
                 doc.moveDown(2);
 
                 // Date & Receipt No
@@ -109,20 +109,14 @@ class CertificateService {
                 doc.font('Helvetica').text('123, Spiritual Plaza, Sector 10, New Delhi - 110001');
                 doc.font('Helvetica-Bold').text('PAN: ', 50, doc.y, { continued: true });
                 doc.font('Helvetica').text('ABCDE1234F');
-                doc.font('Helvetica-Bold').text('80G Registration No: ', 50, doc.y, { continued: true });
-                doc.font('Helvetica').text('CIT(E)/80G/2023-24/A/10234');
-                doc.font('Helvetica-Bold').text('Validity: ', 50, doc.y, { continued: true });
-                doc.font('Helvetica').text('Permanent (From FY 2023-24 onwards)');
                 doc.moveDown(1.2);
 
                 // --- 2. DONOR DETAILS ---
                 drawSectionHeader('2. DONOR DETAILS');
                 doc.fillColor('#000000').fontSize(10).font('Helvetica-Bold').text('Name: ', 50, doc.y, { continued: true });
                 doc.font('Helvetica').text(donation.donorName);
-                doc.font('Helvetica-Bold').text('Address: ', 50, doc.y, { continued: true });
-                doc.font('Helvetica').text(`${donation.address || 'N/A'}, ${donation.city || ''}, ${donation.state || ''}`);
-                doc.font('Helvetica-Bold').text('PAN: ', 50, doc.y, { continued: true });
-                doc.font('Helvetica').text(decrypt(donation.panNumber) || 'N/A');
+                doc.font('Helvetica-Bold').text('Mobile: ', 50, doc.y, { continued: true });
+                doc.font('Helvetica').text(donation.donorMobile);
                 doc.moveDown(1.2);
 
                 // --- 3. DONATION DETAILS ---
@@ -135,21 +129,12 @@ class CertificateService {
                 doc.font('Helvetica').text('Online / Razorpay');
                 doc.font('Helvetica-Bold').text('Transaction ID: ', 50, doc.y, { continued: true });
                 doc.font('Helvetica').text(donation.transactionId || 'N/A');
-                doc.font('Helvetica-Bold').text('Date of Donation: ', 50, doc.y, { continued: true });
-                doc.font('Helvetica').text(new Date(donation.createdAt).toLocaleDateString('en-IN'));
                 doc.moveDown(1.2);
-
-                // --- 4. DEDUCTION ELIGIBILITY ---
-                drawSectionHeader('4. DEDUCTION ELIGIBILITY');
-                doc.fillColor('#000000').fontSize(10).font('Helvetica').text('This donation is eligible for deduction under Section 80G of Income Tax Act, 1961.');
-                doc.font('Helvetica-Bold').text('Eligible Deduction: ', 50, doc.y, { continued: true });
-                doc.font('Helvetica').text('50%');
-                doc.moveDown(1.5);
 
                 // --- DECLARATION ---
                 doc.rect(40, doc.y, 515, 45).stroke('#eeeeee');
                 doc.fontSize(9).fillColor('#666666').font('Helvetica-Oblique').text(
-                    'DECLARATION: We confirm that we are registered under Section 80G of the Income Tax Act and the donation received is eligible for deduction as per applicable laws. This is a computer-generated receipt and does not require a physical signature.',
+                    'This is a computer-generated receipt for the donation received by The DharmArth Foundation. Thank you for your contribution towards serving humanity.',
                     45, doc.y + 7, { width: 505, align: 'justify' }
                 );
                 doc.moveDown(3);
@@ -157,10 +142,9 @@ class CertificateService {
                 // --- SIGNATORY ---
                 const footerY = doc.y;
                 doc.fillColor('#000000').fontSize(10).font('Helvetica-Bold').text('Authorized Signatory', 380, footerY);
-                doc.font('Helvetica').text('Name: ******', 380, doc.y);
-                doc.text('Designation: ******', 380, doc.y);
+                doc.font('Helvetica').text('The DharmArth Foundation', 380, doc.y);
                 doc.moveDown(0.5);
-                doc.fontSize(8).fillColor(themeColor).text('(Signature & Stamp)', 380, doc.y, { align: 'left' });
+                doc.fontSize(8).fillColor(themeColor).text('(Digital Receipt)', 380, doc.y, { align: 'left' });
 
                 // Footer Border
                 doc.rect(40, 780, 515, 2).fill(themeColor);
@@ -170,9 +154,10 @@ class CertificateService {
 
                 stream.on('finish', async () => {
                     donation.receiptNumber = receiptNo;
-                    donation.certificateUrl = `/public/certificates/${fileName}`;
+                    donation.receiptUrl = `/public/receipts/${fileName}`;
+                    donation.certificateUrl = donation.receiptUrl; // Sync for backward compatibility
                     await donation.save();
-                    resolve(donation.certificateUrl);
+                    resolve(donation.receiptUrl);
                 });
 
             } catch (error) {

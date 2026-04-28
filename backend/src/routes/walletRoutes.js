@@ -108,7 +108,10 @@ router.get('/transactions', protect, async (req, res) => {
             createdAt: d.createdAt,
             isDonation: true,
             certificateUrl: d.certificateUrl,
-            receiptNumber: d.receiptNumber
+            receiptNumber: d.receiptNumber,
+            is80G: d.is80G,
+            is80GUploaded: d.is80GUploaded,
+            certificate80GUrl: d.certificate80GUrl
         }));
 
         // 4. Merge and Sort

@@ -256,7 +256,10 @@ const Navbar = () => {
                                     borderRadius: '4px', minWidth: '150px', zIndex: 1000
                                 }}>
                                     {!user.isSuperAdmin && !isDeliveryPartner && (
-                                        <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.wallet')}</Link>
+                                        <>
+                                            <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.wallet')}</Link>
+                                            <Link to="/my-subscriptions" style={{ display: 'block', padding: '8px', color: '#333' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.subscriptions') || 'My Subscriptions'}</Link>
+                                        </>
                                     )}
                                     <div onClick={handleLogout} style={{ display: 'block', padding: '8px', color: 'red', cursor: 'pointer' }}>{t('navbar.logout')}</div>
                                 </div>

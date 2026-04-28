@@ -51,8 +51,18 @@ const userSchema = new mongoose.Schema({
     payoutCredentials: {
         bankName: { type: String, maxlength: 100 },
         accountHolder: { type: String, maxlength: 100 },
-        accountNumber: { type: String, maxlength: 100 },
-        ifscCode: { type: String, maxlength: 50 },
+        accountNumber: { 
+            type: String, 
+            maxlength: 200, // increased to allow encrypted string length
+            set: encrypt,
+            get: decrypt
+        },
+        ifscCode: { 
+            type: String, 
+            maxlength: 150, // increased to allow encrypted string length
+            set: encrypt,
+            get: decrypt
+        },
         upiId: { type: String, maxlength: 100 },
         isVerified: { type: Boolean, default: false }
     },
@@ -81,6 +91,8 @@ const userSchema = new mongoose.Schema({
     }]
 }, {
     timestamps: true,
+    toJSON: { getters: true },
+    toObject: { getters: true }
 });
 
 // Encrypt password and sensitive details
@@ -108,23 +120,6 @@ userSchema.pre('save', async function () {
         } catch (err) {
             console.error("Referral Code Hook Error:", err);
         }
-    }
-
-    // 3. Banking Credentials Encryption
-    if (this.isModified('payoutCredentials.accountNumber') && this.payoutCredentials.accountNumber) {
-        this.payoutCredentials.accountNumber = encrypt(this.payoutCredentials.accountNumber);
-    }
-    if (this.isModified('payoutCredentials.ifscCode') && this.payoutCredentials.ifscCode) {
-        this.payoutCredentials.ifscCode = encrypt(this.payoutCredentials.ifscCode);
-    }
-});
-
-userSchema.post('init', function(doc) {
-    if (doc.payoutCredentials?.accountNumber) {
-        doc.payoutCredentials.accountNumber = decrypt(doc.payoutCredentials.accountNumber);
-    }
-    if (doc.payoutCredentials?.ifscCode) {
-        doc.payoutCredentials.ifscCode = decrypt(doc.payoutCredentials.ifscCode);
     }
 });
 

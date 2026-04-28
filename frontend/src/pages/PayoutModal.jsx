@@ -228,24 +228,24 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                                 </div>
 
                                 {/* Condition 1: Lock-in Period */}
-                                <div className={`condition-card ${isTimeUnlocked ? 'unlocked' : 'locked'}`}>
-                                    <div className="condition-icon">
-                                        {isTimeUnlocked ? <CheckCircle size={24} /> : <Clock size={24} />}
-                                    </div>
-                                    <div className="condition-content">
-                                        <div className="condition-title-row">
-                                            <h3>Lock-in Period (3 Months)</h3>
-                                            <span className="status-tag">{isTimeUnlocked ? 'Completed' : 'In Progress'}</span>
+                                {!isTimeUnlocked && (
+                                    <div className={`condition-card locked`}>
+                                        <div className="condition-icon">
+                                            <Clock size={24} />
                                         </div>
+                                        <div className="condition-content">
+                                            <div className="condition-title-row">
+                                                <h3>Lock-in Period (3 Months)</h3>
+                                                <span className="status-tag">In Progress</span>
+                                            </div>
 
-                                        <div className="progress-track">
-                                            <div
-                                                className="progress-fill time-fill"
-                                                style={{ width: `${timeProgress}%` }}
-                                            ></div>
-                                        </div>
+                                            <div className="progress-track">
+                                                <div
+                                                    className="progress-fill time-fill"
+                                                    style={{ width: `${timeProgress}%` }}
+                                                ></div>
+                                            </div>
 
-                                        {!isTimeUnlocked ? (
                                             <div className="countdown-timer">
                                                 <div className="timer-box">
                                                     <span>{timeLeft.days || 0}</span>
@@ -267,44 +267,40 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                                                     <label>Sec</label>
                                                 </div>
                                             </div>
-                                        ) : (
-                                            <p className="success-msg">Lock-in period successfully completed!</p>
-                                        )}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {/* Condition 2: Minimum Balance */}
-                                <div className={`condition-card ${isBalanceUnlocked ? 'unlocked' : 'locked'}`}>
-                                    <div className="condition-icon">
-                                        {isBalanceUnlocked ? <CheckCircle size={24} /> : <Wallet size={24} />}
-                                    </div>
-                                    <div className="condition-content">
-                                        <div className="condition-title-row">
-                                            <h3>Minimum Balance (₹{MIN_BALANCE})</h3>
-                                            <span className="status-tag">{isBalanceUnlocked ? 'Met' : 'Pending'}</span>
+                                {!isBalanceUnlocked && (
+                                    <div className={`condition-card locked`}>
+                                        <div className="condition-icon">
+                                            <Wallet size={24} />
                                         </div>
+                                        <div className="condition-content">
+                                            <div className="condition-title-row">
+                                                <h3>Minimum Balance (₹{MIN_BALANCE})</h3>
+                                                <span className="status-tag">Pending</span>
+                                            </div>
 
-                                        <div className="progress-track">
-                                            <div
-                                                className="progress-fill balance-fill"
-                                                style={{ width: `${balanceProgress}%` }}
-                                            ></div>
-                                        </div>
+                                            <div className="progress-track">
+                                                <div
+                                                    className="progress-fill balance-fill"
+                                                    style={{ width: `${balanceProgress}%` }}
+                                                ></div>
+                                            </div>
 
-                                        <div className="balance-details">
-                                            <span>Current: <strong>₹{currentBalance}</strong></span>
-                                            {!isBalanceUnlocked && (
+                                            <div className="balance-details">
+                                                <span>Current: <strong>₹{currentBalance}</strong></span>
                                                 <span className="needed">Need <strong>₹{MIN_BALANCE - currentBalance}</strong> more</span>
-                                            )}
-                                        </div>
+                                            </div>
 
-                                        {!isBalanceUnlocked && (
                                             <button className="btn-share-modal" onClick={handleShare}>
                                                 <Share2 size={16} /> Share Now to Earn Faster
                                             </button>
-                                        )}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {/* Amount Selection - ONLY SHOW IF UNLOCKED */}
                                 {canPayout && (

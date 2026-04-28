@@ -6,10 +6,32 @@ const Notification = require('../models/Notification');
 const { processDonationCommission } = require('../services/commissionService');
 const certificateService = require('../services/certificateService');
 const whatsappService = require('../services/whatsappService');
-const { protect, optionalProtect } = require('../middlewares/authMiddleware');
+const { protect, optionalProtect, adminOnly } = require('../middlewares/authMiddleware');
 const razorpay = require('../config/razorpay');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+
+// Multer Storage for 80G Certificates
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = path.join(__dirname, '../../public/certificates/manual');
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, `80G_${req.params.id}_${Date.now()}${path.extname(file.originalname)}`);
+    }
+});
+const upload = multer({ 
+    storage,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/pdf') cb(null, true);
+        else cb(new Error('Only PDF files are allowed'), false);
+    }
+});
 
 // Rate limiter for initiating donations: 5 attempts per hour per IP
 const donationLimiter = rateLimit({
@@ -22,20 +44,25 @@ const donationLimiter = rateLimit({
 
 // @desc    Get All Donations (Admin)
 // @route   GET /api/donate
-router.get('/', async (req, res) => {
-    // Ideally check permission
+router.get('/', protect, adminOnly, async (req, res) => {
     try {
-        const { month, year } = req.query;
+        const { month, year, pending80G, is80G } = req.query;
         let filter = {};
 
         if (month && year) {
-            // month is 1-indexed in query, but 0-indexed in JS Date
             const startDate = new Date(year, month - 1, 1);
             const endDate = new Date(year, month, 0, 23, 59, 59, 999);
-            filter.createdAt = {
-                $gte: startDate,
-                $lte: endDate
-            };
+            filter.createdAt = { $gte: startDate, $lte: endDate };
+        }
+
+        if (pending80G === 'true') {
+            filter.is80G = true;
+            filter.is80GUploaded = { $ne: true };
+            filter.status = 'success';
+        } else if (is80G === 'true') {
+            filter.is80G = true;
+            filter.is80GUploaded = true;
+            filter.status = 'success';
         }
 
         const donations = await Donation.find(filter)
@@ -419,10 +446,44 @@ router.post('/regenerate-certificate/:id', async (req, res) => {
     try {
         const donation = await Donation.findById(req.params.id);
         if (!donation) return res.status(404).json({ message: 'Donation not found' });
-        if (!donation.is80G) return res.status(400).json({ message: 'This donation does not require 80G' });
+        // Allow regenerating receipt for any donation regardless of 80G status
 
         await certificateService.createCertificate(donation);
         res.json({ message: 'Certificate regenerated successfully', url: donation.certificateUrl });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Upload 80G Certificate (Admin)
+// @route   POST /api/donate/upload-80g/:id
+router.post('/upload-80g/:id', protect, adminOnly, upload.single('certificate'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: 'Please upload a PDF file' });
+
+        const donation = await Donation.findById(req.params.id);
+        if (!donation) return res.status(404).json({ message: 'Donation not found' });
+
+        const relativePath = `/public/certificates/manual/${req.file.filename}`;
+        donation.certificate80GUrl = relativePath;
+        donation.is80GUploaded = true;
+        await donation.save();
+
+        // Send WhatsApp Notification
+        try {
+            await whatsappService.send80GCertificateNotification(
+                donation.donorMobile,
+                donation.donorName,
+                relativePath
+            );
+        } catch (wsErr) {
+            console.error("WhatsApp Notify Error (80G):", wsErr.message);
+        }
+
+        res.json({ 
+            message: '80G Certificate uploaded and notification queued', 
+            url: relativePath 
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

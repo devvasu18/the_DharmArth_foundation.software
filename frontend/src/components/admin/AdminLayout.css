@@ -84,24 +84,31 @@ body {
 .admin-link {
     display: flex;
     align-items: center;
-    padding: 1rem 2rem;
+    padding: 0.8rem 1.5rem;
     color: #3e4b5b;
     text-decoration: none;
     font-weight: 500;
     font-size: 0.95rem;
     transition: all 0.3s ease;
     border-left: 4px solid transparent;
+    margin: 0.25rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 .admin-link:hover {
     color: var(--primary-color);
     background-color: #fcfcfc;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
 }
 
 .admin-link.active {
     color: #ffffff;
     background-color: var(--primary-color);
     border-left-color: var(--secondary-color);
+    border-color: var(--secondary-color);
     box-shadow: 0 4px 10px rgba(0, 191, 165, 0.3);
 }
 
@@ -123,7 +130,8 @@ body {
 /* --- Sidebar Links --- */
 @media (min-width: 992px) {
     .admin-sidebar.collapsed .admin-link {
-        padding: 1rem;
+        padding: 0.8rem;
+        margin: 0.25rem 0.5rem;
         justify-content: center;
     }
 
