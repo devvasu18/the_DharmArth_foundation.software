@@ -92,7 +92,7 @@ const handleSubscriptionCharged = async (subscriptionId, paymentId, payload, io)
         }
 
         // 8. Notifications
-        await whatsappService.sendDonationNotification(subscription.donorMobile, subscription.donorName, amount);
+        await whatsappService.sendDonationNotification(subscription.donorMobile, subscription.donorName, amount, donation._id);
         
         // Notify Admin via Socket.io
         if (io) {

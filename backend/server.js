@@ -40,6 +40,10 @@ console.log(`[CONFIG] Razorpay Key: ${process.env.RAZORPAY_KEY_ID ? 'LOADED' : '
 console.log('---------------------------');
 
 connectDB().then(() => {
+    // Initialize Notification Queue Worker
+    const whatsappService = require('./src/services/whatsappService');
+    whatsappService.startWorker(30000); // Check queue every 30 seconds
+
     server.listen(PORT, '0.0.0.0', () => {
         console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
     });

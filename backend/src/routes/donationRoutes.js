@@ -256,11 +256,11 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
         }
 
         // 6. Send WhatsApp Notification
-        await whatsappService.sendDonationNotification(donorMobile, donorName, amount);
+        await whatsappService.sendDonationNotification(donorMobile, donorName, amount, donation._id);
 
         // 7. Send Email Notification if available
         if (donorEmail) {
-            await whatsappService.sendDonationEmail(donorEmail, donorName, amount);
+            await whatsappService.sendDonationEmail(donorEmail, donorName, amount, donation._id);
         }
 
         // 8. Sync info to User Profile for auto-fill next time

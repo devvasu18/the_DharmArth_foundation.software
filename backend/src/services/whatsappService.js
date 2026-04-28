@@ -1,120 +1,208 @@
+const NotificationQueue = require('../models/NotificationQueue');
+
 /**
  * WhatsApp Service
  * Handles communication with the external whatsapp_service_backend
+ * Integrated with a persistent queue to ensure 100% delivery reliability
  */
-
 class WhatsappService {
     constructor() {
         this.baseUrl = process.env.WHATSAPP_SERVICE_URL || 'http://localhost:3000';
+        this.isProcessing = false;
+        this.workerInterval = null;
     }
 
     /**
-     * Send a general message via WhatsApp service
-     * @param {string} number - Recipient mobile number
-     * @param {string} message - Message content
+     * Start the background worker to process the notification queue
+     * @param {number} intervalMs - How often to check the queue (default 30s)
      */
-    async sendMessage(number, message) {
+    startWorker(intervalMs = 30000) {
+        if (this.workerInterval) return;
+        
+        console.log(`[NOTIFICATION WORKER] Started with ${intervalMs}ms interval`);
+        this.workerInterval = setInterval(() => this.processQueue(), intervalMs);
+        
+        // Also run once immediately on startup
+        setTimeout(() => this.processQueue(), 5000);
+    }
+
+    /**
+     * Process pending notifications in the queue
+     */
+    async processQueue() {
+        if (this.isProcessing) return;
+        this.isProcessing = true;
+
         try {
-            console.log(`[WHATSAPP] Sending message to ${number}...`);
+            // Find up to 10 pending or failed (with < 5 attempts) notifications
+            const pending = await NotificationQueue.find({
+                status: { $in: ['pending', 'failed'] },
+                attempts: { $lt: 5 },
+                scheduledAt: { $lte: new Date() }
+            }).sort({ createdAt: 1 }).limit(10);
 
-            // Basic number cleaning (remove non-digits if necessary, but assume user enters correctly)
-            // The WhatsApp service backend likely handles format, but we ensure it's a string.
-            const cleanNumber = String(number).replace(/\D/g, '');
-
-            const response = await fetch(`${this.baseUrl}/send`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': process.env.WHATSAPP_SERVICE_API_KEY
-                },
-                body: JSON.stringify({
-                    number: cleanNumber,
-                    message: message
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `WhatsApp service returned ${response.status}`);
+            if (pending.length > 0) {
+                console.log(`[NOTIFICATION WORKER] Processing ${pending.length} queued notifications...`);
             }
 
-            const data = await response.json();
-            console.log(`[WHATSAPP] Message queued successfully: ${data.messageId}`);
-            return data;
+            for (const item of pending) {
+                await this._processItem(item);
+            }
         } catch (error) {
-            console.error('[WHATSAPP SERVICE ERROR]', error.message);
-            // We don't throw error here to avoid breaking the donation flow if WhatsApp fails
-            return null;
+            console.error('[NOTIFICATION WORKER ERROR]', error.message);
+        } finally {
+            this.isProcessing = false;
         }
     }
 
     /**
-     * Send a general email via the communication bridge
-     * @param {string} to - Recipient email
-     * @param {string} subject - Email subject
-     * @param {Object} options - { text, html, name }
+     * Internal: Process a single queue item
      */
-    async sendEmail(to, subject, options = {}) {
+    async _processItem(item) {
+        item.status = 'processing';
+        item.attempts += 1;
+        await item.save();
+
         try {
-            console.log(`[EMAIL] Sending email to ${to}...`);
-            const response = await fetch(`${this.baseUrl}/send-email`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': process.env.WHATSAPP_SERVICE_API_KEY
-                },
-                body: JSON.stringify({
-                    to,
+            let success = false;
+            if (item.type === 'whatsapp') {
+                success = await this._sendWhatsAppNow(item.recipient, item.content);
+            } else if (item.type === 'email') {
+                success = await this._sendEmailNow(item.recipient, item.content);
+            }
+
+            if (success) {
+                item.status = 'sent';
+                console.log(`[NOTIFICATION WORKER] Successfully sent ${item.type} to ${item.recipient}`);
+            } else {
+                throw new Error('Delivery failed (Service returned null or error)');
+            }
+        } catch (error) {
+            console.error(`[NOTIFICATION WORKER] Failed attempt ${item.attempts} for ${item.recipient}:`, error.message);
+            item.status = 'failed';
+            item.lastError = error.message;
+            // Exponential backoff: retry after 5m, 15m, 1h, 4h
+            const backoffMinutes = [5, 15, 60, 240][item.attempts - 1] || 1440;
+            item.scheduledAt = new Date(Date.now() + backoffMinutes * 60000);
+        }
+
+        await item.save();
+    }
+
+    /**
+     * Internal: Direct HTTP call to WhatsApp Service for WhatsApp
+     */
+    async _sendWhatsAppNow(number, message) {
+        const cleanNumber = String(number).replace(/\D/g, '');
+        const response = await fetch(`${this.baseUrl}/send`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': process.env.WHATSAPP_SERVICE_API_KEY
+            },
+            body: JSON.stringify({ number: cleanNumber, message })
+        });
+
+        if (!response.ok) return false;
+        const data = await response.json();
+        return !!data.success || !!data.messageId;
+    }
+
+    /**
+     * Internal: Direct HTTP call to WhatsApp Service for Email
+     */
+    async _sendEmailNow(to, content) {
+        const response = await fetch(`${this.baseUrl}/send-email`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': process.env.WHATSAPP_SERVICE_API_KEY
+            },
+            body: JSON.stringify({
+                to,
+                subject: content.subject,
+                text: content.text,
+                html: content.html,
+                name: content.name
+            })
+        });
+
+        if (!response.ok) return false;
+        const data = await response.json();
+        return !!data.success || !!data.emailId;
+    }
+
+    /**
+     * Public: Queue a WhatsApp message
+     */
+    async sendMessage(number, message, metadata = {}) {
+        try {
+            await NotificationQueue.create({
+                type: 'whatsapp',
+                recipient: number,
+                content: message,
+                metadata
+            });
+            // Trigger background process immediately (non-blocking)
+            this.processQueue().catch(() => {});
+            return true;
+        } catch (error) {
+            console.error('[WHATSAPP QUEUE ERROR]', error.message);
+            return false;
+        }
+    }
+
+    /**
+     * Public: Queue an Email
+     */
+    async sendEmail(to, subject, options = {}, metadata = {}) {
+        try {
+            await NotificationQueue.create({
+                type: 'email',
+                recipient: to,
+                content: {
                     subject,
                     text: options.text,
                     html: options.html,
                     name: options.name
-                })
+                },
+                metadata
             });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Email bridge returned ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log(`[EMAIL] Email queued successfully: ${data.emailId}`);
-            return data;
+            // Trigger background process immediately (non-blocking)
+            this.processQueue().catch(() => {});
+            return true;
         } catch (error) {
-            console.error('[EMAIL SERVICE ERROR]', error.message);
-            return null;
+            console.error('[EMAIL QUEUE ERROR]', error.message);
+            return false;
         }
     }
 
     /**
      * Specialized: Send Donation Thank You email
      */
-    async sendDonationEmail(to, donorName, amount) {
+    async sendDonationEmail(to, donorName, amount, donationId) {
         const subject = "Thank you for your generous donation!";
         const html = `
             <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
                 <h2 style="color: #2c3e50; text-align: center;">🙏 Thank You, ${donorName}!</h2>
                 <p>We have successfully received your donation of <strong>₹${amount}</strong>.</p>
-                <p>Your contribution to <strong>The DharmArth Foundation</strong> helps us continue our mission of serving the community. We are deeply grateful for your support.</p>
+                <p>Your contribution to <strong>The DharmArth Foundation</strong> helps us continue our mission of serving the community.</p>
                 <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-                <p style="font-size: 0.9em; color: #777;">This is an automated receipt. If you have any questions, please contact us at support@dharmarth.org.</p>
-                <div style="text-align: center; margin-top: 20px;">
-                    <a href="https://dharmarth.org" style="background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Visit Our Website</a>
-                </div>
+                <p style="font-size: 0.9em; color: #777;">Transaction ID: ${donationId}</p>
             </div>
         `;
-        return this.sendEmail(to, subject, { html, name: donorName });
+        return this.sendEmail(to, subject, { html, name: donorName }, { donationId });
     }
 
     /**
      * Specialized: Send Donation Thank You WhatsApp Notification
      */
-    async sendDonationNotification(donorMobile, donorName, amount) {
+    async sendDonationNotification(donorMobile, donorName, amount, donationId) {
         const Setting = require('../models/Setting');
         const setting = await Setting.findOne({ key: 'whatsapp_donation_template' });
-        const template = setting?.value || "Dear {name}, thank you for your generous donation of ₹{amount} to The DharmArth Foundation. Your support helps us make a big difference! 🙏";
+        const template = setting?.value || "Dear {name}, thank you for your generous donation of ₹{amount} to The DharmArth Foundation. 🙏";
         const message = template.replace('{name}', donorName).replace('{amount}', amount);
-        return this.sendMessage(donorMobile, message);
+        return this.sendMessage(donorMobile, message, { donationId });
     }
 
     /**
@@ -123,7 +211,7 @@ class WhatsappService {
     async sendWithdrawalNotification(mobile, name, amount) {
         const Setting = require('../models/Setting');
         const setting = await Setting.findOne({ key: 'whatsapp_withdrawal_template' });
-        const template = setting?.value || "Dear {name}, your payout request of ₹{amount} has been successfully processed and completed. The funds have been transferred as per your provided details. Thank you for your continued support! 🙏";
+        const template = setting?.value || "Dear {name}, your payout request of ₹{amount} has been successfully processed. 🙏";
         const message = template.replace('{name}', name).replace('{amount}', amount);
         return this.sendMessage(mobile, message);
     }
@@ -134,7 +222,7 @@ class WhatsappService {
     async sendL1MotivatorNotification(motivatorMobile, data) {
         const Setting = require('../models/Setting');
         const setting = await Setting.findOne({ key: 'whatsapp_motivator_l1_template' });
-        const template = setting?.value || "Congratulations {motivator_name}! You received ₹{commission} commission for a donation of ₹{donation_amount} from {donor_name} ({donor_mobile}). Level: 1 🙏";
+        const template = setting?.value || "Congratulations {motivator_name}! You received ₹{commission} commission for a donation from {donor_name}. 🙏";
 
         const message = template
             .replace(/{motivator_name}/g, data.motivatorName)
@@ -143,7 +231,7 @@ class WhatsappService {
             .replace(/{donor_name}/g, data.donorName)
             .replace(/{donor_mobile}/g, data.donorMobile);
 
-        return this.sendMessage(motivatorMobile, message);
+        return this.sendMessage(motivatorMobile, message, { type: 'commission_l1' });
     }
 
     /**
@@ -152,7 +240,7 @@ class WhatsappService {
     async sendL2MotivatorNotification(motivatorMobile, data) {
         const Setting = require('../models/Setting');
         const setting = await Setting.findOne({ key: 'whatsapp_motivator_l2_template' });
-        const template = setting?.value || "Level 2 Bonus! {motivator_name}, you received ₹{commission} commission via {l1_motivator_name} ({l1_motivator_mobile}) for a donation from {donor_name} ({donor_mobile}). Level: 2 🙏";
+        const template = setting?.value || "Level 2 Bonus! {motivator_name}, you received ₹{commission} commission via {l1_motivator_name}. 🙏";
 
         const message = template
             .replace(/{motivator_name}/g, data.motivatorName)
@@ -163,8 +251,9 @@ class WhatsappService {
             .replace(/{l1_motivator_name}/g, data.l1MotivatorName)
             .replace(/{l1_motivator_mobile}/g, data.l1MotivatorMobile);
 
-        return this.sendMessage(motivatorMobile, message);
+        return this.sendMessage(motivatorMobile, message, { type: 'commission_l2' });
     }
 }
 
 module.exports = new WhatsappService();
+

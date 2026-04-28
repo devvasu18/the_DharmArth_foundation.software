@@ -79,9 +79,9 @@ exports.completeDonation = async (orderId, paymentId, io) => {
 
         // 6. Send WhatsApp/Email Notifications
         try {
-            await whatsappService.sendDonationNotification(donorMobile, donorName, amount);
+            await whatsappService.sendDonationNotification(donorMobile, donorName, amount, donation._id);
             if (donorEmail) {
-                await whatsappService.sendDonationEmail(donorEmail, donorName, amount);
+                await whatsappService.sendDonationEmail(donorEmail, donorName, amount, donation._id);
             }
         } catch (err) {
             console.error("Notifications Failed:", err);
