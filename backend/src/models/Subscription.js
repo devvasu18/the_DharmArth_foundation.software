@@ -9,8 +9,7 @@ const subscriptionSchema = new mongoose.Schema({
     city: { type: String, maxlength: 100 },
     state: { type: String, maxlength: 100 },
     amount: { type: Number, required: true },
-    status: { type: String, enum: ['created', 'active', 'paused', 'cancelled', 'expired'], default: 'created' },
-    
+    status: { type: String, enum: ['created', 'active', 'paused', 'cancelled', 'expired', 'failed'], default: 'created' },
     // Referral link
     motivatorMobile: { type: String, maxlength: 20 },
     level1UserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

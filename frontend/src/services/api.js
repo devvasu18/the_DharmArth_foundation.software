@@ -7,6 +7,9 @@ if (API_BASE_URL.endsWith('/')) {
     API_BASE_URL = API_BASE_URL.slice(0, -1);
 }
 
+console.log(`[API] Connected to Backend: ${API_BASE_URL}`);
+console.log(`[API] WhatsApp Gateway: ${import.meta.env.VITE_WHATSAPP_SERVICE_URL || 'Local (10000)'}`);
+
 const api = axios.create({
     baseURL: `${API_BASE_URL}/api`,
     headers: {

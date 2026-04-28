@@ -155,6 +155,30 @@ exports.verifySubscription = async (req, res) => {
 };
 
 /**
+ * @desc Mark Payment/Subscription as Failed (Frontend Call)
+ * @route POST /api/payment/mark-failed
+ */
+exports.markFailed = async (req, res) => {
+    try {
+        const { order_id, subscription_id } = req.body;
+
+        if (subscription_id) {
+            const Subscription = require('../models/Subscription');
+            await Subscription.findOneAndUpdate({ subscriptionId: subscription_id }, { status: 'failed' });
+        }
+        
+        if (order_id) {
+            await Payment.findOneAndUpdate({ order_id }, { status: 'failed' });
+        }
+
+        res.status(200).json({ success: true, message: 'Marked as failed' });
+    } catch (error) {
+        console.error('Error marking as failed:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+/**
  * @desc Razorpay Webhook Handler (Final Source of Truth)
  * @route POST /api/payment/webhook
  */
@@ -242,6 +266,8 @@ exports.handleWebhook = async (req, res) => {
              if (subscription_id) {
                  // Mark subscription as having a failing payment if needed
                  console.log(`Payment failed for subscription: ${subscription_id}`);
+                 const Subscription = require('../models/Subscription');
+                 await Subscription.findOneAndUpdate({ subscriptionId: subscription_id }, { status: 'failed' });
              }
 
              if (order_id) {

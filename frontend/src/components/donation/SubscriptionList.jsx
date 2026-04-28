@@ -48,12 +48,73 @@ const SubscriptionList = ({ isAdmin = false }) => {
         }
     };
 
+    const handleRetry = async (sub) => {
+        try {
+            const rzpKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+            if (!rzpKey) {
+                toast.error("Payment Gateway is not configured");
+                return;
+            }
+
+            const options = {
+                key: rzpKey,
+                name: "The DharmArth Foundation",
+                description: "Retry Subscription Payment",
+                subscription_id: sub.subscriptionId,
+                handler: async (response) => {
+                    try {
+                        setLoading(true);
+                        const { data } = await api.post('/payment/verify-subscription', {
+                            razorpay_subscription_id: response.razorpay_subscription_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        });
+                        
+                        if (data.success) {
+                            toast.success("Payment Successful! Subscription Active.");
+                            setSubscriptions(prev => prev.map(s => 
+                                s._id === sub._id ? { ...s, status: 'active' } : s
+                            ));
+                        } else {
+                            toast.error("Verification failed.");
+                        }
+                    } catch (err) {
+                        toast.error("Verification error.");
+                    } finally {
+                        setLoading(false);
+                    }
+                },
+                prefill: {
+                    name: sub.donorName,
+                    email: sub.donorEmail,
+                    contact: sub.donorMobile
+                },
+                theme: {
+                    color: "#7c3aed"
+                },
+                modal: {
+                    ondismiss: () => {
+                        toast.error("Payment cancelled.");
+                    }
+                }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+        } catch (error) {
+            console.error("Retry failed:", error);
+            toast.error("Could not initiate retry.");
+        }
+    };
+
     const getStatusBadge = (status) => {
         switch (status) {
             case 'active':
                 return <span className="status-badge active"><CheckCircle size={14} /> Active</span>;
             case 'cancelled':
                 return <span className="status-badge cancelled"><XCircle size={14} /> Cancelled</span>;
+            case 'failed':
+                return <span className="status-badge failed"><AlertTriangle size={14} /> Failed</span>;
             case 'created':
                 return <span className="status-badge created"><Clock size={14} /> Pending First Payment</span>;
             case 'paused':
@@ -113,6 +174,22 @@ const SubscriptionList = ({ isAdmin = false }) => {
                                 onClick={() => handleCancel(sub._id, sub.subscriptionId)}
                             >
                                 Cancel Subscription
+                            </button>
+                        </div>
+                    )}
+                    {sub.status === 'failed' && (
+                        <div className="subscription-actions" style={{ gap: '10px', display: 'flex', justifyContent: 'flex-end' }}>
+                            <button 
+                                className="btn-retry" 
+                                onClick={() => handleRetry(sub)}
+                            >
+                                Retry Payment
+                            </button>
+                            <button 
+                                className="btn-cancel" 
+                                onClick={() => handleCancel(sub._id, sub.subscriptionId)}
+                            >
+                                Cancel
                             </button>
                         </div>
                     )}
@@ -176,6 +253,10 @@ const SubscriptionList = ({ isAdmin = false }) => {
                     background: #fef9c3;
                     color: #854d0e;
                 }
+                .status-badge.failed {
+                    background: #fee2e2;
+                    color: #b91c1c;
+                }
                 .status-badge.paused {
                     background: #ffedd5;
                     color: #9a3412;
@@ -211,6 +292,20 @@ const SubscriptionList = ({ isAdmin = false }) => {
                 }
                 .btn-cancel:hover {
                     background: #fef2f2;
+                }
+                .btn-retry {
+                    background: #7c3aed;
+                    border: 1px solid #7c3aed;
+                    color: white;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    padding: 0.5rem 1rem;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .btn-retry:hover {
+                    background: #6d28d9;
                 }
                 .empty-state {
                     text-align: center;

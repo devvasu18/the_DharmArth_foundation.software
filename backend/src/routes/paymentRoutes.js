@@ -6,5 +6,6 @@ router.post('/create-order', paymentController.createOrder);
 router.post('/verify-payment', paymentController.verifyPayment);
 router.post('/verify-subscription', paymentController.verifySubscription);
 router.post('/webhook', paymentController.handleWebhook);
+router.post('/mark-failed', paymentController.markFailed);
 
 module.exports = router;

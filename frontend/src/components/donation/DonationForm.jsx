@@ -212,8 +212,15 @@ const DonationForm = ({ onSuccess }) => {
             const { data: orderData } = await api.post('/donate', payload);
 
             // 2. Configure Razorpay Options
+            const rzpKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+            if (!rzpKey) {
+                toast.error("Payment Gateway is not configured (Missing Key ID)");
+                setLoading(false);
+                return;
+            }
+
             const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                key: rzpKey,
                 amount: orderData.amount,
                 currency: orderData.currency,
                 name: "The DharmArth Foundation",
@@ -276,9 +283,18 @@ const DonationForm = ({ onSuccess }) => {
                     color: "#7c3aed" // Matching your theme color
                 },
                 modal: {
-                    ondismiss: () => {
+                    ondismiss: async () => {
                         setLoading(false);
                         toast.error("Payment cancelled.");
+                        try {
+                            if (orderData.subscriptionId) {
+                                await api.post('/payment/mark-failed', { subscription_id: orderData.subscriptionId });
+                            } else if (orderData.order_id) {
+                                await api.post('/payment/mark-failed', { order_id: orderData.order_id });
+                            }
+                        } catch (e) {
+                            console.error("Failed to mark payment as failed", e);
+                        }
                     }
                 }
             };

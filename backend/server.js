@@ -32,6 +32,13 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 5000;
 
+console.log('--- SYSTEM CONFIGURATION ---');
+console.log(`[CONFIG] Node Env: ${process.env.NODE_ENV}`);
+console.log(`[CONFIG] WhatsApp URL: ${process.env.WHATSAPP_SERVICE_URL || 'DEFAULT (localhost:10000)'}`);
+console.log(`[CONFIG] WhatsApp Key: ${process.env.WHATSAPP_SERVICE_API_KEY ? 'LOADED (Safe)' : 'MISSING ⚠️'}`);
+console.log(`[CONFIG] Razorpay Key: ${process.env.RAZORPAY_KEY_ID ? 'LOADED' : 'MISSING ⚠️'}`);
+console.log('---------------------------');
+
 connectDB().then(() => {
     server.listen(PORT, '0.0.0.0', () => {
         console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
