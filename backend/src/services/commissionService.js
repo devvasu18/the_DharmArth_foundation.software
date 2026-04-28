@@ -34,13 +34,12 @@ const processDonationCommission = async (donationAmount, motivatorIdentifier, do
         // --- LEVEL 1 COMMISSION ---
         const comm1 = Math.round((donationAmount * rate1)) / 100; // Round to 2 decimals
 
-        let wallet1 = await Wallet.findOne({ user: motivator._id });
-        if (!wallet1) {
-            wallet1 = await Wallet.create({ user: motivator._id });
-        }
-
-        // Use atomic increment to be safe
-        await Wallet.updateOne({ _id: wallet1._id }, { $inc: { balance: comm1, totalEarned: comm1 } });
+        // Use atomic findOneAndUpdate with upsert to prevent race conditions
+        let wallet1 = await Wallet.findOneAndUpdate(
+            { user: motivator._id },
+            { $inc: { balance: comm1, totalEarned: comm1 } },
+            { new: true, upsert: true }
+        );
 
         await Transaction.create({
             wallet: wallet1._id,
@@ -65,12 +64,11 @@ const processDonationCommission = async (donationAmount, motivatorIdentifier, do
             if (grandMotivator) {
                 const comm2 = Math.round((donationAmount * rate2)) / 100; // Round to 2 decimals
 
-                let wallet2 = await Wallet.findOne({ user: grandMotivator._id });
-                if (!wallet2) {
-                    wallet2 = await Wallet.create({ user: grandMotivator._id });
-                }
-
-                await Wallet.updateOne({ _id: wallet2._id }, { $inc: { balance: comm2, totalEarned: comm2 } });
+                let wallet2 = await Wallet.findOneAndUpdate(
+                    { user: grandMotivator._id },
+                    { $inc: { balance: comm2, totalEarned: comm2 } },
+                    { new: true, upsert: true }
+                );
 
                 await Transaction.create({
                     wallet: wallet2._id,
