@@ -106,6 +106,31 @@ const handleSubscriptionCharged = async (subscriptionId, paymentId, payload, io)
             io.to('admin_notifications').emit('new_donation', notif);
         }
 
+        // 9. Sync User Profile
+        try {
+            let donorUser = await User.findOne({ mobile: subscription.donorMobile });
+            if (donorUser) {
+                donorUser.email = subscription.donorEmail || donorUser.email;
+                donorUser.address = subscription.address || donorUser.address;
+                donorUser.city = subscription.city || donorUser.city;
+                donorUser.state = subscription.state || donorUser.state;
+                donorUser.lastMotivatorMobile = subscription.motivatorMobile || donorUser.lastMotivatorMobile;
+            } else {
+                donorUser = new User({
+                    name: subscription.donorName,
+                    mobile: subscription.donorMobile,
+                    email: subscription.donorEmail || undefined,
+                    address: subscription.address,
+                    city: subscription.city,
+                    state: subscription.state,
+                    lastMotivatorMobile: subscription.motivatorMobile
+                });
+            }
+            await donorUser.save();
+        } catch (err) {
+            console.error("User Profile Sync Failed (Subscription):", err);
+        }
+
         console.log(`Subscription ${subscriptionId} charged successfully. Cycle: ${subscription.currentCycle}`);
 
     } catch (error) {

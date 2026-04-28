@@ -161,6 +161,10 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
                 donorUserId: req.user ? req.user._id : null
             });
 
+            // Check if user is already registered to return to frontend
+            const existingUser = await User.findOne({ mobile: donorMobile });
+            const isAlreadyRegistered = !!(existingUser && existingUser.password);
+
             return res.status(201).json({
                 success: true,
                 message: 'Monthly Subscription Initiated',
@@ -169,7 +173,8 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
                 currency: 'INR',
                 donorName,
                 donorEmail,
-                donorMobile
+                donorMobile,
+                isAlreadyRegistered
             });
         }
 
@@ -219,6 +224,10 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
             contact: donorMobile
         });
 
+        // Check if user is already registered to return to frontend
+        const existingUser = await User.findOne({ mobile: donorMobile });
+        const isAlreadyRegistered = !!(existingUser && existingUser.password);
+
         res.status(201).json({
             success: true,
             message: 'Donation Order Created',
@@ -228,7 +237,8 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
             currency: options.currency,
             donorName,
             donorEmail,
-            donorMobile
+            donorMobile,
+            isAlreadyRegistered
         });
         
         return; // Important: exit here, don't run mock success logic below

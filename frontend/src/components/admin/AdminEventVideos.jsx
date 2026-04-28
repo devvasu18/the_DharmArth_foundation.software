@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { Plus, Trash2, Video, GripVertical, Play, Save } from 'lucide-react';
 import './AdminEvents.css'; // Reuse existing styles or create new

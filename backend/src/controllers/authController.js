@@ -35,6 +35,7 @@ const loginUser = async (req, res) => {
                 language: user.language,
                 isMotivator: user.isMotivator,
                 referralCode: user.referralCode,
+                lastMotivatorMobile: user.lastMotivatorMobile,
                 payoutCredentials: user.payoutCredentials,
                 token: generateToken(user._id),
             });
@@ -62,11 +63,13 @@ const registerUser = async (req, res) => {
         }
 
         let referredBy = null;
-        if (req.body.referralCode) {
+        const potentialReferralCode = req.body.referralCode || (user ? user.lastMotivatorMobile : null);
+
+        if (potentialReferralCode) {
             const referrer = await User.findOne({ 
                 $or: [
-                    { mobile: req.body.referralCode },
-                    { referralCode: String(req.body.referralCode).toUpperCase() }
+                    { mobile: potentialReferralCode },
+                    { referralCode: String(potentialReferralCode).toUpperCase() }
                 ]
             });
             
@@ -101,6 +104,7 @@ const registerUser = async (req, res) => {
                 mobile: user.mobile,
                 email: user.email,
                 referralCode: user.referralCode,
+                lastMotivatorMobile: user.lastMotivatorMobile,
                 referredBy: user.referredBy ? {
                     name: (await User.findById(user.referredBy)).name,
                     mobile: (await User.findById(user.referredBy)).mobile
