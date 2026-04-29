@@ -32,6 +32,7 @@ i18n
                         "signIn": "Sign In",
                         "donate": "Donate",
                         "wallet": "Wallet",
+                        "subscriptions": "Subscriptions",
                         "userDashboard": "Account",
                         "howItWorks": "How It Works"
                     },
@@ -178,6 +179,7 @@ i18n
                         "signIn": "साइन इन",
                         "donate": "दान करें",
                         "wallet": "वॉलेट",
+                        "subscriptions": " सदस्यताएँ",
                         "userDashboard": "अकाउंट",
                         "howItWorks": "यह कैसे काम करता है"
                     },
