@@ -150,7 +150,7 @@ const Events = () => {
 
             <div className="events-filters">
                 <div className="filter-wrapper">
-                    <div className="status-filter-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <div className="status-filter-row">
                         <div className="filter-tabs">
                             <button
                                 className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
@@ -166,7 +166,7 @@ const Events = () => {
                             >{(i18n.language === 'hi') ? 'पूर्ण' : 'Past'}</button>
                         </div>
 
-                        <div className="search-box" style={{ width: '300px' }}>
+                        <div className="search-box">
                             <input
                                 type="text"
                                 className="search-input"
@@ -174,11 +174,11 @@ const Events = () => {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
-                            <Search size={18} style={{ position: 'absolute', right: 15, top: 12, color: '#999' }} />
+                            <Search size={18} className="search-icon" />
                         </div>
                     </div>
 
-                    <div className="category-filter-row" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                    <div className="category-filter-row">
                         <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#666', alignSelf: 'center', marginRight: '5px' }}>
                             {(i18n.language === 'hi' ? 'श्रेणी:' : 'Category:')}
                         </span>

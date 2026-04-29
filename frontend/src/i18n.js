@@ -25,14 +25,14 @@ i18n
                         "admin": "Admin Panel",
                         "logout": "Logout",
                         "brand": "Dharmarth",
-                        "browseDonations": "Browse Donations",
+                        "browseDonations": "Donate",
                         "fundraiseFor": "Events",
                         "doctorAvailability": "Doctor Availability",
                         "search": "Search",
                         "signIn": "Sign In",
                         "donate": "Donate",
                         "wallet": "Wallet",
-                        "userDashboard": "User Dashboard",
+                        "userDashboard": "Account",
                         "howItWorks": "How It Works"
                     },
                     "home": {
@@ -171,14 +171,14 @@ i18n
                         "admin": "एडमिन पैनल",
                         "logout": "लॉग आउट",
                         "brand": "धर्मार्थ",
-                        "browseDonations": "दान के अवसर",
+                        "browseDonations": "दान ",
                         "fundraiseFor": "कार्यक्रम",
                         "doctorAvailability": "डॉक्टर उपलब्धता",
                         "search": "खोजें",
                         "signIn": "साइन इन",
                         "donate": "दान करें",
                         "wallet": "वॉलेट",
-                        "userDashboard": "यूज़र डैशबोर्ड",
+                        "userDashboard": "अकाउंट",
                         "howItWorks": "यह कैसे काम करता है"
                     },
                     "home": {

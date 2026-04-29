@@ -304,7 +304,7 @@ const Navbar = () => {
             <div className="bottom-navbar show-mobile">
                 <NavLink to="/" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`} end>
                     <Home size={20} className="nav-icon" />
-                    <span>Home</span>
+                    <span>{t('navbar.home')}</span>
                 </NavLink>
                 <NavLink to="/donate" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
                     <Heart size={20} className="nav-icon" />
