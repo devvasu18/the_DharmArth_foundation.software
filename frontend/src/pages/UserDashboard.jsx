@@ -16,6 +16,7 @@ import SubscriptionList from '../components/donation/SubscriptionList';
 const UserDashboard = () => {
     const { user, setUser } = useAuth();
     const [wallet, setWallet] = useState(null);
+    const [isLoadingWallet, setIsLoadingWallet] = useState(true);
 
 
     const [transactions, setTransactions] = useState([]);
@@ -63,11 +64,14 @@ const UserDashboard = () => {
 
         const fetchInitialData = async () => {
             try {
+                setIsLoadingWallet(true);
                 const summaryRes = await api.get('/wallet/summary');
                 setWallet(summaryRes.data.wallet);
                 setStats(summaryRes.data.stats);
             } catch (error) {
                 console.error("Error fetching initial dashboard data", error);
+            } finally {
+                setIsLoadingWallet(false);
             }
         };
         fetchInitialData();
@@ -288,18 +292,30 @@ const UserDashboard = () => {
 
                                 <div className="wallet-label">My Wallet Balance</div>
                                 <div className="wallet-balance">
-                                    ₹ {wallet?.balance?.toLocaleString() || 0}
+                                    {isLoadingWallet ? (
+                                        <div className="balance-skeleton animate-pulse"></div>
+                                    ) : (
+                                        `₹ ${wallet?.balance?.toLocaleString() || 0}`
+                                    )}
                                 </div>
 
                                 <div className="wallet-stats">
                                     <div className="stat-row">
                                         <TrendingUp size={16} />
-                                        <span>Total Earned: ₹ {wallet?.totalEarned?.toLocaleString() || 0}</span>
+                                        {isLoadingWallet ? (
+                                            <div className="stat-skeleton animate-pulse"></div>
+                                        ) : (
+                                            <span>Total Earned: ₹ {wallet?.totalEarned?.toLocaleString() || 0}</span>
+                                        )}
                                     </div>
                                     <div className="stat-row secondary">
                                         <div className="stat-item">
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <span className="stat-val">{stats.l1Donors || 0}</span>
+                                                {isLoadingWallet ? (
+                                                    <div className="stat-item-skeleton animate-pulse"></div>
+                                                ) : (
+                                                    <span className="stat-val">{stats.l1Donors || 0}</span>
+                                                )}
                                                 <button
                                                     className="btn-view-l1"
                                                     onClick={fetchL1Donors}
@@ -311,7 +327,11 @@ const UserDashboard = () => {
                                             <span className="stat-lbl">L1 Donors</span>
                                         </div>
                                         <div className="stat-item">
-                                            <span className="stat-val">{stats.l2Donors || 0}</span>
+                                            {isLoadingWallet ? (
+                                                <div className="stat-item-skeleton animate-pulse"></div>
+                                            ) : (
+                                                <span className="stat-val">{stats.l2Donors || 0}</span>
+                                            )}
                                             <span className="stat-lbl">L2 Donors</span>
                                         </div>
                                     </div>

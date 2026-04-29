@@ -403,7 +403,6 @@ const AdminDashboard = () => {
                             <thead>
                                 <tr>
                                     <th>Donor</th>
-                                    <th>City</th>
                                     <th>Amount</th>
                                     <th>Date</th>
                                     <th>Motivator</th>
@@ -418,11 +417,6 @@ const AdminDashboard = () => {
                                                 <span className="donor-name">{d.donorName}</span>
                                                 <span className="donor-meta">{d.donorMobile}</span>
                                             </div>
-                                        </td>
-                                        <td>
-                                            <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                                                {d.city || '-'}
-                                            </span>
                                         </td>
                                         <td>
                                             <span className="amount-badge">₹{d.amount}</span>

@@ -253,14 +253,14 @@ router.get('/users/paginated', async (req, res) => {
         const limit = 20;
         const skip = (page - 1) * limit;
 
-        const users = await User.find()
+        const users = await User.find({ isSuperAdmin: { $ne: true } })
             .select('name mobile email referredBy createdAt')
             .populate('referredBy', 'name mobile')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
 
-        const total = await User.countDocuments();
+        const total = await User.countDocuments({ isSuperAdmin: { $ne: true } });
 
         res.json({
             users,
@@ -284,6 +284,7 @@ router.get('/users/search', async (req, res) => {
         }
 
         const users = await User.find({
+            isSuperAdmin: { $ne: true },
             $or: [
                 { name: { $regex: query, $options: 'i' } },
                 { mobile: { $regex: query, $options: 'i' } }

@@ -342,12 +342,40 @@
     margin: var(--spacing-2) 0 var(--spacing-6);
     letter-spacing: -1.5px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    min-height: 4.5rem;
+    display: flex;
+    align-items: center;
 }
 
-@media (max-width: 480px) {
-    .wallet-balance {
-        font-size: 2.5rem;
-    }
+/* Skeleton Loaders */
+.balance-skeleton {
+    height: 3.5rem;
+    width: 200px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+}
+
+.stat-skeleton {
+    height: 1rem;
+    width: 140px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+.stat-item-skeleton {
+    height: 1.5rem;
+    width: 30px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .wallet-stats {

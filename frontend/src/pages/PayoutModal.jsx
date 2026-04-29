@@ -3,7 +3,7 @@ import { X, Clock, AlertCircle, Share2, CheckCircle, Lock, Wallet, IndianRupee }
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import toast from 'react-hot-toast';
-import './UserDashboard.css'; 
+import './UserDashboard.css';
 const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
     const [showConfirmStep, setShowConfirmStep] = useState(false);
     const [withdrawAmount, setWithdrawAmount] = useState(0);
@@ -135,7 +135,7 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
 
                     <div className="conditions-container">
                         {showConfirmStep ? (
-                            <motion.div 
+                            <motion.div
                                 className="confirm-step-ui"
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -177,17 +177,9 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                                 <div className="payout-details-card">
                                     <div className="detail-header">
                                         <h3>Receiving Account</h3>
-                                        {user.payoutCredentials?.isVerified ? (
-                                            <span className="verified-status">
-                                                <CheckCircle size={14} /> Verified
-                                            </span>
-                                        ) : (
-                                            <span className="pending-status">
-                                                <Clock size={14} /> Pending Verification
-                                            </span>
-                                        )}
+
                                     </div>
-                                    
+
                                     {user.payoutCredentials ? (
                                         <div className="bank-info-grid">
                                             {user.payoutCredentials.bankName && (
@@ -304,7 +296,7 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
 
                                 {/* Amount Selection - ONLY SHOW IF UNLOCKED */}
                                 {canPayout && (
-                                    <motion.div 
+                                    <motion.div
                                         className="amount-selection-card"
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
@@ -313,13 +305,13 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                                             <IndianRupee size={18} />
                                             <h3>Enter Withdrawal Amount</h3>
                                         </div>
-                                        
+
                                         <div className="amount-input-wrapper">
                                             <span className="currency-symbol">₹</span>
-                                            <input 
-                                                type="number" 
-                                                value={withdrawAmount} 
-                                                onChange={(e) => setWithdrawAmount(Math.max(0, parseInt(e.target.value) || 0))} 
+                                            <input
+                                                type="number"
+                                                value={withdrawAmount}
+                                                onChange={(e) => setWithdrawAmount(Math.max(0, parseInt(e.target.value) || 0))}
                                                 min={MIN_BALANCE}
                                                 max={currentBalance}
                                                 className="modern-amount-input"
