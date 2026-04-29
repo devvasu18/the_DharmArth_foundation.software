@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import {
     Search, Filter, Calendar, Download, ChevronDown, X,
-    ArrowRight, User, CheckCircle, Wallet, FileText, Save, Upload, Eye
+    ArrowRight, User, CheckCircle, Wallet, FileText, Save, Upload, Eye, Edit2, Lock
 } from 'lucide-react';
 import './TransactionManagement.css';
 import toast from 'react-hot-toast';
@@ -1078,59 +1078,73 @@ const TransactionManagement = () => {
                                 {selectedTransaction.is80G && (
                                     <>
                                         <div className="breakdown-row pt-2 border-t border-slate-100 mt-2">
-                                            <span className="text-green-600 font-bold flex items-center gap-1">
+                                             <span className="text-green-600 font-bold flex items-center gap-1">
                                                 <CheckCircle size={14} /> 80G Benefit
                                             </span> 
-                                            <button 
-                                                className="text-xs text-blue-600 font-bold hover:underline"
-                                                onClick={() => {
-                                                    setIsEditingTax(!isEditingTax);
-                                                    setEditTaxForm({
-                                                        panNumber: selectedTransaction.panNumber || '',
-                                                        aadhaarNumber: selectedTransaction.aadhaarNumber || ''
-                                                    });
-                                                }}
-                                            >
-                                                {isEditingTax ? 'Cancel' : 'Edit Info'}
-                                            </button>
+                                            {selectedTransaction.is80GUploaded ? (
+                                                <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
+                                                    <Lock size={10} /> CERTIFICATE ISSUED
+                                                </span>
+                                            ) : (
+                                                <button 
+                                                    className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"
+                                                    onClick={() => {
+                                                        setIsEditingTax(!isEditingTax);
+                                                        setEditTaxForm({
+                                                            panNumber: selectedTransaction.panNumber || '',
+                                                            aadhaarNumber: selectedTransaction.aadhaarNumber || ''
+                                                        });
+                                                    }}
+                                                >
+                                                    {isEditingTax ? 'Cancel' : <><Edit2 size={12} /> Edit Info</>}
+                                                </button>
+                                            )}
                                         </div>
                                         
                                         {isEditingTax ? (
-                                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-3 space-y-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                                                        <FileText size={18} />
+                                            <div className="bg-white border-2 border-blue-100 rounded-2xl p-5 mt-3 space-y-4 shadow-xl shadow-blue-500/5 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                                                            <FileText size={20} />
+                                                        </div>
+                                                        <div>
+                                                            <h5 className="font-bold text-slate-800 text-sm">Tax Information</h5>
+                                                            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-tight">Update KYC Details</p>
+                                                        </div>
                                                     </div>
-                                                    <h5 className="font-bold text-slate-700 text-sm">Update Tax Information</h5>
                                                 </div>
                                                 
-                                                <div className="grid grid-cols-1 gap-3">
-                                                    <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1">PAN Card Number</label>
+                                                <div className="grid grid-cols-1 gap-4">
+                                                    <div className="relative">
+                                                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">PAN Card Number</label>
                                                         <input 
-                                                            className="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all uppercase placeholder:text-slate-400"
                                                             placeholder="ABCDE1234F"
                                                             value={editTaxForm.panNumber}
                                                             onChange={e => setEditTaxForm({...editTaxForm, panNumber: e.target.value.toUpperCase()})}
+                                                            maxLength={10}
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 ml-1">Aadhaar Number</label>
+                                                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Aadhaar Number</label>
                                                         <input 
-                                                            className="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
                                                             placeholder="12-digit Aadhaar Number"
                                                             value={editTaxForm.aadhaarNumber}
-                                                            onChange={e => setEditTaxForm({...editTaxForm, aadhaarNumber: e.target.value})}
+                                                            onChange={e => setEditTaxForm({...editTaxForm, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12)})}
+                                                            maxLength={12}
+                                                            inputMode="numeric"
                                                         />
                                                     </div>
                                                 </div>
 
                                                 <button 
-                                                    className="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white py-2.5 rounded-lg text-sm font-bold shadow-md shadow-blue-200 transition-all flex items-center justify-center gap-2"
+                                                    className="w-full bg-slate-900 hover:bg-black active:scale-[0.98] text-white py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-slate-200 transition-all flex items-center justify-center gap-2 mt-2"
                                                     onClick={() => handleUpdateTaxInfo(selectedTransaction._id)}
                                                 >
-                                                    <Save size={16} />
-                                                    Save & Apply Changes
+                                                    <Save size={18} />
+                                                    Update Information
                                                 </button>
                                             </div>
                                         ) : (

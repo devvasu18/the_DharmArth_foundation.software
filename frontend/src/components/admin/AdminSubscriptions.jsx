@@ -45,7 +45,7 @@ const AdminSubscriptions = () => {
             </div>
 
             <div className="admin-content-section">
-                <SubscriptionList isAdmin={true} />
+                <SubscriptionList isAdmin={true} searchTerm={searchTerm} statusFilter={statusFilter} />
             </div>
 
             <style>{`

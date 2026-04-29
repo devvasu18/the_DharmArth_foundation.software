@@ -117,6 +117,15 @@ class CertificateService {
                 doc.font('Helvetica').text(donation.donorName);
                 doc.font('Helvetica-Bold').text('Mobile: ', 50, doc.y, { continued: true });
                 doc.font('Helvetica').text(donation.donorMobile);
+
+                if (donation.panNumber) {
+                    doc.font('Helvetica-Bold').text('PAN Card: ', 50, doc.y, { continued: true });
+                    doc.font('Helvetica').text(donation.panNumber);
+                }
+                if (donation.aadhaarNumber) {
+                    doc.font('Helvetica-Bold').text('Aadhaar Card: ', 50, doc.y, { continued: true });
+                    doc.font('Helvetica').text(donation.aadhaarNumber);
+                }
                 doc.moveDown(1.2);
 
                 // --- 3. DONATION DETAILS ---

@@ -699,10 +699,14 @@ const DonationForm = ({ onSuccess }) => {
                                         placeholder="ABCDE1234F"
                                         value={pan}
                                         onChange={(e) => {
-                                            setPan(e.target.value.toUpperCase());
+                                            const val = e.target.value.toUpperCase().slice(0, 10);
+                                            setPan(val);
                                             if (errors.pan) setErrors({ ...errors, pan: null });
                                         }}
                                         maxLength={10}
+                                        autoCapitalize="characters"
+                                        autoCorrect="off"
+                                        spellCheck="false"
                                     />
                                 </div>
                                 {errors.pan && <small className="error-text">{errors.pan}</small>}
@@ -719,13 +723,12 @@ const DonationForm = ({ onSuccess }) => {
                                         placeholder="1234 5678 9012"
                                         value={aadhaar}
                                         onChange={(e) => {
-                                            const val = e.target.value;
-                                            if (/^\d*$/.test(val) && val.length <= 12) {
-                                                setAadhaar(val);
-                                                if (errors.aadhaar) setErrors({ ...errors, aadhaar: null });
-                                            }
+                                            const val = e.target.value.replace(/\D/g, '').slice(0, 12);
+                                            setAadhaar(val);
+                                            if (errors.aadhaar) setErrors({ ...errors, aadhaar: null });
                                         }}
                                         maxLength={12}
+                                        inputMode="numeric"
                                     />
                                 </div>
                                 {errors.aadhaar && <small className="error-text">{errors.aadhaar}</small>}
@@ -780,10 +783,14 @@ const DonationForm = ({ onSuccess }) => {
                                 placeholder="Re-enter PAN Number"
                                 value={confirmPan}
                                 onChange={(e) => {
-                                    setConfirmPan(e.target.value.toUpperCase());
+                                    const val = e.target.value.toUpperCase().slice(0, 10);
+                                    setConfirmPan(val);
                                     setConfirmError('');
                                 }}
                                 maxLength={10}
+                                autoCapitalize="characters"
+                                autoCorrect="off"
+                                spellCheck="false"
                             />
                             {confirmError && <small className="error-text">{confirmError}</small>}
                         </div>

@@ -130,6 +130,22 @@ class NotificationService {
             onModel: 'PayoutRequest'
         });
     }
+
+    /**
+     * Specialized: Subscription Cancelled Alert for Admin
+     */
+    async notifySubscriptionCancelledAdmin(subscription) {
+        const msg = `🛑 Subscription Cancelled: ${subscription.donorName} (${subscription.donorMobile}) has cancelled their monthly donation of ₹${subscription.amount}.`;
+        
+        return await this.notify({
+            userId: null, // For admins
+            type: 'SUBSCRIPTION_CANCELLED',
+            message: msg,
+            referenceId: subscription._id,
+            onModel: 'Subscription',
+            whatsapp: process.env.ADMIN_MOBILE || '9999999999'
+        });
+    }
 }
 
 module.exports = new NotificationService();

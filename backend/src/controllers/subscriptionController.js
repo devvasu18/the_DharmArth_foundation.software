@@ -1,5 +1,6 @@
 const Subscription = require('../models/Subscription');
 const razorpay = require('../config/razorpay');
+const notificationService = require('../services/notificationService');
 
 /**
  * @desc    Get current user's subscriptions
@@ -93,6 +94,11 @@ exports.cancelSubscription = async (req, res) => {
         // 2. Update DB
         subscription.status = 'cancelled';
         await subscription.save();
+
+        // 3. Notify Admin
+        notificationService.notifySubscriptionCancelledAdmin(subscription).catch(err => 
+            console.error('Error sending cancellation notification to admin:', err)
+        );
 
         res.json({ message: 'Subscription cancelled successfully', subscription });
     } catch (error) {

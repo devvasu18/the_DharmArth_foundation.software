@@ -4,7 +4,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useConfirm } from '../../context/ConfirmContext';
 
-const SubscriptionList = ({ isAdmin = false }) => {
+const SubscriptionList = ({ isAdmin = false, searchTerm = '', statusFilter = '' }) => {
     const [subscriptions, setSubscriptions] = useState([]);
     const [loading, setLoading] = useState(true);
     const { showConfirm } = useConfirm();
@@ -12,7 +12,17 @@ const SubscriptionList = ({ isAdmin = false }) => {
     const fetchSubscriptions = async () => {
         try {
             setLoading(true);
-            const url = isAdmin ? '/subscriptions/admin/all' : '/subscriptions/my';
+            let url = isAdmin ? '/subscriptions/admin/all' : '/subscriptions/my';
+            
+            // Add query params if admin
+            if (isAdmin) {
+                const params = new URLSearchParams();
+                if (searchTerm) params.append('search', searchTerm);
+                if (statusFilter) params.append('status', statusFilter);
+                const queryString = params.toString();
+                if (queryString) url += `?${queryString}`;
+            }
+
             const { data } = await api.get(url);
             setSubscriptions(data);
         } catch (error) {
@@ -24,8 +34,12 @@ const SubscriptionList = ({ isAdmin = false }) => {
     };
 
     useEffect(() => {
-        fetchSubscriptions();
-    }, []);
+        const timer = setTimeout(() => {
+            fetchSubscriptions();
+        }, searchTerm ? 500 : 0); // Debounce search
+        
+        return () => clearTimeout(timer);
+    }, [searchTerm, statusFilter, isAdmin]);
 
     const handleCancel = async (id, subscriptionId) => {
         const confirmed = await showConfirm(

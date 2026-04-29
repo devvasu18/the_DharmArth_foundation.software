@@ -470,7 +470,9 @@ const AdminLayout = () => {
                                                     onClick={() => handleNotificationClick(notif)}
                                                 >
                                                     <div className="notif-icon">
-                                                        {notif.onModel === 'PayoutRequest' ? '💸' : notif.type === 'DONATION' ? '💰' : '📢'}
+                                                        {notif.onModel === 'PayoutRequest' ? '💸' : 
+                                                         notif.type === 'DONATION' ? '💰' : 
+                                                         notif.type === 'SUBSCRIPTION_CANCELLED' ? '🛑' : '📢'}
                                                     </div>
                                                     <div className="notif-content">
                                                         <p className="notif-msg">{notif.message}</p>
