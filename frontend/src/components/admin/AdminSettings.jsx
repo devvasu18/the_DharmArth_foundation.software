@@ -120,7 +120,7 @@ const AdminSettings = () => {
     };
 
     const handleAddPlan = () => {
-        if (donationConfig.plans.length < 4) {
+        if (donationConfig.plans.length < 6) {
             setDonationConfig({ ...donationConfig, plans: [...donationConfig.plans, 1000] });
         }
     };
@@ -319,7 +319,7 @@ const AdminSettings = () => {
                 }}>
                     <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', minWidth: '500px', maxWidth: '90%' }}>
                         <h4>Configure Donation Plans</h4>
-                        <p style={{ fontSize: '0.9rem', color: '#666' }}>Manage donation amounts (Max 4). Select one as Popular.</p>
+                        <p style={{ fontSize: '0.9rem', color: '#666' }}>Manage donation amounts (Max 6). Select one as Popular.</p>
 
                         <div style={{ margin: '1.5rem 0', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             {donationConfig.plans.map((plan, index) => (
@@ -355,7 +355,7 @@ const AdminSettings = () => {
                                 </div>
                             ))}
 
-                            {donationConfig.plans.length < 4 && (
+                            {donationConfig.plans.length < 6 && (
                                 <button className="btn btn-outline" onClick={handleAddPlan}>
                                     + Add Plan
                                 </button>
