@@ -7,21 +7,16 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 import './UserDashboard.css';
 import PayoutModal from './PayoutModal';
 import OnboardingModal from './OnboardingModal';
 import SubscriptionList from '../components/donation/SubscriptionList';
 
 const UserDashboard = () => {
-    const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
+    const { user, setUser } = useAuth();
     const [wallet, setWallet] = useState(null);
 
-    // Force login if no token (handles corrupted localStorage from previous bug)
-    useEffect(() => {
-        if (!user || !user.token) {
-            window.location.href = '/login';
-        }
-    }, [user]);
 
     const [transactions, setTransactions] = useState([]);
     const [copied, setCopied] = useState(false);
@@ -62,17 +57,12 @@ const UserDashboard = () => {
     const [l1FilterYear, setL1FilterYear] = useState(new Date().getFullYear());
     const [l1Summary, setL1Summary] = useState({ lifetimeEarning: 0, prevMonthEarning: 0 });
 
-    // Fetch initial profile, balance and stats
+    // Fetch wallet and stats
     useEffect(() => {
-        if (!user?.token || user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
+        if (!user || user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
 
         const fetchInitialData = async () => {
             try {
-                const uRes = await api.get('/users/profile');
-                const updatedUser = { ...uRes.data, token: user.token };
-                setUser(updatedUser);
-                localStorage.setItem('user', JSON.stringify(updatedUser));
-
                 const summaryRes = await api.get('/wallet/summary');
                 setWallet(summaryRes.data.wallet);
                 setStats(summaryRes.data.stats);
@@ -81,11 +71,10 @@ const UserDashboard = () => {
             }
         };
         fetchInitialData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [user]);
 
     const fetchTransactions = async (pageNum, isInitial = false) => {
-        if (!user?.token) return;
+        if (!user) return;
         if (isInitial) {
             setPage(1);
             setHasMore(true);

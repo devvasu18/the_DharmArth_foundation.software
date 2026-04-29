@@ -5,6 +5,7 @@ import { io } from "socket.io-client";
 import toast from 'react-hot-toast';
 import api, { API_BASE_URL } from '../../services/api';
 import { useConfirm } from '../../context/ConfirmContext';
+import { useAuth } from '../../context/AuthContext';
 import './AdminLayout.css';
 
 // Simple notification sound
@@ -14,7 +15,7 @@ const AdminLayout = () => {
     const { showAlert } = useConfirm();
     const navigate = useNavigate();
     const location = useLocation();
-    const [user, setUser] = useState(null);
+    const { user, logout } = useAuth();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
@@ -41,19 +42,6 @@ const AdminLayout = () => {
     };
 
     useEffect(() => {
-        const storedUser = JSON.parse(localStorage.getItem('user'));
-        setUser(storedUser);
-
-        // Basic protection check
-        if (!storedUser || !storedUser.token) {
-            navigate('/login');
-            return;
-        } else if (!storedUser.isSuperAdmin && (!storedUser.roles || storedUser.roles.length === 0)) {
-            toast.error("Admins Only: You do not have permission to access this area.");
-            navigate('/');
-            return;
-        }
-
         // Initialize Socket
         socketRef.current = io(API_BASE_URL, {
             withCredentials: true
@@ -155,8 +143,7 @@ const AdminLayout = () => {
 
     const handleLogout = () => {
         if (socketRef.current) socketRef.current.disconnect();
-        localStorage.removeItem('user');
-        navigate('/login');
+        logout();
     };
 
     const handleFullScreen = () => {

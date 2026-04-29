@@ -8,7 +8,7 @@ const MySubscriptions = () => {
     const [user] = useState(JSON.parse(localStorage.getItem('user')));
 
     useEffect(() => {
-        if (!user || !user.token) {
+        if (!user) {
             window.location.href = '/login';
         }
     }, [user]);

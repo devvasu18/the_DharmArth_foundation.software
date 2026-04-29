@@ -3,6 +3,7 @@ import Navbar from '../layout/Navbar';
 import AuthFooter from './AuthFooter';
 import api from '../../services/api';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import './Auth.css';
 import { Eye, EyeOff, User, BadgeCheck } from 'lucide-react';
@@ -25,6 +26,7 @@ const Signup = () => {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleSignup = async () => {
         if (!name || !mobile || !password) {
@@ -42,9 +44,8 @@ const Signup = () => {
         try {
             const { data } = await api.post('/auth/register', { name, mobile, email, password });
 
-            // Automatically login or redirect
-            // For now, let's login (save token)
-            localStorage.setItem('user', JSON.stringify(data));
+            // Use context login
+            login(data);
 
             // Show Success Modal instead of alert
             setShowSuccessModal(true);

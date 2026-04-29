@@ -118,8 +118,8 @@ const DonationForm = ({ onSuccess }) => {
                             setMotivatorMobile(freshUser.lastMotivatorMobile);
                         }
 
-                        // Sync localStorage while preserving token
-                        localStorage.setItem('user', JSON.stringify({ ...freshUser, token: user.token }));
+                        // Sync localStorage
+                        localStorage.setItem('user', JSON.stringify(freshUser));
                     }
                 } catch (e) {
                     // Handle 401 (Unauthorized) - user session expired

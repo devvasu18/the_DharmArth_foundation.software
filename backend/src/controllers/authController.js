@@ -2,6 +2,37 @@ const User = require('../models/User');
 const Role = require('../models/Role'); // Ensure Role model is registered
 const generateToken = require('../utils/generateToken');
 
+// Helper to get token from model, create cookie and send response
+const sendTokenResponse = (user, statusCode, res) => {
+    const token = generateToken(user._id);
+
+    const options = {
+        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+    };
+
+    res.status(statusCode).cookie('token', token, options).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        isSuperAdmin: user.isSuperAdmin,
+        roles: user.roles,
+        referredBy: user.referredBy ? {
+            name: user.referredBy.name,
+            mobile: user.referredBy.mobile
+        } : null,
+        language: user.language,
+        isMotivator: user.isMotivator,
+        referralCode: user.referralCode,
+        lastMotivatorMobile: user.lastMotivatorMobile,
+        payoutCredentials: user.payoutCredentials,
+    });
+};
+
+
 // @desc    Auth user & get token
 // @route   POST /api/auth/login
 // @access  Public
@@ -21,24 +52,7 @@ const loginUser = async (req, res) => {
                 return res.status(403).json({ message: 'Account suspended. Please contact Support Team.' });
             }
 
-            res.json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                mobile: user.mobile,
-                isSuperAdmin: user.isSuperAdmin,
-                roles: user.roles,
-                referredBy: user.referredBy ? {
-                    name: user.referredBy.name,
-                    mobile: user.referredBy.mobile
-                } : null,
-                language: user.language,
-                isMotivator: user.isMotivator,
-                referralCode: user.referralCode,
-                lastMotivatorMobile: user.lastMotivatorMobile,
-                payoutCredentials: user.payoutCredentials,
-                token: generateToken(user._id),
-            });
+            return sendTokenResponse(user, 200, res);
         } else {
             // GENERIC MESSAGE: Prevents User Enumeration (Target #4)
             res.status(401).json({ message: 'Invalid mobile or password' });
@@ -98,19 +112,7 @@ const registerUser = async (req, res) => {
         }
 
         if (user) {
-            res.status(201).json({
-                _id: user._id,
-                name: user.name,
-                mobile: user.mobile,
-                email: user.email,
-                referralCode: user.referralCode,
-                lastMotivatorMobile: user.lastMotivatorMobile,
-                referredBy: user.referredBy ? {
-                    name: (await User.findById(user.referredBy)).name,
-                    mobile: (await User.findById(user.referredBy)).mobile
-                } : null,
-                token: generateToken(user._id)
-            });
+            return sendTokenResponse(user, 201, res);
         } else {
             res.status(400).json({ message: 'Invalid user data' });
         }
@@ -165,4 +167,17 @@ const checkUserStatus = async (req, res) => {
     }
 };
 
-module.exports = { loginUser, registerUser, checkReferral, checkUserStatus };
+// @desc    Logout user / clear cookie
+// @route   GET /api/auth/logout
+// @access  Public
+const logoutUser = async (req, res) => {
+    res.cookie('token', 'none', {
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true,
+    });
+
+    res.status(200).json({ success: true, message: 'Logged out successfully' });
+};
+
+module.exports = { loginUser, registerUser, logoutUser, checkReferral, checkUserStatus };
+

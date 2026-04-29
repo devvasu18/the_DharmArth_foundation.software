@@ -7,26 +7,15 @@ import { io } from "socket.io-client";
 import { API_BASE_URL } from '../../services/api';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import './Navbar.css';
 
 const Navbar = () => {
     const { t, i18n } = useTranslation();
+    const { user, setUser, logout } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
-    const [user, setUser] = useState(null);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const dropdownRef = React.useRef(null);
-
-    // Check auth status on mount
-    React.useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            setUser(parsedUser);
-            if (parsedUser.language) {
-                i18n.changeLanguage(parsedUser.language);
-            }
-        }
-    }, []);
 
     // Close dropdown on click outside
     React.useEffect(() => {
@@ -119,9 +108,7 @@ const Navbar = () => {
     }, [isNotificationsOpen]);
 
     const handleLogout = () => {
-        localStorage.removeItem('user');
-        setUser(null);
-        window.location.href = '/login';
+        logout();
     };
 
     const isDeliveryPartner = user?.roles?.some(r => (typeof r === 'string' ? r === 'Delivery boy' : r.name === 'Delivery boy'));

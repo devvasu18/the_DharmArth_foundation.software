@@ -56,6 +56,10 @@ const DeliveryBoyDashboard = lazy(() => import('./pages/DeliveryBoyDashboard'));
 const SharedCheckout = lazy(() => import('./pages/SharedCheckout'));
 const SharedTracker = lazy(() => import('./pages/SharedTracker'));
 
+import { AuthProvider } from './context/AuthContext';
+import AdminRoute from './components/auth/AdminRoute';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+
 // Layout element for Suspense
 const RootLayout = () => (
   <Suspense fallback={<LoadingSpinner />}>
@@ -72,20 +76,26 @@ const router = createBrowserRouter(
       <Route path="/signup" element={<Signup />} />
       <Route path="/donate" element={<DonationPage />} />
       <Route path="/start-fundraiser" element={<StartFundraiser />} />
-      <Route path="/dashboard" element={<UserDashboard />} />
-      <Route path="/my-subscriptions" element={<MySubscriptions />} />
+      
+      {/* Protected User Routes */}
+      <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+      <Route path="/my-subscriptions" element={<ProtectedRoute><MySubscriptions /></ProtectedRoute>} />
+      
       <Route path="/events" element={<Events />} />
       <Route path="/events/:slug" element={<EventDetail />} />
       <Route path="/gallery" element={<Gallery />} />
       <Route path="/gallery/:id" element={<GalleryDetail />} />
       <Route path="/doctors" element={<DoctorAvailability />} />
       <Route path="/order-medicine" element={<OrderMedicine />} />
-      <Route path="/delivery-boy" element={<DeliveryBoyDashboard />} />
+      
+      {/* Protected Rider Route */}
+      <Route path="/delivery-boy" element={<ProtectedRoute><DeliveryBoyDashboard /></ProtectedRoute>} />
+      
       <Route path="/checkout/:id" element={<SharedCheckout />} />
       <Route path="/track/:orderId" element={<SharedTracker />} />
 
-      {/* Admin Routes */}
-      <Route path="/admin" element={<AdminLayout />}>
+      {/* Admin Routes - Strictly Guarded */}
+      <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="sliders" element={<AdminSliders />} />
@@ -111,7 +121,7 @@ const router = createBrowserRouter(
         <Route path="reports/commission" element={<CommissionReports />} />
       </Route>
 
-      <Route path="/admin-user-explorer" element={<AdminLayout />}>
+      <Route path="/admin-user-explorer" element={<AdminRoute><AdminLayout /></AdminRoute>}>
         <Route path="transactions" element={<AdminTransactions />} />
       </Route>
 
@@ -123,10 +133,12 @@ const router = createBrowserRouter(
 
 function App() {
   return (
-    <ConfirmProvider>
-      <Toaster position="top-right" />
-      <RouterProvider router={router} />
-    </ConfirmProvider>
+    <AuthProvider>
+      <ConfirmProvider>
+        <Toaster position="top-right" />
+        <RouterProvider router={router} />
+      </ConfirmProvider>
+    </AuthProvider>
   );
 }
 

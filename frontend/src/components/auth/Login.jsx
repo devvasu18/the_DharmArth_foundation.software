@@ -6,6 +6,7 @@ import Navbar from '../layout/Navbar';
 import AuthFooter from './AuthFooter';
 import api from '../../services/api';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import './Auth.css';
 import DOMPurify from 'dompurify';
 
@@ -22,6 +23,7 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
 
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -49,8 +51,8 @@ const Login = () => {
         try {
             const { data } = await api.post('/auth/login', { mobile, password });
 
-            // Save user & token
-            localStorage.setItem('user', JSON.stringify(data));
+            // Use context login
+            login(data);
 
             if (data.language) {
                 i18n.changeLanguage(data.language);

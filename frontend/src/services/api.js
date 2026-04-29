@@ -12,6 +12,7 @@ console.log(`[API] WhatsApp Gateway: ${import.meta.env.VITE_WHATSAPP_SERVICE_URL
 
 const api = axios.create({
     baseURL: `${API_BASE_URL}/api`,
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -19,21 +20,6 @@ const api = axios.create({
 
 export { API_BASE_URL };
 
-// Add auth token to requests if available
-api.interceptors.request.use((config) => {
-    const userStr = localStorage.getItem('user');
-    if (userStr && userStr !== "null" && userStr !== "undefined") {
-        try {
-            const user = JSON.parse(userStr);
-            if (user && user.token) {
-                config.headers.Authorization = `Bearer ${user.token}`;
-            }
-        } catch (e) {
-            localStorage.removeItem('user');
-        }
-    }
-    return config;
-});
 
 // Handle global responses (like 401)
 api.interceptors.response.use(
@@ -42,7 +28,7 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             console.warn("Unauthorized access - clearing session");
             localStorage.removeItem('user');
-            // Optional: window.location.href = '/login'; 
+            window.location.href = '/login'; 
         }
         return Promise.reject(error);
     }
