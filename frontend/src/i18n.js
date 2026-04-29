@@ -34,7 +34,8 @@ i18n
                         "wallet": "Wallet",
                         "subscriptions": "Subscriptions",
                         "userDashboard": "Account",
-                        "howItWorks": "How It Works"
+                        "howItWorks": "How It Works",
+                        "changeLanguage": "Change Language"
                     },
                     "home": {
                         "welcomeTitle": "Welcome to The Dharmarth Foundation",
@@ -181,7 +182,8 @@ i18n
                         "wallet": "वॉलेट",
                         "subscriptions": " सदस्यताएँ",
                         "userDashboard": "अकाउंट",
-                        "howItWorks": "यह कैसे काम करता है"
+                        "howItWorks": "यह कैसे काम करता है",
+                        "changeLanguage": "भाषा बदलें"
                     },
                     "home": {
                         "welcomeTitle": "धर्मार्थ फाउंडेशन में आपका स्वागत है",

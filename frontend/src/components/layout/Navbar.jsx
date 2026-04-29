@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Search, ChevronDown, Menu, X, Heart, Calendar, Stethoscope, User as UserIcon, Home } from 'lucide-react';
+import { Bell, Search, ChevronDown, Menu, X, Heart, Calendar, Stethoscope, User as UserIcon, Home, Languages } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +15,7 @@ const Navbar = () => {
     const { user, setUser, logout } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isLangModalOpen, setIsLangModalOpen] = useState(false);
     const dropdownRef = React.useRef(null);
 
     // Close dropdown on click outside
@@ -113,6 +114,21 @@ const Navbar = () => {
 
     const isDeliveryPartner = user?.roles?.some(r => (typeof r === 'string' ? r === 'Delivery boy' : r.name === 'Delivery boy'));
 
+    const renderLanguageToggle = (isMobile = false) => (
+        <div
+            className="nav-link"
+            onClick={(e) => {
+                e.stopPropagation();
+                setIsLangModalOpen(true);
+                if (isMobile) setIsOpen(false);
+            }}
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+            <Languages size={18} />
+            <span>{t('navbar.changeLanguage')}</span>
+        </div>
+    );
+
     return (
         <nav className="navbar">
             <div className="container navbar-container">
@@ -142,39 +158,7 @@ const Navbar = () => {
 
                 <div className="navbar-actions hidden-mobile">
                     {/* Language Toggle */}
-                    <div
-                        onClick={() => {
-                            const currentLang = i18n.language || 'hi';
-                            const newLang = currentLang.startsWith('en') ? 'hi' : 'en';
-                            i18n.changeLanguage(newLang);
-                            if (user) {
-                                const updatedUser = { ...user, language: newLang };
-                                setUser(updatedUser);
-                                localStorage.setItem('user', JSON.stringify(updatedUser));
-                                api.put('/users/language', { language: newLang }).catch(console.error);
-                            }
-                        }}
-                        style={{
-                            cursor: 'pointer',
-                            marginRight: '15px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            fontSize: '0.9rem',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        <span style={{
-                            color: (i18n.language && i18n.language.startsWith('hi')) ? 'var(--primary)' : '#888',
-                            fontWeight: (i18n.language && i18n.language.startsWith('hi')) ? '800' : '400'
-                        }}>हिंदी</span>
-
-                        <span style={{ margin: '0 6px', color: '#ccc' }}>|</span>
-
-                        <span style={{
-                            color: (i18n.language && i18n.language.startsWith('en')) ? 'var(--primary)' : '#888',
-                            fontWeight: (i18n.language && i18n.language.startsWith('en')) ? '800' : '400'
-                        }}>EN</span>
-                    </div>
+                    {renderLanguageToggle()}
 
                     <Link to="/donate" className="btn btn-outline">{t('navbar.donate')}</Link>
 
@@ -266,6 +250,7 @@ const Navbar = () => {
             {/* Mobile Menu */}
             {isOpen && (
                 <div className="mobile-menu">
+                    {renderLanguageToggle(true)}
                     {!isDeliveryPartner && (
                         <>
                             {/* <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.doctorAvailability')}</NavLink> */}
@@ -306,6 +291,114 @@ const Navbar = () => {
                     <span>{user ? t('navbar.userDashboard') : t('navbar.signIn')}</span>
                 </NavLink>
             </div>
+
+            {/* Language Selection Modal */}
+            <AnimatePresence>
+                {isLangModalOpen && (
+                    <motion.div
+                        className="lang-modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsLangModalOpen(false)}
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 9999,
+                            padding: '20px'
+                        }}
+                    >
+                        <motion.div
+                            className="lang-modal-content"
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                backgroundColor: 'white',
+                                padding: '30px',
+                                borderRadius: '16px',
+                                width: '100%',
+                                maxWidth: '400px',
+                                textAlign: 'center',
+                                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                            }}
+                        >
+                            <h2 style={{ marginBottom: '20px', fontSize: '1.5rem', fontWeight: 'bold', color: '#1a202c' }}>
+                                {i18n.language.startsWith('hi') ? 'भाषा चुनें' : 'Select Language'}
+                            </h2>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <button
+                                    onClick={() => {
+                                        i18n.changeLanguage('hi');
+                                        if (user) {
+                                            setUser({ ...user, language: 'hi' });
+                                            api.put('/users/language', { language: 'hi' }).catch(console.error);
+                                        }
+                                        setIsLangModalOpen(false);
+                                    }}
+                                    style={{
+                                        padding: '15px',
+                                        borderRadius: '12px',
+                                        border: i18n.language.startsWith('hi') ? '2px solid var(--primary)' : '1px solid #e2e8f0',
+                                        backgroundColor: i18n.language.startsWith('hi') ? '#f0fdf4' : 'white',
+                                        fontSize: '1.1rem',
+                                        fontWeight: '600',
+                                        color: i18n.language.startsWith('hi') ? 'var(--primary)' : '#4a5568',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    हिंदी {i18n.language.startsWith('hi') && '✓'}
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        i18n.changeLanguage('en');
+                                        if (user) {
+                                            setUser({ ...user, language: 'en' });
+                                            api.put('/users/language', { language: 'en' }).catch(console.error);
+                                        }
+                                        setIsLangModalOpen(false);
+                                    }}
+                                    style={{
+                                        padding: '15px',
+                                        borderRadius: '12px',
+                                        border: i18n.language.startsWith('en') ? '2px solid var(--primary)' : '1px solid #e2e8f0',
+                                        backgroundColor: i18n.language.startsWith('en') ? '#f0fdf4' : 'white',
+                                        fontSize: '1.1rem',
+                                        fontWeight: '600',
+                                        color: i18n.language.startsWith('en') ? 'var(--primary)' : '#4a5568',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    English {i18n.language.startsWith('en') && '✓'}
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => setIsLangModalOpen(false)}
+                                style={{ marginTop: '20px', color: '#718096', fontWeight: '500', cursor: 'pointer', background: 'none', border: 'none' }}
+                            >
+                                {i18n.language.startsWith('hi') ? 'बंद करें' : 'Close'}
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </nav>
     );
 };
