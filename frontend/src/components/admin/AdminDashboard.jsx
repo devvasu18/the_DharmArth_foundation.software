@@ -12,7 +12,7 @@ const AdminDashboard = () => {
     const [stats, setStats] = useState({
         userCount: 0,
         totalDonations: 0,
-        activeCampaigns: 5,
+        activeCampaigns: 0,
         donationGrowth: { val: 0, isPositive: true },
         userGrowth: { val: 0, isPositive: true }
     });

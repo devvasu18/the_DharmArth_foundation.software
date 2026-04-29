@@ -124,8 +124,9 @@ const Navbar = () => {
             }}
             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
         >
-            <Languages size={18} />
+
             <span>{t('navbar.changeLanguage')}</span>
+            <Languages size={18} />
         </div>
     );
 

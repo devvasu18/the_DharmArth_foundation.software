@@ -8,12 +8,14 @@ import toast from 'react-hot-toast';
 import './DonationForm.css';
 import { validatePAN, validateAadhaar } from '../../utils/validators';
 import DOMPurify from 'dompurify';
+import { useAuth } from '../../context/AuthContext';
 
 const DonationForm = ({ onSuccess }) => {
     const { t } = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
     const { showAlert } = useConfirm();
+    const { login, user: authUser } = useAuth();
     const [amount, setAmount] = useState(1000);
     const [donationConfig, setDonationConfig] = useState({ plans: [600, 1000, 5000], popularAmount: 1000 });
     const [customAmount, setCustomAmount] = useState(1000);
@@ -84,58 +86,19 @@ const DonationForm = ({ onSuccess }) => {
         fetchSettings();
 
         // Auto-fill user details if logged in
-        const fetchLatestProfile = async () => {
-            const userStr = localStorage.getItem('user');
-            if (userStr && userStr !== "null" && userStr !== "undefined") {
-                try {
-                    // Start with what we have in localStorage
-                    let user = JSON.parse(userStr);
-                    setFullName(user.name || '');
-                    setMobile(user.mobile || '');
-                    setEmail(user.email || '');
-                    if (user.referredBy) {
-                        setMotivatorMobile(user.referredBy.mobile || user.referredBy.referralCode || '');
-                        setMotivatorName(user.referredBy.name || '');
-                        setIsMotivatorLocked(true);
-                    } else if (user.lastMotivatorMobile) {
-                        setMotivatorMobile(user.lastMotivatorMobile);
-                    }
-
-                    // Then fetch fresh data from server to catch any recent syncs
-                    const { data: freshUser } = await api.get('/users/profile');
-                    if (freshUser) {
-                        setFullName(freshUser.name || '');
-                        setMobile(freshUser.mobile || '');
-                        setEmail(freshUser.email || '');
-
-                        // Handle populated referredBy
-                        if (freshUser.referredBy && typeof freshUser.referredBy === 'object') {
-                            const ref = freshUser.referredBy;
-                            setMotivatorMobile(ref.mobile || ref.referralCode || '');
-                            setMotivatorName(ref.name || '');
-                            setIsMotivatorLocked(true);
-                        } else if (freshUser.lastMotivatorMobile) {
-                            setMotivatorMobile(freshUser.lastMotivatorMobile);
-                        }
-
-                        // Sync localStorage
-                        localStorage.setItem('user', JSON.stringify(freshUser));
-                    }
-                } catch (e) {
-                    // Handle 401 (Unauthorized) - user session expired
-                    if (e.response?.status === 401) {
-                        console.warn("Session expired or unauthorized. Using local fallback.");
-                        // Optional: logout user if token is invalid
-                        // localStorage.removeItem('user');
-                    } else {
-                        console.error("Error syncing user profile:", e);
-                    }
-                }
+        if (authUser) {
+            setFullName(authUser.name || '');
+            setMobile(authUser.mobile || '');
+            setEmail(authUser.email || '');
+            if (authUser.referredBy) {
+                setMotivatorMobile(authUser.referredBy.mobile || authUser.referredBy.referralCode || '');
+                setMotivatorName(authUser.referredBy.name || '');
+                setIsMotivatorLocked(true);
+            } else if (authUser.lastMotivatorMobile) {
+                setMotivatorMobile(authUser.lastMotivatorMobile);
             }
-        };
-
-        fetchLatestProfile();
-    }, []);
+        }
+    }, [authUser]);
 
     // Check for referral link
     useEffect(() => {
@@ -155,7 +118,7 @@ const DonationForm = ({ onSuccess }) => {
             // Prevent self-referral
             if (motivatorMobile && mobile && motivatorMobile === mobile) {
                 setMotivatorName("");
-                setErrors(prev => ({ ...prev, motivator: "Please fill motivators no. not self" }));
+                setErrors(prev => ({ ...prev, motivator: "Please fill the motivator’s number, not your own" }));
                 return;
             }
 
@@ -167,7 +130,7 @@ const DonationForm = ({ onSuccess }) => {
                         setErrors(prev => ({ ...prev, motivator: null }));
                     } else {
                         setMotivatorName('');
-                        setErrors(prev => ({ ...prev, motivator: "Invalid mobile number or code" }));
+                        setErrors(prev => ({ ...prev, motivator: "Motivator not found " }));
                     }
                 } catch (error) {
                     console.error("Error validating motivator:", error);
@@ -389,7 +352,7 @@ const DonationForm = ({ onSuccess }) => {
                 referralCode: motivatorMobile
             });
 
-            localStorage.setItem('user', JSON.stringify(data));
+            login(data);
             toast.success("Account Created Successfully!");
             navigate('/dashboard');
         } catch (error) {

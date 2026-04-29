@@ -98,7 +98,7 @@ const UserDashboard = () => {
     useEffect(() => {
         if (user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
         fetchTransactions(1, true);
-    }, [selectedMonth, selectedYear]);
+    }, [selectedMonth, selectedYear, user]);
 
     const [isExporting, setIsExporting] = useState(false);
 
@@ -401,10 +401,7 @@ const UserDashboard = () => {
                         </div>
 
 
-                        {/* TABS HEADER */}
-                        <div className="dashboard-tabs-header">
-                            <h3 className="section-title" style={{ padding: '0 1rem', margin: '0' }}>Recent Activity</h3>
-                        </div>
+
 
                         <motion.div
                             className="transactions-section"
@@ -530,9 +527,9 @@ const UserDashboard = () => {
                                                     <td>
                                                         <div className="status-cell">
                                                             <span className={`status-badge ${txn.reason === 'payout' && txn.status === 'pending' ? 'badge-processing' :
-                                                                    txn.status === 'failed' ? 'badge-rejected' :
-                                                                        txn.reason === 'payout' && (txn.status === 'success' || txn.status === 'completed') ? 'badge-completed' :
-                                                                            txn.type === 'credit' || txn.isDonation ? 'badge-credit' : 'badge-debit'
+                                                                txn.status === 'failed' ? 'badge-rejected' :
+                                                                    txn.reason === 'payout' && (txn.status === 'success' || txn.status === 'completed') ? 'badge-completed' :
+                                                                        txn.type === 'credit' || txn.isDonation ? 'badge-credit' : 'badge-debit'
                                                                 }`}>
                                                                 {txn.reason === 'payout' && txn.status === 'pending' ? 'IN PROCESS' :
                                                                     txn.status === 'failed' ? 'REJECTED' :
