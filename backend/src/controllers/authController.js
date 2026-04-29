@@ -9,8 +9,8 @@ const sendTokenResponse = (user, statusCode, res) => {
     const options = {
         expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+        secure: true, // Always true for cross-site cookies
+        sameSite: 'None', // Required for cross-site cookies (Vercel -> Render)
     };
 
     res.status(statusCode).cookie('token', token, options).json({
@@ -174,6 +174,8 @@ const logoutUser = async (req, res) => {
     res.cookie('token', 'none', {
         expires: new Date(Date.now() + 10 * 1000),
         httpOnly: true,
+        secure: true,
+        sameSite: 'None',
     });
 
     res.status(200).json({ success: true, message: 'Logged out successfully' });
