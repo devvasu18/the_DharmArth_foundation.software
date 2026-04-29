@@ -24,10 +24,13 @@ app.use(cors({
 app.use(helmet());
 app.use(morgan('dev'));
 
+// Trust proxy (Required for Render, Heroku, etc.)
+app.set('trust proxy', 1);
+
 // Rate Limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    max: 1000, // Increased to 1000 requests per 15 minutes
     message: 'Too many requests from this IP, please try again after 15 minutes',
     standardHeaders: true,
     legacyHeaders: false,
