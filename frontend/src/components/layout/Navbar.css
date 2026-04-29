@@ -300,12 +300,15 @@
 
     .bottom-nav-item.active {
         color: var(--primary);
-        font-weight: 700;
+        font-weight: 800;
     }
 
     .bottom-nav-item.active .nav-icon {
-        fill: var(--primary);
-        transform: scale(1.1);
-        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        background: rgba(13, 170, 188, 0.1);
+        border: 2px solid var(--primary);
+        border-radius: 12px;
+        padding: 6px;
+        transform: translateY(-2px);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 }
