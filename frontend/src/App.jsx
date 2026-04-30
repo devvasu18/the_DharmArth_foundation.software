@@ -9,6 +9,7 @@ import {
 import { Toaster } from 'react-hot-toast';
 import { ConfirmProvider } from './context/ConfirmContext';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import AppErrorBoundary from './components/common/AppErrorBoundary';
 
 // Lazy Loaded Pages
 const Home = lazy(() => import('./pages/Home'));
@@ -69,7 +70,7 @@ const RootLayout = () => (
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route element={<RootLayout />}>
+    <Route element={<RootLayout />} errorElement={<AppErrorBoundary />}>
       {/* Public Routes */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
