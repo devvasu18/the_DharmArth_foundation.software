@@ -9,9 +9,34 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
     const [withdrawAmount, setWithdrawAmount] = useState(0);
     const [timeLeft, setTimeLeft] = useState({});
 
-    // Constants
-    const LOCK_IN_DAYS = 90;
-    const MIN_BALANCE = 500;
+    const [payoutRules, setPayoutRules] = useState({
+        minBalance: 500,
+        lockInMonths: 3
+    });
+    const [loadingRules, setLoadingRules] = useState(true);
+
+    // Fetch Rules
+    useEffect(() => {
+        if (isOpen) {
+            const fetchRules = async () => {
+                try {
+                    const { data } = await api.get('/content/settings');
+                    setPayoutRules({
+                        minBalance: data.payout_min_balance || 500,
+                        lockInMonths: data.payout_lock_in_months || 3
+                    });
+                } catch (error) {
+                    console.error("Failed to fetch payout rules", error);
+                } finally {
+                    setLoadingRules(false);
+                }
+            };
+            fetchRules();
+        }
+    }, [isOpen]);
+
+    const LOCK_IN_DAYS = payoutRules.lockInMonths * 30;
+    const MIN_BALANCE = payoutRules.minBalance;
 
     // Memoized Dates to prevent effect loops
     const { startDate, unlockDate, isTimeUnlocked, totalDuration, timeProgress } = React.useMemo(() => {
@@ -227,7 +252,7 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                                         </div>
                                         <div className="condition-content">
                                             <div className="condition-title-row">
-                                                <h3>Lock-in Period (3 Months)</h3>
+                                                <h3>Lock-in Period ({payoutRules.lockInMonths} Months)</h3>
                                                 <span className="status-tag">In Progress</span>
                                             </div>
 
@@ -331,7 +356,9 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                     </div>
 
                     <div className="modal-footer">
-                        {canPayout ? (
+                        {loadingRules ? (
+                            <div className="animate-pulse" style={{ height: '50px', background: '#f1f5f9', borderRadius: '12px', width: '100%' }}></div>
+                        ) : canPayout ? (
                             <button className="btn-proceed" onClick={handleProceed}>
                                 {showConfirmStep ? 'Verify and Confirm' : `Next Step`}
                             </button>

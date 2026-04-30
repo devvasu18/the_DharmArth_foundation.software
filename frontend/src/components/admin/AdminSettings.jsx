@@ -34,6 +34,13 @@ const AdminSettings = () => {
         l2MotivatorTemplate: ''
     });
 
+    // Payout Config State
+    const [payoutModalOpen, setPayoutModalOpen] = useState(false);
+    const [payoutConfig, setPayoutConfig] = useState({
+        minBalance: 500,
+        lockInMonths: 3
+    });
+
     useEffect(() => {
         fetchSettings();
     }, []);
@@ -59,6 +66,12 @@ const AdminSettings = () => {
                 withdrawalTemplate: data.whatsapp_withdrawal_template || "Dear {name}, your payout request of ₹{amount} has been successfully processed and completed. The funds have been transferred as per your provided details. Thank you for your continued support! 🙏",
                 l1MotivatorTemplate: data.whatsapp_motivator_l1_template || "Congratulations {motivator_name}! You received ₹{commission} commission for a donation of ₹{donation_amount} from {donor_name} ({donor_mobile}). Level: 1 🙏",
                 l2MotivatorTemplate: data.whatsapp_motivator_l2_template || "Level 2 Bonus! {motivator_name}, you received ₹{commission} commission via {l1_motivator_name} ({l1_motivator_mobile}) for a donation from {donor_name} ({donor_mobile}). Level: 2 🙏"
+            });
+
+            // Payout Config
+            setPayoutConfig({
+                minBalance: data.payout_min_balance || 500,
+                lockInMonths: data.payout_lock_in_months || 3
             });
         } catch (error) {
             console.error("Failed to fetch settings", error);
@@ -170,6 +183,27 @@ const AdminSettings = () => {
         }
     };
 
+    // --- Payout Logic ---
+    const openPayoutModal = () => {
+        setPayoutModalOpen(true);
+    };
+
+    const handleSavePayoutConfig = async () => {
+        try {
+            const updates = {
+                payout_min_balance: Number(payoutConfig.minBalance),
+                payout_lock_in_months: Number(payoutConfig.lockInMonths)
+            };
+            await api.put('/content/settings', updates);
+            setSettings({ ...settings, ...updates });
+            setPayoutModalOpen(false);
+            toast.success("Payout Configuration Saved!");
+        } catch (error) {
+            console.error("Save failed", error);
+            toast.error("Failed to save payout configuration");
+        }
+    };
+
     if (loading) return <div>Loading settings...</div>;
 
     return (
@@ -238,6 +272,22 @@ const AdminSettings = () => {
                             <button
                                 className="btn btn-outline"
                                 onClick={openWhatsappModal}
+                            >
+                                Configure
+                            </button>
+                        </td>
+                    </tr>
+
+                    {/* Payout Config Row */}
+                    <tr>
+                        <td><strong>Payout Configuration</strong> (Min Balance & Lock-in)</td>
+                        <td>
+                            Min: ₹{payoutConfig.minBalance} | Lock-in: {payoutConfig.lockInMonths} Months
+                        </td>
+                        <td>
+                            <button
+                                className="btn btn-outline"
+                                onClick={openPayoutModal}
                             >
                                 Configure
                             </button>
@@ -555,6 +605,54 @@ const AdminSettings = () => {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Payout Config Modal */}
+            {payoutModalOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 2000
+                }}>
+                    <div style={{ background: 'white', padding: '2rem', borderRadius: '24px', minWidth: '400px', maxWidth: '90%' }}>
+                        <h4 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Configure Payout Rules</h4>
+                        <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1.5rem' }}>Set withdrawal limits and lock-in periods for users.</p>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>Minimum Withdrawal Balance (₹)</label>
+                                <input
+                                    type="number"
+                                    className="form-input"
+                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                                    value={payoutConfig.minBalance}
+                                    onChange={(e) => setPayoutConfig({ ...payoutConfig, minBalance: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>Lock-in Period (Months)</label>
+                                <input
+                                    type="number"
+                                    className="form-input"
+                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                                    value={payoutConfig.lockInMonths}
+                                    onChange={(e) => setPayoutConfig({ ...payoutConfig, lockInMonths: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                            <button className="btn btn-outline" onClick={() => setPayoutModalOpen(false)} style={{ borderRadius: '10px' }}>Cancel</button>
+                            <button 
+                                className="btn bg-primary text-white" 
+                                onClick={handleSavePayoutConfig}
+                                style={{ borderRadius: '10px', background: '#00bfa5', fontWeight: 700 }}
+                            >
+                                Save Configuration
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );

@@ -344,7 +344,7 @@ const UserDashboard = () => {
                                         const hasPayoutDetails = user?.payoutCredentials && (user?.payoutCredentials.accountNumber || user?.payoutCredentials.upiId);
                                         if (!user?.isMotivator || !hasPayoutDetails) {
                                             setIsOnboardingModalOpen(true);
-                                            toast.error("Please register your Payout Details (Bank or UPI) to continue.");
+                                            toast("Please register your Payout Details (Bank or UPI) to continue.", { icon: 'ℹ️' });
                                         } else {
                                             setIsPayoutModalOpen(true);
                                         }
