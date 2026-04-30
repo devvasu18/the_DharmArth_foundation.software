@@ -42,7 +42,7 @@ class WhatsappService {
             }).sort({ createdAt: 1 }).limit(10);
 
             if (pending.length > 0) {
-                console.log(`[NOTIFICATION WORKER] Processing ${pending.length} queued notifications...`);
+                console.log(`[NOTIFICATION WORKER] 🔍 Found ${pending.length} notifications to process. Starting batch...`);
             }
 
             for (const item of pending) {
@@ -78,7 +78,7 @@ class WhatsappService {
                 throw new Error('Delivery failed (Service returned null or error)');
             }
         } catch (error) {
-            console.error(`[NOTIFICATION WORKER] Failed attempt ${item.attempts} for ${item.recipient}:`, error.message);
+            console.error(`[NOTIFICATION WORKER] ❌ FAILED attempt ${item.attempts} for ${item.recipient}:`, error.message);
             item.status = 'failed';
             item.lastError = error.message;
             // Exponential backoff: retry after 5m, 15m, 1h, 4h
@@ -104,8 +104,13 @@ class WhatsappService {
             body: JSON.stringify({ number: cleanNumber, message })
         });
 
-        if (!response.ok) return false;
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => 'No error body');
+            console.error(`[WHATSAPP SERVICE] ❌ External service returned ${response.status}:`, errorText);
+            return false;
+        }
         const data = await response.json();
+        console.log(`[WHATSAPP SERVICE] ✅ Successfully delivered to tunnel! Message ID: ${data.success || data.messageId}`);
         return !!data.success || !!data.messageId;
     }
 
@@ -129,8 +134,13 @@ class WhatsappService {
             })
         });
 
-        if (!response.ok) return false;
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => 'No error body');
+            console.error(`[EMAIL SERVICE] ❌ External service returned ${response.status}:`, errorText);
+            return false;
+        }
         const data = await response.json();
+        console.log(`[EMAIL SERVICE] ✅ Successfully delivered to tunnel! Email ID: ${data.success || data.emailId}`);
         return !!data.success || !!data.emailId;
     }
 
