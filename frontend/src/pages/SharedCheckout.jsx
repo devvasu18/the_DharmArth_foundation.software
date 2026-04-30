@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import './SharedCheckout.css';
 import SimplifyDosage from '../components/SimplifyDosage';
+import { useAuth } from '../context/AuthContext';
 
 const SharedCheckout = () => {
     const { id } = useParams();
@@ -41,14 +42,15 @@ const SharedCheckout = () => {
     const [showDosageMap, setShowDosageMap] = useState({});
     const [isOrderingForOther, setIsOrderingForOther] = useState(false);
 
+    const { user: authUser } = useAuth();
+    
     useEffect(() => {
         fetchPrescription();
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
+        if (authUser) {
             setIsLoggedIn(true);
             fetchSavedAddresses();
         }
-    }, [id]);
+    }, [id, authUser]);
 
     const fetchSavedAddresses = async () => {
         try {

@@ -364,9 +364,7 @@ const DonationForm = ({ onSuccess }) => {
     };
 
     if (donationSuccess) {
-        const userStr = localStorage.getItem('user');
-        const userObj = userStr && userStr !== 'null' && userStr !== 'undefined' ? JSON.parse(userStr) : null;
-        const isLoggedIn = !!(userObj && userObj.token);
+        const isLoggedIn = !!authUser;
 
         return (
             <div className="donation-container" style={{ textAlign: 'center', padding: '3rem 2rem' }}>

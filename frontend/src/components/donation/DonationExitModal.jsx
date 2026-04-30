@@ -4,6 +4,7 @@ import { Heart, X, Send, Phone, User, ArrowRight, Home } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import './DonationExitModal.css';
+import { useAuth } from '../../context/AuthContext';
 
 const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
     const [phase, setPhase] = useState(1); // 1: Message, 2: Form
@@ -13,20 +14,16 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
         mobile: ''
     });
 
+    const { user: authUser } = useAuth();
+    
     useEffect(() => {
         if (isOpen) {
             // Check for logged-in user to auto-fill
-            const userStr = localStorage.getItem('user');
-            if (userStr) {
-                try {
-                    const user = JSON.parse(userStr);
-                    setFormData({
-                        name: user.name || '',
-                        mobile: user.mobile || ''
-                    });
-                } catch (e) {
-                    console.error("Error parsing user from localStorage");
-                }
+            if (authUser) {
+                setFormData({
+                    name: authUser.name || '',
+                    mobile: authUser.mobile || ''
+                });
             }
         } else {
             // Reset phase when closed
