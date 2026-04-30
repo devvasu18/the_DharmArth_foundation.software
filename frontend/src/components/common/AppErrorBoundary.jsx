@@ -13,9 +13,11 @@ const AppErrorBoundary = () => {
   const isChunkLoadFailed = 
     (error instanceof TypeError && 
       (error.message.includes('Failed to fetch dynamically imported module') || 
-       error.message.includes('Importing a module script failed'))) ||
+       error.message.includes('Importing a module script failed') ||
+       error.message.includes('error loading dynamically imported module'))) ||
     (error?.name === 'ChunkLoadError') ||
-    (error?.message?.includes('chunk'));
+    (error?.message?.includes('chunk')) ||
+    (error?.message?.toLowerCase().includes('failed to fetch') && error?.message?.toLowerCase().includes('.js'));
 
   if (isChunkLoadFailed) {
     // Only reload once to avoid infinite loops if it's a real network error

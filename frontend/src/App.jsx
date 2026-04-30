@@ -96,7 +96,7 @@ const router = createBrowserRouter(
       <Route path="/track/:orderId" element={<SharedTracker />} />
 
       {/* Admin Routes - Strictly Guarded */}
-      <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+      <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>} errorElement={<AppErrorBoundary />}>
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="sliders" element={<AdminSliders />} />
@@ -122,7 +122,7 @@ const router = createBrowserRouter(
         <Route path="reports/commission" element={<CommissionReports />} />
       </Route>
 
-      <Route path="/admin-user-explorer" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+      <Route path="/admin-user-explorer" element={<AdminRoute><AdminLayout /></AdminRoute>} errorElement={<AppErrorBoundary />}>
         <Route path="transactions" element={<AdminTransactions />} />
       </Route>
 
@@ -133,6 +133,35 @@ const router = createBrowserRouter(
 );
 
 function App() {
+  React.useEffect(() => {
+    const handleGlobalError = (event) => {
+      const error = event.error || event.reason || {};
+      const message = error.message || String(event);
+      
+      const isChunkError = 
+        message.includes('Failed to fetch dynamically imported module') || 
+        message.includes('Importing a module script failed') ||
+        message.includes('ChunkLoadError');
+
+      if (isChunkError) {
+        const lastReload = sessionStorage.getItem('last-chunk-reload');
+        const now = Date.now();
+        if (!lastReload || now - parseInt(lastReload) > 10000) {
+          sessionStorage.setItem('last-chunk-reload', now.toString());
+          window.location.reload();
+        }
+      }
+    };
+
+    window.addEventListener('error', handleGlobalError);
+    window.addEventListener('unhandledrejection', handleGlobalError);
+    
+    return () => {
+      window.removeEventListener('error', handleGlobalError);
+      window.removeEventListener('unhandledrejection', handleGlobalError);
+    };
+  }, []);
+
   return (
     <AuthProvider>
       <ConfirmProvider>

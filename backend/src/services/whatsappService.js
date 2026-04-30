@@ -98,7 +98,8 @@ class WhatsappService {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-api-key': process.env.WHATSAPP_SERVICE_API_KEY
+                'x-api-key': process.env.WHATSAPP_SERVICE_API_KEY,
+                'bypass-tunnel-reminder': 'true'
             },
             body: JSON.stringify({ number: cleanNumber, message })
         });
@@ -116,7 +117,8 @@ class WhatsappService {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-api-key': process.env.WHATSAPP_SERVICE_API_KEY
+                'x-api-key': process.env.WHATSAPP_SERVICE_API_KEY,
+                'bypass-tunnel-reminder': 'true'
             },
             body: JSON.stringify({
                 to,

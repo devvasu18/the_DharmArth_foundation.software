@@ -11,7 +11,10 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
 
     const [payoutRules, setPayoutRules] = useState({
         minBalance: 500,
-        lockInMonths: 3
+        lockInMonths: 0,
+        lockInDays: 0,
+        lockInHours: 0,
+        hasLockInSettings: false
     });
     const [loadingRules, setLoadingRules] = useState(true);
 
@@ -23,7 +26,10 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                     const { data } = await api.get('/content/settings');
                     setPayoutRules({
                         minBalance: data.payout_min_balance || 500,
-                        lockInMonths: data.payout_lock_in_months || 3
+                        lockInMonths: data.payout_lock_in_months || 0,
+                        lockInDays: data.payout_lock_in_days || 0,
+                        lockInHours: data.payout_lock_in_hours || 0,
+                        hasLockInSettings: 'payout_lock_in_months' in data || 'payout_lock_in_days' in data || 'payout_lock_in_hours' in data
                     });
                 } catch (error) {
                     console.error("Failed to fetch payout rules", error);
@@ -35,16 +41,24 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
         }
     }, [isOpen]);
 
-    const LOCK_IN_DAYS = payoutRules.lockInMonths * 30;
-    const MIN_BALANCE = payoutRules.minBalance;
-
     // Memoized Dates to prevent effect loops
     const { startDate, unlockDate, isTimeUnlocked, totalDuration, timeProgress } = React.useMemo(() => {
         const start = new Date(wallet?.createdAt || user?.createdAt || Date.now());
-        const unlock = new Date(start.getTime() + (LOCK_IN_DAYS * 24 * 60 * 60 * 1000));
+        const unlock = new Date(start);
+        
+        if (!payoutRules.hasLockInSettings) {
+            // Legacy 90 days fallback
+            unlock.setDate(unlock.getDate() + 90);
+        } else {
+            if (payoutRules.lockInMonths) unlock.setMonth(unlock.getMonth() + Number(payoutRules.lockInMonths));
+            if (payoutRules.lockInDays) unlock.setDate(unlock.getDate() + Number(payoutRules.lockInDays));
+            if (payoutRules.lockInHours) unlock.setHours(unlock.getHours() + Number(payoutRules.lockInHours));
+        }
+
         const now = new Date();
         const duration = unlock.getTime() - start.getTime();
         const elapsed = now.getTime() - start.getTime();
+        
         return {
             startDate: start,
             unlockDate: unlock,
@@ -52,9 +66,10 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
             totalDuration: duration,
             timeProgress: Math.min(100, Math.max(0, (elapsed / duration) * 100))
         };
-    }, [wallet?.createdAt, user?.createdAt]);
+    }, [wallet?.createdAt, user?.createdAt, payoutRules]);
 
     const currentBalance = wallet?.balance || 0;
+    const MIN_BALANCE = payoutRules.minBalance || 500;
     const balanceProgress = Math.min(100, Math.max(0, (currentBalance / MIN_BALANCE) * 100));
     const isBalanceUnlocked = currentBalance >= MIN_BALANCE;
 
@@ -252,7 +267,9 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                                         </div>
                                         <div className="condition-content">
                                             <div className="condition-title-row">
-                                                <h3>Lock-in Period ({payoutRules.lockInMonths} Months)</h3>
+                                                <h3>Lock-in Period ({!payoutRules.hasLockInSettings ? '90 Days' : 
+                                                    `${payoutRules.lockInMonths > 0 ? payoutRules.lockInMonths + 'm ' : ''}${payoutRules.lockInDays > 0 ? payoutRules.lockInDays + 'd ' : ''}${payoutRules.lockInHours > 0 ? payoutRules.lockInHours + 'h' : ''}`.trim() || 'None'
+                                                })</h3>
                                                 <span className="status-tag">In Progress</span>
                                             </div>
 

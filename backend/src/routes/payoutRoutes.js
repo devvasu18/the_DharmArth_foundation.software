@@ -4,6 +4,7 @@ const PayoutRequest = require('../models/PayoutRequest');
 const Wallet = require('../models/Wallet');
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
+const Setting = require('../models/Setting');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 const { upload } = require('../config/cloudinary');
 const notificationService = require('../services/notificationService');
@@ -23,19 +24,68 @@ router.post('/request', protect, async (req, res) => {
 
         const withdrawAmount = parseFloat(amount) || wallet.balance;
 
-        if (withdrawAmount < 500) {
-            return res.status(400).json({ message: 'Minimum withdrawal amount is ₹500' });
+        // Fetch Dynamic Settings
+        const settings = await Setting.find({ 
+            key: { $in: ['payout_min_balance', 'payout_lock_in_months', 'payout_lock_in_days', 'payout_lock_in_hours'] } 
+        });
+        const settingsMap = settings.reduce((acc, curr) => {
+            acc[curr.key] = curr.value;
+            return acc;
+        }, {});
+
+        const minBalance = Number(settingsMap.payout_min_balance) || 500;
+        const lockInMonths = Number(settingsMap.payout_lock_in_months) || 0;
+        const lockInDays = Number(settingsMap.payout_lock_in_days) || 0;
+        const lockInHours = Number(settingsMap.payout_lock_in_hours) || 0;
+
+        if (withdrawAmount < minBalance) {
+            return res.status(400).json({ message: `Minimum withdrawal amount is ₹${minBalance}` });
         }
 
         if (withdrawAmount > wallet.balance) {
             return res.status(400).json({ message: 'Insufficient balance' });
         }
 
-        // Check for lock-in (90 days)
-        const lockInDate = new Date(wallet.createdAt || user.createdAt);
-        lockInDate.setDate(lockInDate.getDate() + 90);
+        // Check for Dynamic Lock-in
+        const createdAt = wallet.createdAt || user.createdAt;
+        const lockInDate = new Date(createdAt);
+        
+        // Add Months (approximate 30 days per month for simplicity, or use setMonth)
+        if (lockInMonths > 0) {
+            lockInDate.setMonth(lockInDate.getMonth() + lockInMonths);
+        }
+        // Add Days
+        if (lockInDays > 0) {
+            lockInDate.setDate(lockInDate.getDate() + lockInDays);
+        }
+        // Add Hours
+        if (lockInHours > 0) {
+            lockInDate.setHours(lockInDate.getHours() + lockInHours);
+        }
+
+        // Default fallback if all are 0 and it was previously 90 days? 
+        // Actually, if admin sets all to 0, it means no lock-in.
+        // But if they haven't set anything yet, we might want to keep the 90 days?
+        // Let's check if settingsMap is empty or specifically lock-in settings are missing.
+        const hasLockInSettings = 'payout_lock_in_months' in settingsMap || 'payout_lock_in_days' in settingsMap || 'payout_lock_in_hours' in settingsMap;
+        
+        if (!hasLockInSettings) {
+            // Fallback to legacy 90 days if no settings exist yet
+            lockInDate.setDate(new Date(createdAt).getDate() + 90);
+        }
+
         if (new Date() < lockInDate) {
-            return res.status(400).json({ message: 'Withdrawal locked for 90 days from joining' });
+            let lockInMessage = 'Withdrawal locked';
+            if (!hasLockInSettings) {
+                lockInMessage = 'Withdrawal locked for 90 days from joining';
+            } else {
+                const parts = [];
+                if (lockInMonths > 0) parts.push(`${lockInMonths} months`);
+                if (lockInDays > 0) parts.push(`${lockInDays} days`);
+                if (lockInHours > 0) parts.push(`${lockInHours} hours`);
+                lockInMessage = `Withdrawal locked for ${parts.join(', ')} from joining`;
+            }
+            return res.status(400).json({ message: lockInMessage });
         }
 
         // Check if pending request exists

@@ -38,7 +38,9 @@ const AdminSettings = () => {
     const [payoutModalOpen, setPayoutModalOpen] = useState(false);
     const [payoutConfig, setPayoutConfig] = useState({
         minBalance: 500,
-        lockInMonths: 3
+        lockInMonths: 0,
+        lockInDays: 0,
+        lockInHours: 0
     });
 
     useEffect(() => {
@@ -71,7 +73,9 @@ const AdminSettings = () => {
             // Payout Config
             setPayoutConfig({
                 minBalance: data.payout_min_balance || 500,
-                lockInMonths: data.payout_lock_in_months || 3
+                lockInMonths: data.payout_lock_in_months || 0,
+                lockInDays: data.payout_lock_in_days || 0,
+                lockInHours: data.payout_lock_in_hours || 0
             });
         } catch (error) {
             console.error("Failed to fetch settings", error);
@@ -192,7 +196,9 @@ const AdminSettings = () => {
         try {
             const updates = {
                 payout_min_balance: Number(payoutConfig.minBalance),
-                payout_lock_in_months: Number(payoutConfig.lockInMonths)
+                payout_lock_in_months: Number(payoutConfig.lockInMonths),
+                payout_lock_in_days: Number(payoutConfig.lockInDays),
+                payout_lock_in_hours: Number(payoutConfig.lockInHours)
             };
             await api.put('/content/settings', updates);
             setSettings({ ...settings, ...updates });
@@ -282,7 +288,7 @@ const AdminSettings = () => {
                     <tr>
                         <td><strong>Payout Configuration</strong> (Min Balance & Lock-in)</td>
                         <td>
-                            Min: ₹{payoutConfig.minBalance} | Lock-in: {payoutConfig.lockInMonths} Months
+                            Min: ₹{payoutConfig.minBalance} | Lock-in: {payoutConfig.lockInMonths}m {payoutConfig.lockInDays}d {payoutConfig.lockInHours}h
                         </td>
                         <td>
                             <button
@@ -628,15 +634,40 @@ const AdminSettings = () => {
                                     onChange={(e) => setPayoutConfig({ ...payoutConfig, minBalance: e.target.value })}
                                 />
                             </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>Lock-in Period (Months)</label>
-                                <input
-                                    type="number"
-                                    className="form-input"
-                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
-                                    value={payoutConfig.lockInMonths}
-                                    onChange={(e) => setPayoutConfig({ ...payoutConfig, lockInMonths: e.target.value })}
-                                />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>Months</label>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                                        value={payoutConfig.lockInMonths}
+                                        onChange={(e) => setPayoutConfig({ ...payoutConfig, lockInMonths: e.target.value })}
+                                        min="0"
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>Days</label>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                                        value={payoutConfig.lockInDays}
+                                        onChange={(e) => setPayoutConfig({ ...payoutConfig, lockInDays: e.target.value })}
+                                        min="0"
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>Hours</label>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                                        value={payoutConfig.lockInHours}
+                                        onChange={(e) => setPayoutConfig({ ...payoutConfig, lockInHours: e.target.value })}
+                                        min="0"
+                                    />
+                                </div>
                             </div>
                         </div>
 
