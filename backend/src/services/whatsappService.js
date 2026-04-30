@@ -99,7 +99,8 @@ class WhatsappService {
             headers: {
                 'Content-Type': 'application/json',
                 'x-api-key': process.env.WHATSAPP_SERVICE_API_KEY,
-                'bypass-tunnel-reminder': 'true'
+                'bypass-tunnel-reminder': 'true',
+                'ngrok-skip-browser-warning': 'true'
             },
             body: JSON.stringify({ number: cleanNumber, message })
         });
@@ -123,7 +124,8 @@ class WhatsappService {
             headers: {
                 'Content-Type': 'application/json',
                 'x-api-key': process.env.WHATSAPP_SERVICE_API_KEY,
-                'bypass-tunnel-reminder': 'true'
+                'bypass-tunnel-reminder': 'true',
+                'ngrok-skip-browser-warning': 'true'
             },
             body: JSON.stringify({
                 to,
