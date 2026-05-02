@@ -619,3 +619,145 @@
     background-color: #f8f9fa;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
+
+/* --- Tax Information Section Styles --- */
+.tax-edit-container {
+    background: white;
+    border: 2px solid #dbeafe; /* blue-100 */
+    border-radius: 1rem; /* 16px - rounded-2xl */
+    padding: 1.25rem; /* p-5 */
+    margin-top: 0.75rem; /* mt-3 */
+    box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.05), 0 8px 10px -6px rgba(59, 130, 246, 0.05); /* shadow-xl shadow-blue-500/5 */
+}
+
+.tax-edit-container.animate-in {
+    animation: taxFadeInDown 0.3s ease-out;
+}
+
+@keyframes taxFadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tax-edit-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem; /* mb-2 */
+}
+
+.tax-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* gap-3 */
+}
+
+.tax-icon-wrapper {
+    width: 2.5rem; /* w-10 */
+    height: 2.5rem; /* h-10 */
+    border-radius: 0.75rem; /* rounded-xl */
+    background-color: #eff6ff; /* blue-50 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563eb; /* blue-600 */
+}
+
+.tax-header-info h5 {
+    font-weight: 700;
+    color: #1e293b; /* slate-800 */
+    font-size: 0.875rem; /* text-sm */
+    margin: 0;
+}
+
+.tax-header-info p {
+    font-size: 0.625rem; /* text-[10px] */
+    color: #64748b; /* slate-500 */
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: -0.025em; /* tracking-tight */
+    margin: 0;
+}
+
+.tax-form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem; /* gap-4 */
+}
+
+.tax-input-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.tax-input-label {
+    display: block;
+    font-size: 0.6875rem; /* text-[11px] */
+    font-weight: 700;
+    color: #64748b; /* slate-500 */
+    text-transform: uppercase;
+    letter-spacing: 0.05em; /* tracking-wider */
+    margin-bottom: 0.375rem; /* mb-1.5 */
+    margin-left: 0.25rem; /* ml-1 */
+}
+
+.tax-input-control {
+    width: 100%;
+    padding: 0.75rem 1rem; /* px-4 py-3 */
+    background-color: #f8fafc; /* slate-50 */
+    border: 1px solid #e2e8f0; /* slate-200 */
+    border-radius: 0.75rem; /* rounded-xl */
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 600;
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.tax-input-control:focus {
+    background-color: white;
+    border-color: #3b82f6; /* blue-500 */
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); /* focus:ring-4 focus:ring-blue-500/10 */
+}
+
+.tax-input-control.uppercase {
+    text-transform: uppercase;
+}
+
+.tax-input-control::placeholder {
+    color: #94a3b8; /* slate-400 */
+}
+
+.tax-update-btn {
+    width: 100%;
+    background-color: #0f172a; /* slate-900 */
+    color: white;
+    padding: 0.875rem 1rem; /* py-3.5 */
+    border-radius: 0.75rem; /* rounded-xl */
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 700;
+    box-shadow: 0 10px 15px -3px rgba(226, 232, 240, 0.5); /* shadow-lg shadow-slate-200 */
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem; /* gap-2 */
+    margin-top: 1rem; /* mt-4 */
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+}
+
+.tax-update-btn:hover {
+    background-color: #000;
+}
+
+.tax-update-btn:active {
+    transform: scale(0.98);
+}

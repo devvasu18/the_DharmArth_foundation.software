@@ -1102,34 +1102,34 @@ const TransactionManagement = () => {
                                         </div>
                                         
                                         {isEditingTax ? (
-                                            <div className="bg-white border-2 border-blue-100 rounded-2xl p-5 mt-3 space-y-4 shadow-xl shadow-blue-500/5 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                                            <div className="tax-edit-container animate-in">
+                                                <div className="tax-edit-header">
+                                                    <div className="tax-header-left">
+                                                        <div className="tax-icon-wrapper">
                                                             <FileText size={20} />
                                                         </div>
-                                                        <div>
-                                                            <h5 className="font-bold text-slate-800 text-sm">Tax Information</h5>
-                                                            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-tight">Update KYC Details</p>
+                                                        <div className="tax-header-info">
+                                                            <h5>Tax Information</h5>
+                                                            <p>Update KYC Details</p>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 
-                                                <div className="grid grid-cols-1 gap-4">
-                                                    <div className="relative">
-                                                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">PAN Card Number</label>
+                                                <div className="tax-form-grid">
+                                                    <div className="tax-input-field">
+                                                        <label className="tax-input-label">PAN Card Number</label>
                                                         <input 
-                                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all uppercase placeholder:text-slate-400"
+                                                            className="tax-input-control uppercase"
                                                             placeholder="ABCDE1234F"
                                                             value={editTaxForm.panNumber}
                                                             onChange={e => setEditTaxForm({...editTaxForm, panNumber: e.target.value.toUpperCase()})}
                                                             maxLength={10}
                                                         />
                                                     </div>
-                                                    <div>
-                                                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Aadhaar Number</label>
+                                                    <div className="tax-input-field">
+                                                        <label className="tax-input-label">Aadhaar Number</label>
                                                         <input 
-                                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400"
+                                                            className="tax-input-control"
                                                             placeholder="12-digit Aadhaar Number"
                                                             value={editTaxForm.aadhaarNumber}
                                                             onChange={e => setEditTaxForm({...editTaxForm, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12)})}
@@ -1140,7 +1140,7 @@ const TransactionManagement = () => {
                                                 </div>
 
                                                 <button 
-                                                    className="w-full bg-slate-900 hover:bg-black active:scale-[0.98] text-white py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-slate-200 transition-all flex items-center justify-center gap-2 mt-2"
+                                                    className="tax-update-btn"
                                                     onClick={() => handleUpdateTaxInfo(selectedTransaction._id)}
                                                 >
                                                     <Save size={18} />
