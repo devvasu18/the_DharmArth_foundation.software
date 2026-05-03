@@ -42,38 +42,12 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
     }, [isOpen]);
 
     // Memoized Dates to prevent effect loops
-    const { startDate, unlockDate, isTimeUnlocked, totalDuration, timeProgress } = React.useMemo(() => {
-        const start = new Date(wallet?.createdAt || user?.createdAt || Date.now());
-        const unlock = new Date(start);
-        
-        if (!payoutRules.hasLockInSettings) {
-            // Legacy 90 days fallback
-            unlock.setDate(unlock.getDate() + 90);
-        } else {
-            if (payoutRules.lockInMonths) unlock.setMonth(unlock.getMonth() + Number(payoutRules.lockInMonths));
-            if (payoutRules.lockInDays) unlock.setDate(unlock.getDate() + Number(payoutRules.lockInDays));
-            if (payoutRules.lockInHours) unlock.setHours(unlock.getHours() + Number(payoutRules.lockInHours));
-        }
-
-        const now = new Date();
-        const duration = unlock.getTime() - start.getTime();
-        const elapsed = now.getTime() - start.getTime();
-        
-        return {
-            startDate: start,
-            unlockDate: unlock,
-            isTimeUnlocked: elapsed >= duration,
-            totalDuration: duration,
-            timeProgress: Math.min(100, Math.max(0, (elapsed / duration) * 100))
-        };
-    }, [wallet?.createdAt, user?.createdAt, payoutRules]);
-
     const currentBalance = wallet?.balance || 0;
     const MIN_BALANCE = payoutRules.minBalance || 500;
     const balanceProgress = Math.min(100, Math.max(0, (currentBalance / MIN_BALANCE) * 100));
     const isBalanceUnlocked = currentBalance >= MIN_BALANCE;
 
-    const canPayout = isTimeUnlocked && isBalanceUnlocked;
+    const canPayout = isBalanceUnlocked;
 
     // Effect for initializing amount - ONLY run once when opening
     useEffect(() => {
@@ -84,29 +58,6 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
         }
     }, [isOpen, currentBalance]);
 
-    // Effect for timer
-    useEffect(() => {
-        if (!isOpen || isTimeUnlocked) return;
-
-        const timer = setInterval(() => {
-            const nowTime = new Date().getTime();
-            const distance = unlockDate.getTime() - nowTime;
-
-            if (distance < 0) {
-                clearInterval(timer);
-                setTimeLeft({});
-            } else {
-                setTimeLeft({
-                    days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-                    hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-                    minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-                    seconds: Math.floor((distance % (1000 * 60)) / 1000)
-                });
-            }
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [isOpen, isTimeUnlocked, unlockDate]);
 
     const handleShare = () => {
         const shareLink = `${window.location.origin}/donate?ref=${user?.mobile}`;
@@ -187,15 +138,15 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
 
                                 <div className="confirm-details-list">
                                     <div className="confirm-detail-item">
-                                        <label>Receiving Via</label>
+                                        <label>Bank</label>
                                         <span>{user.payoutCredentials.bankName || 'UPI / Mobile Pay'}</span>
                                     </div>
                                     <div className="confirm-detail-item">
-                                        <label>Holder Name</label>
+                                        <label> Account Holder Name</label>
                                         <span>{user.payoutCredentials.accountHolder}</span>
                                     </div>
                                     <div className="confirm-detail-item">
-                                        <label>Identifier</label>
+                                        <label>Account No.</label>
                                         <span>{user.payoutCredentials.accountNumber ? user.payoutCredentials.accountNumber.replace(/.(?=.{4})/g, '*') : user.payoutCredentials.upiId}</span>
                                     </div>
                                 </div>
@@ -259,51 +210,6 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                                     )}
                                 </div>
 
-                                {/* Condition 1: Lock-in Period */}
-                                {!isTimeUnlocked && (
-                                    <div className={`condition-card locked`}>
-                                        <div className="condition-icon">
-                                            <Clock size={24} />
-                                        </div>
-                                        <div className="condition-content">
-                                            <div className="condition-title-row">
-                                                <h3>Lock-in Period ({!payoutRules.hasLockInSettings ? '90 Days' : 
-                                                    `${payoutRules.lockInMonths > 0 ? payoutRules.lockInMonths + 'm ' : ''}${payoutRules.lockInDays > 0 ? payoutRules.lockInDays + 'd ' : ''}${payoutRules.lockInHours > 0 ? payoutRules.lockInHours + 'h' : ''}`.trim() || 'None'
-                                                })</h3>
-                                                <span className="status-tag">In Progress</span>
-                                            </div>
-
-                                            <div className="progress-track">
-                                                <div
-                                                    className="progress-fill time-fill"
-                                                    style={{ width: `${timeProgress}%` }}
-                                                ></div>
-                                            </div>
-
-                                            <div className="countdown-timer">
-                                                <div className="timer-box">
-                                                    <span>{timeLeft.days || 0}</span>
-                                                    <label>Days</label>
-                                                </div>
-                                                <span className="colon">:</span>
-                                                <div className="timer-box">
-                                                    <span>{timeLeft.hours || 0}</span>
-                                                    <label>Hrs</label>
-                                                </div>
-                                                <span className="colon">:</span>
-                                                <div className="timer-box">
-                                                    <span>{timeLeft.minutes || 0}</span>
-                                                    <label>Min</label>
-                                                </div>
-                                                <span className="colon">:</span>
-                                                <div className="timer-box">
-                                                    <span>{timeLeft.seconds || 0}</span>
-                                                    <label>Sec</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
 
                                 {/* Condition 2: Minimum Balance */}
                                 {!isBalanceUnlocked && (
@@ -360,12 +266,6 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                                             />
                                         </div>
 
-                                        <div className="amount-presets">
-                                            <button onClick={() => setWithdrawAmount(500)} className={withdrawAmount === 500 ? 'active' : ''}>₹500</button>
-                                            <button onClick={() => setWithdrawAmount(1000)} className={withdrawAmount === 1000 ? 'active' : ''}>₹1000</button>
-                                            <button onClick={() => setWithdrawAmount(2000)} className={withdrawAmount === 2000 ? 'active' : ''}>₹2000</button>
-                                            <button onClick={() => setWithdrawAmount(currentBalance)} className={withdrawAmount === currentBalance ? 'active' : ''}>Max</button>
-                                        </div>
                                     </motion.div>
                                 )}
                             </>

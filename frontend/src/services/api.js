@@ -45,11 +45,11 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            console.warn("Unauthorized access - clearing session");
+            console.warn("Session expired or unauthorized - clearing local user state");
             localStorage.removeItem('user');
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login'; 
-            }
+            // Do NOT redirect globally here, as public pages (like /donate) 
+            // might trigger 401s when checking for a session.
+            // ProtectedRoute.jsx will handle redirection for guarded routes.
         }
         return Promise.reject(error);
     }

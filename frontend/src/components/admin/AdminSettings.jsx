@@ -39,10 +39,7 @@ const AdminSettings = () => {
     // Payout Config State
     const [payoutModalOpen, setPayoutModalOpen] = useState(false);
     const [payoutConfig, setPayoutConfig] = useState({
-        minBalance: 500,
-        lockInMonths: 0,
-        lockInDays: 0,
-        lockInHours: 0
+        minBalance: 500
     });
 
     useEffect(() => {
@@ -74,10 +71,7 @@ const AdminSettings = () => {
 
             // Payout Config
             setPayoutConfig({
-                minBalance: data.payout_min_balance || 500,
-                lockInMonths: data.payout_lock_in_months || 0,
-                lockInDays: data.payout_lock_in_days || 0,
-                lockInHours: data.payout_lock_in_hours || 0
+                minBalance: data.payout_min_balance || 500
             });
         } catch (error) {
             console.error("Failed to fetch settings", error);
@@ -226,10 +220,7 @@ const AdminSettings = () => {
     const handleSavePayoutConfig = async () => {
         try {
             const updates = {
-                payout_min_balance: Number(payoutConfig.minBalance),
-                payout_lock_in_months: Number(payoutConfig.lockInMonths),
-                payout_lock_in_days: Number(payoutConfig.lockInDays),
-                payout_lock_in_hours: Number(payoutConfig.lockInHours)
+                payout_min_balance: Number(payoutConfig.minBalance)
             };
             await api.put('/content/settings', updates);
             setSettings({ ...settings, ...updates });
@@ -669,7 +660,7 @@ const AdminSettings = () => {
                 }}>
                     <div style={{ background: 'white', padding: '2rem', borderRadius: '24px', minWidth: '400px', maxWidth: '90%' }}>
                         <h4 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Configure Payout Rules</h4>
-                        <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1.5rem' }}>Set withdrawal limits and lock-in periods for users.</p>
+                        <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1.5rem' }}>Set the minimum balance requirement for user withdrawals.</p>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             <div>
@@ -681,41 +672,6 @@ const AdminSettings = () => {
                                     value={payoutConfig.minBalance}
                                     onChange={(e) => setPayoutConfig({ ...payoutConfig, minBalance: e.target.value })}
                                 />
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>Months</label>
-                                    <input
-                                        type="number"
-                                        className="form-input"
-                                        style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
-                                        value={payoutConfig.lockInMonths}
-                                        onChange={(e) => setPayoutConfig({ ...payoutConfig, lockInMonths: e.target.value })}
-                                        min="0"
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>Days</label>
-                                    <input
-                                        type="number"
-                                        className="form-input"
-                                        style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
-                                        value={payoutConfig.lockInDays}
-                                        onChange={(e) => setPayoutConfig({ ...payoutConfig, lockInDays: e.target.value })}
-                                        min="0"
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>Hours</label>
-                                    <input
-                                        type="number"
-                                        className="form-input"
-                                        style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
-                                        value={payoutConfig.lockInHours}
-                                        onChange={(e) => setPayoutConfig({ ...payoutConfig, lockInHours: e.target.value })}
-                                        min="0"
-                                    />
-                                </div>
                             </div>
                         </div>
 

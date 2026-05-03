@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { encrypt, decrypt } = require('../utils/security');
 
 const payoutRequestSchema = new mongoose.Schema({
     user: {
@@ -22,8 +23,16 @@ const payoutRequestSchema = new mongoose.Schema({
     payoutDetails: {
         bankName: String,
         accountHolder: String,
-        accountNumber: String,
-        ifscCode: String,
+        accountNumber: {
+            type: String,
+            get: decrypt,
+            set: encrypt
+        },
+        ifscCode: {
+            type: String,
+            get: decrypt,
+            set: encrypt
+        },
         upiId: String
     },
     adminNotes: String,
@@ -43,7 +52,9 @@ const payoutRequestSchema = new mongoose.Schema({
     helpResolutionNotes: String,
     helpResolvedAt: Date
 }, {
-    timestamps: true
+    timestamps: true,
+    toJSON: { getters: true },
+    toObject: { getters: true }
 });
 
 module.exports = mongoose.model('PayoutRequest', payoutRequestSchema);

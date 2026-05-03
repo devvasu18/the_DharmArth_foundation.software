@@ -11,8 +11,19 @@ export const AuthProvider = ({ children }) => {
         try {
             const { data } = await api.get('/users/profile');
             setUser(data);
-            // Backup to localStorage for non-sensitive UI persistence (optional but common)
-            localStorage.setItem('user', JSON.stringify(data));
+            
+            // CRITICAL: Preserve the token for Incognito sessions
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                const parsed = JSON.parse(storedUser);
+                if (parsed.token) {
+                    localStorage.setItem('user', JSON.stringify({ ...data, token: parsed.token }));
+                } else {
+                    localStorage.setItem('user', JSON.stringify(data));
+                }
+            } else {
+                localStorage.setItem('user', JSON.stringify(data));
+            }
         } catch (err) {
             setUser(null);
             localStorage.removeItem('user');

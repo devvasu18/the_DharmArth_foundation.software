@@ -13,23 +13,25 @@ const sendTokenResponse = (user, statusCode, res) => {
         sameSite: 'None', // Required for cross-site cookies (Vercel -> Render)
     };
 
+    const userObj = user.toObject({ getters: true });
+
     res.status(statusCode).cookie('token', token, options).json({
         token, // Add this for incognito/third-party cookie fallback
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        mobile: user.mobile,
-        isSuperAdmin: user.isSuperAdmin,
-        roles: user.roles,
-        referredBy: user.referredBy ? {
-            name: user.referredBy.name,
-            mobile: user.referredBy.mobile
+        _id: userObj._id,
+        name: userObj.name,
+        email: userObj.email,
+        mobile: userObj.mobile,
+        isSuperAdmin: userObj.isSuperAdmin,
+        roles: userObj.roles,
+        referredBy: userObj.referredBy ? {
+            name: userObj.referredBy.name,
+            mobile: userObj.referredBy.mobile
         } : null,
-        language: user.language,
-        isMotivator: user.isMotivator,
-        referralCode: user.referralCode,
-        lastMotivatorMobile: user.lastMotivatorMobile,
-        payoutCredentials: user.payoutCredentials,
+        language: userObj.language,
+        isMotivator: userObj.isMotivator,
+        referralCode: userObj.referralCode,
+        lastMotivatorMobile: userObj.lastMotivatorMobile,
+        payoutCredentials: userObj.payoutCredentials,
     });
 };
 
