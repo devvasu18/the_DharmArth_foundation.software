@@ -338,6 +338,45 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
     }
 });
 
+// @desc    Get Previous Motivator for a mobile number (Auto-fill)
+// @route   GET /api/donate/previous-motivator/:mobile
+router.get('/previous-motivator/:mobile', async (req, res) => {
+    try {
+        const { mobile } = req.params;
+        // Search in both Donations and Subscriptions for the latest entry with a motivator
+        const [lastDonation, lastSubscription] = await Promise.all([
+            Donation.findOne({ donorMobile: mobile, motivatorMobile: { $exists: true, $ne: null, $ne: "" } }).sort({ createdAt: -1 }),
+            require('../models/Subscription').findOne({ donorMobile: mobile, motivatorMobile: { $exists: true, $ne: null, $ne: "" } }).sort({ createdAt: -1 })
+        ]);
+
+        let latest = null;
+        if (lastDonation && lastSubscription) {
+            latest = lastDonation.createdAt > lastSubscription.createdAt ? lastDonation : lastSubscription;
+        } else {
+            latest = lastDonation || lastSubscription;
+        }
+
+        if (latest && latest.motivatorMobile) {
+            // Find motivator name for better UX
+            const motivator = await User.findOne({
+                $or: [
+                    { mobile: latest.motivatorMobile },
+                    { referralCode: latest.motivatorMobile.toUpperCase() }
+                ]
+            });
+
+            return res.json({
+                motivatorMobile: latest.motivatorMobile,
+                motivatorName: motivator ? motivator.name : ''
+            });
+        }
+
+        res.json({ message: 'No previous motivator found' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @desc Validate Motivator Mobile or Code
 router.get('/validate-motivator/:identifier', async (req, res) => {
     try {

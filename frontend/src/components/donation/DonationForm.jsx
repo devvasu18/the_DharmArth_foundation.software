@@ -108,6 +108,32 @@ const DonationForm = ({ onSuccess }) => {
         }
     }, [authUser]);
 
+    // Auto-fetch motivator by phone number for non-logged in users
+    useEffect(() => {
+        const fetchPreviousMotivator = async () => {
+            // Only fetch if it's a valid 10-digit mobile and user is NOT logged in 
+            // and we don't already have a motivator (like from a ref link)
+            if (mobile.length === 10 && !authUser && !motivatorMobile) {
+                try {
+                    const { data } = await api.get(`/donate/previous-motivator/${mobile}`);
+                    if (data.motivatorMobile) {
+                        setMotivatorMobile(data.motivatorMobile);
+                        if (data.motivatorName) setMotivatorName(data.motivatorName);
+                        toast.success("Welcome back! Your previous motivator has been auto-selected.", {
+                            icon: '👋',
+                            duration: 3000
+                        });
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch previous motivator", error);
+                }
+            }
+        };
+
+        const timer = setTimeout(fetchPreviousMotivator, 800);
+        return () => clearTimeout(timer);
+    }, [mobile, authUser, motivatorMobile]);
+
     // Check for referral link
     useEffect(() => {
         const params = new URLSearchParams(location.search);
