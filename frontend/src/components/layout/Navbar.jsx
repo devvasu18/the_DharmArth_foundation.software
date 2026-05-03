@@ -231,6 +231,7 @@ const Navbar = () => {
                                         <>
                                             <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.wallet')}</Link>
                                             <Link to="/my-subscriptions" style={{ display: 'block', padding: '8px', color: '#333' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.subscriptions') || 'My Subscriptions'}</Link>
+                                            <Link to="/my-referrals" style={{ display: 'block', padding: '8px', color: '#333' }} onClick={() => setIsProfileOpen(false)}>My Referrals</Link>
                                         </>
                                     )}
                                     <div onClick={handleLogout} style={{ display: 'block', padding: '8px', color: 'red', cursor: 'pointer' }}>{t('navbar.logout')}</div>

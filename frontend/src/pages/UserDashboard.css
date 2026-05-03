@@ -2772,4 +2772,71 @@
     color: white;
     border-color: var(--primary);
 }
+
+/* Referral Management Card */
+.referrals-link-card {
+    cursor: pointer;
+    background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
+    border: 1px solid #ddd6fe !important;
+}
+.referrals-link-card .card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+.referrals-link-card .card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+.referrals-link-card .card-desc {
+    font-size: 0.9rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
+}
+.card-stats-mini {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+.mini-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.mini-stat span {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+}
+.mini-stat strong {
+    font-size: 1.1rem;
+    color: #7c3aed;
+}
+.manage-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: #7c3aed;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: background 0.2s;
+}
+.referrals-link-card:hover .manage-btn {
+    background: #6d28d9;
+}
 

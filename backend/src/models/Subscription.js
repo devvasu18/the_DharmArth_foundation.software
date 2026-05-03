@@ -35,6 +35,11 @@ const subscriptionSchema = new mongoose.Schema({
         type: String, 
         set: encrypt,
         get: decrypt
+    },
+    cancelledBy: { 
+        type: String, 
+        enum: ['user', 'admin'],
+        default: null 
     }
 }, {
     timestamps: true,

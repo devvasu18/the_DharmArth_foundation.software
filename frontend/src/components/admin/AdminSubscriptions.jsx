@@ -11,28 +11,28 @@ const AdminSubscriptions = () => {
             <div className="admin-header">
                 <div className="header-content">
                     <h1 className="admin-title">
-                        <CreditCard className="title-icon" /> 
+                        <CreditCard className="title-icon" />
                         Subscription Management
                     </h1>
-                    <p className="admin-subtitle">Monitor and manage all recurring monthly donations</p>
+
                 </div>
             </div>
 
             <div className="admin-controls-card">
                 <div className="search-box">
                     <Search size={18} className="search-icon" />
-                    <input 
-                        type="text" 
-                        placeholder="Search by Donor Name, Mobile or Subscription ID..." 
+                    <input
+                        type="text"
+                        placeholder="Search by Name, Mobile, User Code or Sub ID..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                
+
                 <div className="filter-group">
                     <Filter size={18} />
-                    <select 
-                        value={statusFilter} 
+                    <select
+                        value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className="admin-select"
                     >

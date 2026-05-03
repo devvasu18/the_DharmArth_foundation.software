@@ -20,6 +20,7 @@ const DonationPage = lazy(() => import('./pages/DonationPage'));
 const StartFundraiser = lazy(() => import('./pages/StartFundraiser'));
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const MySubscriptions = lazy(() => import('./pages/MySubscriptions'));
+const MyReferrals = lazy(() => import('./pages/MyReferrals'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Events = lazy(() => import('./pages/Events'));
 const EventDetail = lazy(() => import('./pages/EventDetail'));
@@ -82,6 +83,7 @@ const router = createBrowserRouter(
       {/* Protected User Routes */}
       <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
       <Route path="/my-subscriptions" element={<ProtectedRoute><MySubscriptions /></ProtectedRoute>} />
+      <Route path="/my-referrals" element={<ProtectedRoute><MyReferrals /></ProtectedRoute>} />
       
       <Route path="/events" element={<Events />} />
       <Route path="/events/:slug" element={<EventDetail />} />

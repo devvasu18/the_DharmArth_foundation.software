@@ -1,30 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, CreditCard, XCircle, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { Calendar, CreditCard, XCircle, CheckCircle, Clock, AlertTriangle, Search, Trash2, Download, FileText as FilePdf, FileSpreadsheet } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useConfirm } from '../../context/ConfirmContext';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const SubscriptionList = ({ isAdmin = false, searchTerm = '', statusFilter = '' }) => {
     const [subscriptions, setSubscriptions] = useState([]);
     const [loading, setLoading] = useState(true);
     const { showConfirm } = useConfirm();
 
-    const fetchSubscriptions = async () => {
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalRecords, setTotalRecords] = useState(0);
+    const [limit, setLimit] = useState(10);
+
+    // Admin Cancel OTP State
+    const [otpModalOpen, setOtpModalOpen] = useState(false);
+    const [otpValue, setOtpValue] = useState('');
+    const [selectedSub, setSelectedSub] = useState(null);
+    const [sendingOtp, setSendingOtp] = useState(false);
+    const [verifyingOtp, setVerifyingOtp] = useState(false);
+
+    const fetchSubscriptions = async (page = currentPage) => {
         try {
             setLoading(true);
-            let url = isAdmin ? '/subscriptions/admin/all' : '/subscriptions/my';
-            
-            // Add query params if admin
-            if (isAdmin) {
-                const params = new URLSearchParams();
-                if (searchTerm) params.append('search', searchTerm);
-                if (statusFilter) params.append('status', statusFilter);
-                const queryString = params.toString();
-                if (queryString) url += `?${queryString}`;
-            }
+            const endpoint = isAdmin ? '/subscriptions/admin/all' : '/subscriptions/my';
+            const { data } = await api.get(endpoint, {
+                params: { 
+                    search: searchTerm, 
+                    status: statusFilter,
+                    page: isAdmin ? page : 1,
+                    limit: isAdmin ? limit : 100 // No pagination for users yet or high limit
+                }
+            });
 
-            const { data } = await api.get(url);
-            setSubscriptions(data);
+            if (isAdmin) {
+                setSubscriptions(data.subscriptions);
+                setTotalPages(data.pagination.totalPages);
+                setTotalRecords(data.pagination.totalRecords);
+            } else {
+                setSubscriptions(data);
+            }
         } catch (error) {
             console.error('Error fetching subscriptions:', error);
             toast.error('Failed to load subscriptions');
@@ -33,32 +53,156 @@ const SubscriptionList = ({ isAdmin = false, searchTerm = '', statusFilter = '' 
         }
     };
 
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+            fetchSubscriptions(newPage);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    const exportExcel = async (exportAll = false) => {
+        try {
+            let dataToExport = subscriptions;
+            const endpoint = isAdmin ? '/subscriptions/admin/all' : '/subscriptions/my';
+            
+            if (exportAll) {
+                const res = await api.get(endpoint, {
+                    params: {
+                        status: statusFilter,
+                        search: searchTerm,
+                        exportAll: true
+                    }
+                });
+                dataToExport = res.data;
+            }
+
+            const worksheetData = dataToExport.map(sub => ({
+                'Donor': sub.donorName,
+                'Mobile': sub.donorMobile,
+                'Amount': sub.amount,
+                'ID': sub.subscriptionId,
+                'Status': sub.status,
+                'Started': new Date(sub.createdAt).toLocaleDateString(),
+                'Next Billing': sub.nextBillingDate ? new Date(sub.nextBillingDate).toLocaleDateString() : 'N/A'
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(worksheetData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Subscriptions');
+            XLSX.writeFile(wb, `Subscriptions_${new Date().toLocaleDateString()}.xlsx`);
+            toast.success('Excel exported successfully');
+        } catch (err) {
+            toast.error('Export failed');
+        }
+    };
+
+    const exportPDF = async (exportAll = false) => {
+        try {
+            let dataToExport = subscriptions;
+            const endpoint = isAdmin ? '/subscriptions/admin/all' : '/subscriptions/my';
+            
+            if (exportAll) {
+                const res = await api.get(endpoint, {
+                    params: {
+                        status: statusFilter,
+                        search: searchTerm,
+                        exportAll: true
+                    }
+                });
+                dataToExport = res.data;
+            }
+
+            const doc = new jsPDF();
+            doc.setFontSize(18);
+            doc.text('Monthly Subscriptions Report', 14, 22);
+            doc.setFontSize(11);
+            doc.setTextColor(100);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+            const tableColumn = ["Donor", "Mobile", "Amount", "Status", "Started"];
+            const tableRows = dataToExport.map(sub => [
+                sub.donorName,
+                sub.donorMobile,
+                `INR ${sub.amount}`,
+                sub.status.toUpperCase(),
+                new Date(sub.createdAt).toLocaleDateString()
+            ]);
+
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 40,
+                theme: 'striped',
+                headStyles: { fillColor: [124, 58, 237] }
+            });
+
+            doc.save(`Subscriptions_${new Date().toLocaleDateString()}.pdf`);
+            toast.success('PDF exported successfully');
+        } catch (err) {
+            toast.error('Export failed');
+        }
+    };
+
     useEffect(() => {
         const timer = setTimeout(() => {
-            fetchSubscriptions();
-        }, searchTerm ? 500 : 0); // Debounce search
+            setCurrentPage(1); // Reset to first page on search/filter
+            fetchSubscriptions(1);
+        }, searchTerm ? 500 : 0);
         
         return () => clearTimeout(timer);
     }, [searchTerm, statusFilter, isAdmin]);
 
-    const handleCancel = async (id, subscriptionId) => {
-        const confirmed = await showConfirm(
-            "Cancel Subscription?",
-            `Are you sure you want to cancel this monthly donation (ID: ${subscriptionId})? You won't be charged from the next cycle.`
-        );
 
-        if (!confirmed) return;
+    const handleCancel = async (sub, otp = null) => {
+        if (isAdmin && !otp) {
+            const confirmed = await showConfirm(
+                "Cancel Subscription?",
+                `Are you sure you want to cancel ${sub.donorName}'s monthly donation of ₹${sub.amount}? An OTP will be sent to the donor for confirmation.`
+            );
+            if (!confirmed) return;
+
+            try {
+                setSendingOtp(true);
+                await api.post(`/subscriptions/request-cancel-otp/${sub._id}`);
+                setSelectedSub(sub);
+                setOtpModalOpen(true);
+                toast.success('OTP sent to donor');
+            } catch (error) {
+                toast.error(error.response?.data?.message || 'Failed to send OTP');
+            } finally {
+                setSendingOtp(false);
+            }
+            return;
+        }
+
+        if (!isAdmin) {
+            const confirmed = await showConfirm(
+                "Cancel Subscription?",
+                `Are you sure you want to cancel this monthly donation (ID: ${sub.subscriptionId})? You won't be charged from the next cycle.`
+            );
+            if (!confirmed) return;
+        }
 
         try {
-            const { data } = await api.post(`/subscriptions/cancel/${id}`);
+            if (isAdmin) setVerifyingOtp(true);
+            const { data } = await api.post(`/subscriptions/cancel/${sub._id}`, { otp });
             toast.success('Subscription cancelled successfully');
-            // Update local state
+            
             setSubscriptions(prev => prev.map(s => 
-                s._id === id ? { ...s, status: 'cancelled' } : s
+                s._id === sub._id ? { ...s, status: 'cancelled', cancelledBy: isAdmin ? 'admin' : 'user' } : s
             ));
+            
+            if (isAdmin) {
+                setOtpModalOpen(false);
+                setOtpValue('');
+                setSelectedSub(null);
+            }
         } catch (error) {
             console.error('Error cancelling subscription:', error);
             toast.error(error.response?.data?.message || 'Failed to cancel subscription');
+        } finally {
+            if (isAdmin) setVerifyingOtp(false);
         }
     };
 
@@ -121,12 +265,24 @@ const SubscriptionList = ({ isAdmin = false, searchTerm = '', statusFilter = '' 
         }
     };
 
-    const getStatusBadge = (status) => {
+    const getStatusBadge = (sub) => {
+        const status = sub.status;
+        const isCancelledByAdmin = sub.cancelledBy === 'admin';
+
         switch (status) {
             case 'active':
                 return <span className="status-badge active"><CheckCircle size={14} /> Active</span>;
             case 'cancelled':
-                return <span className="status-badge cancelled"><XCircle size={14} /> Cancelled</span>;
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                        <span className="status-badge cancelled"><XCircle size={14} /> Cancelled</span>
+                        {isCancelledByAdmin && (
+                            <span style={{ fontSize: '0.6rem', color: '#ef4444', fontWeight: 700, textTransform: 'uppercase', background: '#fee2e2', padding: '2px 6px', borderRadius: '4px', border: '1px solid #fecaca' }}>
+                                Cancelled by Admin
+                            </span>
+                        )}
+                    </div>
+                );
             case 'failed':
                 return <span className="status-badge failed"><AlertTriangle size={14} /> Failed</span>;
             case 'created':
@@ -152,69 +308,437 @@ const SubscriptionList = ({ isAdmin = false, searchTerm = '', statusFilter = '' 
     }
 
     return (
-        <div className="subscription-list">
-            {subscriptions.map((sub) => (
-                <div key={sub._id} className="subscription-card">
-                    <div className="subscription-header">
-                        <div className="sub-info">
-                            <h4 className="sub-amount">₹{sub.amount.toLocaleString()} / month</h4>
-                            <p className="sub-id">ID: {sub.subscriptionId}</p>
-                        </div>
-                        {getStatusBadge(sub.status)}
+        <div className={`subscription-list ${isAdmin ? 'admin-table-view' : ''}`}>
+            <div className="list-controls-row">
+                <div className="export-tools-unified">
+                    <div className="export-group">
+                        <span className="export-label">Export Page:</span>
+                        <button className="export-btn excel-icon" title="Excel Page" onClick={() => exportExcel(false)}>
+                            <Download size={14} />
+                        </button>
+                        <button className="export-btn pdf-icon" title="PDF Page" onClick={() => exportPDF(false)}>
+                            <FilePdf size={14} />
+                        </button>
                     </div>
-                    
-                    <div className="subscription-details">
-                        <div className="detail-item">
-                            <Calendar size={16} />
-                            <span>Started: {new Date(sub.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        {sub.nextBillingDate && sub.status === 'active' && (
-                            <div className="detail-item">
-                                <Clock size={16} />
-                                <span>Next Billing: {new Date(sub.nextBillingDate).toLocaleDateString()}</span>
-                            </div>
-                        )}
-                        {isAdmin && (
-                            <div className="detail-item">
-                                <strong>Donor:</strong> {sub.donorName} ({sub.donorMobile})
-                            </div>
-                        )}
+                    <div className="export-group">
+                        <span className="export-label">Export All:</span>
+                        <button className="export-btn-text excel-text" onClick={() => exportExcel(true)}>Excel</button>
+                        <button className="export-btn-text pdf-text" onClick={() => exportPDF(true)}>PDF</button>
                     </div>
-
-                    {sub.status === 'active' && (
-                        <div className="subscription-actions">
-                            <button 
-                                className="btn-cancel" 
-                                onClick={() => handleCancel(sub._id, sub.subscriptionId)}
-                            >
-                                Cancel Subscription
-                            </button>
-                        </div>
-                    )}
-                    {sub.status === 'failed' && (
-                        <div className="subscription-actions" style={{ gap: '10px', display: 'flex', justifyContent: 'flex-end' }}>
-                            <button 
-                                className="btn-retry" 
-                                onClick={() => handleRetry(sub)}
-                            >
-                                Retry Payment
-                            </button>
-                            <button 
-                                className="btn-cancel" 
-                                onClick={() => handleCancel(sub._id, sub.subscriptionId)}
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    )}
                 </div>
-            ))}
+            </div>
+
+            {!isAdmin ? (
+                // User Table View
+                <div className="user-table-container">
+                <table className="user-sub-table">
+                    <thead>
+                        <tr>
+                            <th>Contribution</th>
+                            <th>Reference ID</th>
+                            <th>Started On</th>
+                            <th>Next Billing</th>
+                            <th>Status</th>
+                            <th className="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {subscriptions.map((sub) => (
+                            <tr key={sub._id}>
+                                <td>
+                                    <div className="user-amount-cell">
+                                        <strong>₹{sub.amount.toLocaleString()}</strong>
+                                        <span className="freq">/ month</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <code className="user-sub-id">{sub.subscriptionId}</code>
+                                </td>
+                                <td>{new Date(sub.createdAt).toLocaleDateString()}</td>
+                                <td>
+                                    {sub.nextBillingDate && sub.status === 'active' 
+                                        ? new Date(sub.nextBillingDate).toLocaleDateString() 
+                                        : '-'}
+                                </td>
+                                <td>{getStatusBadge(sub)}</td>
+                                <td>
+                                    <div className="user-actions-cell">
+                                        {sub.status === 'active' && (
+                                            <button 
+                                                className="btn-cancel-small" 
+                                                onClick={() => handleCancel(sub)}
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
+                                        {sub.status === 'failed' && (
+                                            <>
+                                                <button 
+                                                    className="btn-retry-small" 
+                                                    onClick={() => handleRetry(sub)}
+                                                >
+                                                    Retry
+                                                </button>
+                                                <button 
+                                                    className="btn-cancel-small" 
+                                                    onClick={() => handleCancel(sub)}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            ) : (
+                // Admin Table View
+                <div className="admin-table-container">
+                    <table className="admin-sub-table">
+                        <thead>
+                            <tr>
+                                <th>Donor Details</th>
+                                <th>Amount</th>
+                                <th>ID / Reference</th>
+                                <th>Status</th>
+                                <th>Started On</th>
+                                <th>Next Billing</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {subscriptions.map((sub) => (
+                                <tr key={sub._id}>
+                                    <td>
+                                        <div className="admin-donor-info">
+                                            <span className="d-name">{sub.donorName}</span>
+                                            {sub.donorUserId?.referralCode && (
+                                                <span className="d-code">User Code: {sub.donorUserId.referralCode}</span>
+                                            )}
+                                            <span className="d-mobile">{sub.donorMobile}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="admin-amount-cell">
+                                            <strong>₹{sub.amount.toLocaleString()}</strong>
+                                            <span className="freq">/ month</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <code className="admin-sub-id">{sub.subscriptionId}</code>
+                                    </td>
+                                    <td>{getStatusBadge(sub)}</td>
+                                    <td>{new Date(sub.createdAt).toLocaleDateString()}</td>
+                                    <td>
+                                        {sub.nextBillingDate ? new Date(sub.nextBillingDate).toLocaleDateString() : '-'}
+                                    </td>
+                                    <td>
+                                        {sub.status === 'active' && (
+                                            <button 
+                                                className="admin-btn-cancel"
+                                                onClick={() => handleCancel(sub)}
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {/* Pagination Controls */}
+            {subscriptions.length > 0 && totalPages > 1 && (
+                <div className="list-pagination">
+                    <div className="pagination-info">
+                        Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords} {isAdmin ? 'subscriptions' : 'records'}
+                    </div>
+                    <div className="pagination-buttons">
+                        <button 
+                            className="p-btn" 
+                            disabled={currentPage === 1}
+                            onClick={() => handlePageChange(currentPage - 1)}
+                        >
+                            Previous
+                        </button>
+                        
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                            if (
+                                totalPages <= 7 || 
+                                pageNum === 1 || 
+                                pageNum === totalPages || 
+                                (pageNum >= currentPage - 2 && pageNum <= currentPage + 2)
+                            ) {
+                                return (
+                                    <button 
+                                        key={pageNum}
+                                        className={`p-btn ${currentPage === pageNum ? 'active' : ''}`}
+                                        onClick={() => handlePageChange(pageNum)}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            } else if (
+                                (pageNum === currentPage - 3 || pageNum === currentPage + 3)
+                            ) {
+                                return <span key={pageNum} className="p-dots">...</span>;
+                            }
+                            return null;
+                        })}
+
+                        <button 
+                            className="p-btn" 
+                            disabled={currentPage === totalPages}
+                            onClick={() => handlePageChange(currentPage + 1)}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Admin OTP Modal */}
+            {otpModalOpen && (
+                <div className="otp-overlay">
+                    <div className="otp-modal-box">
+                        <h3>Authorize Cancellation</h3>
+                        <p>Enter the 6-digit code sent to <strong>{selectedSub?.donorMobile}</strong></p>
+                        
+                        <input 
+                            type="text" 
+                            maxLength="6"
+                            placeholder="Enter 6-digit OTP"
+                            value={otpValue}
+                            onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ''))}
+                            className="otp-input-field"
+                        />
+
+                        <div className="otp-modal-footer">
+                            <button className="btn-secondary" onClick={() => setOtpModalOpen(false)}>Cancel</button>
+                            <button 
+                                className="btn-primary" 
+                                onClick={() => handleCancel(selectedSub, otpValue)}
+                                disabled={otpValue.length !== 6 || verifyingOtp}
+                            >
+                                {verifyingOtp ? 'Verifying...' : 'Confirm Cancellation'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style>{`
                 .subscription-list {
-                    display: grid;
+                    width: 100%;
+                }
+
+                .list-controls-row {
+                    display: flex;
+                    justify-content: flex-end;
+                    margin-bottom: 1.5rem;
+                }
+                .export-tools-unified {
+                    display: flex;
                     gap: 1.5rem;
-                    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+                    align-items: center;
+                    background: #f8fafc;
+                    padding: 8px 16px;
+                    border-radius: 12px;
+                    border: 1px solid #e2e8f0;
+                }
+                .export-group {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .export-label {
+                    font-size: 0.7rem;
+                    font-weight: 800;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+                .export-btn {
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 6px;
+                    border: 1px solid #e2e8f0;
+                    background: white;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .export-btn.excel-icon:hover {
+                    color: #059669;
+                    border-color: #059669;
+                    background: #ecfdf5;
+                }
+                .export-btn.pdf-icon:hover {
+                    color: #dc2626;
+                    border-color: #dc2626;
+                    background: #fef2f2;
+                }
+                .export-btn-text {
+                    padding: 4px 12px;
+                    border-radius: 6px;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    border: 1px solid transparent;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .export-btn-text.excel-text {
+                    background: #ecfdf5;
+                    color: #059669;
+                    border-color: #bbf7d0;
+                }
+                .export-btn-text.pdf-text {
+                    background: #fef2f2;
+                    color: #dc2626;
+                    border-color: #fee2e2;
+                }
+                .export-btn-text:hover {
+                    filter: brightness(0.95);
+                }
+
+                .list-pagination {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 1.25rem;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-top: none;
+                    border-radius: 0 0 12px 12px;
+                }
+                .pagination-info {
+                    font-size: 0.85rem;
+                    color: #64748b;
+                }
+                .pagination-buttons {
+                    display: flex;
+                    gap: 6px;
+                    align-items: center;
+                }
+                .p-btn {
+                    padding: 6px 12px;
+                    border-radius: 6px;
+                    border: 1px solid #e2e8f0;
+                    background: white;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    color: #475569;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .p-btn:hover:not(:disabled) {
+                    border-color: var(--primary);
+                    color: var(--primary);
+                    background: #f5f3ff;
+                }
+                .p-btn.active {
+                    background: var(--primary);
+                    color: white;
+                    border-color: var(--primary);
+                }
+                .p-btn:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+                .p-dots {
+                    padding: 0 4px;
+                    color: #94a3b8;
+                }
+
+                /* User Table View Styles */
+                .user-table-container {
+                    background: white;
+                    border-radius: 12px;
+                    border: 1px solid #e2e8f0;
+                    overflow: hidden;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                    margin-top: 1rem;
+                }
+                .user-sub-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    text-align: left;
+                }
+                .user-sub-table th {
+                    background: #f8fafc;
+                    padding: 1rem 1.5rem;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    border-bottom: 1px solid #e2e8f0;
+                }
+                .user-sub-table td {
+                    padding: 1rem 1.5rem;
+                    border-bottom: 1px solid #f1f5f9;
+                    vertical-align: middle;
+                }
+                .user-amount-cell strong {
+                    font-size: 1.1rem;
+                    color: #7c3aed;
+                    display: block;
+                }
+                .user-amount-cell .freq {
+                    font-size: 0.75rem;
+                    color: #64748b;
+                }
+                .user-sub-id {
+                    font-family: monospace;
+                    background: #f1f5f9;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    font-size: 0.8rem;
+                    color: #475569;
+                }
+                .user-actions-cell {
+                    display: flex;
+                    gap: 8px;
+                    justify-content: flex-end;
+                }
+                .btn-cancel-small {
+                    padding: 4px 12px;
+                    background: white;
+                    border: 1px solid #ef4444;
+                    color: #ef4444;
+                    border-radius: 6px;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .btn-cancel-small:hover {
+                    background: #ef4444;
+                    color: white;
+                }
+                .btn-retry-small {
+                    padding: 4px 12px;
+                    background: #7c3aed;
+                    border: 1px solid #7c3aed;
+                    color: white;
+                    border-radius: 6px;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .btn-retry-small:hover {
+                    background: #6d28d9;
+                }
+                .text-right {
+                    text-align: right;
                 }
                 .subscription-card {
                     background: white;
@@ -246,34 +770,40 @@ const SubscriptionList = ({ isAdmin = false, searchTerm = '', statusFilter = '' 
                     margin: 0.25rem 0 0 0;
                 }
                 .status-badge {
-                    display: flex;
+                    display: inline-flex;
                     align-items: center;
                     gap: 0.35rem;
-                    font-size: 0.75rem;
-                    font-weight: 600;
+                    font-size: 0.7rem;
+                    font-weight: 700;
                     padding: 0.25rem 0.6rem;
-                    border-radius: 9999px;
-                    text-transform: capitalize;
+                    border-radius: 6px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.3px;
                 }
                 .status-badge.active {
                     background: #dcfce7;
                     color: #166534;
+                    border: 1px solid #bbf7d0;
                 }
                 .status-badge.cancelled {
-                    background: #fee2e2;
-                    color: #991b1b;
+                    background: #f1f5f9;
+                    color: #64748b;
+                    border: 1px solid #e2e8f0;
                 }
                 .status-badge.created {
-                    background: #fef9c3;
-                    color: #854d0e;
+                    background: #fffbeb;
+                    color: #92400e;
+                    border: 1px solid #fef3c7;
                 }
                 .status-badge.failed {
-                    background: #fee2e2;
+                    background: #fef2f2;
                     color: #b91c1c;
+                    border: 1px solid #fee2e2;
                 }
                 .status-badge.paused {
-                    background: #ffedd5;
-                    color: #9a3412;
+                    background: #fff7ed;
+                    color: #c2410c;
+                    border: 1px solid #ffedd5;
                 }
                 .subscription-details {
                     display: grid;
@@ -305,7 +835,8 @@ const SubscriptionList = ({ isAdmin = false, searchTerm = '', statusFilter = '' 
                     transition: all 0.2s;
                 }
                 .btn-cancel:hover {
-                    background: #fef2f2;
+                    background: #ef4444;
+                    color: white;
                 }
                 .btn-retry {
                     background: #7c3aed;
@@ -318,9 +849,175 @@ const SubscriptionList = ({ isAdmin = false, searchTerm = '', statusFilter = '' 
                     cursor: pointer;
                     transition: all 0.2s;
                 }
-                .btn-retry:hover {
+
+                /* Admin Table Styles */
+                .admin-table-container {
+                    background: white;
+                    border-radius: 12px;
+                    border: 1px solid #e2e8f0;
+                    overflow: hidden;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                }
+                .admin-sub-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    text-align: left;
+                }
+                .admin-sub-table th {
+                    background: #f8fafc;
+                    padding: 1rem;
+                    font-size: 0.75rem;
+                    font-weight: 800;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    border-bottom: 2px solid #e2e8f0;
+                }
+                .admin-sub-table td {
+                    padding: 1rem;
+                    border-bottom: 1px solid #f1f5f9;
+                    vertical-align: middle;
+                    font-size: 0.9rem;
+                    color: #1e293b;
+                }
+                .admin-sub-table tr:hover td {
+                    background: #f8fafc;
+                }
+                .admin-donor-info {
+                    display: flex;
+                    flex-direction: column;
+                }
+                .admin-donor-info .d-name {
+                    font-weight: 700;
+                    color: #0f172a;
+                }
+                .admin-donor-info .d-code {
+                    font-size: 0.75rem;
+                    color: #3b82f6;
+                    font-weight: 600;
+                }
+                .admin-donor-info .d-mobile {
+                    font-size: 0.75rem;
+                    color: #64748b;
+                }
+                .admin-amount-cell strong {
+                    color: #059669;
+                    font-size: 1rem;
+                }
+                .admin-amount-cell .freq {
+                    font-size: 0.75rem;
+                    color: #94a3b8;
+                    margin-left: 2px;
+                }
+                .admin-sub-id {
+                    background: #f1f5f9;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    font-size: 0.75rem;
+                    color: #475569;
+                    font-family: monospace;
+                }
+                .admin-btn-cancel {
+                    background: #fee2e2;
+                    color: #991b1b;
+                    border: 1px solid #fecaca;
+                    padding: 6px 12px;
+                    border-radius: 6px;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .admin-btn-cancel:hover {
+                    background: #ef4444;
+                    color: white;
+                    border-color: #ef4444;
+                }
+
+                /* OTP Modal Styles */
+                .otp-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.5);
+                    backdrop-filter: blur(4px);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 1000;
+                }
+                .otp-modal-box {
+                    background: white;
+                    padding: 2rem;
+                    border-radius: 16px;
+                    width: 100%;
+                    max-width: 400px;
+                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+                    text-align: center;
+                }
+                .otp-modal-box h3 {
+                    margin: 0 0 0.5rem 0;
+                    color: #1e293b;
+                    font-size: 1.25rem;
+                }
+                .otp-modal-box p {
+                    color: #64748b;
+                    font-size: 0.9rem;
+                    margin-bottom: 1.5rem;
+                }
+                .otp-input-field {
+                    width: 100%;
+                    padding: 0.75rem;
+                    font-size: 1.5rem;
+                    text-align: center;
+                    letter-spacing: 0.5rem;
+                    border: 2px solid #e2e8f0;
+                    border-radius: 8px;
+                    margin-bottom: 1.5rem;
+                    font-weight: 700;
+                    color: #1e293b;
+                }
+                .otp-input-field:focus {
+                    border-color: #7c3aed;
+                    outline: none;
+                    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+                }
+                .otp-modal-footer {
+                    display: flex;
+                    gap: 12px;
+                }
+                .otp-modal-footer button {
+                    flex: 1;
+                    padding: 0.75rem;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .btn-secondary {
+                    background: #f1f5f9;
+                    color: #64748b;
+                    border: none;
+                }
+                .btn-secondary:hover {
+                    background: #e2e8f0;
+                }
+                .btn-primary {
+                    background: #7c3aed;
+                    color: white;
+                    border: none;
+                }
+                .btn-primary:hover:not(:disabled) {
                     background: #6d28d9;
                 }
+                .btn-primary:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+
                 .empty-state {
                     text-align: center;
                     padding: 4rem 2rem;

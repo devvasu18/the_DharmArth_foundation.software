@@ -285,6 +285,14 @@ class WhatsappService {
     }
 
     /**
+     * Specialized: Send OTP for Subscription Cancellation via WhatsApp
+     */
+    async sendCancelSubscriptionOTP(mobile, otp, amount) {
+        const message = `Your OTP to authorize *Cancellation* of your ₹${amount} monthly donation at The DharmArth Foundation is: *${otp}*. Valid for 10 minutes.`;
+        return this._sendWhatsAppNow(mobile, message); 
+    }
+
+    /**
      * Specialized: Send OTP via WhatsApp
      */
     async sendOTP(mobile, otp) {

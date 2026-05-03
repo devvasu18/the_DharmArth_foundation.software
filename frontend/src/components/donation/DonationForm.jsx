@@ -134,14 +134,33 @@ const DonationForm = ({ onSuccess }) => {
         return () => clearTimeout(timer);
     }, [mobile, authUser, motivatorMobile]);
 
-    // Check for referral link
+    // Check for referral link and pre-fill data
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const ref = params.get('ref');
-        if (ref) {
-            setMotivatorMobile(ref);
+        const motivator = params.get('motivator');
+        const name = params.get('name');
+        const phone = params.get('mobile');
+        const amt = params.get('amount');
+        const panParam = params.get('pan');
+        const aadhaarParam = params.get('aadhaar');
+        const g80 = params.get('is80G');
+
+        if (ref || motivator) {
+            setMotivatorMobile(ref || motivator);
+            setIsMotivatorLocked(true);
         }
-    }, [location]);
+        if (name) setFullName(name);
+        if (phone) setMobile(phone);
+        if (amt) {
+            setAmount(Number(amt));
+            setCustomAmount(Number(amt));
+        }
+        if (panParam) setPan(panParam);
+        if (aadhaarParam) setAadhaar(aadhaarParam);
+        if (g80 === 'true') setNeed80G(true);
+
+    }, [location.search]);
 
     // Debounce motivator check
     useEffect(() => {

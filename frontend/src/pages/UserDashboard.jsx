@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import api from '../services/api';
-import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown, FileSpreadsheet, FileText as FilePdf, CheckCircle } from 'lucide-react';
+import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, Users, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown, FileSpreadsheet, FileText as FilePdf, CheckCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -422,8 +422,8 @@ const UserDashboard = () => {
                                 </div>
 
 
-                            </motion.div>
-                        </div>
+                             </motion.div>
+                         </div>
 
 
 
@@ -971,6 +971,9 @@ const UserDashboard = () => {
                                                     <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                                         <td style={{ padding: '12px 20px' }}>
                                                             <div style={{ fontWeight: 600, color: '#1e293b' }}>{donor.donorName}</div>
+                                                            <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500, margin: '2px 0' }}>
+                                                                {donor.donorMobile}
+                                                            </div>
                                                             <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
                                                                 Last Donation: {new Date(donor.lastDonation || donor.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                             </div>
