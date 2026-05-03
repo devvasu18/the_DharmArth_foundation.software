@@ -88,7 +88,9 @@ const userSchema = new mongoose.Schema({
         altPhone: String,
         label: { type: String, default: 'Home' },
         updatedAt: { type: Date, default: Date.now }
-    }]
+    }],
+    otp: { type: String },
+    otpExpires: { type: Date },
 }, {
     timestamps: true,
     toJSON: { getters: true },

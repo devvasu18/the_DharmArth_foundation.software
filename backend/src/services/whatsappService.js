@@ -18,10 +18,10 @@ class WhatsappService {
      */
     startWorker(intervalMs = 30000) {
         if (this.workerInterval) return;
-        
+
         console.log(`[NOTIFICATION WORKER] Started with ${intervalMs}ms interval`);
         this.workerInterval = setInterval(() => this.processQueue(), intervalMs);
-        
+
         // Also run once immediately on startup
         setTimeout(() => this.processQueue(), 5000);
     }
@@ -158,7 +158,7 @@ class WhatsappService {
                 metadata
             });
             // Trigger background process immediately (non-blocking)
-            this.processQueue().catch(() => {});
+            this.processQueue().catch(() => { });
             return true;
         } catch (error) {
             console.error('[WHATSAPP QUEUE ERROR]', error.message);
@@ -183,7 +183,7 @@ class WhatsappService {
                 metadata
             });
             // Trigger background process immediately (non-blocking)
-            this.processQueue().catch(() => {});
+            this.processQueue().catch(() => { });
             return true;
         } catch (error) {
             console.error('[EMAIL QUEUE ERROR]', error.message);
@@ -275,7 +275,14 @@ class WhatsappService {
         const message = `Dear ${name}, your 80G certificate is ready. 🙏\n\nYou can download it here: ${fullUrl}`;
         return this.sendMessage(mobile, message, { type: '80g_certificate' });
     }
+
+    /**
+     * Specialized: Send OTP via WhatsApp
+     */
+    async sendOTP(mobile, otp) {
+        const message = `Your OTP for The DharmArth Foundation login is: *${otp}*. Valid for 10 minutes`;
+        return this._sendWhatsAppNow(mobile, message); // Direct send for time-critical OTP
+    }
 }
 
 module.exports = new WhatsappService();
-

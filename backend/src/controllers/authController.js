@@ -14,6 +14,7 @@ const sendTokenResponse = (user, statusCode, res) => {
     };
 
     res.status(statusCode).cookie('token', token, options).json({
+        token, // Add this for incognito/third-party cookie fallback
         _id: user._id,
         name: user.name,
         email: user.email,
@@ -181,5 +182,93 @@ const logoutUser = async (req, res) => {
     res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
-module.exports = { loginUser, registerUser, logoutUser, checkReferral, checkUserStatus };
+// @desc    Send OTP via WhatsApp
+// @route   POST /api/auth/send-otp
+// @access  Public
+const sendOTP = async (req, res) => {
+    const { mobile } = req.body;
+    const whatsappService = require('../services/whatsappService');
+
+    try {
+        let user = await User.findOne({ mobile });
+
+        if (!user) {
+            return res.status(404).json({ message: 'Mobile number not found. Please register first.' });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        user.otp = otp;
+        user.otpExpires = otpExpires;
+        await user.save();
+
+        const success = await whatsappService.sendOTP(mobile, otp);
+        if (success) {
+            res.json({ success: true, message: 'OTP sent successfully' });
+        } else {
+            res.status(500).json({ message: 'Failed to send OTP via WhatsApp' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Verify OTP and Login
+// @route   POST /api/auth/verify-otp
+// @access  Public
+const verifyOTP = async (req, res) => {
+    const { mobile, otp } = req.body;
+
+    try {
+        const user = await User.findOne({ mobile }).populate('roles').populate('referredBy', 'name mobile');
+
+        if (!user || !user.otp || user.otp !== otp || user.otpExpires < new Date()) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+
+        if (user.isSuspended) {
+            return res.status(403).json({ message: 'Account suspended. Please contact Support Team.' });
+        }
+
+        // Clear OTP
+        user.otp = undefined;
+        user.otpExpires = undefined;
+        await user.save();
+
+        return sendTokenResponse(user, 200, res);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Reset Password via OTP
+// @route   POST /api/auth/reset-password
+// @access  Public
+const resetPassword = async (req, res) => {
+    const { mobile, otp, newPassword } = req.body;
+
+    try {
+        const user = await User.findOne({ mobile });
+
+        if (!user || !user.otp || user.otp !== otp || user.otpExpires < new Date()) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+
+        // Set new password
+        user.password = newPassword; // pre('save') hook will hash it
+        
+        // Clear OTP
+        user.otp = undefined;
+        user.otpExpires = undefined;
+        await user.save();
+
+        // Auto-login after reset
+        return sendTokenResponse(user, 200, res);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { loginUser, registerUser, logoutUser, checkReferral, checkUserStatus, sendOTP, verifyOTP, resetPassword };
 

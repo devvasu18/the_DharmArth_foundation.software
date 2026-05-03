@@ -21,6 +21,15 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [otpSent, setOtpSent] = useState(false);
+    const [otpLoading, setOtpLoading] = useState(false);
+
+    // Forgot Password Flow
+    const [isForgotPassword, setIsForgotPassword] = useState(false);
+    const [resetStep, setResetStep] = useState(1); // 1: Mobile/OTP, 2: New Password
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
     const navigate = useNavigate();
     const { login } = useAuth();
@@ -44,6 +53,62 @@ const Login = () => {
         };
         fetchSettings();
     }, []);
+
+    const handleSendOTP = async (e) => {
+        if (e) e.preventDefault();
+        if (mobile.length !== 10) {
+            toast.error("Please enter a valid 10-digit mobile number");
+            return;
+        }
+
+        setOtpLoading(true);
+        try {
+            await api.post('/auth/send-otp', { mobile });
+            setOtpSent(true);
+            toast.success("OTP sent to your WhatsApp!");
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to send OTP");
+        } finally {
+            setOtpLoading(false);
+        }
+    };
+
+    const handleVerifyOTP = async (e) => {
+        if (e) e.preventDefault();
+        if (otp.length !== 6) {
+            toast.error("Please enter a valid 6-digit OTP");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const { data } = await api.post('/auth/verify-otp', { mobile, otp });
+
+            // Use context login
+            login(data);
+
+            if (data.language) {
+                i18n.changeLanguage(data.language);
+            }
+
+            toast.success('Welcome back!');
+            // Redirect based on role or default
+            const roles = data.roles || [];
+            const isDeliveryPartner = roles.some(r => typeof r === 'string' ? r === 'Delivery boy' : r.name === 'Delivery boy');
+
+            if (data.isSuperAdmin) {
+                navigate('/admin');
+            } else if (isDeliveryPartner) {
+                navigate('/delivery-boy');
+            } else {
+                navigate('/');
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Invalid OTP');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handlePasswordLogin = async () => {
         setError('');
@@ -74,6 +139,48 @@ const Login = () => {
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResetPassword = async (e) => {
+        if (e) e.preventDefault();
+        if (newPassword !== confirmNewPassword) {
+            toast.error("Passwords do not match");
+            return;
+        }
+        if (newPassword.length < 6) {
+            toast.error("Password must be at least 6 characters");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const { data } = await api.post('/auth/reset-password', { mobile, otp, newPassword });
+            
+            // Auto Login logic
+            login(data);
+            if (data.language) i18n.changeLanguage(data.language);
+
+            toast.success("Password reset successful! Welcome back.");
+            
+            // Redirect based on role
+            const roles = data.roles || [];
+            const isDeliveryPartner = roles.some(r => typeof r === 'string' ? r === 'Delivery boy' : r.name === 'Delivery boy');
+
+            if (data.isSuperAdmin) navigate('/admin');
+            else if (isDeliveryPartner) navigate('/delivery-boy');
+            else navigate('/');
+
+            // Reset local states
+            setIsForgotPassword(false);
+            setResetStep(1);
+            setOtp('');
+            setOtpSent(false);
+            setPassword('');
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Reset failed");
         } finally {
             setLoading(false);
         }
@@ -173,18 +280,45 @@ const Login = () => {
                                 {loginMethod === 'otp' ? 'Email / Mobile Number *' : 'Mobile Number *'}
                             </label>
 
-                            <input
-                                type="text"
-                                className="input-field"
-                                placeholder={loginMethod === 'otp' ? "Enter Mobile / Email" : "Enter Mobile Number"}
-                                value={mobile}
-                                onChange={handleInputChange}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && loginMethod === 'password') {
-                                        handlePasswordLogin();
-                                    }
-                                }}
-                            />
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="text"
+                                    className="input-field"
+                                    placeholder={loginMethod === 'otp' ? "Enter Mobile / Email" : "Enter Mobile Number"}
+                                    value={mobile}
+                                    onChange={handleInputChange}
+                                    disabled={otpSent}
+                                    style={{ paddingRight: otpSent && loginMethod === 'otp' ? '80px' : '10px' }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && loginMethod === 'password') {
+                                            handlePasswordLogin();
+                                        }
+                                    }}
+                                />
+                                {otpSent && loginMethod === 'otp' && (
+                                    <button 
+                                        type="button"
+                                        style={{ 
+                                            position: 'absolute', 
+                                            right: '10px', 
+                                            top: '50%', 
+                                            transform: 'translateY(-50%)',
+                                            border: 'none', 
+                                            background: 'none', 
+                                            cursor: 'pointer',
+                                            color: 'var(--primary)',
+                                            fontWeight: '600',
+                                            fontSize: '0.85rem'
+                                        }}
+                                        onClick={() => {
+                                            setOtpSent(false);
+                                            setOtp('');
+                                        }}
+                                    >
+                                        Change
+                                    </button>
+                                )}
+                            </div>
 
                             {loginMethod === 'password' && (
                                 <>
@@ -225,14 +359,109 @@ const Login = () => {
                                             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                         </button>
                                     </div>
+                                    <div style={{ textAlign: 'right', marginTop: '8px' }}>
+                                        <button 
+                                            type="button"
+                                            className="text-primary text-sm" 
+                                            style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.875rem' }}
+                                            onClick={() => {
+                                                setIsForgotPassword(true);
+                                                setLoginMethod('otp');
+                                                setOtpSent(false);
+                                                setResetStep(1);
+                                            }}
+                                        >
+                                            Forgot Password?
+                                        </button>
+                                    </div>
                                 </>
                             )}
 
-                            {/* ACTION BUTTON */}
+                            {/* ACTION BUTTON & OTP FLOW */}
                             {loginMethod === 'otp' ? (
-                                <button className="btn bg-primary text-white full-width" style={{ marginTop: '1rem' }}>
-                                    Get OTP
-                                </button>
+                                !otpSent ? (
+                                    <button 
+                                        type="button"
+                                        className="btn bg-primary text-white full-width" 
+                                        style={{ marginTop: '1rem' }}
+                                        onClick={handleSendOTP}
+                                        disabled={otpLoading}
+                                    >
+                                        {otpLoading ? 'Sending...' : 'Get OTP'}
+                                    </button>
+                                ) : (
+                                    <>
+                                        <div className="form-group" style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                                            <label className="form-label" style={{ marginBottom: '1rem', display: 'block' }}>Enter 6-digit OTP</label>
+                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                                {[...Array(6)].map((_, i) => (
+                                                    <input
+                                                        key={i}
+                                                        id={`otp-${i}`}
+                                                        type="text"
+                                                        maxLength="1"
+                                                        value={otp[i] || ''}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value.replace(/\D/g, '');
+                                                            const newOtp = otp.split('');
+                                                            
+                                                            if (val.length > 1) {
+                                                                // Handle paste or multi-digit input
+                                                                const pastedVal = val.slice(0, 6).split('');
+                                                                setOtp(pastedVal.join(''));
+                                                                const lastIdx = Math.min(pastedVal.length - 1, 5);
+                                                                document.getElementById(`otp-${lastIdx}`).focus();
+                                                                return;
+                                                            }
+
+                                                            newOtp[i] = val;
+                                                            setOtp(newOtp.join(''));
+                                                            
+                                                            if (val && i < 5) {
+                                                                document.getElementById(`otp-${i+1}`).focus();
+                                                            }
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Backspace') {
+                                                                if (!otp[i] && i > 0) {
+                                                                    document.getElementById(`otp-${i-1}`).focus();
+                                                                } else {
+                                                                    const newOtp = otp.split('');
+                                                                    newOtp[i] = '';
+                                                                    setOtp(newOtp.join(''));
+                                                                }
+                                                            }
+                                                        }}
+                                                        style={{
+                                                            width: '45px',
+                                                            height: '50px',
+                                                            textAlign: 'center',
+                                                            fontSize: '1.25rem',
+                                                            fontWeight: 'bold',
+                                                            borderRadius: '8px',
+                                                            border: '2px solid #e2e8f0',
+                                                            outline: 'none',
+                                                            transition: 'all 0.2s',
+                                                            background: '#f8fafc',
+                                                            color: '#1e293b'
+                                                        }}
+                                                        onFocus={(e) => e.target.style.borderColor = '#7c3aed'}
+                                                        onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <button 
+                                            type="button"
+                                            className="btn bg-primary text-white full-width" 
+                                            style={{ marginTop: '1rem' }}
+                                            onClick={isForgotPassword ? () => setResetStep(2) : handleVerifyOTP}
+                                            disabled={loading}
+                                        >
+                                            {loading ? 'Verifying...' : (isForgotPassword ? 'Verify OTP' : 'Verify & Login')}
+                                        </button>
+                                    </>
+                                )
                             ) : (
                                 <button
                                     className="btn bg-primary text-white full-width"
@@ -295,6 +524,67 @@ const Login = () => {
                 </div>
 
             </div>
+            {/* FORGOT PASSWORD MODAL/OVERLAY */}
+            {isForgotPassword && otpSent && resetStep === 2 && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+                    backdropFilter: 'blur(4px)'
+                }}>
+                    <div className="auth-container" style={{ maxWidth: '400px', width: '90%', margin: 0, background: 'white', padding: '2rem', borderRadius: '16px' }}>
+                        <h2 className="auth-title">Reset Password</h2>
+                        <p style={{ textAlign: 'center', marginBottom: '1.5rem', color: '#64748b' }}>
+                            OTP verified! Now set your new password.
+                        </p>
+                        
+                        <div className="form-group">
+                            <label className="form-label">New Password</label>
+                            <input
+                                type="password"
+                                className="form-input"
+                                placeholder="Min 6 characters"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                            />
+                        </div>
+
+                        <div className="form-group" style={{ marginTop: '1rem' }}>
+                            <label className="form-label">Confirm New Password</label>
+                            <input
+                                type="password"
+                                className="form-input"
+                                placeholder="Repeat password"
+                                value={confirmNewPassword}
+                                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                            />
+                        </div>
+
+                        <button 
+                            className="btn bg-primary text-white full-width" 
+                            style={{ marginTop: '1.5rem', width: '100%', padding: '0.75rem', borderRadius: '8px' }}
+                            onClick={handleResetPassword}
+                            disabled={loading}
+                        >
+                            {loading ? 'Updating...' : 'Update Password'}
+                        </button>
+
+                        <button 
+                            className="text-sm full-width" 
+                            style={{ marginTop: '1rem', border: 'none', background: 'none', cursor: 'pointer', color: '#64748b', display: 'block', width: '100%' }}
+                            onClick={() => {
+                                setIsForgotPassword(false);
+                                setOtpSent(false);
+                                setOtp('');
+                            }}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <AuthFooter />
         </>
     );

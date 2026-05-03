@@ -18,6 +18,25 @@ const api = axios.create({
     },
 });
 
+// Attach token to every request for incognito/third-party cookie fallback
+api.interceptors.request.use(
+    (config) => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                const { token } = JSON.parse(storedUser);
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                }
+            } catch (e) {
+                console.error("Error parsing stored user for token", e);
+            }
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
 export { API_BASE_URL };
 
 
