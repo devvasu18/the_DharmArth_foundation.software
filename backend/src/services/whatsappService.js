@@ -277,6 +277,14 @@ class WhatsappService {
     }
 
     /**
+     * Specialized: Send OTP for Payout Verification via WhatsApp
+     */
+    async sendPayoutOTP(mobile, otp) {
+        const message = `Your OTP for The DharmArth Foundation *Withdrawal Authorization* is: *${otp}*. Valid for 10 minutes. Please do not share this code with anyone.`;
+        return this._sendWhatsAppNow(mobile, message); // Direct send for time-critical OTP
+    }
+
+    /**
      * Specialized: Send OTP via WhatsApp
      */
     async sendOTP(mobile, otp) {

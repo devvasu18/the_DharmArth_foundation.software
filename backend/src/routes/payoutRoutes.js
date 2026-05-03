@@ -10,13 +10,42 @@ const { upload } = require('../config/cloudinary');
 const notificationService = require('../services/notificationService');
 const whatsappService = require('../services/whatsappService');
 
+// @desc    Send OTP for Payout Verification
+// @route   POST /api/payouts/send-otp
+router.post('/send-otp', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        user.otp = otp;
+        user.otpExpires = otpExpires;
+        await user.save();
+
+        const success = await whatsappService.sendPayoutOTP(user.mobile, otp);
+        if (success) {
+            res.json({ success: true, message: 'Verification OTP sent to your WhatsApp' });
+        } else {
+            res.status(500).json({ message: 'Failed to send OTP via WhatsApp' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @desc    Request a Payout
 // @route   POST /api/payouts/request
 router.post('/request', protect, async (req, res) => {
     try {
-        const { amount } = req.body;
+        const { amount, otp } = req.body;
         const wallet = await Wallet.findOne({ user: req.user._id });
         const user = await User.findById(req.user._id);
+
+        if (!user || !user.otp || user.otp !== otp || user.otpExpires < new Date()) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
 
         if (!wallet) {
             return res.status(404).json({ message: 'Wallet not found' });
@@ -24,19 +53,9 @@ router.post('/request', protect, async (req, res) => {
 
         const withdrawAmount = parseFloat(amount) || wallet.balance;
 
-        // Fetch Dynamic Settings
-        const settings = await Setting.find({ 
-            key: { $in: ['payout_min_balance', 'payout_lock_in_months', 'payout_lock_in_days', 'payout_lock_in_hours'] } 
-        });
-        const settingsMap = settings.reduce((acc, curr) => {
-            acc[curr.key] = curr.value;
-            return acc;
-        }, {});
-
-        const minBalance = Number(settingsMap.payout_min_balance) || 500;
-        const lockInMonths = Number(settingsMap.payout_lock_in_months) || 0;
-        const lockInDays = Number(settingsMap.payout_lock_in_days) || 0;
-        const lockInHours = Number(settingsMap.payout_lock_in_hours) || 0;
+        // Fetch Dynamic Settings (Only Min Balance)
+        const minBalanceSetting = await Setting.findOne({ key: 'payout_min_balance' });
+        const minBalance = minBalanceSetting ? Number(minBalanceSetting.value) : 500;
 
         if (withdrawAmount < minBalance) {
             return res.status(400).json({ message: `Minimum withdrawal amount is ₹${minBalance}` });
@@ -44,54 +63,6 @@ router.post('/request', protect, async (req, res) => {
 
         if (withdrawAmount > wallet.balance) {
             return res.status(400).json({ message: 'Insufficient balance' });
-        }
-
-        // Check for Dynamic Lock-in
-        const createdAt = wallet.createdAt || user.createdAt;
-        const lockInDate = new Date(createdAt);
-        
-        // Add Months (approximate 30 days per month for simplicity, or use setMonth)
-        if (lockInMonths > 0) {
-            lockInDate.setMonth(lockInDate.getMonth() + lockInMonths);
-        }
-        // Add Days
-        if (lockInDays > 0) {
-            lockInDate.setDate(lockInDate.getDate() + lockInDays);
-        }
-        // Add Hours
-        if (lockInHours > 0) {
-            lockInDate.setHours(lockInDate.getHours() + lockInHours);
-        }
-
-        // Default fallback if all are 0 and it was previously 90 days? 
-        // Actually, if admin sets all to 0, it means no lock-in.
-        // But if they haven't set anything yet, we might want to keep the 90 days?
-        // Let's check if settingsMap is empty or specifically lock-in settings are missing.
-        const hasLockInSettings = 'payout_lock_in_months' in settingsMap || 'payout_lock_in_days' in settingsMap || 'payout_lock_in_hours' in settingsMap;
-        
-        if (!hasLockInSettings) {
-            // Fallback to legacy 90 days if no settings exist yet
-            lockInDate.setDate(new Date(createdAt).getDate() + 90);
-        }
-
-        if (new Date() < lockInDate) {
-            let lockInMessage = 'Withdrawal locked';
-            if (!hasLockInSettings) {
-                lockInMessage = 'Withdrawal locked for 90 days from joining';
-            } else {
-                const parts = [];
-                if (lockInMonths > 0) parts.push(`${lockInMonths} months`);
-                if (lockInDays > 0) parts.push(`${lockInDays} days`);
-                if (lockInHours > 0) parts.push(`${lockInHours} hours`);
-                lockInMessage = `Withdrawal locked for ${parts.join(', ')} from joining`;
-            }
-            return res.status(400).json({ message: lockInMessage });
-        }
-
-        // Check if pending request exists
-        const existingRequest = await PayoutRequest.findOne({ user: req.user._id, status: 'pending' });
-        if (existingRequest) {
-            return res.status(400).json({ message: 'You already have a pending payout request' });
         }
 
         if (!user.payoutCredentials || (!user.payoutCredentials.accountNumber && !user.payoutCredentials.upiId)) {
@@ -133,6 +104,11 @@ router.post('/request', protect, async (req, res) => {
         if (io) {
             io.to('admin_notifications').emit('new_payout_request', notification);
         }
+
+        // Clear OTP after successful request
+        user.otp = undefined;
+        user.otpExpires = undefined;
+        await user.save();
 
         res.status(201).json({ message: 'Payout request submitted successfully', request: payoutRequest });
 

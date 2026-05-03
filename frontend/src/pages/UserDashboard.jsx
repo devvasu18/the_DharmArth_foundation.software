@@ -58,22 +58,27 @@ const UserDashboard = () => {
     const [l1FilterYear, setL1FilterYear] = useState(new Date().getFullYear());
     const [l1Summary, setL1Summary] = useState({ lifetimeEarning: 0, prevMonthEarning: 0 });
 
+    const fetchInitialData = async () => {
+        try {
+            setIsLoadingWallet(true);
+            const summaryRes = await api.get('/wallet/summary');
+            setWallet(summaryRes.data.wallet);
+            setStats(summaryRes.data.stats);
+        } catch (error) {
+            console.error("Error fetching initial dashboard data", error);
+        } finally {
+            setIsLoadingWallet(false);
+        }
+    };
+
+    const refreshAllData = () => {
+        fetchInitialData();
+        fetchTransactions(1, true);
+    };
+
     // Fetch wallet and stats
     useEffect(() => {
         if (!user || user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
-
-        const fetchInitialData = async () => {
-            try {
-                setIsLoadingWallet(true);
-                const summaryRes = await api.get('/wallet/summary');
-                setWallet(summaryRes.data.wallet);
-                setStats(summaryRes.data.stats);
-            } catch (error) {
-                console.error("Error fetching initial dashboard data", error);
-            } finally {
-                setIsLoadingWallet(false);
-            }
-        };
         fetchInitialData();
     }, [user]);
 
@@ -662,6 +667,7 @@ const UserDashboard = () => {
             <PayoutModal
                 isOpen={isPayoutModalOpen}
                 onClose={() => setIsPayoutModalOpen(false)}
+                onSuccess={refreshAllData}
                 wallet={wallet}
                 user={user}
             />

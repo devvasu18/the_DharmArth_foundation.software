@@ -4,10 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import './UserDashboard.css';
-const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
+const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess }) => {
     const [showConfirmStep, setShowConfirmStep] = useState(false);
     const [withdrawAmount, setWithdrawAmount] = useState(0);
-    const [timeLeft, setTimeLeft] = useState({});
+    const [showOtpStep, setShowOtpStep] = useState(false);
+    const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    const [sendingOtp, setSendingOtp] = useState(false);
+    const [verifying, setVerifying] = useState(false);
 
     const [payoutRules, setPayoutRules] = useState({
         minBalance: 500,
@@ -74,34 +77,93 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
     };
 
     const handleProceed = async () => {
-        if (canPayout) {
+        if (!canPayout) return;
+
+        // Validation
+        if (withdrawAmount < MIN_BALANCE) {
+            toast.error(`Minimum withdrawal amount is ₹${MIN_BALANCE}`);
+            return;
+        }
+        if (withdrawAmount > currentBalance) {
+            toast.error(`Amount exceeds current balance (₹${currentBalance})`);
+            return;
+        }
+
+        if (!user.payoutCredentials || (!user.payoutCredentials.accountNumber && !user.payoutCredentials.upiId)) {
+            toast.error("Please register your Payout Details (Bank or UPI) in your profile first.");
+            return;
+        }
+
+        if (!showConfirmStep) {
+            setShowConfirmStep(true);
+            return;
+        }
+
+        if (!showOtpStep) {
+            // Send OTP
+            setSendingOtp(true);
             try {
-                // Validation
-                if (withdrawAmount < MIN_BALANCE) {
-                    toast.error(`Minimum withdrawal amount is ₹${MIN_BALANCE}`);
-                    return;
-                }
-                if (withdrawAmount > currentBalance) {
-                    toast.error(`Amount exceeds current balance (₹${currentBalance})`);
-                    return;
-                }
-
-                if (!user.payoutCredentials || (!user.payoutCredentials.accountNumber && !user.payoutCredentials.upiId)) {
-                    toast.error("Please register your Payout Details (Bank or UPI) in your profile first.");
-                    return;
-                }
-
-                if (!showConfirmStep) {
-                    setShowConfirmStep(true);
-                    return;
-                }
-
-                await api.post('/payouts/request', { amount: withdrawAmount });
-                toast.success("Withdrawal Request Submitted Successfully!");
-                onClose();
+                await api.post('/payouts/send-otp');
+                setShowOtpStep(true);
+                toast.success("Verification OTP sent to your WhatsApp");
             } catch (error) {
-                toast.error(error.response?.data?.message || "Failed to submit withdrawal request");
+                toast.error(error.response?.data?.message || "Failed to send OTP");
+            } finally {
+                setSendingOtp(false);
             }
+            return;
+        }
+
+        // Final Step: Submit with OTP
+        const otpString = otp.join('');
+        if (otpString.length < 6) {
+            toast.error("Please enter complete 6-digit OTP");
+            return;
+        }
+
+        setVerifying(true);
+        try {
+            await api.post('/payouts/request', { 
+                amount: withdrawAmount,
+                otp: otpString
+            });
+            toast.success("Withdrawal Request Submitted Successfully!");
+            if (onSuccess) onSuccess();
+            onClose();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to submit request");
+        } finally {
+            setVerifying(false);
+        }
+    };
+
+    const handleOtpChange = (index, value) => {
+        if (value.length > 1) {
+            // Handle paste
+            const pastedData = value.slice(0, 6).split('');
+            const newOtp = [...otp];
+            pastedData.forEach((char, i) => {
+                if (i + index < 6) newOtp[i + index] = char;
+            });
+            setOtp(newOtp);
+            // Focus last pasted or next empty
+            const nextIdx = Math.min(index + pastedData.length, 5);
+            document.getElementById(`otp-${nextIdx}`)?.focus();
+            return;
+        }
+
+        const newOtp = [...otp];
+        newOtp[index] = value;
+        setOtp(newOtp);
+
+        if (value && index < 5) {
+            document.getElementById(`otp-${index + 1}`)?.focus();
+        }
+    };
+
+    const handleOtpKeyDown = (index, e) => {
+        if (e.key === 'Backspace' && !otp[index] && index > 0) {
+            document.getElementById(`otp-${index - 1}`)?.focus();
         }
     };
 
@@ -136,31 +198,71 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                                     <div className="amount-val">₹{withdrawAmount.toLocaleString()}</div>
                                 </div>
 
-                                <div className="confirm-details-list">
-                                    <div className="confirm-detail-item">
-                                        <label>Bank</label>
-                                        <span>{user.payoutCredentials.bankName || 'UPI / Mobile Pay'}</span>
-                                    </div>
-                                    <div className="confirm-detail-item">
-                                        <label> Account Holder Name</label>
-                                        <span>{user.payoutCredentials.accountHolder}</span>
-                                    </div>
-                                    <div className="confirm-detail-item">
-                                        <label>Account No.</label>
-                                        <span>{user.payoutCredentials.accountNumber ? user.payoutCredentials.accountNumber.replace(/.(?=.{4})/g, '*') : user.payoutCredentials.upiId}</span>
-                                    </div>
-                                </div>
+                                {!showOtpStep && (
+                                    <>
+                                        <div className="confirm-details-list">
+                                            <div className="confirm-detail-item">
+                                                <label>Bank</label>
+                                                <span>{user.payoutCredentials.bankName || 'UPI / Mobile Pay'}</span>
+                                            </div>
+                                            <div className="confirm-detail-item">
+                                                <label> Account Holder Name</label>
+                                                <span>{user.payoutCredentials.accountHolder}</span>
+                                            </div>
+                                            <div className="confirm-detail-item">
+                                                <label>Account No.</label>
+                                                <span>{user.payoutCredentials.accountNumber ? user.payoutCredentials.accountNumber.replace(/.(?=.{4})/g, '*') : user.payoutCredentials.upiId}</span>
+                                            </div>
+                                        </div>
 
-                                <div className="confirm-notice">
-                                    <AlertCircle size={18} />
-                                    <p>Your wallet balance will be locked and deducted once the request is approved by our team.</p>
-                                </div>
+                                        <div className="confirm-notice">
+                                            <AlertCircle size={18} />
+                                            <p>Your wallet balance will be locked and deducted once the request is approved by our team.</p>
+                                        </div>
+                                    </>
+                                )}
 
                                 <div className="confirm-actions">
-                                    <button className="btn-back-modal" onClick={() => setShowConfirmStep(false)}>
-                                        Go Back
-                                    </button>
+                                    {!showOtpStep ? (
+                                        <button className="btn-back-modal" onClick={() => setShowConfirmStep(false)}>
+                                            Go Back
+                                        </button>
+                                    ) : (
+                                        <button className="btn-back-modal" onClick={() => setShowOtpStep(false)}>
+                                            Edit Details
+                                        </button>
+                                    )}
                                 </div>
+
+                                {showOtpStep && (
+                                    <motion.div 
+                                        className="otp-verification-area"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                    >
+                                        <div className="otp-header-mini">
+                                            <Lock size={16} />
+                                            <span>Verify it's you</span>
+                                        </div>
+                                        <p className="otp-desc-mini">Enter 6-digit code sent to <strong>{user.mobile}</strong></p>
+                                        
+                                        <div className="otp-input-grid-mini">
+                                            {otp.map((digit, idx) => (
+                                                <input
+                                                    key={idx}
+                                                    id={`otp-${idx}`}
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    maxLength={1}
+                                                    value={digit}
+                                                    onChange={(e) => handleOtpChange(idx, e.target.value)}
+                                                    onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                                                    autoComplete="one-time-code"
+                                                />
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
                             </motion.div>
                         ) : (
                             <>
@@ -276,8 +378,15 @@ const PayoutModal = ({ isOpen, onClose, wallet, user }) => {
                         {loadingRules ? (
                             <div className="animate-pulse" style={{ height: '50px', background: '#f1f5f9', borderRadius: '12px', width: '100%' }}></div>
                         ) : canPayout ? (
-                            <button className="btn-proceed" onClick={handleProceed}>
-                                {showConfirmStep ? 'Verify and Confirm' : `Next Step`}
+                            <button 
+                                className={`btn-proceed ${(sendingOtp || verifying) ? 'loading' : ''}`} 
+                                onClick={handleProceed}
+                                disabled={sendingOtp || verifying}
+                            >
+                                {sendingOtp ? 'Sending OTP...' : 
+                                 verifying ? 'Verifying...' :
+                                 showOtpStep ? 'Confirm Withdrawal' :
+                                 showConfirmStep ? 'Verify and Confirm' : 'Next Step'}
                             </button>
                         ) : (
                             <button className="btn-locked" disabled>

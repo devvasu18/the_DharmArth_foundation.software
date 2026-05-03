@@ -2682,4 +2682,54 @@
         justify-content: flex-end;
     }
 }
+
+/* OTP Verification Styles for Payout */
+.otp-verification-area {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+.otp-header-mini {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1e293b;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+
+.otp-desc-mini {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 1.25rem;
+}
+
+.otp-input-grid-mini {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+}
+
+.otp-input-grid-mini input {
+    width: 100%;
+    height: 50px;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 800;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background: white;
+    transition: all 0.2s;
+    color: #1e293b;
+}
+
+.otp-input-grid-mini input:focus {
+    border-color: #00bfa5;
+    box-shadow: 0 0 0 4px rgba(0, 191, 165, 0.1);
+    outline: none;
+}
 
