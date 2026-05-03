@@ -17,10 +17,10 @@ const Home = () => {
             <HeroSlider />
             <section className="home-welcome" style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
                 <div className="container">
-                    <div style={{ textAlign: 'center', padding: '4rem 0' }}>
-                        <h2 style={{
+                    <div style={{ textAlign: 'center', }}>
+                        <h7 style={{
                             fontSize: 'clamp(2.25rem, 6vw, 3.5rem)',
-                            fontWeight: 900,
+                            fontWeight: 500,
                             marginBottom: 'var(--spacing-4)',
                             background: 'linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%)',
                             WebkitBackgroundClip: 'text',
@@ -29,7 +29,7 @@ const Home = () => {
                             letterSpacing: '-0.03em'
                         }}>
                             {t('home.welcomeTitle')}
-                        </h2>
+                        </h7>
                         <div style={{
                             width: '80px',
                             height: '5px',

@@ -69,7 +69,7 @@
     justify-content: center;
     align-items: flex-start;
     z-index: 20;
-    padding-left: 5rem;
+    padding-left: 2rem;
 }
 
 .hero-text-wrapper {
@@ -168,7 +168,8 @@
         height: 400px;
         /* Reduced height on stack */
         order: 1;
-        transform: translateX(-130px); /* Half of 260px card width */
+        transform: translateX(-130px);
+        /* Half of 260px card width */
     }
 
     .hero-content {
@@ -196,7 +197,8 @@
 @media (max-width: 640px) {
     .hero-visuals {
         height: 320px;
-        transform: translateX(-100px); /* Half of 200px card width */
+        transform: translateX(-100px);
+        /* Half of 200px card width */
     }
 
     .hero-card {

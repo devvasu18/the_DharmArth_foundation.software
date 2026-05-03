@@ -202,6 +202,10 @@ const AdminLayout = () => {
                         <Image size={20} title={isSidebarCollapsed ? "Hero Sliders" : ""} />
                         <span className="admin-link-text">Hero Sliders</span>
                     </NavLink>
+                    <NavLink to="/admin/crowdfunding" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
+                        <TrendingUp size={20} title={isSidebarCollapsed ? "Crowdfunding" : ""} />
+                        <span className="admin-link-text">Crowdfunding</span>
+                    </NavLink>
                     {/* Events Dropdown */}
                     <div className="admin-link-dropdown-container">
                         <div

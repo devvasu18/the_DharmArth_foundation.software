@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Slider = require('../models/Slider');
+const Crowdfunding = require('../models/Crowdfunding');
 const Setting = require('../models/Setting');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 
@@ -43,6 +44,50 @@ router.delete('/sliders/:id', protect, checkPermission('Content Management', 'de
         const slider = await Slider.findByIdAndDelete(req.params.id);
         if (!slider) return res.status(404).json({ message: 'Slider not found' });
         res.json({ message: 'Slider deleted' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// --- CROWDFUNDING ---
+
+// Get all public crowdfunding sections
+router.get('/crowdfunding', async (req, res) => {
+    try {
+        const sections = await Crowdfunding.find({ isVisible: true }).sort('order');
+        res.json(sections);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Admin: CRUD Crowdfunding
+router.post('/crowdfunding', protect, checkPermission('Content Management', 'create'), async (req, res) => {
+    try {
+        const section = await Crowdfunding.create(req.body);
+        res.status(201).json(section);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// Admin: Update Crowdfunding
+router.put('/crowdfunding/:id', protect, checkPermission('Content Management', 'edit'), async (req, res) => {
+    try {
+        const section = await Crowdfunding.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!section) return res.status(404).json({ message: 'Section not found' });
+        res.json(section);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// Admin: Delete Crowdfunding
+router.delete('/crowdfunding/:id', protect, checkPermission('Content Management', 'delete'), async (req, res) => {
+    try {
+        const section = await Crowdfunding.findByIdAndDelete(req.params.id);
+        if (!section) return res.status(404).json({ message: 'Section not found' });
+        res.json({ message: 'Section deleted' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -41,6 +41,7 @@ const AdminEventVideos = lazy(() => import('./components/admin/AdminEventVideos'
 const AdminGalleries = lazy(() => import('./components/admin/AdminGalleries'));
 const CommissionReports = lazy(() => import('./components/admin/reports/CommissionReports'));
 const AdminSubscriptions = lazy(() => import('./components/admin/AdminSubscriptions'));
+const AdminCrowdfunding = lazy(() => import('./components/admin/AdminCrowdfunding'));
 const Gallery = lazy(() => import('./pages/Gallery'));
 const GalleryDetail = lazy(() => import('./pages/GalleryDetail'));
 const AdminLeads = lazy(() => import('./components/admin/AdminLeads'));
@@ -100,6 +101,7 @@ const router = createBrowserRouter(
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="sliders" element={<AdminSliders />} />
+        <Route path="crowdfunding" element={<AdminCrowdfunding />} />
         <Route path="settings" element={<AdminSettings />} />
         <Route path="roles" element={<AdminRoles />} />
         <Route path="transaction-management" element={<TransactionManagement />} />
