@@ -668,6 +668,10 @@ const UserDashboard = () => {
                 isOpen={isPayoutModalOpen}
                 onClose={() => setIsPayoutModalOpen(false)}
                 onSuccess={refreshAllData}
+                onEditDetails={() => {
+                    setIsPayoutModalOpen(false);
+                    setIsOnboardingModalOpen(true);
+                }}
                 wallet={wallet}
                 user={user}
             />

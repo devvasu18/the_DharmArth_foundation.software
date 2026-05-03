@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import './UserDashboard.css';
-const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess }) => {
+const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess, onEditDetails }) => {
     const [showConfirmStep, setShowConfirmStep] = useState(false);
     const [withdrawAmount, setWithdrawAmount] = useState(0);
     const [showOtpStep, setShowOtpStep] = useState(false);
@@ -222,17 +222,6 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess }) => {
                                     </>
                                 )}
 
-                                <div className="confirm-actions">
-                                    {!showOtpStep ? (
-                                        <button className="btn-back-modal" onClick={() => setShowConfirmStep(false)}>
-                                            Go Back
-                                        </button>
-                                    ) : (
-                                        <button className="btn-back-modal" onClick={() => setShowOtpStep(false)}>
-                                            Edit Details
-                                        </button>
-                                    )}
-                                </div>
 
                                 {showOtpStep && (
                                     <motion.div 
@@ -268,9 +257,15 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess }) => {
                             <>
                                 {/* Payout Details Section */}
                                 <div className="payout-details-card">
-                                    <div className="detail-header">
-                                        <h3>Receiving Account</h3>
-
+                                    <div className="detail-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h3 style={{ margin: 0 }}>Receiving Account</h3>
+                                        <button 
+                                            className="btn-edit-inline" 
+                                            onClick={onEditDetails}
+                                            title="Change Payout Details"
+                                        >
+                                            Change
+                                        </button>
                                     </div>
 
                                     {user.payoutCredentials ? (
@@ -377,21 +372,28 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess }) => {
                     <div className="modal-footer">
                         {loadingRules ? (
                             <div className="animate-pulse" style={{ height: '50px', background: '#f1f5f9', borderRadius: '12px', width: '100%' }}></div>
-                        ) : canPayout ? (
-                            <button 
-                                className={`btn-proceed ${(sendingOtp || verifying) ? 'loading' : ''}`} 
-                                onClick={handleProceed}
-                                disabled={sendingOtp || verifying}
-                            >
-                                {sendingOtp ? 'Sending OTP...' : 
-                                 verifying ? 'Verifying...' :
-                                 showOtpStep ? 'Confirm Withdrawal' :
-                                 showConfirmStep ? 'Verify and Confirm' : 'Next Step'}
-                            </button>
-                        ) : (
+                        ) : !canPayout ? (
                             <button className="btn-locked" disabled>
                                 {currentBalance < MIN_BALANCE ? 'Low Balance' : 'Withdrawal Locked'}
                             </button>
+                        ) : (
+                            <>
+                                {showConfirmStep && (
+                                    <button className="btn-back-modal" onClick={() => showOtpStep ? setShowOtpStep(false) : setShowConfirmStep(false)}>
+                                        {showOtpStep ? 'Edit' : 'Back'}
+                                    </button>
+                                )}
+                                <button 
+                                    className={`btn-proceed ${(sendingOtp || verifying) ? 'loading' : ''}`} 
+                                    onClick={handleProceed}
+                                    disabled={sendingOtp || verifying}
+                                >
+                                    {sendingOtp ? 'Sending OTP...' : 
+                                     verifying ? 'Verifying...' :
+                                     showOtpStep ? 'Confirm Withdrawal' :
+                                     showConfirmStep ? 'Verify and Confirm' : 'Next Step'}
+                                </button>
+                            </>
                         )}
                     </div>
                 </motion.div>

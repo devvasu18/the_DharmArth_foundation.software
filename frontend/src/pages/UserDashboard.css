@@ -2166,19 +2166,39 @@
 }
 
 .btn-back-modal {
-    width: 100%;
-    background: #f1f5f9;
-    color: #475569;
-    border: none;
+    flex: 1;
+    background: #f8fafc;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
     padding: 0.75rem;
+    height: 52px;
     border-radius: var(--radius-md);
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-back-modal:hover {
-    background: #e2e8f0;
+    background: #f1f5f9;
+    border-color: #cbd5e0;
+    color: #1e293b;
+}
+
+.modal-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1.5rem;
+    border-top: 1px solid #f1f5f9;
+    background: white;
+}
+
+.modal-footer .btn-proceed {
+    flex: 2;
+    margin: 0;
 }
 
 /* Amount Selection Card */
@@ -2731,5 +2751,25 @@
     border-color: #00bfa5;
     box-shadow: 0 0 0 4px rgba(0, 191, 165, 0.1);
     outline: none;
+}
+
+.btn-edit-inline {
+    background: #f1f5f9;
+    color: var(--primary);
+    border: 1px solid #e2e8f0;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-edit-inline:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
 }
 
