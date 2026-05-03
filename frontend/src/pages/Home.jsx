@@ -15,10 +15,42 @@ const Home = () => {
         <div>
             <Navbar />
             <HeroSlider />
-            <div className="container home-welcome">
-                <h6 style={{ fontSize: 'var(--text-3xl)', marginBottom: 'var(--spacing-4)', color: 'var(--secondary)' }}>{t('home.welcomeTitle')}</h6>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.25rem' }}>{t('home.welcomeSubtitle')}</p>
-            </div>
+            <section className="home-welcome" style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
+                <div className="container">
+                    <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+                        <h2 style={{
+                            fontSize: 'clamp(2.25rem, 6vw, 3.5rem)',
+                            fontWeight: 900,
+                            marginBottom: 'var(--spacing-4)',
+                            background: 'linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            lineHeight: 1.1,
+                            letterSpacing: '-0.03em'
+                        }}>
+                            {t('home.welcomeTitle')}
+                        </h2>
+                        <div style={{
+                            width: '80px',
+                            height: '5px',
+                            background: 'var(--primary)',
+                            margin: 'var(--spacing-6) auto',
+                            borderRadius: 'var(--radius-full)',
+                            opacity: 0.3
+                        }}></div>
+                        <p style={{
+                            color: 'var(--text-muted)',
+                            fontSize: 'clamp(1.1rem, 2.5vw, 1.4rem)',
+                            maxWidth: '800px',
+                            margin: '0 auto',
+                            fontWeight: 500,
+                            lineHeight: 1.6
+                        }}>
+                            {t('home.welcomeSubtitle')}
+                        </p>
+                    </div>
+                </div>
+            </section>
             <CrowdfundingSection />
             <AppDownloadSection />
             <WhyUsSection />

@@ -11,7 +11,7 @@ import DOMPurify from 'dompurify';
 import { useAuth } from '../../context/AuthContext';
 
 const DonationForm = ({ onSuccess }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
     const { showAlert } = useConfirm();
@@ -24,7 +24,9 @@ const DonationForm = ({ onSuccess }) => {
     const [motivatorName, setMotivatorName] = useState('');
     const [need80G, setNeed80G] = useState(false);
     const [isMotivatorLocked, setIsMotivatorLocked] = useState(false);
-    const [donationType, setDonationType] = useState('monthly'); // 'one-time' or 'monthly'
+    const [donationType] = useState('monthly'); // Always monthly now
+    const [donationLabel, setDonationLabel] = useState('');
+    const [donationLabelHi, setDonationLabelHi] = useState('');
 
     // Form States
     const [fullName, setFullName] = useState('');
@@ -78,6 +80,12 @@ const DonationForm = ({ onSuccess }) => {
                         setAmount(config.popularAmount || config.plans[0]);
                         setCustomAmount(config.popularAmount || config.plans[0]);
                     }
+                }
+                if (data.donation_label) {
+                    setDonationLabel(data.donation_label);
+                }
+                if (data.donation_label_hi) {
+                    setDonationLabelHi(data.donation_label_hi);
                 }
             } catch (error) {
                 console.error("Failed to load donation config", error);
@@ -187,7 +195,7 @@ const DonationForm = ({ onSuccess }) => {
                 amount: orderData.amount,
                 currency: orderData.currency,
                 name: "The DharmArth Foundation",
-                description: donationType === 'monthly' ? "Monthly Donation Subscription" : "Donation for Social Cause",
+                description: "Monthly Donation Subscription",
                 order_id: orderData.order_id || null,
                 subscription_id: orderData.subscriptionId || null,
                 handler: async (response) => {
@@ -197,26 +205,17 @@ const DonationForm = ({ onSuccess }) => {
 
                         let verifyPayload, verifyUrl;
 
-                        if (donationType === 'monthly') {
-                            verifyUrl = '/payment/verify-subscription';
-                            verifyPayload = {
-                                razorpay_subscription_id: response.razorpay_subscription_id,
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_signature: response.razorpay_signature
-                            };
-                        } else {
-                            verifyUrl = '/payment/verify-payment';
-                            verifyPayload = {
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_signature: response.razorpay_signature
-                            };
-                        }
+                        verifyUrl = '/payment/verify-subscription';
+                        verifyPayload = {
+                            razorpay_subscription_id: response.razorpay_subscription_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        };
 
                         const { data: verifyData } = await api.post(verifyUrl, verifyPayload);
 
                         if (verifyData.success) {
-                            toast.success(donationType === 'monthly' ? "Subscription Activated!" : "Payment Successful!");
+                            toast.success("Subscription Activated!");
                             setDonationSuccess({
                                 donationId: orderData.subscriptionId || orderData.donationId,
                                 amount: finalAmount,
@@ -252,8 +251,6 @@ const DonationForm = ({ onSuccess }) => {
                         try {
                             if (orderData.subscriptionId) {
                                 await api.post('/payment/mark-failed', { subscription_id: orderData.subscriptionId });
-                            } else if (orderData.order_id) {
-                                await api.post('/payment/mark-failed', { order_id: orderData.order_id });
                             }
                         } catch (e) {
                             console.error("Failed to mark payment as failed", e);
@@ -489,20 +486,19 @@ const DonationForm = ({ onSuccess }) => {
                     {t('donatePage.title')}
                 </h2>
 
-                <div className="donation-type-toggle">
-                    <button
-                        className={`type-btn ${donationType === 'monthly' ? 'active' : ''}`}
-                        onClick={() => setDonationType('monthly')}
-                    >
-                        Monthly (AutoPay)
-                    </button>
-                    <button
-                        className={`type-btn ${donationType === 'one-time' ? 'active' : ''}`}
-                        onClick={() => setDonationType('one-time')}
-                    >
-                        One-time
-                    </button>
-                </div>
+                {(i18n.language === 'hi' ? donationLabelHi : donationLabel) && (
+                    <p className="donation-subtitle" style={{ 
+                        textAlign: 'center', 
+                        color: 'var(--text-secondary)', 
+                        marginTop: '-1rem', 
+                        marginBottom: '2rem',
+                        fontSize: '1.1rem',
+                        fontWeight: 500
+                    }}>
+                        {i18n.language === 'hi' ? donationLabelHi : donationLabel}
+                    </p>
+                )}
+
 
                 <div className="amount-options">
                     {donationConfig.plans.map((planAmount) => (

@@ -9,6 +9,8 @@ const AdminSettings = () => {
     const { showAlert, showConfirm } = useConfirm();
     const [settings, setSettings] = useState({});
     const [loading, setLoading] = useState(true);
+    const [labelModalOpen, setLabelModalOpen] = useState(false);
+    const [editLabel, setEditLabel] = useState({ en: '', hi: '' });
 
     // Banner Config State
     const [configModalOpen, setConfigModalOpen] = useState(false);
@@ -84,14 +86,19 @@ const AdminSettings = () => {
         }
     };
 
-    const handleToggle = async (key, currentValue) => {
-        const newValue = !currentValue;
+    const handleUpdateSetting = async (key, value) => {
         try {
-            await api.put('/content/settings', { [key]: newValue });
-            setSettings({ ...settings, [key]: newValue });
+            await api.put('/content/settings', { [key]: value });
+            setSettings(prev => ({ ...prev, [key]: value }));
+            toast.success("Setting updated!");
         } catch (error) {
             console.error("Update failed", error);
+            toast.error("Failed to update setting");
         }
+    };
+
+    const handleToggle = async (key, currentValue) => {
+        handleUpdateSetting(key, !currentValue);
     };
 
     // --- Banner Logic ---
@@ -149,6 +156,30 @@ const AdminSettings = () => {
 
     const setPopular = (amount) => {
         setDonationConfig({ ...donationConfig, popularAmount: amount });
+    };
+
+    const openLabelModal = () => {
+        setEditLabel({
+            en: settings.donation_label || '',
+            hi: settings.donation_label_hi || ''
+        });
+        setLabelModalOpen(true);
+    };
+
+    const handleSaveLabel = async () => {
+        const updates = {
+            donation_label: editLabel.en,
+            donation_label_hi: editLabel.hi
+        };
+        try {
+            await api.put('/content/settings', updates);
+            setSettings(prev => ({ ...prev, ...updates }));
+            toast.success("Subtitles updated!");
+            setLabelModalOpen(false);
+        } catch (error) {
+            console.error("Save failed", error);
+            toast.error("Failed to save subtitles");
+        }
     };
 
     const handleSaveDonationConfig = async () => {
@@ -264,6 +295,23 @@ const AdminSettings = () => {
                                 onClick={openDonationModal}
                             >
                                 Configure
+                            </button>
+                        </td>
+                    </tr>
+
+                    {/* Donation Label Row */}
+                    <tr>
+                        <td><strong>Donation Form Subtitle</strong> (Appears under the title on Donate page)</td>
+                        <td>
+                            <div><strong>EN:</strong> {settings.donation_label || <span style={{ color: '#999' }}>Not set</span>}</div>
+                            <div style={{ marginTop: '5px' }}><strong>HI:</strong> {settings.donation_label_hi || <span style={{ color: '#999' }}>Not set</span>}</div>
+                        </td>
+                        <td>
+                            <button
+                                className="btn btn-outline"
+                                onClick={openLabelModal}
+                            >
+                                Edit Subtitle
                             </button>
                         </td>
                     </tr>
@@ -679,6 +727,108 @@ const AdminSettings = () => {
                                 style={{ borderRadius: '10px', background: '#00bfa5', fontWeight: 700 }}
                             >
                                 Save Configuration
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Donation Label Modal */}
+            {labelModalOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 2000
+                }}>
+                    <div style={{ 
+                        background: 'white', 
+                        padding: '2rem', 
+                        borderRadius: '24px', 
+                        minWidth: '450px', 
+                        maxWidth: '90%',
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h4 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>Edit Donation Subtitle</h4>
+                            <button onClick={() => setLabelModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                                <X size={24} />
+                            </button>
+                        </div>
+                        
+                        <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '1.5rem' }}>
+                            This text appears directly under the main title on the donation page.
+                        </p>
+
+                        <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.9rem' }}>
+                                    Subtitle Text (English)
+                                </label>
+                                <textarea
+                                    className="form-input"
+                                    style={{ 
+                                        width: '100%', 
+                                        padding: '12px', 
+                                        borderRadius: '12px', 
+                                        border: '1px solid #e2e8f0',
+                                        minHeight: '80px',
+                                        fontSize: '0.95rem',
+                                        lineHeight: '1.5'
+                                    }}
+                                    value={editLabel.en}
+                                    onChange={(e) => setEditLabel({ ...editLabel, en: e.target.value })}
+                                    placeholder="English subtitle..."
+                                />
+                            </div>
+
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.9rem' }}>
+                                    Subtitle Text (Hindi)
+                                </label>
+                                <textarea
+                                    className="form-input"
+                                    style={{ 
+                                        width: '100%', 
+                                        padding: '12px', 
+                                        borderRadius: '12px', 
+                                        border: '1px solid #e2e8f0',
+                                        minHeight: '80px',
+                                        fontSize: '0.95rem',
+                                        lineHeight: '1.5'
+                                    }}
+                                    value={editLabel.hi}
+                                    onChange={(e) => setEditLabel({ ...editLabel, hi: e.target.value })}
+                                    placeholder="Hindi subtitle..."
+                                />
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                            <button 
+                                className="btn btn-outline" 
+                                onClick={() => setLabelModalOpen(false)} 
+                                style={{ borderRadius: '12px', padding: '10px 20px' }}
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                className="btn bg-primary text-white" 
+                                onClick={handleSaveLabel}
+                                style={{ 
+                                    borderRadius: '12px', 
+                                    padding: '10px 24px',
+                                    background: '#00bfa5',
+                                    fontWeight: 700,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    color: 'white',
+                                    border: 'none',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <Save size={18} />
+                                Save Subtitle
                             </button>
                         </div>
                     </div>
