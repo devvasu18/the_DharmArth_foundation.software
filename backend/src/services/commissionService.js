@@ -13,7 +13,7 @@ const processDonationCommission = async (donationAmount, motivatorIdentifier, do
         if (level1UserId) {
             motivator = await User.findById(level1UserId);
         } else {
-            motivator = await User.findOne({ 
+            motivator = await User.findOne({
                 $or: [
                     { mobile: motivatorIdentifier },
                     { referralCode: String(motivatorIdentifier).toUpperCase() }
@@ -47,11 +47,11 @@ const processDonationCommission = async (donationAmount, motivatorIdentifier, do
             type: 'credit',
             reason: 'referral_commission_l1',
             referenceId: donationId,
-            description: `10% Commission for donation from ${donorName} (${donorMobile})`
+            description: ` Commission for donation from ${donorName} (${donorMobile})`
         });
 
         console.log(`L1 Commission: ${comm1} credited to ${motivator.name}`);
-        
+
         // Notify Motivator
         await notificationService.notifyMotivatorDonation(motivator, donationAmount, donorName, donorMobile, 1);
 
@@ -76,13 +76,13 @@ const processDonationCommission = async (donationAmount, motivatorIdentifier, do
                     type: 'credit',
                     reason: 'referral_commission_l2',
                     referenceId: donationId,
-                    description: `3% L2 Commission via ${motivator.name} for donation from ${donorName} (${donorMobile})`
+                    description: ` L2 Commission via ${motivator.name} for donation from ${donorName} (${donorMobile})`
                 });
 
                 console.log(`L2 Commission: ${comm2} credited to ${grandMotivator.name}`);
-        
-        // Notify Grand Motivator
-        await notificationService.notifyMotivatorDonation(grandMotivator, donationAmount, donorName, donorMobile, 2, motivator);
+
+                // Notify Grand Motivator
+                await notificationService.notifyMotivatorDonation(grandMotivator, donationAmount, donorName, donorMobile, 2, motivator);
             }
         }
 
