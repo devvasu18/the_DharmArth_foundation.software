@@ -63,7 +63,6 @@ const userSchema = new mongoose.Schema({
             set: encrypt,
             get: decrypt
         },
-        upiId: { type: String, maxlength: 100 },
         isVerified: { type: Boolean, default: false }
     },
     language: {

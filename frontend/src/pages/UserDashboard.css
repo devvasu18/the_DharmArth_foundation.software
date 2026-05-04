@@ -1933,30 +1933,6 @@
     border: 1px solid #e2e8f0;
 }
 
-.upi-info-banner {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #f0f9ff;
-    border: 1px solid #bae6fd;
-    padding: 1rem 1.25rem;
-    border-radius: 16px;
-    margin-top: 1.5rem;
-}
-
-.info-icon {
-    color: #0284c7;
-    flex-shrink: 0;
-}
-
-.upi-info-banner p {
-    font-size: 0.85rem;
-    color: #0369a1;
-    margin: 0;
-    line-height: 1.4;
-    font-weight: 500;
-}
-
 .onboarding-form input {
     width: 100%;
     padding: 1rem 1rem 1rem 3.25rem;

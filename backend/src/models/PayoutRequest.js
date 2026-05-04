@@ -32,8 +32,7 @@ const payoutRequestSchema = new mongoose.Schema({
             type: String,
             get: decrypt,
             set: encrypt
-        },
-        upiId: String
+        }
     },
     adminNotes: String,
     transactionId: String, // Payment gateway Ref ID

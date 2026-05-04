@@ -341,7 +341,7 @@ router.put('/become-motivator', protect, async (req, res) => {
         const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        const { bankName, accountHolder, accountNumber, ifscCode, upiId } = req.body;
+        const { bankName, accountHolder, accountNumber, ifscCode } = req.body;
 
         console.log(`Starting motivator registration for user: ${user.mobile} (${user.name})`);
 
@@ -353,7 +353,6 @@ router.put('/become-motivator', protect, async (req, res) => {
             accountHolder: accountHolder || '',
             accountNumber: accountNumber || '',
             ifscCode: ifscCode || '',
-            upiId: upiId || '',
             isVerified: false 
         };
 

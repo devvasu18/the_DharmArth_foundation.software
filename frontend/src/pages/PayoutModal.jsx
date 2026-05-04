@@ -89,8 +89,8 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess, onEditDetails }
             return;
         }
 
-        if (!user.payoutCredentials || (!user.payoutCredentials.accountNumber && !user.payoutCredentials.upiId)) {
-            toast.error("Please register your Payout Details (Bank or UPI) in your profile first.");
+        if (!user.payoutCredentials || !user.payoutCredentials.accountNumber) {
+            toast.error("Please register your Payout Details (Bank) in your profile first.");
             return;
         }
 
@@ -203,7 +203,7 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess, onEditDetails }
                                         <div className="confirm-details-list">
                                             <div className="confirm-detail-item">
                                                 <label>Bank</label>
-                                                <span>{user.payoutCredentials.bankName || 'UPI / Mobile Pay'}</span>
+                                                <span>{user.payoutCredentials.bankName}</span>
                                             </div>
                                             <div className="confirm-detail-item">
                                                 <label> Account Holder Name</label>
@@ -211,7 +211,7 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess, onEditDetails }
                                             </div>
                                             <div className="confirm-detail-item">
                                                 <label>Account No.</label>
-                                                <span>{user.payoutCredentials.accountNumber ? user.payoutCredentials.accountNumber.replace(/.(?=.{4})/g, '*') : user.payoutCredentials.upiId}</span>
+                                                <span>{user.payoutCredentials.accountNumber?.replace(/.(?=.{4})/g, '*')}</span>
                                             </div>
                                         </div>
 
@@ -286,12 +286,6 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess, onEditDetails }
                                                 <div className="info-item">
                                                     <label>IFSC</label>
                                                     <span>{user.payoutCredentials.ifscCode}</span>
-                                                </div>
-                                            )}
-                                            {user.payoutCredentials.upiId && (
-                                                <div className="info-item">
-                                                    <label>UPI / Mobile</label>
-                                                    <span>{user.payoutCredentials.upiId}</span>
                                                 </div>
                                             )}
                                             <div className="info-item">

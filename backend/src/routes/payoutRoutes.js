@@ -65,8 +65,8 @@ router.post('/request', protect, async (req, res) => {
             return res.status(400).json({ message: 'Insufficient balance' });
         }
 
-        if (!user.payoutCredentials || (!user.payoutCredentials.accountNumber && !user.payoutCredentials.upiId)) {
-            return res.status(400).json({ message: 'Please update your Payout Details (Bank or UPI) before requesting payout' });
+        if (!user.payoutCredentials || !user.payoutCredentials.accountNumber) {
+            return res.status(400).json({ message: 'Please update your Payout Details (Bank) before requesting payout' });
         }
 
         // ATOMIC DEDUCTION: This prevents Target #6 (Race Conditions)

@@ -21,13 +21,12 @@ const indianBanks = [
 ].sort();
 
 const OnboardingModal = ({ isOpen, onClose, user, setUser }) => {
-    const [payoutMethod, setPayoutMethod] = useState(null); // 'bank' or 'upi'
+    const [payoutMethod, setPayoutMethod] = useState('bank'); // Always 'bank' now
     const [bankForm, setBankForm] = useState({
         bankName: '',
         accountHolder: '',
         accountNumber: '',
-        ifscCode: '',
-        upiId: ''
+        ifscCode: ''
     });
     const [bankLoading, setBankLoading] = useState(false);
 
@@ -55,7 +54,7 @@ const OnboardingModal = ({ isOpen, onClose, user, setUser }) => {
         setBankLoading(true);
         // IFSC Validation: 4 chars, 0, then 6 alphanumeric
         const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
-        if (payoutMethod === 'bank' && !ifscRegex.test(bankForm.ifscCode)) {
+        if (!ifscRegex.test(bankForm.ifscCode)) {
             toast.error("Invalid IFSC Code. Format: ABCD0123456");
             setBankLoading(false);
             return;
@@ -63,13 +62,13 @@ const OnboardingModal = ({ isOpen, onClose, user, setUser }) => {
 
         // Account Number Validation: 9-18 digits
         const accRegex = /^\d{9,18}$/;
-        if (payoutMethod === 'bank' && !accRegex.test(bankForm.accountNumber)) {
+        if (!accRegex.test(bankForm.accountNumber)) {
             toast.error("Invalid Account Number. Should be 9-18 digits.");
             setBankLoading(false);
             return;
         }
 
-        if (payoutMethod === 'bank' && !bankForm.bankName) {
+        if (!bankForm.bankName) {
             toast.error("Please select a Bank Name");
             setBankLoading(false);
             return;
@@ -117,181 +116,111 @@ const OnboardingModal = ({ isOpen, onClose, user, setUser }) => {
                     </div>
 
                     <div className="conditions-container onboarding-modal-body">
-                        <div className="payout-method-selector-label">Select Payout Method</div>
-                        <div className="payout-method-options">
-                            <div
-                                className={`method-option ${payoutMethod === 'bank' ? 'active' : ''}`}
-                                onClick={() => setPayoutMethod('bank')}
-                            >
-                                <div className="option-check"></div>
-                                <Building className="option-icon" size={24} />
-                                <div className="option-info">
-                                    <span className="option-title">Bank Transfer</span>
-                                    <span className="option-desc">Direct to bank account</span>
-                                </div>
-                            </div>
-                            <div
-                                className={`method-option ${payoutMethod === 'upi' ? 'active' : ''}`}
-                                onClick={() => setPayoutMethod('upi')}
-                            >
-                                <div className="option-check"></div>
-                                <Send className="option-icon" size={24} />
-                                <div className="option-info">
-                                    <span className="option-title">UPI / Mobile Pay</span>
-                                    <span className="option-desc">Fast & Instant payout</span>
-                                </div>
-                            </div>
-                        </div>
+                        <div className="payout-method-selector-label">Payout Method: Bank Transfer</div>
 
-                        {payoutMethod && (
-                            <form onSubmit={handleBecomeMotivator} className="onboarding-form">
-                                <div className="form-grid">
-                                    {payoutMethod === 'bank' ? (
-                                        <>
-                                            <div className="input-group">
-                                                <label>Bank Name</label>
-                                                <div className="searchable-dropdown" ref={dropdownRef}>
-                                                    <div
-                                                        className={`dropdown-trigger ${isDropdownOpen ? 'active' : ''}`}
-                                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                                    >
+                        <form onSubmit={handleBecomeMotivator} className="onboarding-form">
+                            <div className="form-grid">
+                                <div className="input-group">
+                                    <label>Bank Name</label>
+                                    <div className="searchable-dropdown" ref={dropdownRef}>
+                                        <div
+                                            className={`dropdown-trigger ${isDropdownOpen ? 'active' : ''}`}
+                                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                        >
 
-                                                        <span className={bankForm.bankName ? 'selected-val' : 'placeholder'}>
-                                                            {bankForm.bankName || "Select Your Bank"}
-                                                        </span>
-                                                        <ChevronDown className={`chevron-icon ${isDropdownOpen ? 'rotate' : ''}`} size={18} />
+                                            <span className={bankForm.bankName ? 'selected-val' : 'placeholder'}>
+                                                {bankForm.bankName || "Select Your Bank"}
+                                            </span>
+                                            <ChevronDown className={`chevron-icon ${isDropdownOpen ? 'rotate' : ''}`} size={18} />
+                                        </div>
+
+                                        <AnimatePresence>
+                                            {isDropdownOpen && (
+                                                <motion.div
+                                                    className="dropdown-menu-list"
+                                                    initial={{ opacity: 0, y: -10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, y: -10 }}
+                                                >
+                                                    <div className="dropdown-search">
+                                                        <div className="search-input-wrapper">
+                                                            <Search size={18} />
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Search bank name..."
+                                                                value={searchTerm}
+                                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                autoFocus
+                                                            />
+                                                        </div>
                                                     </div>
-
-                                                    <AnimatePresence>
-                                                        {isDropdownOpen && (
-                                                            <motion.div
-                                                                className="dropdown-menu-list"
-                                                                initial={{ opacity: 0, y: -10 }}
-                                                                animate={{ opacity: 1, y: 0 }}
-                                                                exit={{ opacity: 0, y: -10 }}
-                                                            >
-                                                                <div className="dropdown-search">
-                                                                    <div className="search-input-wrapper">
-                                                                        <Search size={18} />
-                                                                        <input 
-                                                                            type="text" 
-                                                                            placeholder="Search bank name..." 
-                                                                            value={searchTerm}
-                                                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                                                            onClick={(e) => e.stopPropagation()}
-                                                                            autoFocus
-                                                                        />
-                                                                    </div>
+                                                    <div className="options-container">
+                                                        {filteredBanks.length > 0 ? (
+                                                            filteredBanks.map((bank, index) => (
+                                                                <div
+                                                                    key={index}
+                                                                    className={`dropdown-option ${bankForm.bankName === bank ? 'active' : ''}`}
+                                                                    onClick={() => {
+                                                                        setBankForm({ ...bankForm, bankName: bank });
+                                                                        setIsDropdownOpen(false);
+                                                                        setSearchTerm('');
+                                                                    }}
+                                                                >
+                                                                    {bank}
                                                                 </div>
-                                                                <div className="options-container">
-                                                                    {filteredBanks.length > 0 ? (
-                                                                        filteredBanks.map((bank, index) => (
-                                                                            <div
-                                                                                key={index}
-                                                                                className={`dropdown-option ${bankForm.bankName === bank ? 'active' : ''}`}
-                                                                                onClick={() => {
-                                                                                    setBankForm({ ...bankForm, bankName: bank });
-                                                                                    setIsDropdownOpen(false);
-                                                                                    setSearchTerm('');
-                                                                                }}
-                                                                            >
-                                                                                {bank}
-                                                                            </div>
-                                                                        ))
-                                                                    ) : (
-                                                                        <div className="no-options">No banks found</div>
-                                                                    )}
-                                                                </div>
-                                                            </motion.div>
+                                                            ))
+                                                        ) : (
+                                                            <div className="no-options">No banks found</div>
                                                         )}
-                                                    </AnimatePresence>
-                                                </div>
-                                            </div>
-                                            <div className="input-group">
-                                                <label>Account Holder Name</label>
-                                                <div className="input-with-icon">
-                                                    <User className="field-icon" size={18} />
-                                                    <input required type="text" value={bankForm.accountHolder} onChange={e => setBankForm({ ...bankForm, accountHolder: e.target.value })} placeholder="Your Name" />
-                                                </div>
-                                            </div>
-                                            <div className="input-group">
-                                                <label>Account Number</label>
-                                                <div className="input-with-icon">
-                                                    <CreditCard className="field-icon" size={18} />
-                                                    <input
-                                                        required
-                                                        type="text"
-                                                        minLength={9}
-                                                        maxLength={18}
-                                                        pattern="\d{9,18}"
-                                                        title="Account number should be 9-18 digits"
-                                                        value={bankForm.accountNumber}
-                                                        onChange={e => setBankForm({ ...bankForm, accountNumber: e.target.value.replace(/\D/g, '') })}
-                                                        placeholder="9-18 Digits"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="input-group">
-                                                <label>IFSC Code</label>
-                                                <div className="input-with-icon">
-                                                    <ShieldCheck className="field-icon" size={18} />
-                                                    <input
-                                                        required
-                                                        type="text"
-                                                        maxLength={11}
-                                                        pattern="[A-Z]{4}0[A-Z0-9]{6}"
-                                                        title="Invalid IFSC Code. Format: ABCD0123456"
-                                                        value={bankForm.ifscCode}
-                                                        onChange={e => setBankForm({ ...bankForm, ifscCode: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') })}
-                                                        placeholder="e.g. HDFC0001234"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className="input-group">
-                                                <label>Account Holder Name</label>
-                                                <div className="input-with-icon">
-                                                    <User className="field-icon" size={18} />
-                                                    <input required type="text" value={bankForm.accountHolder} onChange={e => setBankForm({ ...bankForm, accountHolder: e.target.value })} placeholder="Your Name" />
-                                                </div>
-                                            </div>
-                                            <div className="input-group">
-                                                <label>UPI ID or Mobile Number</label>
-                                                <div className="input-with-icon">
-                                                    <Send className="field-icon" size={18} />
-                                                    <input 
-                                                        required 
-                                                        type="text" 
-                                                        pattern="^[\w\.\-]+@[\w\-]+\.[a-z]{2,4}$|^\d{10}$|^[\w\.\-]+@[\w\-]+$"
-                                                        title="Enter a valid UPI ID (e.g. name@bank) or 10-digit mobile number"
-                                                        value={bankForm.upiId} 
-                                                        onChange={e => setBankForm({ ...bankForm, upiId: e.target.value })} 
-                                                        placeholder="e.g. 9876543210@paytm" 
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="upi-compatibility full-width">
-                                                <span className="comp-text">Supports all major apps</span>
-                                                <div className="comp-icons">
-                                                    <div className="comp-badge">G-Pay</div>
-                                                    <div className="comp-badge">PhonePe</div>
-                                                    <div className="comp-badge">Paytm</div>
-                                                    <div className="comp-badge">+ UPI</div>
-                                                </div>
-                                            </div>
-
-                                            <div className="upi-info-banner full-width">
-                                                <ShieldCheck className="info-icon" size={18} />
-                                                <p>Payments will be sent instantly to the UPI app linked to this ID or Mobile Number.</p>
-                                            </div>
-                                        </>
-                                    )}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
                                 </div>
-                            </form>
-                        )}
+                                <div className="input-group">
+                                    <label>Account Holder Name</label>
+                                    <div className="input-with-icon">
+                                        <User className="field-icon" size={18} />
+                                        <input required type="text" value={bankForm.accountHolder} onChange={e => setBankForm({ ...bankForm, accountHolder: e.target.value })} placeholder="Your Name" />
+                                    </div>
+                                </div>
+                                <div className="input-group">
+                                    <label>Account Number</label>
+                                    <div className="input-with-icon">
+                                        <CreditCard className="field-icon" size={18} />
+                                        <input
+                                            required
+                                            type="text"
+                                            minLength={9}
+                                            maxLength={18}
+                                            pattern="\d{9,18}"
+                                            title="Account number should be 9-18 digits"
+                                            value={bankForm.accountNumber}
+                                            onChange={e => setBankForm({ ...bankForm, accountNumber: e.target.value.replace(/\D/g, '') })}
+                                            placeholder="9-18 Digits"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="input-group">
+                                    <label>IFSC Code</label>
+                                    <div className="input-with-icon">
+                                        <ShieldCheck className="field-icon" size={18} />
+                                        <input
+                                            required
+                                            type="text"
+                                            maxLength={11}
+                                            pattern="[A-Z]{4}0[A-Z0-9]{6}"
+                                            title="Invalid IFSC Code. Format: ABCD0123456"
+                                            value={bankForm.ifscCode}
+                                            onChange={e => setBankForm({ ...bankForm, ifscCode: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') })}
+                                            placeholder="e.g. HDFC0001234"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
 
                     {payoutMethod && (
@@ -303,7 +232,7 @@ const OnboardingModal = ({ isOpen, onClose, user, setUser }) => {
                                 className="btn-register-modern"
                                 disabled={bankLoading}
                             >
-                                {bankLoading ? 'Registering...' : `Register ${payoutMethod === 'bank' ? 'Bank' : 'UPI'} & Start Earning`}
+                                {bankLoading ? 'Registering...' : 'Register Bank & Start Earning'}
                                 {!bankLoading && <ArrowRight size={18} />}
                             </button>
                         </div>

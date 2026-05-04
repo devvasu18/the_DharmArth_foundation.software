@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, CreditCard, XCircle, CheckCircle, Clock, AlertTriangle, Search, Trash2, Download, FileText as FilePdf, FileSpreadsheet } from 'lucide-react';
+import { Calendar, CreditCard, XCircle, CheckCircle, Clock, AlertTriangle, Search, Trash2, Download, FileText as FilePdf, FileSpreadsheet, Filter } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useConfirm } from '../../context/ConfirmContext';
@@ -7,7 +7,9 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
-const SubscriptionList = ({ isAdmin = false, searchTerm = '', statusFilter = '' }) => {
+const SubscriptionList = ({ isAdmin = false }) => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
     const [subscriptions, setSubscriptions] = useState([]);
     const [loading, setLoading] = useState(true);
     const { showConfirm } = useConfirm();
@@ -33,17 +35,22 @@ const SubscriptionList = ({ isAdmin = false, searchTerm = '', statusFilter = '' 
                 params: { 
                     search: searchTerm, 
                     status: statusFilter,
-                    page: isAdmin ? page : 1,
-                    limit: isAdmin ? limit : 100 // No pagination for users yet or high limit
+                    page: page,
+                    limit: limit
                 }
             });
 
-            if (isAdmin) {
+            if (data.subscriptions) {
                 setSubscriptions(data.subscriptions);
-                setTotalPages(data.pagination.totalPages);
-                setTotalRecords(data.pagination.totalRecords);
-            } else {
+                if (data.pagination) {
+                    setTotalPages(data.pagination.totalPages || 1);
+                    setTotalRecords(data.pagination.totalRecords || 0);
+                }
+            } else if (Array.isArray(data)) {
+                // Fallback for direct array responses
                 setSubscriptions(data);
+                setTotalPages(1);
+                setTotalRecords(data.length);
             }
         } catch (error) {
             console.error('Error fetching subscriptions:', error);
@@ -309,6 +316,7 @@ const SubscriptionList = ({ isAdmin = false, searchTerm = '', statusFilter = '' 
 
     return (
         <div className={`subscription-list ${isAdmin ? 'admin-table-view' : ''}`}>
+            {/* Export Controls - Now always at the very top */}
             <div className="list-controls-row">
                 <div className="export-tools-unified">
                     <div className="export-group">
@@ -327,6 +335,35 @@ const SubscriptionList = ({ isAdmin = false, searchTerm = '', statusFilter = '' 
                     </div>
                 </div>
             </div>
+
+            {/* Admin Filter Controls - Moved here to be below exports but above table */}
+            {isAdmin && (
+                <div className="admin-controls-card">
+                    <div className="search-box">
+                        <Search size={18} className="search-icon" />
+                        <input
+                            type="text"
+                            placeholder="Search by Name, Mobile, User Code or Sub ID..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="filter-group">
+                        <Filter size={18} />
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="admin-select"
+                        >
+                            <option value="">All Statuses</option>
+                            <option value="active">Active</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="created">Pending</option>
+                        </select>
+                    </div>
+                </div>
+            )}
 
             {!isAdmin ? (
                 // User Table View
@@ -1026,6 +1063,54 @@ const SubscriptionList = ({ isAdmin = false, searchTerm = '', statusFilter = '' 
                 .empty-icon {
                     margin-bottom: 1rem;
                     opacity: 0.5;
+                }
+
+                /* Admin Control Styles (Moved from AdminSubscriptions) */
+                .admin-controls-card {
+                    background: white;
+                    padding: 1.25rem 1.5rem;
+                    border-radius: 12px;
+                    border: 1px solid #e2e8f0;
+                    display: flex;
+                    gap: 1.5rem;
+                    margin: 1rem 0 2rem 0;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                }
+                .search-box {
+                    flex: 1;
+                    position: relative;
+                }
+                .search-icon {
+                    position: absolute;
+                    left: 1rem;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: #94a3b8;
+                }
+                .search-box input {
+                    width: 100%;
+                    padding: 0.75rem 1rem 0.75rem 3rem;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    outline: none;
+                    transition: border-color 0.2s;
+                }
+                .search-box input:focus {
+                    border-color: var(--primary);
+                }
+                .filter-group {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    color: #64748b;
+                }
+                .admin-select {
+                    padding: 0.75rem 1.5rem;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    background: white;
+                    outline: none;
+                    cursor: pointer;
                 }
             `}</style>
         </div>

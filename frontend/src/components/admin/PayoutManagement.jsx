@@ -329,15 +329,10 @@ const PayoutManagement = () => {
                                             <label>IFSC Code</label>
                                             <strong>{selectedPayout.payoutDetails?.ifscCode}</strong>
                                         </div>
-                                        {selectedPayout.payoutDetails?.upiId && (
-                                            <div className="acc-row">
-                                                <label>UPI ID</label>
-                                                <strong>{selectedPayout.payoutDetails?.upiId}</strong>
-                                            </div>
-                                        )}
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
+                                 </div>
+                             </div>
 
                             {selectedPayout.status === 'pending' ? (
                                 <div className="processing-form">

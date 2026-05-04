@@ -346,10 +346,10 @@ const UserDashboard = () => {
                                 <button
                                     className="payout-btn"
                                     onClick={() => {
-                                        const hasPayoutDetails = user?.payoutCredentials && (user?.payoutCredentials.accountNumber || user?.payoutCredentials.upiId);
+                                        const hasPayoutDetails = user?.payoutCredentials && user?.payoutCredentials.accountNumber;
                                         if (!user?.isMotivator || !hasPayoutDetails) {
                                             setIsOnboardingModalOpen(true);
-                                            toast("Please register your Payout Details (Bank or UPI) to continue.", { icon: 'ℹ️' });
+                                            toast("Please register your Payout Details (Bank) to continue.", { icon: 'ℹ️' });
                                         } else {
                                             setIsPayoutModalOpen(true);
                                         }
