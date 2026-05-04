@@ -718,32 +718,7 @@ const UserDashboard = () => {
                                     <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Amount Requested</label>
                                     <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b' }}>₹ {selectedTxnDetails.amount.toLocaleString()}</div>
                                 </div>
-
-                                {selectedTxnDetails.transactionId && (
-                                    <div style={{ marginBottom: '1rem' }}>
-                                        <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Transaction ID / Ref</label>
-                                        <div style={{ wordBreak: 'break-all', fontWeight: 600 }}>{selectedTxnDetails.transactionId}</div>
-                                    </div>
-                                )}
-
-                                {selectedTxnDetails.adminNotes && (
-                                    <div style={{ marginBottom: '1rem' }}>
-                                        <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Admin Message</label>
-                                        <div style={{ color: '#475569', fontStyle: 'italic' }}>{selectedTxnDetails.adminNotes}</div>
-                                    </div>
-                                )}
                             </div>
-
-                            {selectedTxnDetails.proofImage && (
-                                <div className="proof-section">
-                                    <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Payment Proof (Screenshot)</label>
-                                    <a href={selectedTxnDetails.proofImage} target="_blank" rel="noreferrer" className="proof-image-link">
-                                        <div style={{ borderRadius: '12px', overflow: 'hidden', border: '2px solid #e2e8f0' }}>
-                                            <img src={selectedTxnDetails.proofImage} alt="Payment Proof" style={{ width: '100%', maxHeight: '300px', objectFit: 'contain' }} />
-                                        </div>
-                                    </a>
-                                </div>
-                            )}
 
                             <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center' }}>
                                 Processed at: {selectedTxnDetails.processedAt ? new Date(selectedTxnDetails.processedAt).toLocaleString() : 'Pending'}

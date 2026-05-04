@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import Navbar from '../components/layout/Navbar';
+
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { Users, Filter, CheckCircle, XCircle, Send, ArrowRight, Smartphone, Download, FileText as FilePdf, FileSpreadsheet } from 'lucide-react';
@@ -14,7 +16,7 @@ const MyReferrals = () => {
     const [referrals, setReferrals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('active'); // active, inactive
-    
+
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -32,7 +34,7 @@ const MyReferrals = () => {
             const { data } = await api.get('/subscriptions/motivator/referrals', {
                 params: { status: statusFilter, page, limit }
             });
-            
+
             if (data.pagination) {
                 setReferrals(data.subscriptions);
                 setTotalPages(data.pagination.totalPages);
@@ -69,7 +71,7 @@ const MyReferrals = () => {
         const donationUrl = `${baseUrl}/donate?motivator=${user?.mobile}&name=${encodeURIComponent(donorName)}&mobile=${mobile}&amount=${amount}&is80G=${is80G}&pan=${pan}&aadhaar=${aadhaar}`;
 
         const message = `Namaste ${donorName}, this is ${motivatorName} from The DharmArth Foundation. 🕉️\n\nYour monthly contribution of ₹${amount} has stopped. We invite you to continue your noble support for our mission. 🙏\n\nYou can restart your donation with just one click here: ${donationUrl}\n\nThank you for your kindness!`;
-        
+
         const whatsappUrl = `https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
     };
@@ -154,173 +156,175 @@ const MyReferrals = () => {
     };
 
     return (
-        <div className="my-referrals-container">
-            <header className="referrals-header">
-                <div className="header-content">
-                    <h1>
-                        <Users className="header-icon" />
-                        My Referrals
-                    </h1>
-                    <p>Track donors motivated by you and help them stay connected.</p>
-                </div>
-            </header>
-
-            <div className="referrals-controls">
-                <div className="filter-tabs">
-                    <button 
-                        className={`tab ${statusFilter === 'active' ? 'active' : ''}`}
-                        onClick={() => { setStatusFilter('active'); setCurrentPage(1); }}
-                    >
-                        Active Donors
-                    </button>
-                    <button 
-                        className={`tab ${statusFilter === 'inactive' ? 'active' : ''}`}
-                        onClick={() => { setStatusFilter('inactive'); setCurrentPage(1); }}
-                    >
-                        Inactive Donors
-                    </button>
-                </div>
-
-                <div className="export-actions">
-                    <div className="export-group">
-                        <span className="export-label">Export Current:</span>
-                        <button className="btn-export excel" onClick={() => exportToExcel(false)} disabled={isExporting}>
-                            <FileSpreadsheet size={16} />
-                        </button>
-                        <button className="btn-export pdf" onClick={() => exportToPDF(false)} disabled={isExporting}>
-                            <FilePdf size={16} />
-                        </button>
+        <div className="page-wrapper">
+            <Navbar />
+            <div className="my-referrals-container">
+                <header className="referrals-header">
+                    <div className="header-content">
+                        <h1>
+                            <Users className="header-icon" />
+                            My Referrals
+                        </h1>
+                        <p>Track donors motivated by you and help them stay connected.</p>
                     </div>
-                    <div className="export-group">
-                        <span className="export-label">Export All:</span>
-                        <button className="btn-export-all excel" onClick={() => exportToExcel(true)} disabled={isExporting}>
-                            Excel
-                        </button>
-                        <button className="btn-export-all pdf" onClick={() => exportToPDF(true)} disabled={isExporting}>
-                            PDF
-                        </button>
-                    </div>
-                </div>
-            </div>
+                </header>
 
-            <div className="referrals-list">
-                {loading ? (
-                    <div className="loading-state">Loading your referrals...</div>
-                ) : referrals.length === 0 ? (
-                    <div className="empty-state">
-                        <Users size={48} />
-                        <h3>No {statusFilter} referrals found</h3>
-                        <p>Share your referral code to motivate more people!</p>
-                    </div>
-                ) : (
-                    <>
-                        <div className="referral-table-container">
-                            <table className="referral-table">
-                                <thead>
-                                    <tr>
-                                        <th>Donor</th>
-                                        <th>Mobile</th>
-                                        <th>Contribution</th>
-                                        <th>Started On</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {referrals.map((ref) => (
-                                        <tr key={ref._id}>
-                                            <td>
-                                                <div className="donor-info-cell">
-                                                    <div className="donor-avatar-small">
-                                                        {ref.donorName.charAt(0).toUpperCase()}
-                                                    </div>
-                                                    <span className="donor-name-text">{ref.donorName}</span>
-                                                </div>
-                                            </td>
-                                            <td>{ref.donorMobile}</td>
-                                            <td>
-                                                <span className="amount-text">₹{ref.amount}/mo</span>
-                                            </td>
-                                            <td>{new Date(ref.createdAt).toLocaleDateString()}</td>
-                                            <td>
-                                                <div className={`status-pill-small ${ref.status}`}>
-                                                    {ref.status.toUpperCase()}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                {statusFilter === 'inactive' ? (
-                                                    <button 
-                                                        className="rejoin-btn-small"
-                                                        onClick={() => handleRejoinWhatsApp(ref)}
-                                                    >
-                                                        <Send size={14} />
-                                                        Re-invite
-                                                    </button>
-                                                ) : (
-                                                    <span className="active-label">Active</span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                <div className="referrals-controls">
+                    <div className="status-filter-wrapper">
+                        <div className="filter-group">
+                            <Filter size={18} className="filter-icon" />
+                            <span className="filter-label">Status:</span>
+                            <select 
+                                className="status-select"
+                                value={statusFilter}
+                                onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+                            >
+                                <option value="active">Active Donors</option>
+                                <option value="inactive">Inactive Donors</option>
+                            </select>
                         </div>
+                    </div>
 
-                        {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="referral-pagination">
-                                <div className="pagination-info">
-                                    Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords} donors
-                                </div>
-                                <div className="pagination-buttons">
-                                    <button 
-                                        className="p-btn" 
-                                        disabled={currentPage === 1}
-                                        onClick={() => handlePageChange(currentPage - 1)}
-                                    >
-                                        Previous
-                                    </button>
-                                    
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
-                                        if (
-                                            totalPages <= 5 || 
-                                            pageNum === 1 || 
-                                            pageNum === totalPages || 
-                                            (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-                                        ) {
-                                            return (
-                                                <button 
-                                                    key={pageNum}
-                                                    className={`p-btn ${currentPage === pageNum ? 'active' : ''}`}
-                                                    onClick={() => handlePageChange(pageNum)}
-                                                >
-                                                    {pageNum}
-                                                </button>
-                                            );
-                                        } else if (
-                                            pageNum === currentPage - 2 || 
-                                            pageNum === currentPage + 2
-                                        ) {
-                                            return <span key={pageNum} className="p-dots">...</span>;
-                                        }
-                                        return null;
-                                    })}
+                    <div className="export-actions">
+                        <div className="export-group">
+                            <span className="export-label">Export page:</span>
+                            <button className="btn-export excel" onClick={() => exportToExcel(false)} disabled={isExporting}>
+                                <FileSpreadsheet size={16} />
+                            </button>
+                            <button className="btn-export pdf" onClick={() => exportToPDF(false)} disabled={isExporting}>
+                                <FilePdf size={16} />
+                            </button>
+                        </div>
+                        <div className="export-group">
+                            <span className="export-label">Export All:</span>
+                            <button className="btn-export-all excel" onClick={() => exportToExcel(true)} disabled={isExporting}>
+                                Excel
+                            </button>
+                            <button className="btn-export-all pdf" onClick={() => exportToPDF(true)} disabled={isExporting}>
+                                PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-                                    <button 
-                                        className="p-btn" 
-                                        disabled={currentPage === totalPages}
-                                        onClick={() => handlePageChange(currentPage + 1)}
-                                    >
-                                        Next
-                                    </button>
-                                </div>
+                <div className="referrals-list">
+                    {loading ? (
+                        <div className="loading-state">Loading your referrals...</div>
+                    ) : referrals.length === 0 ? (
+                        <div className="empty-state">
+                            <Users size={48} />
+                            <h3>No {statusFilter} referrals found</h3>
+                            <p>Share your referral code to motivate more people!</p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="referral-table-container">
+                                <table className="referral-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Donor</th>
+                                            <th>Mobile</th>
+                                            <th>Contribution</th>
+                                            <th>Started On</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {referrals.map((ref) => (
+                                            <tr key={ref._id}>
+                                                <td>
+                                                    <div className="donor-info-cell">
+                                                        <div className="donor-avatar-small">
+                                                            {ref.donorName.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <span className="donor-name-text">{ref.donorName}</span>
+                                                    </div>
+                                                </td>
+                                                <td>{ref.donorMobile}</td>
+                                                <td>
+                                                    <span className="amount-text">₹{ref.amount}/mo</span>
+                                                </td>
+                                                <td>{new Date(ref.createdAt).toLocaleDateString()}</td>
+                                                <td>
+                                                    <div className={`status-pill-small ${ref.status}`}>
+                                                        {ref.status.toUpperCase()}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    {statusFilter === 'inactive' ? (
+                                                        <button
+                                                            className="rejoin-btn-small"
+                                                            onClick={() => handleRejoinWhatsApp(ref)}
+                                                        >
+                                                            <Send size={14} />
+                                                            Re-invite
+                                                        </button>
+                                                    ) : (
+                                                        <span className="active-label">Active</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                        )}
-                    </>
-                )}
-            </div>
 
-            <style>{`
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="referral-pagination">
+                                    <div className="pagination-info">
+                                        Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords} donors
+                                    </div>
+                                    <div className="pagination-buttons">
+                                        <button
+                                            className="p-btn"
+                                            disabled={currentPage === 1}
+                                            onClick={() => handlePageChange(currentPage - 1)}
+                                        >
+                                            Previous
+                                        </button>
+
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                                            if (
+                                                totalPages <= 5 ||
+                                                pageNum === 1 ||
+                                                pageNum === totalPages ||
+                                                (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                                            ) {
+                                                return (
+                                                    <button
+                                                        key={pageNum}
+                                                        className={`p-btn ${currentPage === pageNum ? 'active' : ''}`}
+                                                        onClick={() => handlePageChange(pageNum)}
+                                                    >
+                                                        {pageNum}
+                                                    </button>
+                                                );
+                                            } else if (
+                                                pageNum === currentPage - 2 ||
+                                                pageNum === currentPage + 2
+                                            ) {
+                                                return <span key={pageNum} className="p-dots">...</span>;
+                                            }
+                                            return null;
+                                        })}
+
+                                        <button
+                                            className="p-btn"
+                                            disabled={currentPage === totalPages}
+                                            onClick={() => handlePageChange(currentPage + 1)}
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+
+                <style>{`
                 .my-referrals-container {
                     padding: 2rem;
                     max-width: 1200px;
@@ -353,30 +357,43 @@ const MyReferrals = () => {
                     align-items: center;
                     flex-wrap: wrap;
                     gap: 1.5rem;
+                    padding: 1rem;
+                    background: #f8fafc;
+                    border-radius: 16px;
+                    border: 1px solid #e2e8f0;
                 }
-                .filter-tabs {
+                .status-filter-wrapper {
                     display: flex;
-                    gap: 1rem;
-                    background: #f1f5f9;
-                    padding: 0.4rem;
-                    border-radius: 12px;
-                    width: fit-content;
+                    align-items: center;
                 }
-                .tab {
-                    padding: 0.6rem 1.2rem;
-                    border-radius: 8px;
+                .filter-group {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    background: white;
+                    padding: 0.5rem 1rem;
+                    border-radius: 10px;
+                    border: 1px solid #e2e8f0;
+                }
+                .filter-icon {
+                    color: #64748b;
+                }
+                .filter-label {
+                    font-size: 0.85rem;
+                    font-weight: 700;
+                    color: #475569;
+                    text-transform: uppercase;
+                    letter-spacing: 0.025em;
+                }
+                .status-select {
                     border: none;
                     background: transparent;
-                    color: #64748b;
+                    font-size: 0.95rem;
                     font-weight: 600;
+                    color: #1e293b;
                     cursor: pointer;
-                    transition: all 0.2s;
-                    font-size: 0.9rem;
-                }
-                .tab.active {
-                    background: white;
-                    color: #7c3aed;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                    outline: none;
+                    padding-right: 0.5rem;
                 }
 
                 .export-actions {
@@ -599,6 +616,8 @@ const MyReferrals = () => {
                     margin: 1rem 0 0.5rem;
                 }
             `}</style>
+
+            </div>
         </div>
     );
 };

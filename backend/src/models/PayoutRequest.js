@@ -17,7 +17,7 @@ const payoutRequestSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'approved', 'rejected', 'completed'],
+        enum: ['pending', 'approved', 'rejected', 'completed', 'exported'],
         default: 'pending'
     },
     payoutDetails: {

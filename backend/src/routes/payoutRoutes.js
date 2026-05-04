@@ -144,6 +144,8 @@ router.get('/', protect, checkPermission('Transaction Management', 'view'), asyn
         } else if (status && status !== 'all') {
             if (status === 'processed') {
                 query.status = { $in: ['completed', 'rejected'] };
+            } else if (status === 'pending_all') {
+                query.status = { $in: ['pending', 'exported'] };
             } else {
                 query.status = status;
             }
@@ -161,6 +163,12 @@ router.get('/', protect, checkPermission('Transaction Management', 'view'), asyn
         }
 
         const total = await PayoutRequest.countDocuments(query);
+        const stats = await PayoutRequest.aggregate([
+            { $match: query },
+            { $group: { _id: null, totalAmount: { $sum: "$amount" } } }
+        ]);
+        const totalAmount = stats.length > 0 ? stats[0].totalAmount : 0;
+
         const requests = await PayoutRequest.find(query)
             .populate('user', 'name mobile email')
             .sort({ createdAt: -1 })
@@ -171,6 +179,7 @@ router.get('/', protect, checkPermission('Transaction Management', 'view'), asyn
             payouts: requests,
             metadata: {
                 total,
+                totalAmount,
                 page,
                 pages: Math.ceil(total / limit),
                 limit
@@ -365,6 +374,26 @@ router.put('/resolve-dispute/:id', protect, checkPermission('Transaction Managem
         }
 
         res.json({ message: 'Help request marked as resolved', payout });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Admin: Bulk Update Payout Status (e.g. mark as exported)
+// @route   PUT /api/payouts/bulk/status
+router.put('/bulk/status', protect, checkPermission('Transaction Management', 'edit'), async (req, res) => {
+    try {
+        const { ids, status } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ message: 'No IDs provided' });
+        }
+
+        await PayoutRequest.updateMany(
+            { _id: { $in: ids } },
+            { $set: { status: status, processedAt: Date.now() } }
+        );
+
+        res.json({ success: true, message: `Updated ${ids.length} payouts to ${status}` });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
