@@ -17,6 +17,7 @@ const seedData = async () => {
         { moduleName: 'Prescription Management', availableActions: ['view', 'edit'] },
         { moduleName: 'Order Management', availableActions: ['view', 'edit'] },
         { moduleName: 'Delivery Management', availableActions: ['view', 'create', 'edit', 'delete'] },
+        { moduleName: 'CMS Management', availableActions: ['view', 'create', 'edit', 'delete'] },
     ];
 
     for (const mod of modules) {

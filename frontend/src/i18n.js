@@ -106,7 +106,7 @@ i18n
                         "p2": " Have Been Saved With Monthly Contributions From ",
                         "p3": "4,21,908 Contributors",
                         "p4": ". Save Countless Lives By Giving Monthly.",
-                        "cta": "START MONTHLY GIVING"
+                        "cta": "Join & Earn Monthly"
                     },
                     "donatePage": {
                         "title": "Select Donation Amount",

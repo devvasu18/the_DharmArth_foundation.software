@@ -24,6 +24,7 @@ const MyReferrals = lazy(() => import('./pages/MyReferrals'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Events = lazy(() => import('./pages/Events'));
 const EventDetail = lazy(() => import('./pages/EventDetail'));
+const DynamicPage = lazy(() => import('./pages/DynamicPage'));
 
 // Admin Components
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
@@ -55,6 +56,7 @@ const AdminDelivery = lazy(() => import('./components/admin/AdminDelivery'));
 const AdminDispatch = lazy(() => import('./components/admin/AdminDispatch'));
 const AdminPharmacyOrders = lazy(() => import('./components/admin/AdminPharmacyOrders'));
 const AdminWhatsApp = lazy(() => import('./components/admin/AdminWhatsApp'));
+const CMSDashboard = lazy(() => import('./pages/admin/cms/CMSDashboard'));
 const DeliveryBoyDashboard = lazy(() => import('./pages/DeliveryBoyDashboard'));
 const SharedCheckout = lazy(() => import('./pages/SharedCheckout'));
 const SharedTracker = lazy(() => import('./pages/SharedTracker'));
@@ -97,6 +99,7 @@ const router = createBrowserRouter(
       
       <Route path="/checkout/:id" element={<SharedCheckout />} />
       <Route path="/track/:orderId" element={<SharedTracker />} />
+      <Route path="/p/:slug" element={<DynamicPage />} />
 
       {/* Admin Routes - Strictly Guarded */}
       <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>} errorElement={<AppErrorBoundary />}>
@@ -124,6 +127,7 @@ const router = createBrowserRouter(
         <Route path="whatsapp" element={<AdminWhatsApp />} />
         <Route path="subscriptions" element={<AdminSubscriptions />} />
         <Route path="reports/commission" element={<CommissionReports />} />
+        <Route path="cms" element={<CMSDashboard />} />
       </Route>
 
       <Route path="/admin-user-explorer" element={<AdminRoute><AdminLayout /></AdminRoute>} errorElement={<AppErrorBoundary />}>

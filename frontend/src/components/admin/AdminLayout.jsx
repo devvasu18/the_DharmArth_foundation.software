@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet, Calendar, FileText, Stethoscope, MessageSquare, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Users, Image, Settings, LogOut, Search, Bell, Maximize, Menu, ChevronDown, CheckCheck, TrendingUp, Wallet, Calendar, FileText, Stethoscope, MessageSquare, CreditCard, Globe } from 'lucide-react';
 import { io } from "socket.io-client";
 import toast from 'react-hot-toast';
 import api, { API_BASE_URL } from '../../services/api';
@@ -205,6 +205,10 @@ const AdminLayout = () => {
                     <NavLink to="/admin/crowdfunding" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <TrendingUp size={20} title={isSidebarCollapsed ? "Crowdfunding" : ""} />
                         <span className="admin-link-text">Crowdfunding</span>
+                    </NavLink>
+                    <NavLink to="/admin/cms" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
+                        <Globe size={20} title={isSidebarCollapsed ? "Page Management" : ""} />
+                        <span className="admin-link-text">Page Management</span>
                     </NavLink>
                     {/* Events Dropdown */}
                     <div className="admin-link-dropdown-container">

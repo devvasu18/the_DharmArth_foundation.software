@@ -134,7 +134,7 @@ const AdminSliders = () => {
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h3>Hero Sliders Manager</h3>
+                <h3> Home page Hero Sliders Manager</h3>
             </div>
 
             {/* Tabs */}

@@ -142,11 +142,15 @@ const Navbar = () => {
                     {!isDeliveryPartner && (
                         <>
 
+
                             <NavLink to="/events" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.fundraiseFor')}</NavLink>
+                            <NavLink to="/p/join-and-earn" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('join&Earn')}</NavLink>
+                            <NavLink to="/p/about-us" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>About Us</NavLink>
                             {/* <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.doctorAvailability')}</NavLink>
                             <NavLink to="/order-medicine" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Order Medicine</NavLink> */}
                         </>
                     )}
+
 
                     {user?.isSuperAdmin && (
                         <NavLink to="/admin" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.admin')}</NavLink>

@@ -1,0 +1,129 @@
+.faq-section {
+  padding: 6rem 0;
+  background-color: var(--bg-light);
+}
+
+.faq-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-6);
+}
+
+.faq-header {
+  text-center;
+  margin-bottom: 4rem;
+}
+
+.faq-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 1.5rem;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 191, 165, 0.2);
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.faq-item {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.faq-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 10px 25px -5px rgba(0, 191, 165, 0.1);
+  transform: translateY(-2px);
+}
+
+.faq-item.active {
+  border-color: var(--primary);
+  background-color: #f8ffff;
+  box-shadow: 0 10px 25px -5px rgba(0, 191, 165, 0.15);
+}
+
+.faq-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.faq-question {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-main);
+  transition: color 0.3s;
+}
+
+.faq-item.active .faq-question,
+.faq-item:hover .faq-question {
+  color: var(--primary);
+}
+
+.faq-indicator {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background-color: var(--bg-light);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faq-item:hover .faq-indicator {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.faq-item.active .faq-indicator {
+  background-color: var(--primary);
+  color: white;
+  transform: rotate(180deg);
+}
+
+.faq-answer-wrapper {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faq-item.active .faq-answer-wrapper {
+  max-height: 500px;
+  opacity: 1;
+}
+
+.faq-answer-content {
+  padding: 0 2rem 1.5rem 2rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.faq-divider {
+  height: 1px;
+  width: 100%;
+  background-color: var(--primary-light);
+  margin-bottom: 1rem;
+}
