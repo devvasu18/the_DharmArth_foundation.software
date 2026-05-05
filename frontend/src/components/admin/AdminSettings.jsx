@@ -327,7 +327,7 @@ const AdminSettings = () => {
                     <tr>
                         <td><strong>Payout Configuration</strong> (Min Balance & Lock-in)</td>
                         <td>
-                            Min: ₹{payoutConfig.minBalance} | Lock-in: {payoutConfig.lockInMonths}m {payoutConfig.lockInDays}d {payoutConfig.lockInHours}h
+                            Min: ₹{payoutConfig.minBalance}
                         </td>
                         <td>
                             <button
@@ -473,15 +473,15 @@ const AdminSettings = () => {
                         backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center',
                         zIndex: 2000, backdropFilter: 'blur(8px)', padding: '20px'
                     }}>
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            style={{ 
-                                background: '#f8fafc', 
-                                borderRadius: '24px', 
+                            style={{
+                                background: '#f8fafc',
+                                borderRadius: '24px',
                                 width: '100%',
-                                maxWidth: '800px', 
+                                maxWidth: '800px',
                                 maxHeight: '95vh',
                                 overflow: 'hidden',
                                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
@@ -490,20 +490,20 @@ const AdminSettings = () => {
                             }}
                         >
                             {/* Modal Header */}
-                            <div style={{ 
-                                background: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)', 
-                                padding: '2rem', 
+                            <div style={{
+                                background: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)',
+                                padding: '2rem',
                                 color: 'white',
                                 position: 'relative'
                             }}>
-                                <button 
+                                <button
                                     onClick={() => setWhatsappModalOpen(false)}
-                                    style={{ 
-                                        position: 'absolute', top: '1.5rem', right: '1.5rem', 
-                                        background: 'rgba(255,255,255,0.2)', border: 'none', 
-                                        borderRadius: '50%', width: '36px', height: '36px', 
-                                        color: 'white', cursor: 'pointer', display: 'flex', 
-                                        alignItems: 'center', justifyContent: 'center' 
+                                    style={{
+                                        position: 'absolute', top: '1.5rem', right: '1.5rem',
+                                        background: 'rgba(255,255,255,0.2)', border: 'none',
+                                        borderRadius: '50%', width: '36px', height: '36px',
+                                        color: 'white', cursor: 'pointer', display: 'flex',
+                                        alignItems: 'center', justifyContent: 'center'
                                     }}
                                 >
                                     <X size={20} />
@@ -522,11 +522,11 @@ const AdminSettings = () => {
                             {/* Modal Body */}
                             <div style={{ padding: '2rem', overflowY: 'auto', flex: 1 }}>
                                 {/* Placeholders Info */}
-                                <div style={{ 
-                                    background: '#ffffff', 
-                                    border: '1px solid #e2e8f0', 
-                                    borderRadius: '16px', 
-                                    padding: '1.25rem', 
+                                <div style={{
+                                    background: '#ffffff',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '16px',
+                                    padding: '1.25rem',
                                     marginBottom: '2rem',
                                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
                                 }}>
@@ -536,19 +536,19 @@ const AdminSettings = () => {
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                         {['{name}', '{amount}', '{commission}', '{motivator_name}', '{donor_name}', '{donor_mobile}', '{l1_motivator_name}', '{l1_motivator_mobile}'].map(tag => (
-                                            <span key={tag} style={{ 
-                                                background: '#f1f5f9', 
-                                                color: '#475569', 
-                                                padding: '4px 10px', 
-                                                borderRadius: '8px', 
-                                                fontSize: '0.8rem', 
+                                            <span key={tag} style={{
+                                                background: '#f1f5f9',
+                                                color: '#475569',
+                                                padding: '4px 10px',
+                                                borderRadius: '8px',
+                                                fontSize: '0.8rem',
                                                 fontWeight: 600,
                                                 border: '1px solid #e2e8f0',
                                                 cursor: 'default',
                                                 transition: 'all 0.2s'
                                             }}
-                                            onMouseEnter={(e) => { e.target.style.background = '#e2e8f0'; e.target.style.color = '#1e293b'; }}
-                                            onMouseLeave={(e) => { e.target.style.background = '#f1f5f9'; e.target.style.color = '#475569'; }}
+                                                onMouseEnter={(e) => { e.target.style.background = '#e2e8f0'; e.target.style.color = '#1e293b'; }}
+                                                onMouseLeave={(e) => { e.target.style.background = '#f1f5f9'; e.target.style.color = '#475569'; }}
                                             >
                                                 {tag}
                                             </span>
@@ -614,29 +614,29 @@ const AdminSettings = () => {
                             </div>
 
                             {/* Modal Footer */}
-                            <div style={{ 
-                                padding: '1.5rem 2rem', 
-                                background: 'white', 
+                            <div style={{
+                                padding: '1.5rem 2rem',
+                                background: 'white',
                                 borderTop: '1px solid #e2e8f0',
-                                display: 'flex', 
-                                justifyContent: 'flex-end', 
-                                gap: '1rem' 
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                                gap: '1rem'
                             }}>
-                                <button 
-                                    className="btn btn-outline" 
+                                <button
+                                    className="btn btn-outline"
                                     onClick={() => setWhatsappModalOpen(false)}
                                     style={{ padding: '10px 24px', borderRadius: '10px' }}
                                 >
                                     Cancel
                                 </button>
-                                <button 
-                                    className="btn bg-primary text-white" 
+                                <button
+                                    className="btn bg-primary text-white"
                                     onClick={handleSaveWhatsappConfig}
-                                    style={{ 
-                                        padding: '10px 28px', 
-                                        borderRadius: '10px', 
-                                        display: 'flex', 
-                                        alignItems: 'center', 
+                                    style={{
+                                        padding: '10px 28px',
+                                        borderRadius: '10px',
+                                        display: 'flex',
+                                        alignItems: 'center',
                                         gap: '8px',
                                         background: '#00bfa5',
                                         fontWeight: 700
@@ -677,8 +677,8 @@ const AdminSettings = () => {
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
                             <button className="btn btn-outline" onClick={() => setPayoutModalOpen(false)} style={{ borderRadius: '10px' }}>Cancel</button>
-                            <button 
-                                className="btn bg-primary text-white" 
+                            <button
+                                className="btn bg-primary text-white"
                                 onClick={handleSavePayoutConfig}
                                 style={{ borderRadius: '10px', background: '#00bfa5', fontWeight: 700 }}
                             >
@@ -696,11 +696,11 @@ const AdminSettings = () => {
                     backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
                     zIndex: 2000
                 }}>
-                    <div style={{ 
-                        background: 'white', 
-                        padding: '2rem', 
-                        borderRadius: '24px', 
-                        minWidth: '450px', 
+                    <div style={{
+                        background: 'white',
+                        padding: '2rem',
+                        borderRadius: '24px',
+                        minWidth: '450px',
                         maxWidth: '90%',
                         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
                     }}>
@@ -710,7 +710,7 @@ const AdminSettings = () => {
                                 <X size={24} />
                             </button>
                         </div>
-                        
+
                         <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '1.5rem' }}>
                             This text appears directly under the main title on the donation page.
                         </p>
@@ -722,10 +722,10 @@ const AdminSettings = () => {
                                 </label>
                                 <textarea
                                     className="form-input"
-                                    style={{ 
-                                        width: '100%', 
-                                        padding: '12px', 
-                                        borderRadius: '12px', 
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px',
+                                        borderRadius: '12px',
                                         border: '1px solid #e2e8f0',
                                         minHeight: '80px',
                                         fontSize: '0.95rem',
@@ -743,10 +743,10 @@ const AdminSettings = () => {
                                 </label>
                                 <textarea
                                     className="form-input"
-                                    style={{ 
-                                        width: '100%', 
-                                        padding: '12px', 
-                                        borderRadius: '12px', 
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px',
+                                        borderRadius: '12px',
                                         border: '1px solid #e2e8f0',
                                         minHeight: '80px',
                                         fontSize: '0.95rem',
@@ -760,18 +760,18 @@ const AdminSettings = () => {
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                            <button 
-                                className="btn btn-outline" 
-                                onClick={() => setLabelModalOpen(false)} 
+                            <button
+                                className="btn btn-outline"
+                                onClick={() => setLabelModalOpen(false)}
                                 style={{ borderRadius: '12px', padding: '10px 20px' }}
                             >
                                 Cancel
                             </button>
-                            <button 
-                                className="btn bg-primary text-white" 
+                            <button
+                                className="btn bg-primary text-white"
                                 onClick={handleSaveLabel}
-                                style={{ 
-                                    borderRadius: '12px', 
+                                style={{
+                                    borderRadius: '12px',
                                     padding: '10px 24px',
                                     background: '#00bfa5',
                                     fontWeight: 700,

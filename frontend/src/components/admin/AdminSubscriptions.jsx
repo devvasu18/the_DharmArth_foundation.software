@@ -13,9 +13,9 @@ const AdminSubscriptions = () => {
 
             <style>{`
                 .admin-page-container {
-                    padding: 2rem;
+                    padding: 0 2rem 2rem;
                     max-width: 1400px;
-                    margin: 0 auto;
+                    margin: -2.5rem auto 0;
                 }
                 .admin-header {
                     margin-bottom: 1.5rem;
