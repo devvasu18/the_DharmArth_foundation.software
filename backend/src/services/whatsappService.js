@@ -307,6 +307,27 @@ class WhatsappService {
         const message = `Your OTP for The DharmArth Foundation login is: *${otp}*. Valid for 10 minutes`;
         return this._sendWhatsAppNow(mobile, message); // Direct send for time-critical OTP
     }
+
+    /**
+     * Specialized: Send OTP via Email
+     */
+    async sendOTPByEmail(email, otp, name = "User") {
+        const subject = `${otp} is your verification code`;
+        const html = `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
+                <h2 style="color: #2c3e50; text-align: center;">Verification Code</h2>
+                <p>Hello ${name},</p>
+                <p>Your OTP for The DharmArth Foundation login/password reset is:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <span style="font-size: 32px; font-weight: 800; letter-spacing: 5px; color: #00bfa5; padding: 10px 20px; border: 2px dashed #00bfa5; border-radius: 8px;">${otp}</span>
+                </div>
+                <p>This code is valid for <strong>10 minutes</strong>. Please do not share this code with anyone.</p>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                <p style="font-size: 0.8em; color: #777; text-align: center;">If you didn't request this, please ignore this email.</p>
+            </div>
+        `;
+        return this._sendEmailNow(email, { subject, html, name });
+    }
 }
 
 module.exports = new WhatsappService();

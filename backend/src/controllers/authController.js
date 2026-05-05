@@ -40,14 +40,18 @@ const sendTokenResponse = (user, statusCode, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = async (req, res) => {
-    const { mobile, password } = req.body;
+    const { identifier, mobile, password } = req.body;
+    const searchId = identifier || mobile;
 
     try {
-        const user = await User.findOne({ mobile }).populate('roles').populate('referredBy', 'name mobile');
+        const user = await User.findOne({
+            $or: [
+                { mobile: searchId },
+                { email: searchId?.toLowerCase() }
+            ]
+        }).populate('roles').populate('referredBy', 'name mobile');
 
-        // NORMALIZING RESPONSE TIME: We check password even if user is not found
-        // This prevents Timing Attacks (Target #5)
-        const dummyPassword = "$2a$10$abcdefghijklmnopqrstuv"; // A fake hash
+        const dummyPassword = "$2a$10$abcdefghijklmnopqrstuv"; 
         const isValid = user ? await user.matchPassword(password) : await require('bcryptjs').compare(password, dummyPassword);
 
         if (user && isValid) {
@@ -57,8 +61,7 @@ const loginUser = async (req, res) => {
 
             return sendTokenResponse(user, 200, res);
         } else {
-            // GENERIC MESSAGE: Prevents User Enumeration (Target #4)
-            res.status(401).json({ message: 'Invalid mobile or password' });
+            res.status(401).json({ message: 'Invalid credentials or password' });
         }
     } catch (error) {
         console.error(error);
@@ -73,10 +76,18 @@ const registerUser = async (req, res) => {
     const { name, mobile, email, password } = req.body;
 
     try {
+        // 1. Check if mobile already exists with a password
         let user = await User.findOne({ mobile });
-
         if (user && user.password) {
-            return res.status(400).json({ message: 'User already exists' });
+            return res.status(400).json({ message: 'Mobile number already registered' });
+        }
+
+        // 2. Check if email already exists in another account
+        if (email) {
+            const emailExists = await User.findOne({ email: email.toLowerCase() });
+            if (emailExists && (!user || emailExists._id.toString() !== user._id.toString())) {
+                return res.status(400).json({ message: 'Email address already in use by another account' });
+            }
         }
 
         let referredBy = null;
@@ -90,17 +101,16 @@ const registerUser = async (req, res) => {
                 ]
             });
             
-            // PREVENT RECURSIVE/SELF REFERRAL (Target #1)
             if (referrer && referrer.mobile !== mobile) {
                 referredBy = referrer._id;
             }
         }
 
         if (user) {
-            // "Claim" account (Existing guest donor with no password)
+            // "Claim" account
             user.name = name || user.name;
-            user.email = email || user.email;
-            user.password = password; // pre('save') hook will hash this
+            user.email = email ? email.toLowerCase() : user.email;
+            user.password = password;
             if (referredBy) user.referredBy = referredBy;
             await user.save();
         } else {
@@ -108,7 +118,7 @@ const registerUser = async (req, res) => {
             user = await User.create({
                 name,
                 mobile,
-                email: email || undefined,
+                email: email ? email.toLowerCase() : undefined,
                 password,
                 referredBy
             });
@@ -151,10 +161,16 @@ const checkReferral = async (req, res) => {
 // @route   POST /api/auth/check-status
 // @access  Public
 const checkUserStatus = async (req, res) => {
-    const { mobile } = req.body;
+    const { identifier, mobile } = req.body;
+    const searchId = identifier || mobile;
 
     try {
-        const user = await User.findOne({ mobile });
+        const user = await User.findOne({
+            $or: [
+                { mobile: searchId },
+                { email: searchId?.toLowerCase() }
+            ]
+        });
 
         if (!user) {
             return res.json({ exists: false });
@@ -163,7 +179,8 @@ const checkUserStatus = async (req, res) => {
         res.json({
             exists: true,
             hasPassword: !!user.password,
-            name: user.name
+            name: user.name,
+            isEmail: searchId?.includes('@')
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -188,14 +205,20 @@ const logoutUser = async (req, res) => {
 // @route   POST /api/auth/send-otp
 // @access  Public
 const sendOTP = async (req, res) => {
-    const { mobile } = req.body;
+    const { identifier, mobile } = req.body;
+    const searchId = identifier || mobile;
     const whatsappService = require('../services/whatsappService');
 
     try {
-        let user = await User.findOne({ mobile });
+        const user = await User.findOne({
+            $or: [
+                { mobile: searchId },
+                { email: searchId?.toLowerCase() }
+            ]
+        });
 
         if (!user) {
-            return res.status(404).json({ message: 'Mobile number not found. Please register first.' });
+            return res.status(404).json({ message: 'User not found. Please register first.' });
         }
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -205,11 +228,23 @@ const sendOTP = async (req, res) => {
         user.otpExpires = otpExpires;
         await user.save();
 
-        const success = await whatsappService.sendOTP(mobile, otp);
-        if (success) {
-            res.json({ success: true, message: 'OTP sent successfully' });
+        let success = false;
+        const isEmail = searchId?.includes('@');
+
+        if (isEmail && user.email) {
+            success = await whatsappService.sendOTPByEmail(user.email, otp, user.name);
         } else {
-            res.status(500).json({ message: 'Failed to send OTP via WhatsApp' });
+            success = await whatsappService.sendOTP(user.mobile, otp);
+        }
+
+        if (success) {
+            res.json({ 
+                success: true, 
+                message: `OTP sent successfully to ${isEmail ? 'your email' : 'WhatsApp'}`,
+                isEmail
+            });
+        } else {
+            res.status(500).json({ message: `Failed to send OTP via ${isEmail ? 'email' : 'WhatsApp'}` });
         }
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -220,10 +255,16 @@ const sendOTP = async (req, res) => {
 // @route   POST /api/auth/verify-otp
 // @access  Public
 const verifyOTP = async (req, res) => {
-    const { mobile, otp } = req.body;
+    const { identifier, mobile, otp } = req.body;
+    const searchId = identifier || mobile;
 
     try {
-        const user = await User.findOne({ mobile }).populate('roles').populate('referredBy', 'name mobile');
+        const user = await User.findOne({
+            $or: [
+                { mobile: searchId },
+                { email: searchId?.toLowerCase() }
+            ]
+        }).populate('roles').populate('referredBy', 'name mobile');
 
         if (!user || !user.otp || user.otp !== otp || user.otpExpires < new Date()) {
             return res.status(400).json({ message: 'Invalid or expired OTP' });
@@ -248,17 +289,23 @@ const verifyOTP = async (req, res) => {
 // @route   POST /api/auth/reset-password
 // @access  Public
 const resetPassword = async (req, res) => {
-    const { mobile, otp, newPassword } = req.body;
+    const { identifier, mobile, otp, newPassword } = req.body;
+    const searchId = identifier || mobile;
 
     try {
-        const user = await User.findOne({ mobile });
+        const user = await User.findOne({
+            $or: [
+                { mobile: searchId },
+                { email: searchId?.toLowerCase() }
+            ]
+        });
 
         if (!user || !user.otp || user.otp !== otp || user.otpExpires < new Date()) {
             return res.status(400).json({ message: 'Invalid or expired OTP' });
         }
 
         // Set new password
-        user.password = newPassword; // pre('save') hook will hash it
+        user.password = newPassword; 
         
         // Clear OTP
         user.otp = undefined;

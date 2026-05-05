@@ -42,7 +42,8 @@ const Signup = () => {
         setError('');
         setLoading(true);
         try {
-            const { data } = await api.post('/auth/register', { name, mobile, email, password });
+            const normalizedEmail = email ? email.toLowerCase().trim() : undefined;
+            const { data } = await api.post('/auth/register', { name, mobile, email: normalizedEmail, password });
 
             // Use context login
             login(data);
@@ -76,7 +77,7 @@ const Signup = () => {
             if (val.length === 10) {
                 setVerifyingStatus(true);
                 try {
-                    const { data } = await api.post('/auth/check-status', { mobile: val });
+                    const { data } = await api.post('/auth/check-status', { identifier: val });
                     if (data.exists) {
                         if (data.hasPassword) {
                             setError('User already exists. Please login.');
@@ -109,13 +110,13 @@ const Signup = () => {
 
                             {/* ERROR MESSAGE */}
                             {error && <div style={{ color: 'red', marginBottom: '10px', fontSize: '0.9rem' }}>{error}</div>}
-                            
+
                             {isClaiming && (
-                                <div style={{ 
-                                    background: 'rgba(13, 170, 188, 0.1)', 
-                                    padding: '10px', 
-                                    borderRadius: '8px', 
-                                    marginBottom: '15px', 
+                                <div style={{
+                                    background: 'rgba(13, 170, 188, 0.1)',
+                                    padding: '10px',
+                                    borderRadius: '8px',
+                                    marginBottom: '15px',
                                     fontSize: '0.85rem',
                                     border: '1px solid var(--primary)',
                                     color: '#0d7a8c'
@@ -228,7 +229,7 @@ const Signup = () => {
                 isOpen={showSuccessModal}
                 onClose={handleCloseSuccessModal}
                 title={isClaiming ? "Account Claimed!" : "Registration Successful!"}
-                message={isClaiming 
+                message={isClaiming
                     ? `Welcome back ${name}! Your account has been secured and your previous donations are now linked.`
                     : `Welcome ${name}! Your account has been successfully created. You can now start donating or fundraising.`
                 }

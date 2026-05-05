@@ -16,7 +16,7 @@ const Login = () => {
     const [bannerData, setBannerData] = useState(null);
 
     // Form States
-    const [mobile, setMobile] = useState('');
+    const [identifier, setIdentifier] = useState(''); // Can be email or mobile
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -27,9 +27,10 @@ const Login = () => {
 
     // Forgot Password Flow
     const [isForgotPassword, setIsForgotPassword] = useState(false);
-    const [resetStep, setResetStep] = useState(1); // 1: Mobile/OTP, 2: New Password
+    const [resetStep, setResetStep] = useState(1); // 1: Identifier/OTP, 2: New Password
     const [newPassword, setNewPassword] = useState('');
     const [confirmNewPassword, setConfirmNewPassword] = useState('');
+    const [showResetPassword, setShowResetPassword] = useState(false);
 
     const navigate = useNavigate();
     const { login } = useAuth();
@@ -56,16 +57,18 @@ const Login = () => {
 
     const handleSendOTP = async (e) => {
         if (e) e.preventDefault();
-        if (mobile.length !== 10) {
-            toast.error("Please enter a valid 10-digit mobile number");
+        
+        const isEmail = identifier.includes('@');
+        if (!isEmail && identifier.length !== 10) {
+            toast.error("Please enter a valid 10-digit mobile number or email address");
             return;
         }
 
         setOtpLoading(true);
         try {
-            await api.post('/auth/send-otp', { mobile });
+            const { data } = await api.post('/auth/send-otp', { identifier });
             setOtpSent(true);
-            toast.success("OTP sent to your WhatsApp!");
+            toast.success(data.message || `OTP sent to your ${data.isEmail ? 'Email' : 'WhatsApp'}!`);
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to send OTP");
         } finally {
@@ -82,7 +85,7 @@ const Login = () => {
 
         setLoading(true);
         try {
-            const { data } = await api.post('/auth/verify-otp', { mobile, otp });
+            const { data } = await api.post('/auth/verify-otp', { identifier, otp });
 
             // Use context login
             login(data);
@@ -114,7 +117,7 @@ const Login = () => {
         setError('');
         setLoading(true);
         try {
-            const { data } = await api.post('/auth/login', { mobile, password });
+            const { data } = await api.post('/auth/login', { identifier, password });
 
             // Use context login
             login(data);
@@ -157,7 +160,7 @@ const Login = () => {
 
         setLoading(true);
         try {
-            const { data } = await api.post('/auth/reset-password', { mobile, otp, newPassword });
+            const { data } = await api.post('/auth/reset-password', { identifier, otp, newPassword });
             
             // Auto Login logic
             login(data);
@@ -195,21 +198,12 @@ const Login = () => {
     const handleInputChange = (e) => {
         let val = e.target.value;
 
-        if (loginMethod === 'password') {
-            // Strict Mobile: Clean input and take up to 10 digits
-            const numericVal = val.replace(/\D/g, '');
-            if (numericVal.length <= 10) {
-                setMobile(numericVal);
-            }
+        // If the input is purely numeric and longer than 10 digits, cap it at 10 (standard Indian mobile)
+        // Otherwise, allow everything so they can type email addresses freely.
+        if (/^\d+$/.test(val) && val.length > 10) {
+            setIdentifier(val.slice(0, 10));
         } else {
-            // OTP (Email/Mobile): If looks like mobile (numeric), clean and restrict.
-            // If it has alpha chars, it's likely an email, allow as is.
-            if (/^\d*$/.test(val.replace(/\s/g, ''))) {
-                const numericVal = val.replace(/\D/g, '');
-                if (numericVal.length <= 10) setMobile(numericVal);
-            } else {
-                setMobile(val);
-            }
+            setIdentifier(val);
         }
     };
 
@@ -277,18 +271,18 @@ const Login = () => {
                             {error && <div style={{ color: 'red', marginBottom: '10px', fontSize: '0.9rem' }}>{error}</div>}
 
                             <label className="input-label">
-                                {loginMethod === 'otp' ? 'Email / Mobile Number *' : 'Mobile Number *'}
+                                Email / Mobile Number *
                             </label>
 
                             <div style={{ position: 'relative' }}>
                                 <input
                                     type="text"
                                     className="input-field"
-                                    placeholder={loginMethod === 'otp' ? "Enter Mobile / Email" : "Enter Mobile Number"}
-                                    value={mobile}
+                                    placeholder="Enter Email or 10-digit Mobile"
+                                    value={identifier}
                                     onChange={handleInputChange}
                                     disabled={otpSent}
-                                    style={{ paddingRight: otpSent && loginMethod === 'otp' ? '80px' : '10px' }}
+                                    style={{ paddingRight: otpSent ? '80px' : '10px' }}
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter' && loginMethod === 'password') {
                                             handlePasswordLogin();
@@ -539,26 +533,62 @@ const Login = () => {
                         
                         <div className="form-group">
                             <label className="form-label">New Password</label>
-                            <input
-                                type="password"
-                                className="form-input"
-                                placeholder="Min 6 characters"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                            />
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type={showResetPassword ? "text" : "password"}
+                                    className="form-input"
+                                    placeholder="Min 6 characters"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0', paddingRight: '40px' }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowResetPassword(!showResetPassword)}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '10px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        color: '#64748b'
+                                    }}
+                                >
+                                    {showResetPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </div>
 
                         <div className="form-group" style={{ marginTop: '1rem' }}>
                             <label className="form-label">Confirm New Password</label>
-                            <input
-                                type="password"
-                                className="form-input"
-                                placeholder="Repeat password"
-                                value={confirmNewPassword}
-                                onChange={(e) => setConfirmNewPassword(e.target.value)}
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                            />
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type={showResetPassword ? "text" : "password"}
+                                    className="form-input"
+                                    placeholder="Repeat password"
+                                    value={confirmNewPassword}
+                                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0', paddingRight: '40px' }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowResetPassword(!showResetPassword)}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '10px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        color: '#64748b'
+                                    }}
+                                >
+                                    {showResetPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </div>
 
                         <button 
