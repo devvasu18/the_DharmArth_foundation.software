@@ -177,13 +177,13 @@ const DonationForm = ({ onSuccess }) => {
 
             if (motivatorMobile.length >= 4) {
                 try {
-                    const { data } = await api.get(`/donate/validate-motivator/${motivatorMobile}`);
+                    const { data } = await api.get(`/donate/validate-motivator/${motivatorMobile}?currentMobile=${mobile}`);
                     if (data.valid) {
                         setMotivatorName(data.name);
                         setErrors(prev => ({ ...prev, motivator: null }));
                     } else {
                         setMotivatorName('');
-                        setErrors(prev => ({ ...prev, motivator: "Motivator not found " }));
+                        setErrors(prev => ({ ...prev, motivator: data.message || "Motivator not found" }));
                     }
                 } catch (error) {
                     console.error("Error validating motivator:", error);

@@ -381,15 +381,25 @@ router.get('/previous-motivator/:mobile', async (req, res) => {
 router.get('/validate-motivator/:identifier', async (req, res) => {
     try {
         const { identifier } = req.params;
+        const { currentMobile } = req.query;
+
         const query = identifier.length >= 10 
             ? { mobile: identifier } 
             : { referralCode: identifier.toUpperCase() };
 
-        const user = await User.findOne(query);
+        const user = await User.findOne(query).populate('referredBy', 'mobile');
         if (user) {
+            // Check for circular reference
+            if (currentMobile && user.referredBy && user.referredBy.mobile === currentMobile) {
+                return res.json({ 
+                    valid: false, 
+                    message: 'Circular Relationship: This user has already selected you as their motivator.' 
+                });
+            }
+
             res.json({ valid: true, name: user.name, mobile: user.mobile, code: user.referralCode });
         } else {
-            res.json({ valid: false });
+            res.json({ valid: false, message: 'Motivator not found' });
         }
     } catch (error) {
         res.status(500).json({ message: error.message });

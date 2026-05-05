@@ -99,9 +99,14 @@ const registerUser = async (req, res) => {
                     { mobile: potentialReferralCode },
                     { referralCode: String(potentialReferralCode).toUpperCase() }
                 ]
-            });
+            }).populate('referredBy', 'mobile');
             
             if (referrer && referrer.mobile !== mobile) {
+                // Circularity check: if User B is trying to set User A as motivator,
+                // check if User A already has User B as motivator.
+                if (referrer.referredBy && referrer.referredBy.mobile === mobile) {
+                    return res.status(400).json({ message: 'Circular motivator relationship is not allowed. This user has already selected you as their motivator.' });
+                }
                 referredBy = referrer._id;
             }
         }

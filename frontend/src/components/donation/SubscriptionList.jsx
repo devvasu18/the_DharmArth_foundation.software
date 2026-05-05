@@ -367,70 +367,120 @@ const SubscriptionList = ({ isAdmin = false }) => {
 
             {!isAdmin ? (
                 // User Table View
-                <div className="user-table-container">
-                <table className="user-sub-table">
-                    <thead>
-                        <tr>
-                            <th>Contribution</th>
-                            <th>Reference ID</th>
-                            <th>Started On</th>
-                            <th>Next Billing</th>
-                            <th>Status</th>
-                            <th className="text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {subscriptions.map((sub) => (
-                            <tr key={sub._id}>
-                                <td>
-                                    <div className="user-amount-cell">
-                                        <strong>₹{sub.amount.toLocaleString()}</strong>
-                                        <span className="freq">/ month</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <code className="user-sub-id">{sub.subscriptionId}</code>
-                                </td>
-                                <td>{new Date(sub.createdAt).toLocaleDateString()}</td>
-                                <td>
-                                    {sub.nextBillingDate && sub.status === 'active' 
-                                        ? new Date(sub.nextBillingDate).toLocaleDateString() 
-                                        : '-'}
-                                </td>
-                                <td>{getStatusBadge(sub)}</td>
-                                <td>
-                                    <div className="user-actions-cell">
-                                        {sub.status === 'active' && (
-                                            <button 
-                                                className="btn-cancel-small" 
-                                                onClick={() => handleCancel(sub)}
-                                            >
-                                                Cancel
-                                            </button>
-                                        )}
-                                        {sub.status === 'failed' && (
-                                            <>
-                                                <button 
-                                                    className="btn-retry-small" 
-                                                    onClick={() => handleRetry(sub)}
-                                                >
-                                                    Retry
-                                                </button>
+                <>
+                <div className="user-table-container hide-mobile">
+                    <table className="user-sub-table">
+                        <thead>
+                            <tr>
+                                <th>Contribution</th>
+                                <th>Reference ID</th>
+                                <th>Started On</th>
+                                <th>Next Billing</th>
+                                <th>Status</th>
+                                <th className="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {subscriptions.map((sub) => (
+                                <tr key={sub._id}>
+                                    <td>
+                                        <div className="user-amount-cell">
+                                            <strong>₹{sub.amount.toLocaleString()}</strong>
+                                            <span className="freq">/ month</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <code className="user-sub-id">{sub.subscriptionId}</code>
+                                    </td>
+                                    <td>{new Date(sub.createdAt).toLocaleDateString()}</td>
+                                    <td>
+                                        {sub.nextBillingDate && sub.status === 'active' 
+                                            ? new Date(sub.nextBillingDate).toLocaleDateString() 
+                                            : '-'}
+                                    </td>
+                                    <td>{getStatusBadge(sub)}</td>
+                                    <td>
+                                        <div className="user-actions-cell">
+                                            {sub.status === 'active' && (
                                                 <button 
                                                     className="btn-cancel-small" 
                                                     onClick={() => handleCancel(sub)}
                                                 >
                                                     Cancel
                                                 </button>
-                                            </>
-                                        )}
+                                            )}
+                                            {sub.status === 'failed' && (
+                                                <>
+                                                    <button 
+                                                        className="btn-retry-small" 
+                                                        onClick={() => handleRetry(sub)}
+                                                    >
+                                                        Retry
+                                                    </button>
+                                                    <button 
+                                                        className="btn-cancel-small" 
+                                                        onClick={() => handleCancel(sub)}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Mobile User Cards */}
+                <div className="subscription-card-grid show-mobile">
+                    {subscriptions.map((sub) => (
+                        <div className="sub-mobile-card" key={sub._id}>
+                            <div className="card-header">
+                                <div className="amount-info">
+                                    <span className="amount">₹{sub.amount.toLocaleString()}</span>
+                                    <span className="freq">/ monthly</span>
+                                </div>
+                                <div className="status">{getStatusBadge(sub)}</div>
+                            </div>
+                            <div className="card-body">
+                                <div className="info-row">
+                                    <span className="label">ID:</span>
+                                    <code className="value">{sub.subscriptionId}</code>
+                                </div>
+                                <div className="info-row">
+                                    <span className="label">Started:</span>
+                                    <span className="value">{new Date(sub.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                {sub.status === 'active' && sub.nextBillingDate && (
+                                    <div className="info-row">
+                                        <span className="label">Next Billing:</span>
+                                        <span className="value highlight">{new Date(sub.nextBillingDate).toLocaleDateString()}</span>
                                     </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                                )}
+                            </div>
+                            <div className="card-footer">
+                                {sub.status === 'active' && (
+                                    <button className="mobile-action-btn cancel" onClick={() => handleCancel(sub)}>
+                                        <XCircle size={16} /> Cancel Subscription
+                                    </button>
+                                )}
+                                {sub.status === 'failed' && (
+                                    <div className="button-group">
+                                        <button className="mobile-action-btn retry" onClick={() => handleRetry(sub)}>
+                                            <CreditCard size={16} /> Retry Payment
+                                        </button>
+                                        <button className="mobile-action-btn cancel" onClick={() => handleCancel(sub)}>
+                                            Cancel
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                </>
             ) : (
                 // Admin Table View
                 <div className="admin-table-container">
@@ -1111,6 +1161,109 @@ const SubscriptionList = ({ isAdmin = false }) => {
                     background: white;
                     outline: none;
                     cursor: pointer;
+                }
+
+                /* Mobile Optimization */
+                .show-mobile { display: none; }
+                .hide-mobile { display: block; }
+
+                @media (max-width: 768px) {
+                    .hide-mobile { display: none; }
+                    .show-mobile { display: block; }
+
+                    .list-controls-row {
+                        justify-content: center;
+                        margin-bottom: 1rem;
+                    }
+                    .export-tools-unified {
+                        flex-direction: column;
+                        width: 100%;
+                        gap: 10px;
+                    }
+                    .export-group { width: 100%; justify-content: space-between; }
+
+                    .sub-mobile-card {
+                        background: white;
+                        border-radius: 16px;
+                        border: 1px solid #e2e8f0;
+                        margin-bottom: 1rem;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                        overflow: hidden;
+                    }
+                    .sub-mobile-card .card-header {
+                        padding: 1rem;
+                        background: #f8fafc;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border-bottom: 1px solid #f1f5f9;
+                    }
+                    .amount-info .amount {
+                        font-size: 1.2rem;
+                        font-weight: 800;
+                        color: #7c3aed;
+                        display: block;
+                    }
+                    .amount-info .freq {
+                        font-size: 0.7rem;
+                        color: #64748b;
+                        text-transform: uppercase;
+                        font-weight: 700;
+                    }
+                    .sub-mobile-card .card-body {
+                        padding: 1rem;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                    }
+                    .info-row {
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 0.85rem;
+                    }
+                    .info-row .label { color: #94a3b8; font-weight: 600; }
+                    .info-row .value { color: #1e293b; font-weight: 700; }
+                    .info-row .value.highlight { color: #7c3aed; }
+                    
+                    .sub-mobile-card .card-footer {
+                        padding: 0.75rem 1rem;
+                        border-top: 1px solid #f1f5f9;
+                    }
+                    .mobile-action-btn {
+                        width: 100%;
+                        padding: 0.75rem;
+                        border-radius: 10px;
+                        font-weight: 700;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                        cursor: pointer;
+                        border: 1px solid transparent;
+                    }
+                    .mobile-action-btn.cancel {
+                        background: #fff;
+                        border-color: #ef4444;
+                        color: #ef4444;
+                    }
+                    .mobile-action-btn.retry {
+                        background: #7c3aed;
+                        color: white;
+                        margin-bottom: 8px;
+                    }
+                    .list-pagination {
+                        flex-direction: column;
+                        gap: 1rem;
+                        text-align: center;
+                    }
+                    .pagination-buttons {
+                        width: 100%;
+                        justify-content: center;
+                    }
+                    .admin-controls-card {
+                        flex-direction: column;
+                        gap: 10px;
+                    }
                 }
             `}</style>
         </div>

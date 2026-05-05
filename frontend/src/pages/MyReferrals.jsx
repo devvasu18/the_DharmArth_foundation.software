@@ -218,7 +218,7 @@ const MyReferrals = () => {
                         </div>
                     ) : (
                         <>
-                            <div className="referral-table-container">
+                            <div className="referral-table-container hide-mobile">
                                 <table className="referral-table">
                                     <thead>
                                         <tr>
@@ -268,6 +268,45 @@ const MyReferrals = () => {
                                         ))}
                                     </tbody>
                                 </table>
+                            </div>
+
+                            {/* Mobile Card Grid */}
+                            <div className="referral-card-grid show-mobile">
+                                {referrals.map((ref) => (
+                                    <div className="referral-mobile-card" key={ref._id}>
+                                        <div className="card-top">
+                                            <div className="donor-info">
+                                                <div className="donor-avatar">{ref.donorName.charAt(0).toUpperCase()}</div>
+                                                <div>
+                                                    <div className="name">{ref.donorName}</div>
+                                                    <div className="mobile">{ref.donorMobile}</div>
+                                                </div>
+                                            </div>
+                                            <div className={`status-badge ${ref.status}`}>
+                                                {ref.status.toUpperCase()}
+                                            </div>
+                                        </div>
+                                        <div className="card-details">
+                                            <div className="detail-item">
+                                                <span className="label">Monthly Contribution</span>
+                                                <span className="value primary">₹{ref.amount}</span>
+                                            </div>
+                                            <div className="detail-item">
+                                                <span className="label">Started On</span>
+                                                <span className="value">{new Date(ref.createdAt).toLocaleDateString()}</span>
+                                            </div>
+                                        </div>
+                                        {statusFilter === 'inactive' && (
+                                            <button 
+                                                className="mobile-action-btn rejoin"
+                                                onClick={() => handleRejoinWhatsApp(ref)}
+                                            >
+                                                <Send size={16} />
+                                                Send Re-invite on WhatsApp
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
 
                             {/* Pagination */}
@@ -614,6 +653,127 @@ const MyReferrals = () => {
                 .empty-state h3 {
                     color: #1e293b;
                     margin: 1rem 0 0.5rem;
+                }
+
+                /* Responsive Logic */
+                .show-mobile { display: none; }
+                .hide-mobile { display: block; }
+
+                @media (max-width: 768px) {
+                    .my-referrals-container { padding: 1rem; }
+                    .referrals-header h1 { font-size: 1.5rem; }
+                    .referrals-header p { font-size: 0.95rem; }
+                    
+                    .referrals-controls {
+                        flex-direction: column;
+                        align-items: stretch;
+                        gap: 1rem;
+                    }
+                    .status-filter-wrapper, .export-actions {
+                        width: 100%;
+                    }
+                    .export-actions {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 1rem;
+                    }
+                    .filter-group { width: 100%; justify-content: space-between; }
+                    
+                    .hide-mobile { display: none; }
+                    .show-mobile { display: block; }
+
+                    .referral-card-grid {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 1rem;
+                    }
+                    .referral-mobile-card {
+                        background: white;
+                        border-radius: 16px;
+                        border: 1px solid #e2e8f0;
+                        padding: 1.25rem;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                    }
+                    .card-top {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-start;
+                        margin-bottom: 1.25rem;
+                    }
+                    .donor-info {
+                        display: flex;
+                        gap: 0.75rem;
+                        align-items: center;
+                    }
+                    .donor-avatar {
+                        width: 40px;
+                        height: 40px;
+                        background: #f5f3ff;
+                        color: #7c3aed;
+                        border-radius: 10px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-weight: 800;
+                    }
+                    .donor-info .name {
+                        font-weight: 700;
+                        color: #1e293b;
+                        font-size: 1rem;
+                    }
+                    .donor-info .mobile {
+                        font-size: 0.8rem;
+                        color: #64748b;
+                    }
+                    .status-badge {
+                        padding: 4px 8px;
+                        border-radius: 6px;
+                        font-size: 0.65rem;
+                        font-weight: 800;
+                        text-transform: uppercase;
+                    }
+                    .status-badge.active { background: #ecfdf5; color: #059669; }
+                    .status-badge.inactive { background: #fef2f2; color: #dc2626; }
+                    
+                    .card-details {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 1rem;
+                        padding: 1rem 0;
+                        border-top: 1px solid #f1f5f9;
+                    }
+                    .detail-item { display: flex; flex-direction: column; gap: 4px; }
+                    .detail-item .label { font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+                    .detail-item .value { font-size: 0.9rem; font-weight: 600; color: #334155; }
+                    .detail-item .value.primary { color: #7c3aed; font-weight: 800; }
+
+                    .mobile-action-btn {
+                        width: 100%;
+                        margin-top: 0.5rem;
+                        padding: 0.75rem;
+                        border-radius: 10px;
+                        border: none;
+                        font-weight: 700;
+                        font-size: 0.9rem;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                        cursor: pointer;
+                    }
+                    .mobile-action-btn.rejoin { background: #25d366; color: white; }
+
+                    .referral-pagination {
+                        flex-direction: column;
+                        gap: 1rem;
+                        text-align: center;
+                    }
+                    .pagination-buttons {
+                        width: 100%;
+                        justify-content: center;
+                        overflow-x: auto;
+                        padding-bottom: 5px;
+                    }
                 }
             `}</style>
 
