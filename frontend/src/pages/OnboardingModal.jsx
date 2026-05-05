@@ -40,6 +40,17 @@ const OnboardingModal = ({ isOpen, onClose, user, setUser }) => {
     );
 
     useEffect(() => {
+        if (isOpen && user?.payoutCredentials) {
+            setBankForm({
+                bankName: user.payoutCredentials.bankName || '',
+                accountHolder: user.payoutCredentials.accountHolder || '',
+                accountNumber: user.payoutCredentials.accountNumber || '',
+                ifscCode: user.payoutCredentials.ifscCode || ''
+            });
+        }
+    }, [isOpen, user]);
+
+    useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsDropdownOpen(false);

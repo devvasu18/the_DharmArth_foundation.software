@@ -17,7 +17,7 @@ const payoutRequestSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'approved', 'rejected', 'completed', 'exported'],
+        enum: ['pending', 'approved', 'rejected', 'completed', 'exported', 'failed'],
         default: 'pending'
     },
     payoutDetails: {
@@ -49,7 +49,9 @@ const payoutRequestSchema = new mongoose.Schema({
         default: false
     },
     helpResolutionNotes: String,
-    helpResolvedAt: Date
+    helpResolvedAt: Date,
+    userReply: String,
+    userReplyAt: Date
 }, {
     timestamps: true,
     toJSON: { getters: true },

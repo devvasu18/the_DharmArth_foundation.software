@@ -1,25 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, CheckCircle, XCircle, Eye, Download, Clock, IndianRupee, User, ExternalLink, Image as ImageIcon, Trash2, Building, X, AlertCircle } from 'lucide-react';
+import { Search, Filter, CheckCircle, XCircle, Eye, Download, Clock, IndianRupee, User, ExternalLink, Image as ImageIcon, Trash2, Building, X, AlertCircle, Send } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
+import { useConfirm } from '../../context/ConfirmContext';
 import './PayoutManagement.css';
 
 const PayoutManagement = () => {
+    const { showConfirm } = useConfirm();
     const [payouts, setPayouts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('pending');
     const [page, setPage] = useState(1);
-    const [metadata, setMetadata] = useState({ total: 0, totalAmount: 0, pages: 1 });
+    const [metadata, setMetadata] = useState({ total: 0, totalAmount: 0, pages: 1, allCounts: { pending: 0, exported: 0, processed: 0, disputed: 0 } });
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('pending');
     const [selectedIds, setSelectedIds] = useState([]);
+    const [isBulkStatusModalOpen, setIsBulkStatusModalOpen] = useState(false);
+    const [bulkStatusToApply, setBulkStatusToApply] = useState('');
+    const [bulkAdminNote, setBulkAdminNote] = useState('');
     
     // Modal state
     const [selectedPayout, setSelectedPayout] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [resolutionNotes, setResolutionNotes] = useState('');
+
+    // Inline edit state
+    const [isEditingDetails, setIsEditingDetails] = useState(false);
+    const [editedBank, setEditedBank] = useState({
+        bankName: '',
+        accountNumber: '',
+        ifscCode: '',
+        accountHolder: ''
+    });
 
     useEffect(() => {
         fetchPayouts();
@@ -77,9 +91,11 @@ const PayoutManagement = () => {
             return;
         }
 
-        if (!window.confirm(`Are you sure you want to export ${toExport.length} payouts and mark them as 'Exported'?`)) {
-            return;
-        }
+        const confirmed = await showConfirm(
+            "Confirm Export", 
+            `Are you sure you want to export ${toExport.length} payouts and mark them as 'Exported'?`
+        );
+        if (!confirmed) return;
 
         try {
             const today = new Date();
@@ -192,15 +208,48 @@ const PayoutManagement = () => {
             toast.error("Failed to generate export file or update status");
         }
     };
+    
+    const handleBulkStatusUpdate = async (status) => {
+        if (selectedIds.length === 0) return;
+
+        // If status is completed, show custom confirmation
+        if (status === 'completed') {
+            const confirmed = await showConfirm(
+                "Bulk Update Status",
+                `Are you sure you want to mark ${selectedIds.length} payouts as SUCCESS?`
+            );
+            if (!confirmed) return;
+        } 
+        // For 'failed', the modal itself is the confirmation, so we proceed directly
+        
+        try {
+            await api.put('/payouts/bulk/status', {
+                ids: selectedIds,
+                status: status,
+                adminNotes: status === 'failed' ? bulkAdminNote : ''
+            });
+
+            toast.success(`Updated ${selectedIds.length} payouts to ${status}`);
+            setSelectedIds([]);
+            setIsBulkStatusModalOpen(false);
+            setBulkAdminNote('');
+            fetchPayouts();
+        } catch (error) {
+            console.error("Bulk update error", error);
+            toast.error("Failed to update payouts status");
+        }
+    };
 
     const handleProcess = async (status) => {
         if (!selectedPayout) return;
 
+        const confirmTitle = status === 'completed' ? "Complete Payout" : "Reject Payout";
         const confirmMsg = status === 'completed' 
             ? "Are you sure you want to mark this payout as COMPLETED? This will notify the user."
             : "Are you sure you want to REJECT this payout? The amount will be refunded to the user's wallet.";
         
-        if (!window.confirm(confirmMsg)) return;
+        const confirmed = await showConfirm(confirmTitle, confirmMsg);
+        if (!confirmed) return;
 
         setProcessing(true);
         try {
@@ -240,6 +289,61 @@ const PayoutManagement = () => {
         }
     };
 
+    const handleResetToPending = async () => {
+        if (!selectedPayout) return;
+        
+        const confirmed = await showConfirm(
+            "Reset to Pending",
+            "This will move the request back to Pending and refresh the bank details from the motivator's latest profile. Continue?"
+        );
+        if (!confirmed) return;
+
+        setProcessing(true);
+        try {
+            await api.put(`/payouts/${selectedPayout._id}/reset`);
+            toast.success("Payout reset to pending. You can now re-export it.");
+            setIsModalOpen(false);
+            fetchPayouts();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to reset payout");
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const handleSaveManualDetails = async () => {
+        if (!editedBank.bankName || !editedBank.accountNumber || !editedBank.ifscCode) {
+            toast.error("Please fill all bank details");
+            return;
+        }
+
+        // IFSC Validation (Standard Indian Format: 4 letters, '0', 6 alphanumeric)
+        const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+        if (!ifscRegex.test(editedBank.ifscCode)) {
+            toast.error("Invalid IFSC Format! Should be 11 chars (e.g. HDFC0001234)");
+            return;
+        }
+
+        // Account Number Validation (9-18 digits)
+        if (editedBank.accountNumber.length < 9 || editedBank.accountNumber.length > 18 || !/^\d+$/.test(editedBank.accountNumber)) {
+            toast.error("Account Number must be between 9 and 18 digits");
+            return;
+        }
+
+        setProcessing(true);
+        try {
+            await api.put(`/payouts/${selectedPayout._id}/details`, editedBank);
+            toast.success("Details updated and payout moved to Pending");
+            setIsEditingDetails(false);
+            setIsModalOpen(false);
+            fetchPayouts();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to update details");
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     const getStatusBadge = (p) => {
         if (p.isDisputed) {
             if (p.isHelpResolved) return <span className="payout-badge success" style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' }}><CheckCircle size={12} /> HELP RESOLVED</span>;
@@ -250,7 +354,9 @@ const PayoutManagement = () => {
             case 'pending': return <span className="payout-badge pending"><Clock size={12} /> PENDING</span>;
             case 'exported': return <span className="payout-badge exported" style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' }}><Download size={12} /> EXPORTED</span>;
             case 'completed': return <span className="payout-badge success"><CheckCircle size={12} /> COMPLETED</span>;
-            case 'rejected': return <span className="payout-badge error"><XCircle size={12} /> REJECTED</span>;
+            case 'failed': 
+                if (p.userReply) return <span className="payout-badge" style={{ background: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd' }}><Send size={12} /> REPLY RECEIVED</span>;
+                return <span className="payout-badge error" style={{ background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' }}><AlertCircle size={12} /> FAILED</span>;
             default: return <span className="payout-badge">{p.status.toUpperCase()}</span>;
         }
     };
@@ -280,6 +386,27 @@ const PayoutManagement = () => {
                         <Download size={18} /> Export {selectedIds.length > 0 ? `(${selectedIds.length})` : 'Selected'}
                     </button>
                 )}
+                {activeTab === 'exported' && selectedIds.length > 0 && (
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button 
+                            className="btn-bulk-success" 
+                            style={{ background: '#ecfdf5', color: '#059669', border: '1px solid #10b981', padding: '8px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, cursor: 'pointer' }}
+                            onClick={() => handleBulkStatusUpdate('completed')}
+                        >
+                            <CheckCircle size={18} /> Mark Success ({selectedIds.length})
+                        </button>
+                        <button 
+                            className="btn-bulk-fail" 
+                            style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #ef4444', padding: '8px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, cursor: 'pointer' }}
+                            onClick={() => {
+                                setBulkStatusToApply('failed');
+                                setIsBulkStatusModalOpen(true);
+                            }}
+                        >
+                            <XCircle size={18} /> Mark Failed ({selectedIds.length})
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="payout-tabs">
@@ -288,28 +415,40 @@ const PayoutManagement = () => {
                     onClick={() => handleTabChange('pending')}
                 >
                     <Clock size={16} /> Pending Requests
+                    {metadata.allCounts?.pending > 0 && (
+                        <span className="tab-badge">{metadata.allCounts.pending}</span>
+                    )}
                 </button>
                 <button 
                     className={`tab-btn ${activeTab === 'exported' ? 'active' : ''}`}
                     onClick={() => handleTabChange('exported')}
                 >
                     <Download size={16} /> Exported
+                    {metadata.allCounts?.exported > 0 && (
+                        <span className="tab-badge grey">{metadata.allCounts.exported}</span>
+                    )}
                 </button>
                 <button 
                     className={`tab-btn ${activeTab === 'processed' ? 'active' : ''}`}
                     onClick={() => handleTabChange('processed')}
                 >
                     <CheckCircle size={16} /> Processed History
+                    {metadata.allCounts?.processed > 0 && (
+                        <span className="tab-badge grey">{metadata.allCounts.processed}</span>
+                    )}
                 </button>
                 <button 
                     className={`tab-btn ${activeTab === 'disputed' ? 'active' : ''}`}
                     onClick={() => {
                         setActiveTab('disputed');
                         setPage(1);
-                        setStatusFilter('all'); // Filter strictly by isDisputed on backend
+                        setStatusFilter('all');
                     }}
                 >
-                    <XCircle size={16} color="var(--error)" /> Needs Attention (Disputes)
+                    <AlertCircle size={16} /> Needs Attention (Disputes)
+                    {metadata.allCounts?.disputed > 0 && (
+                        <span className="tab-badge alert-red">{metadata.allCounts.disputed}</span>
+                    )}
                 </button>
             </div>
 
@@ -329,7 +468,7 @@ const PayoutManagement = () => {
                         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                             <option value="processed">All Processed</option>
                             <option value="completed">Completed (Paid)</option>
-                            <option value="rejected">Rejected</option>
+                            <option value="failed">Failed (Action Required)</option>
                         </select>
                     </div>
                 )}
@@ -339,7 +478,7 @@ const PayoutManagement = () => {
                 <table className="payout-table">
                     <thead>
                         <tr>
-                            {activeTab === 'pending' && (
+                            {(activeTab === 'pending' || activeTab === 'exported') && (
                                 <th style={{ width: '40px' }}>
                                     <input 
                                         type="checkbox" 
@@ -366,7 +505,7 @@ const PayoutManagement = () => {
                             <tr><td colSpan={activeTab === 'pending' ? "7" : "6"} style={{textAlign: 'center', padding: '40px'}}>No payout requests found.</td></tr>
                         ) : payouts.map(p => (
                             <tr key={p._id}>
-                                {activeTab === 'pending' && (
+                                {(activeTab === 'pending' || activeTab === 'exported') && (
                                     <td>
                                         <input 
                                             type="checkbox" 
@@ -454,7 +593,10 @@ const PayoutManagement = () => {
                     <div className="payout-admin-modal">
                         <div className="modal-header">
                             <h3>Review Payout Request</h3>
-                            <button onClick={() => setIsModalOpen(false)} className="modal-close-btn"><X size={20} /></button>
+                            <button onClick={() => {
+                                setIsModalOpen(false);
+                                setIsEditingDetails(false);
+                            }} className="modal-close-btn"><X size={20} /></button>
                         </div>
                         
                         <div className="modal-body">
@@ -478,49 +620,97 @@ const PayoutManagement = () => {
                                         <h4>{selectedPayout.user?.name}</h4>
                                         <p>{selectedPayout.user?.mobile}</p>
                                     </div>
+                                    {(selectedPayout.status === 'failed' || selectedPayout.status === 'pending' || selectedPayout.status === 'exported') && (
+                                        <button 
+                                            style={{ marginLeft: 'auto', background: 'none', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px 8px', fontSize: '0.75rem', cursor: 'pointer', color: '#64748b' }}
+                                            onClick={() => {
+                                                setIsEditingDetails(!isEditingDetails);
+                                                setEditedBank({
+                                                    bankName: selectedPayout.payoutDetails?.bankName || '',
+                                                    accountNumber: selectedPayout.payoutDetails?.accountNumber || '',
+                                                    ifscCode: selectedPayout.payoutDetails?.ifscCode || '',
+                                                    accountHolder: selectedPayout.payoutDetails?.accountHolder || selectedPayout.user?.name || ''
+                                                });
+                                            }}
+                                        >
+                                            {isEditingDetails ? 'Cancel Edit' : 'Edit Bank Info'}
+                                        </button>
+                                    )}
                                 </div>
                                 <div className="bank-info-group">
-                                    <div className="bank-name">
-                                        <Building size={16} />
-                                        <span>{selectedPayout.payoutDetails?.bankName}</span>
-                                    </div>
-                                    <div className="account-details">
-                                        <div className="acc-row">
-                                            <label>Account Number</label>
-                                            <strong>{selectedPayout.payoutDetails?.accountNumber}</strong>
+                                    {isEditingDetails ? (
+                                        <div style={{ padding: '10px', display: 'grid', gap: '10px' }}>
+                                            <div>
+                                                <label style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>Bank Name</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={editedBank.bankName} 
+                                                    onChange={e => setEditedBank({...editedBank, bankName: e.target.value})}
+                                                    style={{ width: '100%', padding: '6px', border: '1px solid #e2e8f0', borderRadius: '4px' }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>Account Number</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={editedBank.accountNumber} 
+                                                    onChange={e => {
+                                                        const val = e.target.value.replace(/\D/g, '');
+                                                        if (val.length <= 18) setEditedBank({...editedBank, accountNumber: val});
+                                                    }}
+                                                    placeholder="9-18 digits"
+                                                    style={{ width: '100%', padding: '6px', border: '1px solid #e2e8f0', borderRadius: '4px' }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>IFSC Code</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={editedBank.ifscCode} 
+                                                    onChange={e => {
+                                                        const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                                                        if (val.length <= 11) setEditedBank({...editedBank, ifscCode: val});
+                                                    }}
+                                                    placeholder="11 chars (e.g. HDFC0001234)"
+                                                    style={{ width: '100%', padding: '6px', border: '1px solid #e2e8f0', borderRadius: '4px' }}
+                                                />
+                                            </div>
+                                            <button 
+                                                onClick={handleSaveManualDetails}
+                                                style={{ background: '#0f172a', color: 'white', border: 'none', borderRadius: '6px', padding: '8px', fontWeight: 600, cursor: 'pointer' }}
+                                                disabled={processing}
+                                            >
+                                                {processing ? 'Saving...' : 'Save & Move to Pending'}
+                                            </button>
                                         </div>
-                                        <div className="acc-row">
-                                            <label>IFSC Code</label>
-                                            <strong>{selectedPayout.payoutDetails?.ifscCode}</strong>
-                                        </div>
-                                        </div>
-                                    </div>
+                                    ) : (
+                                        <>
+                                            <div className="bank-name">
+                                                <Building size={16} />
+                                                <span>{selectedPayout.payoutDetails?.bankName}</span>
+                                            </div>
+                                            <div className="account-details">
+                                                <div className="acc-row">
+                                                    <label>Account Number</label>
+                                                    <strong>{selectedPayout.payoutDetails?.accountNumber}</strong>
+                                                </div>
+                                                <div className="acc-row">
+                                                    <label>IFSC Code</label>
+                                                    <strong>{selectedPayout.payoutDetails?.ifscCode}</strong>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
+                            </div>
 
                             {selectedPayout.status === 'pending' ? (
                                 <>
                                     <div className="status-update-info">
                                         <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '1.5rem', textAlign: 'center' }}>
-                                            Review this payout request and mark it as completed or rejected. 
-                                            Bulk bank transfer processing will handle the actual fund movement.
+                                            Review the details above. To process this payout, please use the 
+                                            <strong> Bulk Export & Mark Success</strong> tools on the main dashboard.
                                         </p>
-                                    </div>
-                                    
-                                    <div className="modal-footer-actions">
-                                        <button 
-                                            className="btn-reject" 
-                                            onClick={() => handleProcess('rejected')}
-                                            disabled={processing}
-                                        >
-                                            Reject & Refund
-                                        </button>
-                                        <button 
-                                            className="btn-approve" 
-                                            onClick={() => handleProcess('completed')}
-                                            disabled={processing}
-                                        >
-                                            {processing ? 'Processing...' : 'Confirm Payment'}
-                                        </button>
                                     </div>
                                 </>
                             ) : (
@@ -573,8 +763,81 @@ const PayoutManagement = () => {
                                     <div className={`final-status ${selectedPayout.status}`}>
                                         Status: {selectedPayout.status.toUpperCase()}
                                     </div>
+                                    
+                                    {selectedPayout.status === 'failed' && selectedPayout.adminNotes && (
+                                        <div style={{ marginTop: '1rem', padding: '1rem', background: '#fff7ed', borderRadius: '12px', border: '1px solid #ffedd5' }}>
+                                            <h4 style={{ color: '#c2410c', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Admin Failure Note:</h4>
+                                            <p style={{ color: '#9a3412', fontSize: '0.95rem' }}>"{selectedPayout.adminNotes}"</p>
+                                        </div>
+                                    )}
+
+                                    {selectedPayout.userReply && (
+                                        <div style={{ marginTop: '1rem', padding: '1rem', background: '#f0f9ff', borderRadius: '12px', border: '1px solid #e0f2fe' }}>
+                                            <h4 style={{ color: '#0369a1', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <Send size={14} /> Motivator Reply:
+                                            </h4>
+                                            <p style={{ color: '#075985', fontSize: '0.95rem', fontWeight: 500 }}>"{selectedPayout.userReply}"</p>
+                                            <small style={{ color: '#0ea5e9', display: 'block', marginTop: '0.5rem' }}>
+                                                Received: {new Date(selectedPayout.userReplyAt).toLocaleString()}
+                                            </small>
+                                        </div>
+                                    )}
+
+                                    {selectedPayout.status === 'failed' && (
+                                        <div style={{ marginTop: '1.5rem', borderTop: '1px dashed #cbd5e1', paddingTop: '1rem' }}>
+                                            <button 
+                                                className="btn-approve" 
+                                                style={{ width: '100%', background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' }}
+                                                onClick={handleResetToPending}
+                                                disabled={processing}
+                                            >
+                                                {processing ? 'Processing...' : 'Move to Pending for Re-export'}
+                                            </button>
+                                            <p style={{ fontSize: '0.75rem', color: '#64748b', textAlign: 'center', marginTop: '0.5rem' }}>
+                                                This will pick up the communicator's latest bank details from their profile.
+                                            </p>
+                                        </div>
+                                    )}
                                     </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {/* Bulk Status Modal */}
+            {isBulkStatusModalOpen && (
+                <div className="payout-modal-overlay">
+                    <div className="payout-admin-modal" style={{ maxWidth: '450px' }}>
+                        <div className="modal-header">
+                            <h3>Mark Payouts as Failed</h3>
+                            <button onClick={() => setIsBulkStatusModalOpen(false)} className="modal-close-btn"><X size={20} /></button>
+                        </div>
+                        <div className="modal-body">
+                            <p style={{ marginBottom: '1.5rem', color: '#64748b' }}>
+                                You are marking <strong>{selectedIds.length}</strong> payouts as failed. Please provide a reason that will be visible to the motivators.
+                            </p>
+                            <div className="form-group">
+                                <label>Failure Reason / Notes</label>
+                                <textarea 
+                                    rows="4" 
+                                    placeholder="e.g. Invalid account number, bank server down, etc."
+                                    value={bulkAdminNote}
+                                    onChange={(e) => setBulkAdminNote(e.target.value)}
+                                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                                ></textarea>
+                            </div>
+                            <div className="modal-footer-actions" style={{ marginTop: '1.5rem' }}>
+                                <button className="btn-cancel" onClick={() => setIsBulkStatusModalOpen(false)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #cbd5e1', background: 'white', cursor: 'pointer' }}>Cancel</button>
+                                <button 
+                                    className="btn-approve" 
+                                    onClick={() => handleBulkStatusUpdate('failed')}
+                                    disabled={!bulkAdminNote.trim()}
+                                    style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#dc2626', color: 'white', fontWeight: 600, cursor: 'pointer', opacity: bulkAdminNote.trim() ? 1 : 0.5 }}
+                                >
+                                    Confirm Mark Failed
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

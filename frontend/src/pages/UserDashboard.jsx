@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import api from '../services/api';
-import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, Users, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown, FileSpreadsheet, FileText as FilePdf, CheckCircle } from 'lucide-react';
+import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, Users, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown, FileSpreadsheet, FileText as FilePdf, CheckCircle, AlertCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -43,6 +43,10 @@ const UserDashboard = () => {
     const [disputePayoutId, setDisputePayoutId] = useState('');
     const [isDisputeSubmitting, setIsDisputeSubmitting] = useState(false);
 
+    // User Reply States
+    const [userReplyText, setUserReplyText] = useState('');
+    const [isReplying, setIsReplying] = useState(false);
+
 
     // Infinite Scroll States
     const [page, setPage] = useState(1);
@@ -57,6 +61,14 @@ const UserDashboard = () => {
     const [l1FilterMonth, setL1FilterMonth] = useState(new Date().getMonth() + 1);
     const [l1FilterYear, setL1FilterYear] = useState(new Date().getFullYear());
     const [l1Summary, setL1Summary] = useState({ lifetimeEarning: 0, prevMonthEarning: 0 });
+
+    // L2 Donors List States
+    const [isL2ModalOpen, setIsL2ModalOpen] = useState(false);
+    const [l2DonorsList, setL2DonorsList] = useState([]);
+    const [isLoadingL2, setIsLoadingL2] = useState(false);
+    const [l2FilterMonth, setL2FilterMonth] = useState(new Date().getMonth() + 1);
+    const [l2FilterYear, setL2FilterYear] = useState(new Date().getFullYear());
+    const [l2Summary, setL2Summary] = useState({ lifetimeEarning: 0, prevMonthEarning: 0 });
 
     const fetchInitialData = async () => {
         try {
@@ -78,9 +90,9 @@ const UserDashboard = () => {
 
     // Fetch wallet and stats
     useEffect(() => {
-        if (!user || user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
+        if (!user?._id || user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
         fetchInitialData();
-    }, [user]);
+    }, [user?._id]);
 
     const fetchTransactions = async (pageNum, isInitial = false) => {
         if (!user) return;
@@ -105,9 +117,9 @@ const UserDashboard = () => {
 
     // Initial fetch when filters change
     useEffect(() => {
-        if (user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
+        if (!user?._id || user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
         fetchTransactions(1, true);
-    }, [selectedMonth, selectedYear, user]);
+    }, [selectedMonth, selectedYear, user?._id]);
 
     const [isExporting, setIsExporting] = useState(false);
 
@@ -213,10 +225,29 @@ const UserDashboard = () => {
 
     if (!user) return <div style={{ padding: '2rem', textAlign: 'center' }}>Please Login First</div>;
 
-    const triggerDispute = (payoutId) => {
-        setDisputePayoutId(payoutId);
-        setDisputeMsg('');
+    const triggerDispute = (id) => {
+        setDisputePayoutId(id);
         setIsDisputeModalOpen(true);
+    };
+
+    const handleUserReply = async () => {
+        if (!userReplyText.trim()) {
+            toast.error("Please enter your reply message");
+            return;
+        }
+
+        setIsReplying(true);
+        try {
+            await api.put(`/payouts/${selectedTxnDetails._id}/reply`, { reply: userReplyText });
+            toast.success("Reply sent successfully");
+            setUserReplyText('');
+            setIsDetailsModalOpen(false);
+            refreshAllData();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to send reply");
+        } finally {
+            setIsReplying(false);
+        }
     };
 
     const handleDisputeSubmit = async () => {
@@ -255,6 +286,22 @@ const UserDashboard = () => {
             setIsL1ModalOpen(false);
         } finally {
             setIsLoadingL1(false);
+        }
+    };
+
+    const fetchL2Donors = async (m = l2FilterMonth, y = l2FilterYear) => {
+        setIsLoadingL2(true);
+        setIsL2ModalOpen(true);
+        try {
+            const res = await api.get(`/wallet/l2-donors?month=${m}&year=${y}`);
+            setL2DonorsList(res.data.donors);
+            setL2Summary(res.data.summary);
+        } catch (error) {
+            console.error("Error fetching L2 donors", error);
+            toast.error("Failed to load L2 donors");
+            setIsL2ModalOpen(false);
+        } finally {
+            setIsLoadingL2(false);
         }
     };
 
@@ -332,11 +379,20 @@ const UserDashboard = () => {
                                             <span className="stat-lbl">L1 Donors</span>
                                         </div>
                                         <div className="stat-item">
-                                            {isLoadingWallet ? (
-                                                <div className="stat-item-skeleton animate-pulse"></div>
-                                            ) : (
-                                                <span className="stat-val">{stats.l2Donors || 0}</span>
-                                            )}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                {isLoadingWallet ? (
+                                                    <div className="stat-item-skeleton animate-pulse"></div>
+                                                ) : (
+                                                    <span className="stat-val">{stats.l2Donors || 0}</span>
+                                                )}
+                                                <button
+                                                    className="btn-view-l1"
+                                                    onClick={() => fetchL2Donors()}
+                                                    title="View L2 Donors"
+                                                >
+                                                    <Eye size={14} />
+                                                </button>
+                                            </div>
                                             <span className="stat-lbl">L2 Donors</span>
                                         </div>
                                     </div>
@@ -557,9 +613,9 @@ const UserDashboard = () => {
                                                                         txn.type === 'credit' || txn.isDonation ? 'badge-credit' : 'badge-debit'
                                                                 }`}>
                                                                 {txn.reason === 'payout' && txn.status === 'pending' ? 'IN PROCESS' :
-                                                                    txn.status === 'failed' ? 'REJECTED' :
+                                                                    txn.status === 'failed' ? 'FAILED' :
                                                                         txn.isHelpResolved ? 'HELP RESOLVED' :
-                                                                            txn.type === 'credit' ? 'Commission' : (txn.isDonation ? 'Donation' : (txn.reason === 'payout' ? 'COMPLETED' : txn.type))}
+                                                                            txn.type === 'credit' ? 'Commission' : (txn.isDonation ? 'Donation' : (txn.reason === 'payout' ? (txn.status === 'failed' ? 'FAILED' : 'COMPLETED') : txn.type))}
                                                             </span>
 
                                                             {txn.reason === 'payout' && (
@@ -748,6 +804,44 @@ const UserDashboard = () => {
                                         <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #dcfce7', textAlign: 'left' }}>
                                             <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#059669', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Resolution Response</label>
                                             <div style={{ color: '#15803d', fontWeight: 500 }}>{selectedTxnDetails.helpResolutionNotes}</div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {selectedTxnDetails.status === 'failed' && (
+                                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#c2410c', fontWeight: 700, fontSize: '0.85rem', marginBottom: '0.5rem', justifyContent: 'center' }}>
+                                        <AlertCircle size={14} /> PAYOUT FAILED
+                                    </div>
+                                    <div style={{ padding: '0.75rem', background: '#fff7ed', borderRadius: '8px', border: '1px solid #ffedd5', marginBottom: '1rem' }}>
+                                        <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#c2410c', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Reason from Admin</label>
+                                        <div style={{ color: '#9a3412', fontWeight: 500, fontSize: '0.9rem' }}>{selectedTxnDetails.adminNotes || 'Information missing or incorrect.'}</div>
+                                    </div>
+
+                                    {!selectedTxnDetails.userReply ? (
+                                        <div className="reply-section">
+                                            <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Your Correction / Reply</label>
+                                            <textarea
+                                                style={{ width: '100%', borderRadius: '12px', padding: '10px', border: '2px solid #e2e8f0', minHeight: '80px', fontSize: '0.9rem', outline: 'none', resize: 'none' }}
+                                                placeholder="e.g. Corrected Bank account is XXXXXXXXXXXX..."
+                                                value={userReplyText}
+                                                onChange={(e) => setUserReplyText(e.target.value)}
+                                            ></textarea>
+                                            <button 
+                                                className="btn-proceed" 
+                                                style={{ marginTop: '0.75rem', width: '100%', margin: '0.75rem 0 0' }}
+                                                onClick={handleUserReply}
+                                                disabled={isReplying}
+                                            >
+                                                {isReplying ? 'Sending...' : 'Send Correction to Admin'}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div style={{ padding: '0.75rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                            <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Your Reply Sent</label>
+                                            <div style={{ color: '#334155', fontWeight: 500, fontSize: '0.9rem' }}>"{selectedTxnDetails.userReply}"</div>
+                                            <small style={{ color: '#94a3b8', display: 'block', marginTop: '4px' }}>Sent on: {new Date(selectedTxnDetails.userReplyAt).toLocaleDateString()}</small>
                                         </div>
                                     )}
                                 </div>
@@ -966,6 +1060,139 @@ const UserDashboard = () => {
 
                             <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9', padding: '1.25rem' }}>
                                 <button className="btn-proceed" style={{ margin: 0, width: '100%' }} onClick={() => setIsL1ModalOpen(false)}>Close</button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* L2 Donors Modal */}
+            <AnimatePresence>
+                {isL2ModalOpen && (
+                    <div className="payout-modal-overlay" onClick={() => setIsL2ModalOpen(false)}>
+                        <motion.div
+                            className="payout-modal"
+                            onClick={e => e.stopPropagation()}
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            style={{ maxWidth: '450px' }}
+                        >
+                            <button className="payout-modal-close" onClick={() => setIsL2ModalOpen(false)}><X size={24} /></button>
+
+                            <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', paddingBottom: '1.5rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
+                                    <Users size={28} color="white" />
+                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>L2 Network</h2>
+                                </div>
+                                <p style={{ margin: '5px 0 0', opacity: 0.9 }}>Track your indirect referrals and earnings</p>
+                            </div>
+
+                            <div style={{ background: '#f8fafc', padding: '1.25rem', borderBottom: '1px solid #e2e8f0' }}>
+                                {/* Summary Stats */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '1.25rem' }}>
+                                    <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderLeft: '4px solid #6366f1' }}>
+                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Lifetime L2</p>
+                                        <p style={{ margin: '4px 0 0', fontSize: '1.2rem', fontWeight: 800, color: '#1e293b' }}>₹{l2Summary.lifetimeEarning.toFixed(2)}</p>
+                                    </div>
+                                    <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderLeft: '4px solid #f59e0b' }}>
+                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Last Month</p>
+                                        <p style={{ margin: '4px 0 0', fontSize: '1.2rem', fontWeight: 800, color: '#1e293b' }}>₹{l2Summary.prevMonthEarning.toFixed(2)}</p>
+                                    </div>
+                                </div>
+
+                                {/* Filters Row */}
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <div style={{ flex: 1, position: 'relative' }}>
+                                        <select
+                                            value={l2FilterMonth}
+                                            onChange={(e) => {
+                                                const val = Number(e.target.value);
+                                                setL2FilterMonth(val);
+                                                fetchL2Donors(val, l2FilterYear);
+                                            }}
+                                            style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', appearance: 'none', background: 'white' }}
+                                        >
+                                            <option value={0}>Lifetime View</option>
+                                            {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((m, i) => (
+                                                <option key={m} value={i + 1}>{m}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown size={14} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748b' }} />
+                                    </div>
+                                    <div style={{ flex: 1, position: 'relative' }}>
+                                        <select
+                                            value={l2FilterYear}
+                                            onChange={(e) => {
+                                                const val = Number(e.target.value);
+                                                setL2FilterYear(val);
+                                                fetchL2Donors(l2FilterMonth, val);
+                                            }}
+                                            style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', appearance: 'none', background: 'white' }}
+                                        >
+                                            {[2024, 2025, 2026].map(y => (
+                                                <option key={y} value={y}>{y}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown size={14} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748b' }} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="conditions-container" style={{ padding: '0', background: '#ffffff', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }}>
+                                {isLoadingL2 ? (
+                                    <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+                                        <motion.div
+                                            animate={{ rotate: 360 }}
+                                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                            style={{ display: 'inline-block', marginBottom: '1rem' }}
+                                        >
+                                            <Clock size={32} />
+                                        </motion.div>
+                                        <p>Loading donors list...</p>
+                                    </div>
+                                ) : l2DonorsList.length === 0 ? (
+                                    <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+                                        <Users size={40} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+                                        <p>No L2 donors found yet.</p>
+                                    </div>
+                                ) : (
+                                    <div className="l1-donors-list" style={{ maxHeight: '60vh', overflowY: 'auto', width: '100%' }}>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                            <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
+                                                <tr>
+                                                    <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Donor Name</th>
+                                                    <th style={{ textAlign: 'right', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Your Earning</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {l2DonorsList.map((donor, idx) => (
+                                                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                                        <td style={{ padding: '12px 20px' }}>
+                                                            <div style={{ fontWeight: 600, color: '#1e293b' }}>{donor.donorName}</div>
+                                                            <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500, margin: '2px 0' }}>
+                                                                {donor.donorMobile}
+                                                            </div>
+                                                            <div style={{ fontSize: '0.75rem', color: '#6366f1', fontWeight: 600, marginTop: '4px' }}>
+                                                                via {donor.referredBy}
+                                                            </div>
+                                                            <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '4px' }}>
+                                                                Last Donation: {new Date(donor.lastDonation || donor.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ padding: '12px 20px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>
+                                                            ₹{(donor.totalEarning || 0).toLocaleString()}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9', padding: '1.25rem' }}>
+                                <button className="btn-proceed" style={{ margin: 0, width: '100%' }} onClick={() => setIsL2ModalOpen(false)}>Close</button>
                             </div>
                         </motion.div>
                     </div>

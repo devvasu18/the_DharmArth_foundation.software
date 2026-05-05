@@ -5,14 +5,7 @@ import { CreditCard, Search, Filter } from 'lucide-react';
 const AdminSubscriptions = () => {
     return (
         <div className="admin-page-container">
-            <div className="admin-header">
-                <div className="header-content">
-                    <h1 className="admin-title">
-                        <CreditCard className="title-icon" />
-                        Subscription Management
-                    </h1>
-                </div>
-            </div>
+
 
             <div className="admin-content-section">
                 <SubscriptionList isAdmin={true} />

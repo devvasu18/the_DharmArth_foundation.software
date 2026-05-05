@@ -580,6 +580,33 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
+.tab-badge {
+    background: #00bfa5;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
+    font-weight: 800;
+}
+
+.tab-badge.grey {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.tab-badge.alert-red {
+    background: #ef4444;
+    color: white;
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
 /* Pagination Footer */
 .pagination-footer {
     display: flex;

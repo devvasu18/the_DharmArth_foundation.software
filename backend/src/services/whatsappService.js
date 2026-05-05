@@ -231,6 +231,14 @@ class WhatsappService {
     }
 
     /**
+     * Specialized: Send Payout Failure WhatsApp Notification
+     */
+    async sendWithdrawalFailedNotification(mobile, name, amount, reason) {
+        const message = `Dear ${name}, your payout request of ₹${amount} could not be processed due to: ${reason || 'Information mismatch'}. Please check your dashboard to correct the details. 🙏`;
+        return this.sendMessage(mobile, message);
+    }
+
+    /**
      * Specialized: Send L1 Motivator Commission Notification
      */
     async sendL1MotivatorNotification(motivatorMobile, data) {

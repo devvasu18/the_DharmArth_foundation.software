@@ -140,10 +140,13 @@ router.get('/', protect, checkPermission('Transaction Management', 'view'), asyn
         let query = {};
         
         if (isDisputed === 'true') {
-            query.isDisputed = true;
+            query.$or = [
+                { isDisputed: true },
+                { status: 'failed', userReply: { $exists: true, $ne: "" } }
+            ];
         } else if (status && status !== 'all') {
             if (status === 'processed') {
-                query.status = { $in: ['completed', 'rejected'] };
+                query.status = { $in: ['completed', 'failed'] };
             } else if (status === 'pending_all') {
                 query.status = { $in: ['pending', 'exported'] };
             } else {
@@ -175,6 +178,19 @@ router.get('/', protect, checkPermission('Transaction Management', 'view'), asyn
             .skip(skip)
             .limit(limit);
 
+        // Global counts for dashboard tabs
+        const allCounts = {
+            pending: await PayoutRequest.countDocuments({ status: 'pending' }),
+            exported: await PayoutRequest.countDocuments({ status: 'exported' }),
+            processed: await PayoutRequest.countDocuments({ status: { $in: ['completed', 'failed'] } }),
+            disputed: await PayoutRequest.countDocuments({ 
+                $or: [
+                    { isDisputed: true },
+                    { status: 'failed', userReply: { $exists: true, $ne: "" } }
+                ]
+            })
+        };
+
         res.json({
             payouts: requests,
             metadata: {
@@ -182,7 +198,8 @@ router.get('/', protect, checkPermission('Transaction Management', 'view'), asyn
                 totalAmount,
                 page,
                 pages: Math.ceil(total / limit),
-                limit
+                limit,
+                allCounts
             }
         });
     } catch (error) {
@@ -379,21 +396,179 @@ router.put('/resolve-dispute/:id', protect, checkPermission('Transaction Managem
     }
 });
 
-// @desc    Admin: Bulk Update Payout Status (e.g. mark as exported)
+// @desc    Admin: Bulk Update Payout Status (e.g. mark as exported, completed, or failed)
 // @route   PUT /api/payouts/bulk/status
 router.put('/bulk/status', protect, checkPermission('Transaction Management', 'edit'), async (req, res) => {
     try {
-        const { ids, status } = req.body;
+        const { ids, status, adminNotes } = req.body;
         if (!ids || !Array.isArray(ids) || ids.length === 0) {
             return res.status(400).json({ message: 'No IDs provided' });
         }
 
+        const updateData = { status: status, processedAt: Date.now() };
+        if (adminNotes) {
+            updateData.adminNotes = adminNotes;
+        }
+
         await PayoutRequest.updateMany(
             { _id: { $in: ids } },
-            { $set: { status: status, processedAt: Date.now() } }
+            { $set: updateData }
         );
 
+        // Update corresponding transactions
+        const txnStatus = status === 'completed' ? 'success' : status === 'failed' ? 'failed' : 'pending';
+        await Transaction.updateMany(
+            { referenceId: { $in: ids } },
+            { $set: { status: txnStatus } }
+        );
+
+        // If status is failed or completed, notify users (WhatsApp + Bell)
+        if (status === 'failed' || status === 'completed') {
+            const io = req.app.get('io');
+            const requests = await PayoutRequest.find({ _id: { $in: ids } }).populate('user', 'name mobile');
+            
+            for (let request of requests) {
+                // 1. In-App Bell Notification
+                try {
+                    const userNotif = await notificationService.notifyPayoutProcessed(request, status);
+                    if (io) {
+                        io.to(`user_${request.user._id}`).emit('payout_processed', userNotif);
+                    }
+                } catch (err) {
+                    console.error("Failed to send in-app notification:", err.message);
+                }
+
+                // 2. WhatsApp Notification
+                try {
+                    if (request.user && request.user.mobile) {
+                        if (status === 'completed') {
+                            await whatsappService.sendWithdrawalNotification(request.user.mobile, request.user.name, request.amount);
+                        } else if (status === 'failed') {
+                            await whatsappService.sendWithdrawalFailedNotification(request.user.mobile, request.user.name, request.amount, adminNotes);
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to send WhatsApp notification:", err.message);
+                }
+            }
+        }
+
         res.json({ success: true, message: `Updated ${ids.length} payouts to ${status}` });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    User: Reply to Failed Payout
+// @route   PUT /api/payouts/:id/reply
+router.put('/:id/reply', protect, async (req, res) => {
+    try {
+        const { reply } = req.body;
+        const payout = await PayoutRequest.findOne({ _id: req.params.id, user: req.user._id });
+
+        if (!payout) {
+            return res.status(404).json({ message: 'Payout request not found' });
+        }
+
+        if (payout.status !== 'failed') {
+            return res.status(400).json({ message: 'Can only reply to failed payouts' });
+        }
+
+        if (payout.userReply) {
+            return res.status(400).json({ message: 'You have already replied to this request' });
+        }
+
+        payout.userReply = reply;
+        payout.userReplyAt = Date.now();
+        // Reset status to exported or pending so admin can see it again? 
+        // User said "user can rereply once", so maybe admin should see the reply and then take action.
+        // Let's keep it as 'failed' but with a reply.
+        await payout.save();
+
+        // Notify Admin
+        const io = req.app.get('io');
+        if (io) {
+            io.to('admin_notifications').emit('payout_user_reply', {
+                message: `REPLY: ${req.user.name} replied to failed payout #${payout._id.toString().slice(-6).toUpperCase()}`,
+                payoutId: payout._id,
+                reply: reply
+            });
+        }
+
+        res.json({ success: true, message: 'Reply sent successfully', payout });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Admin: Reset Failed Payout to Pending
+// @route   PUT /api/payouts/:id/reset
+router.put('/:id/reset', protect, checkPermission('Transaction Management', 'edit'), async (req, res) => {
+    try {
+        const payout = await PayoutRequest.findById(req.params.id).populate('user');
+        if (!payout) return res.status(404).json({ message: 'Payout not found' });
+
+        if (!payout.user || !payout.user.payoutCredentials) {
+            return res.status(400).json({ message: "User bank details not found" });
+        }
+
+        // Update details from user's latest profile - explicit mapping ensures fresh data & encryption
+        payout.status = 'pending';
+        payout.payoutDetails = {
+            bankName: payout.user.payoutCredentials.bankName || '',
+            accountHolder: payout.user.payoutCredentials.accountHolder || '',
+            accountNumber: payout.user.payoutCredentials.accountNumber || '',
+            ifscCode: payout.user.payoutCredentials.ifscCode || ''
+        };
+        
+        payout.adminNotes = undefined;
+        payout.userReply = undefined;
+        payout.userReplyAt = undefined;
+        payout.processedAt = undefined;
+        
+        await payout.save();
+
+        // Also update transaction status back to pending
+        await Transaction.updateMany(
+            { referenceId: payout._id },
+            { $set: { status: 'pending' } }
+        );
+
+        res.json({ success: true, message: 'Payout reset to pending with latest bank details', payout });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Admin: Update Payout Details Manually
+// @route   PUT /api/payouts/:id/details
+router.put('/:id/details', protect, checkPermission('Transaction Management', 'edit'), async (req, res) => {
+    try {
+        const { bankName, accountNumber, ifscCode, accountHolder } = req.body;
+        const payout = await PayoutRequest.findById(req.params.id);
+        if (!payout) return res.status(404).json({ message: 'Payout not found' });
+
+        payout.payoutDetails = {
+            bankName,
+            accountNumber,
+            ifscCode,
+            accountHolder: accountHolder || (payout.payoutDetails ? payout.payoutDetails.accountHolder : "")
+        };
+        
+        // Also reset to pending automatically if admin is fixing it
+        payout.status = 'pending';
+        payout.adminNotes = undefined;
+        payout.userReply = undefined;
+        payout.processedAt = undefined;
+
+        await payout.save();
+        
+        await Transaction.updateMany(
+            { referenceId: payout._id },
+            { $set: { status: 'pending' } }
+        );
+
+        res.json({ success: true, message: 'Payout details updated and reset to pending', payout });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

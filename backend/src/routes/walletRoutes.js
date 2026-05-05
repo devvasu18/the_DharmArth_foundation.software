@@ -266,4 +266,101 @@ router.get('/l1-donors', protect, async (req, res) => {
     }
 });
 
+// @desc    Get L2 Donors List (Aggregated by donor with total earnings + Filters)
+// @route   GET /api/wallet/l2-donors
+router.get('/l2-donors', protect, async (req, res) => {
+    try {
+        const Donation = require('../models/Donation');
+        const Setting = require('../models/Setting');
+
+        const { month, year } = req.query;
+
+        // Fetch L2 Commission Rate
+        const l2RateSetting = await Setting.findOne({ key: 'commission_level_2' });
+        const l2Rate = l2RateSetting ? l2RateSetting.value : 5; // Default 5% if not set
+
+        // 1. Calculate Summary Stats (Lifetime and Previous Month)
+        const now = new Date();
+        const firstOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+        const [lifetimeStats, prevMonthStats] = await Promise.all([
+            Donation.aggregate([
+                { $match: { level2UserId: req.user._id, status: 'success' } },
+                { $group: { _id: null, total: { $sum: "$amount" } } }
+            ]),
+            Donation.aggregate([
+                { 
+                    $match: { 
+                        level2UserId: req.user._id, 
+                        status: 'success',
+                        createdAt: { $gte: firstOfPrevMonth, $lte: lastOfPrevMonth }
+                    } 
+                },
+                { $group: { _id: null, total: { $sum: "$amount" } } }
+            ])
+        ]);
+
+        const summary = {
+            lifetimeEarning: (lifetimeStats[0]?.total || 0) * (l2Rate / 100),
+            prevMonthEarning: (prevMonthStats[0]?.total || 0) * (l2Rate / 100)
+        };
+
+        // 2. Prepare Aggregation Pipeline for the List
+        let matchQuery = {
+            level2UserId: req.user._id,
+            status: 'success'
+        };
+
+        if (month && year && Number(month) > 0) {
+            const start = new Date(year, month - 1, 1);
+            const end = new Date(year, month, 1);
+            matchQuery.createdAt = { $gte: start, $lt: end };
+        } else if (year) {
+            const start = new Date(year, 0, 1);
+            const end = new Date(Number(year) + 1, 0, 1);
+            matchQuery.createdAt = { $gte: start, $lt: end };
+        }
+
+        const donors = await Donation.aggregate([
+            { $match: matchQuery },
+            {
+                $group: {
+                    _id: { name: "$donorName", mobile: "$donorMobile", l1Id: "$level1UserId" },
+                    totalAmount: { $sum: "$amount" },
+                    lastDonation: { $max: "$createdAt" }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: '_id.l1Id',
+                    foreignField: '_id',
+                    as: 'l1User'
+                }
+            },
+            { $unwind: "$l1User" },
+            {
+                $project: {
+                    _id: 0,
+                    donorName: "$_id.name",
+                    donorMobile: "$_id.mobile",
+                    referredBy: "$l1User.name",
+                    totalAmount: 1,
+                    totalEarning: { $multiply: ["$totalAmount", l2Rate / 100] },
+                    lastDonation: 1
+                }
+            },
+            { $sort: { lastDonation: -1 } }
+        ]);
+        
+        res.json({
+            summary,
+            donors
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;
