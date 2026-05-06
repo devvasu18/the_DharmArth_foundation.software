@@ -157,6 +157,16 @@ body {
 .bg-teal-600 { background-color: var(--primary); }
 .bg-teal-500 { background-color: var(--primary); }
 .bg-teal-50 { background-color: var(--primary-light); }
+.bg-gray-900 { background-color: #111827; }
+.bg-white { background-color: #ffffff; }
+.text-teal-600 { color: var(--primary); }
+.text-teal-500 { color: var(--primary); }
+.text-teal-300 { color: #99f6e4; }
+.text-teal-50 { color: var(--primary-light); }
+
+.cms-section a {
+    text-decoration: none;
+}
 
 /* Global Utilities */
 .btn {
@@ -267,6 +277,7 @@ body {
 .text-3xl { font-size: 1.875rem; }
 .text-4xl { font-size: 2.25rem; }
 .text-5xl { font-size: 3rem; }
+.text-6xl { font-size: 3.75rem; }
 .md\:text-8xl { @media (min-width: 768px) { font-size: 6rem; } }
 
 /* Line Heights */

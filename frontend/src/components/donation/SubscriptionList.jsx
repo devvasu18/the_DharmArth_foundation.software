@@ -10,6 +10,8 @@ import 'jspdf-autotable';
 const SubscriptionList = ({ isAdmin = false }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
+    const [amountFilter, setAmountFilter] = useState('');
+    const [uniqueAmounts, setUniqueAmounts] = useState([]);
     const [subscriptions, setSubscriptions] = useState([]);
     const [loading, setLoading] = useState(true);
     const { showConfirm } = useConfirm();
@@ -32,9 +34,10 @@ const SubscriptionList = ({ isAdmin = false }) => {
             setLoading(true);
             const endpoint = isAdmin ? '/subscriptions/admin/all' : '/subscriptions/my';
             const { data } = await api.get(endpoint, {
-                params: { 
-                    search: searchTerm, 
+                params: {
+                    search: searchTerm,
                     status: statusFilter,
+                    amount: amountFilter,
                     page: page,
                     limit: limit
                 }
@@ -72,11 +75,12 @@ const SubscriptionList = ({ isAdmin = false }) => {
         try {
             let dataToExport = subscriptions;
             const endpoint = isAdmin ? '/subscriptions/admin/all' : '/subscriptions/my';
-            
+
             if (exportAll) {
                 const res = await api.get(endpoint, {
                     params: {
                         status: statusFilter,
+                        amount: amountFilter,
                         search: searchTerm,
                         exportAll: true
                     }
@@ -108,11 +112,12 @@ const SubscriptionList = ({ isAdmin = false }) => {
         try {
             let dataToExport = subscriptions;
             const endpoint = isAdmin ? '/subscriptions/admin/all' : '/subscriptions/my';
-            
+
             if (exportAll) {
                 const res = await api.get(endpoint, {
                     params: {
                         status: statusFilter,
+                        amount: amountFilter,
                         search: searchTerm,
                         exportAll: true
                     }
@@ -156,9 +161,23 @@ const SubscriptionList = ({ isAdmin = false }) => {
             setCurrentPage(1); // Reset to first page on search/filter
             fetchSubscriptions(1);
         }, searchTerm ? 500 : 0);
-        
+
         return () => clearTimeout(timer);
-    }, [searchTerm, statusFilter, isAdmin]);
+    }, [searchTerm, statusFilter, amountFilter, isAdmin]);
+
+    useEffect(() => {
+        if (isAdmin) {
+            const fetchAmounts = async () => {
+                try {
+                    const { data } = await api.get('/subscriptions/admin/amounts');
+                    setUniqueAmounts(data || []);
+                } catch (err) {
+                    console.error("Failed to fetch unique amounts", err);
+                }
+            };
+            fetchAmounts();
+        }
+    }, [isAdmin]);
 
 
     const handleCancel = async (sub, otp = null) => {
@@ -195,11 +214,11 @@ const SubscriptionList = ({ isAdmin = false }) => {
             if (isAdmin) setVerifyingOtp(true);
             const { data } = await api.post(`/subscriptions/cancel/${sub._id}`, { otp });
             toast.success('Subscription cancelled successfully');
-            
-            setSubscriptions(prev => prev.map(s => 
+
+            setSubscriptions(prev => prev.map(s =>
                 s._id === sub._id ? { ...s, status: 'cancelled', cancelledBy: isAdmin ? 'admin' : 'user' } : s
             ));
-            
+
             if (isAdmin) {
                 setOtpModalOpen(false);
                 setOtpValue('');
@@ -234,10 +253,10 @@ const SubscriptionList = ({ isAdmin = false }) => {
                             razorpay_payment_id: response.razorpay_payment_id,
                             razorpay_signature: response.razorpay_signature
                         });
-                        
+
                         if (data.success) {
                             toast.success("Payment Successful! Subscription Active.");
-                            setSubscriptions(prev => prev.map(s => 
+                            setSubscriptions(prev => prev.map(s =>
                                 s._id === sub._id ? { ...s, status: 'active' } : s
                             ));
                         } else {
@@ -314,6 +333,14 @@ const SubscriptionList = ({ isAdmin = false }) => {
         );
     }
 
+    const activePageTotal = subscriptions
+        .filter(sub => sub.status === 'active')
+        .reduce((sum, sub) => sum + (sub.amount || 0), 0);
+
+    const failedPageTotal = subscriptions
+        .filter(sub => sub.status === 'failed')
+        .reduce((sum, sub) => sum + (sub.amount || 0), 0);
+
     return (
         <div className={`subscription-list ${isAdmin ? 'admin-table-view' : ''}`}>
             {/* Export Controls - Now always at the very top */}
@@ -362,124 +389,138 @@ const SubscriptionList = ({ isAdmin = false }) => {
                             <option value="created">Pending</option>
                         </select>
                     </div>
+
+                    <div className="filter-group">
+                        <CreditCard size={18} />
+                        <select
+                            value={amountFilter}
+                            onChange={(e) => setAmountFilter(e.target.value)}
+                            className="admin-select"
+                        >
+                            <option value="">All Amounts</option>
+                            {uniqueAmounts.map(amt => (
+                                <option key={amt} value={amt}>₹{amt.toLocaleString()}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             )}
 
             {!isAdmin ? (
                 // User Table View
                 <>
-                <div className="user-table-container hide-mobile">
-                    <table className="user-sub-table">
-                        <thead>
-                            <tr>
-                                <th>Contribution</th>
-                                <th>Reference ID</th>
-                                <th>Started On</th>
-                                <th>Next Billing</th>
-                                <th>Status</th>
-                                <th className="text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {subscriptions.map((sub) => (
-                                <tr key={sub._id}>
-                                    <td>
-                                        <div className="user-amount-cell">
-                                            <strong>₹{sub.amount.toLocaleString()}</strong>
-                                            <span className="freq">/ month</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <code className="user-sub-id">{sub.subscriptionId}</code>
-                                    </td>
-                                    <td>{new Date(sub.createdAt).toLocaleDateString()}</td>
-                                    <td>
-                                        {sub.nextBillingDate && sub.status === 'active' 
-                                            ? new Date(sub.nextBillingDate).toLocaleDateString() 
-                                            : '-'}
-                                    </td>
-                                    <td>{getStatusBadge(sub)}</td>
-                                    <td>
-                                        <div className="user-actions-cell">
-                                            {sub.status === 'active' && (
-                                                <button 
-                                                    className="btn-cancel-small" 
-                                                    onClick={() => handleCancel(sub)}
-                                                >
-                                                    Cancel
-                                                </button>
-                                            )}
-                                            {sub.status === 'failed' && (
-                                                <>
-                                                    <button 
-                                                        className="btn-retry-small" 
-                                                        onClick={() => handleRetry(sub)}
-                                                    >
-                                                        Retry
-                                                    </button>
-                                                    <button 
-                                                        className="btn-cancel-small" 
+                    <div className="user-table-container hide-mobile">
+                        <table className="user-sub-table">
+                            <thead>
+                                <tr>
+                                    <th>Contribution</th>
+                                    <th>Reference ID</th>
+                                    <th>Started On</th>
+                                    <th>Next Billing</th>
+                                    <th>Status</th>
+                                    <th className="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {subscriptions.map((sub) => (
+                                    <tr key={sub._id}>
+                                        <td>
+                                            <div className="user-amount-cell">
+                                                <strong>₹{sub.amount.toLocaleString()}</strong>
+                                                <span className="freq">/ month</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <code className="user-sub-id">{sub.subscriptionId}</code>
+                                        </td>
+                                        <td>{new Date(sub.createdAt).toLocaleDateString()}</td>
+                                        <td>
+                                            {sub.nextBillingDate && sub.status === 'active'
+                                                ? new Date(sub.nextBillingDate).toLocaleDateString()
+                                                : '-'}
+                                        </td>
+                                        <td>{getStatusBadge(sub)}</td>
+                                        <td>
+                                            <div className="user-actions-cell">
+                                                {sub.status === 'active' && (
+                                                    <button
+                                                        className="btn-cancel-small"
                                                         onClick={() => handleCancel(sub)}
                                                     >
                                                         Cancel
                                                     </button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                                )}
+                                                {sub.status === 'failed' && (
+                                                    <>
+                                                        <button
+                                                            className="btn-retry-small"
+                                                            onClick={() => handleRetry(sub)}
+                                                        >
+                                                            Retry
+                                                        </button>
+                                                        <button
+                                                            className="btn-cancel-small"
+                                                            onClick={() => handleCancel(sub)}
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
-                {/* Mobile User Cards */}
-                <div className="subscription-card-grid show-mobile">
-                    {subscriptions.map((sub) => (
-                        <div className="sub-mobile-card" key={sub._id}>
-                            <div className="card-header">
-                                <div className="amount-info">
-                                    <span className="amount">₹{sub.amount.toLocaleString()}</span>
-                                    <span className="freq">/ monthly</span>
+                    {/* Mobile User Cards */}
+                    <div className="subscription-card-grid show-mobile">
+                        {subscriptions.map((sub) => (
+                            <div className="sub-mobile-card" key={sub._id}>
+                                <div className="card-header">
+                                    <div className="amount-info">
+                                        <span className="amount">₹{sub.amount.toLocaleString()}</span>
+                                        <span className="freq">/ monthly</span>
+                                    </div>
+                                    <div className="status">{getStatusBadge(sub)}</div>
                                 </div>
-                                <div className="status">{getStatusBadge(sub)}</div>
-                            </div>
-                            <div className="card-body">
-                                <div className="info-row">
-                                    <span className="label">ID:</span>
-                                    <code className="value">{sub.subscriptionId}</code>
-                                </div>
-                                <div className="info-row">
-                                    <span className="label">Started:</span>
-                                    <span className="value">{new Date(sub.createdAt).toLocaleDateString()}</span>
-                                </div>
-                                {sub.status === 'active' && sub.nextBillingDate && (
+                                <div className="card-body">
                                     <div className="info-row">
-                                        <span className="label">Next Billing:</span>
-                                        <span className="value highlight">{new Date(sub.nextBillingDate).toLocaleDateString()}</span>
+                                        <span className="label">ID:</span>
+                                        <code className="value">{sub.subscriptionId}</code>
                                     </div>
-                                )}
-                            </div>
-                            <div className="card-footer">
-                                {sub.status === 'active' && (
-                                    <button className="mobile-action-btn cancel" onClick={() => handleCancel(sub)}>
-                                        <XCircle size={16} /> Cancel Subscription
-                                    </button>
-                                )}
-                                {sub.status === 'failed' && (
-                                    <div className="button-group">
-                                        <button className="mobile-action-btn retry" onClick={() => handleRetry(sub)}>
-                                            <CreditCard size={16} /> Retry Payment
-                                        </button>
+                                    <div className="info-row">
+                                        <span className="label">Started:</span>
+                                        <span className="value">{new Date(sub.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                    {sub.status === 'active' && sub.nextBillingDate && (
+                                        <div className="info-row">
+                                            <span className="label">Next Billing:</span>
+                                            <span className="value highlight">{new Date(sub.nextBillingDate).toLocaleDateString()}</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="card-footer">
+                                    {sub.status === 'active' && (
                                         <button className="mobile-action-btn cancel" onClick={() => handleCancel(sub)}>
-                                            Cancel
+                                            <XCircle size={16} /> Cancel Subscription
                                         </button>
-                                    </div>
-                                )}
+                                    )}
+                                    {sub.status === 'failed' && (
+                                        <div className="button-group">
+                                            <button className="mobile-action-btn retry" onClick={() => handleRetry(sub)}>
+                                                <CreditCard size={16} /> Retry Payment
+                                            </button>
+                                            <button className="mobile-action-btn cancel" onClick={() => handleCancel(sub)}>
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
                 </>
             ) : (
                 // Admin Table View
@@ -524,7 +565,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                                     </td>
                                     <td>
                                         {sub.status === 'active' && (
-                                            <button 
+                                            <button
                                                 className="admin-btn-cancel"
                                                 onClick={() => handleCancel(sub)}
                                             >
@@ -536,6 +577,24 @@ const SubscriptionList = ({ isAdmin = false }) => {
                             ))}
                         </tbody>
                     </table>
+
+                    {isAdmin && (
+                        <div className="admin-table-footer">
+                            <div className="summary-group">
+                                <div className="total-summary failed">
+                                    <span className="label">Failed Total:</span>
+                                    <span className="value">₹{failedPageTotal.toLocaleString()}</span>
+                                    <span className="freq">/ month</span>
+                                </div>
+                                <div className="total-summary active">
+                                    <span className="label">Active Total:</span>
+                                    <span className="value">₹{activePageTotal.toLocaleString()}</span>
+                                    <span className="freq">/ month</span>
+                                </div>
+
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -546,23 +605,23 @@ const SubscriptionList = ({ isAdmin = false }) => {
                         Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords} {isAdmin ? 'subscriptions' : 'records'}
                     </div>
                     <div className="pagination-buttons">
-                        <button 
-                            className="p-btn" 
+                        <button
+                            className="p-btn"
                             disabled={currentPage === 1}
                             onClick={() => handlePageChange(currentPage - 1)}
                         >
                             Previous
                         </button>
-                        
+
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
                             if (
-                                totalPages <= 7 || 
-                                pageNum === 1 || 
-                                pageNum === totalPages || 
+                                totalPages <= 7 ||
+                                pageNum === 1 ||
+                                pageNum === totalPages ||
                                 (pageNum >= currentPage - 2 && pageNum <= currentPage + 2)
                             ) {
                                 return (
-                                    <button 
+                                    <button
                                         key={pageNum}
                                         className={`p-btn ${currentPage === pageNum ? 'active' : ''}`}
                                         onClick={() => handlePageChange(pageNum)}
@@ -578,8 +637,8 @@ const SubscriptionList = ({ isAdmin = false }) => {
                             return null;
                         })}
 
-                        <button 
-                            className="p-btn" 
+                        <button
+                            className="p-btn"
                             disabled={currentPage === totalPages}
                             onClick={() => handlePageChange(currentPage + 1)}
                         >
@@ -595,9 +654,9 @@ const SubscriptionList = ({ isAdmin = false }) => {
                     <div className="otp-modal-box">
                         <h3>Authorize Cancellation</h3>
                         <p>Enter the 6-digit code sent to <strong>{selectedSub?.donorMobile}</strong></p>
-                        
-                        <input 
-                            type="text" 
+
+                        <input
+                            type="text"
                             maxLength="6"
                             placeholder="Enter 6-digit OTP"
                             value={otpValue}
@@ -607,8 +666,8 @@ const SubscriptionList = ({ isAdmin = false }) => {
 
                         <div className="otp-modal-footer">
                             <button className="btn-secondary" onClick={() => setOtpModalOpen(false)}>Cancel</button>
-                            <button 
-                                className="btn-primary" 
+                            <button
+                                className="btn-primary"
                                 onClick={() => handleCancel(selectedSub, otpValue)}
                                 disabled={otpValue.length !== 6 || verifyingOtp}
                             >
@@ -1161,6 +1220,56 @@ const SubscriptionList = ({ isAdmin = false }) => {
                     background: white;
                     outline: none;
                     cursor: pointer;
+                }
+                
+                .admin-table-footer {
+                    padding: 1.5rem;
+                    background: #f8fafc;
+                    border-top: 2px solid #e2e8f0;
+                    display: flex;
+                    justify-content: flex-end;
+                }
+                .summary-group {
+                    display: flex;
+                    gap: 1rem;
+                }
+                .total-summary {
+                    display: flex;
+                    align-items: baseline;
+                    gap: 8px;
+                    background: white;
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 12px;
+                    border: 1px solid #e2e8f0;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                }
+                .total-summary.active {
+                    border-left: 4px solid #10b981;
+                }
+                .total-summary.failed {
+                    border-left: 4px solid #ef4444;
+                }
+                .total-summary .label {
+                    font-size: 0.85rem;
+                    font-weight: 700;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+                .total-summary.active .value {
+                    font-size: 1.5rem;
+                    font-weight: 800;
+                    color: #10b981;
+                }
+                .total-summary.failed .value {
+                    font-size: 1.5rem;
+                    font-weight: 800;
+                    color: #ef4444;
+                }
+                .total-summary .freq {
+                    font-size: 0.85rem;
+                    color: #94a3b8;
+                    font-weight: 600;
                 }
 
                 /* Mobile Optimization */

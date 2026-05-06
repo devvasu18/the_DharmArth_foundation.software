@@ -367,19 +367,6 @@ const PayoutManagement = () => {
                 <div>
                     <h2 className="payout-title">Motivator Payouts</h2>
                     <p className="payout-subtitle">Review and process commission withdrawal requests</p>
-                    {activeTab === 'pending' && metadata.totalAmount > 0 && (
-                        <div className="total-pending-amount" style={{ 
-                            marginTop: '0.5rem', 
-                            fontSize: '1rem', 
-                            fontWeight: 800, 
-                            color: '#059669',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                        }}>
-                            <IndianRupee size={16} /> Total Pending: ₹{metadata.totalAmount.toLocaleString()}
-                        </div>
-                    )}
                 </div>
                 {activeTab === 'pending' && (
                     <button className="btn-export" onClick={handleExport}>
@@ -552,6 +539,31 @@ const PayoutManagement = () => {
                     </tbody>
                 </table>
             </div>
+
+            {activeTab !== 'disputed' && (
+                <div className="admin-table-footer">
+                    <div className="summary-group">
+                        {(activeTab === 'pending' || activeTab === 'exported') && (
+                            <div className="total-summary pending">
+                                <span className="label">Pending Total:</span>
+                                <span className="value">₹{payouts.reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString()}</span>
+                            </div>
+                        )}
+                        {activeTab === 'processed' && (
+                            <>
+                                <div className="total-summary failed">
+                                    <span className="label">Failed Total:</span>
+                                    <span className="value">₹{payouts.filter(p => p.status === 'failed').reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString()}</span>
+                                </div>
+                                <div className="total-summary active">
+                                    <span className="label">Active Total:</span>
+                                    <span className="value">₹{payouts.filter(p => p.status === 'completed').reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString()}</span>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Pagination Controls */}
             {!loading && metadata.pages > 1 && (

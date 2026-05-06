@@ -8,6 +8,7 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess, onEditDetails }
     const [showConfirmStep, setShowConfirmStep] = useState(false);
     const [withdrawAmount, setWithdrawAmount] = useState(0);
     const [showOtpStep, setShowOtpStep] = useState(false);
+    const [showSuccessStep, setShowSuccessStep] = useState(false);
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [sendingOtp, setSendingOtp] = useState(false);
     const [verifying, setVerifying] = useState(false);
@@ -58,6 +59,7 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess, onEditDetails }
             setWithdrawAmount(currentBalance);
         } else {
             setShowConfirmStep(false);
+            setShowSuccessStep(false);
         }
     }, [isOpen, currentBalance]);
 
@@ -127,9 +129,8 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess, onEditDetails }
                 amount: withdrawAmount,
                 otp: otpString
             });
-            toast.success("Withdrawal Request Submitted Successfully!");
+            setShowSuccessStep(true);
             if (onSuccess) onSuccess();
-            onClose();
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to submit request");
         } finally {
@@ -182,12 +183,47 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess, onEditDetails }
                     <button className="payout-modal-close" onClick={onClose}><X size={24} /></button>
 
                     <div className="payout-modal-header">
-                        <h2>{showConfirmStep ? 'Confirm Withdrawal' : 'Withdrawal'}</h2>
-                        <p>{showConfirmStep ? 'Please verify your details before proceeding' : 'Track your milestones and request payouts'}</p>
+                        <h2>{showSuccessStep ? 'Success!' : showConfirmStep ? 'Confirm Withdrawal' : 'Withdrawal'}</h2>
+                        <p>{showSuccessStep ? 'Request submitted successfully' : showConfirmStep ? 'Please verify your details before proceeding' : 'Track your milestones and request payouts'}</p>
                     </div>
 
                     <div className="conditions-container">
-                        {showConfirmStep ? (
+                        {showSuccessStep ? (
+                            <motion.div 
+                                className="success-step-ui"
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                style={{ textAlign: 'center', padding: '2rem 1rem' }}
+                            >
+                                <div className="success-icon-wrapper" style={{ 
+                                    width: '80px', 
+                                    height: '80px', 
+                                    background: '#ecfdf5', 
+                                    color: '#10b981', 
+                                    borderRadius: '50%', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    margin: '0 auto 1.5rem',
+                                    boxShadow: '0 10px 20px rgba(16, 185, 129, 0.1)'
+                                }}>
+                                    <CheckCircle size={48} />
+                                </div>
+                                <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#111827', marginBottom: '0.5rem' }}>Thank You!</h3>
+                                <p style={{ color: '#059669', fontWeight: 700, fontSize: '1rem', marginBottom: '1rem' }}>Withdrawal Request Submitted Successfully!</p>
+                                <div style={{ 
+                                    background: '#f8fafc', 
+                                    padding: '1.25rem', 
+                                    borderRadius: '16px', 
+                                    border: '1px solid #e2e8f0',
+                                    color: '#64748b',
+                                    fontSize: '0.95rem',
+                                    lineHeight: '1.6'
+                                }}>
+                                    Your payment will be received in your bank account in the next <strong>5-7 working days</strong>.
+                                </div>
+                            </motion.div>
+                        ) : showConfirmStep ? (
                             <motion.div
                                 className="confirm-step-ui"
                                 initial={{ opacity: 0, x: 20 }}
@@ -366,6 +402,10 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess, onEditDetails }
                     <div className="modal-footer">
                         {loadingRules ? (
                             <div className="animate-pulse" style={{ height: '50px', background: '#f1f5f9', borderRadius: '12px', width: '100%' }}></div>
+                        ) : showSuccessStep ? (
+                            <button className="btn-proceed" onClick={onClose} style={{ width: '100%', borderRadius: '12px' }}>
+                                Got it, Thanks!
+                            </button>
                         ) : !canPayout ? (
                             <button className="btn-locked" disabled>
                                 {currentBalance < MIN_BALANCE ? 'Low Balance' : 'Withdrawal Locked'}
@@ -397,3 +437,4 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess, onEditDetails }
 };
 
 export default PayoutModal;
+

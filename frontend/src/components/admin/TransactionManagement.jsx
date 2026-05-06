@@ -1004,6 +1004,21 @@ const TransactionManagement = () => {
                 </table>
             </div>
 
+            <div className="admin-table-footer">
+                <div className="summary-group">
+                    <div className="total-summary failed">
+                        <span className="label">Failed Total:</span>
+                        <span className="value">₹{transactions.filter(txn => txn.status === 'failed').reduce((sum, txn) => sum + (txn.amount || 0), 0).toLocaleString()}</span>
+                        <span className="freq">/ month</span>
+                    </div>
+                    <div className="total-summary active">
+                        <span className="label">Active Total:</span>
+                        <span className="value">₹{transactions.filter(txn => txn.status === 'success').reduce((sum, txn) => sum + (txn.amount || 0), 0).toLocaleString()}</span>
+                        <span className="freq">/ month</span>
+                    </div>
+                </div>
+            </div>
+
             {/* Pagination */}
             <div className="pagination-controls">
                 <button className="page-btn" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Previous</button>

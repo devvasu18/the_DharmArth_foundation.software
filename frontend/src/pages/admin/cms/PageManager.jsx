@@ -617,8 +617,27 @@ const DataEditor = ({ component, onClose, onSave }) => {
                                         <label className="cms-label">{key.replace(/([A-Z])/g, ' $1')}</label>
                                         <div className="flex flex-col gap-2 w-full">
                                             {data[key] && (data[key].startsWith('http') || data[key].startsWith('/')) && (
-                                                <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-100 shadow-sm mb-2">
-                                                    <img src={data[key]} alt="" className="w-full h-full object-cover" />
+                                                <div className="relative w-24 h-16 rounded-xl overflow-hidden border border-gray-100 shadow-sm mb-2 bg-black">
+                                                    {key === 'videoUrl' ? (
+                                                        <img 
+                                                            src={`https://img.youtube.com/vi/${(() => {
+                                                                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                                                                const match = data[key].match(regExp);
+                                                                return (match && match[2].length === 11) ? match[2] : '';
+                                                            })()}/hqdefault.jpg`} 
+                                                            alt="" 
+                                                            className="w-full h-full object-cover opacity-80" 
+                                                        />
+                                                    ) : (
+                                                        <img src={data[key]} alt="" className="w-full h-full object-cover" />
+                                                    )}
+                                                    {key === 'videoUrl' && (
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white">
+                                                                <Play size={14} fill="currentColor" />
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                             <div className="flex gap-2">

@@ -53,10 +53,11 @@ exports.getMySubscriptions = async (req, res) => {
  */
 exports.getAllSubscriptions = async (req, res) => {
     try {
-        const { status, search, page = 1, limit = 10, exportAll } = req.query;
+        const { status, amount, search, page = 1, limit = 10, exportAll } = req.query;
         let query = {};
 
         if (status) query.status = status;
+        if (amount) query.amount = parseInt(amount);
         if (search) {
             const User = require('../models/User');
             // Find users matching the search as a referral code
@@ -273,6 +274,21 @@ exports.getMotivatorReferrals = async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching motivator referrals:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+/**
+ * @desc    Get all unique subscription amounts
+ * @route   GET /api/subscriptions/admin/amounts
+ * @access  Private/Admin
+ */
+exports.getUniqueAmounts = async (req, res) => {
+    try {
+        const amounts = await Subscription.distinct('amount');
+        res.json(amounts.sort((a, b) => a - b));
+    } catch (error) {
+        console.error('Error fetching unique amounts:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };

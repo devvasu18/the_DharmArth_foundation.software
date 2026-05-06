@@ -21,7 +21,7 @@ const MonthlyGivingSection = () => {
                         <p className="monthly-giving-text">
                             <span className="monthly-giving-highlight">{t('monthly.p1')}</span>{t('monthly.p2')}<span className="monthly-giving-highlight">{t('monthly.p3')}</span>{t('monthly.p4')}
                         </p>
-                        <button className="monthly-giving-btn" onClick={() => window.location.href = '/donate'}>
+                        <button className="monthly-giving-btn" onClick={() => window.location.href = '/p/join-and-earn'}>
                             {t('monthly.cta')} <ArrowRight size={20} strokeWidth={3} />
                         </button>
                     </div>

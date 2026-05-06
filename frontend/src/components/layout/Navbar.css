@@ -32,7 +32,7 @@
 }
 
 .nav-link {
-    font-size: var(--text-sm);
+    font-size: var(--text-base);
     font-weight: 500;
     color: var(--text-main);
     display: flex;
@@ -202,7 +202,7 @@
     padding: var(--spacing-2) var(--spacing-4);
     border-radius: var(--radius-sm);
     font-weight: 600;
-    font-size: var(--text-sm);
+    font-size: var(--text-base);
     transition: all var(--transition-fast);
     text-decoration: none;
 }
@@ -221,6 +221,7 @@
 .btn-link {
     color: var(--text-muted);
     font-weight: 500;
+    font-size: var(--text-base);
     text-decoration: none;
 }
 
