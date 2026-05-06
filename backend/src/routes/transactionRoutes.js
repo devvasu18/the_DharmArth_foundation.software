@@ -315,21 +315,40 @@ router.get('/users/:userId/referral-tree', async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Get direct referrals (Level 1)
-        const level1Users = await User.find({ referredBy: userId })
-            .select('name mobile email createdAt')
+        // Get direct referrals (Level 1) - via referredBy OR lastMotivatorMobile
+        const level1ByReferral = await User.find({ referredBy: userId })
+            .select('name mobile email createdAt referredBy lastMotivatorMobile')
             .sort({ createdAt: -1 });
+
+        // Also find users who donated using this user's mobile as motivator (but no formal referral link)
+        const level1ByMotivator = await User.find({
+            referredBy: null,
+            lastMotivatorMobile: user.mobile,
+            _id: { $nin: level1ByReferral.map(u => u._id) } // avoid duplicates
+        })
+            .select('name mobile email createdAt referredBy lastMotivatorMobile')
+            .sort({ createdAt: -1 });
+
+        const level1Users = [...level1ByReferral, ...level1ByMotivator];
 
         // Get Level 2 referrals (people referred by Level 1 users)
         const level2Data = [];
         for (const l1User of level1Users) {
-            const l2Users = await User.find({ referredBy: l1User._id })
+            const l2ByReferral = await User.find({ referredBy: l1User._id })
+                .select('name mobile email createdAt')
+                .sort({ createdAt: -1 });
+
+            const l2ByMotivator = await User.find({
+                referredBy: null,
+                lastMotivatorMobile: l1User.mobile,
+                _id: { $nin: l2ByReferral.map(u => u._id) }
+            })
                 .select('name mobile email createdAt')
                 .sort({ createdAt: -1 });
 
             level2Data.push({
                 level1User: l1User,
-                level2Users: l2Users
+                level2Users: [...l2ByReferral, ...l2ByMotivator]
             });
         }
 
@@ -496,15 +515,18 @@ router.get('/donations/:donationId/breakdown', async (req, res) => {
                 amount: donation.amount,
                 date: donation.createdAt,
                 panNumber: donation.panNumber, // Getters handle this since it's not .lean()
-                aadhaarNumber: donation.aadhaarNumber
+                aadhaarNumber: donation.aadhaarNumber,
+                paymentMethod: donation.paymentMethod || 'online'
             },
-            commissions: transactions.map(txn => ({
-                recipient: txn.wallet.user,
-                amount: txn.amount,
-                percentage: txn.reason === 'referral_commission_l1' ? 10 : 3,
-                level: txn.reason === 'referral_commission_l1' ? 1 : 2,
-                description: txn.description
-            }))
+            commissions: transactions
+                .filter(txn => txn.reason.includes('referral_commission'))
+                .map(comm => ({
+                    recipient: comm.wallet.user,
+                    amount: comm.amount,
+                    percentage: comm.reason === 'referral_commission_l1' ? 10 : 3,
+                    level: comm.reason === 'referral_commission_l1' ? 1 : 2,
+                    description: comm.description
+                }))
         };
 
         res.json(breakdown);
@@ -749,7 +771,7 @@ router.get('/commission-reports', async (req, res) => {
         const skip = (page - 1) * limit;
 
         const tableDonations = await Donation.find({ status: 'success', ...dateQuery })
-            .select('amount createdAt transactionId orderId status level1UserId level2UserId')
+            .select('amount createdAt transactionId orderId status level1UserId level2UserId paymentMethod')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
@@ -757,8 +779,9 @@ router.get('/commission-reports', async (req, res) => {
 
         // Calculate commissions for each donation in table
         const detailedTable = tableDonations.map(d => {
-            const l1 = d.level1UserId ? d.amount * 0.10 : 0;
-            const l2 = d.level2UserId ? d.amount * 0.03 : 0;
+            const isWallet = d.paymentMethod === 'wallet';
+            const l1 = (d.level1UserId && !isWallet) ? d.amount * 0.10 : 0;
+            const l2 = (d.level2UserId && !isWallet) ? d.amount * 0.03 : 0;
             const totalComm = l1 + l2;
             return {
                 id: d._id,
@@ -769,7 +792,8 @@ router.get('/commission-reports', async (req, res) => {
                 l2Commission: l2,
                 totalCommission: totalComm,
                 platformBalance: d.amount - totalComm,
-                status: 'Paid' // since we filtered for success
+                status: 'Paid', // since we filtered for success
+                paymentMethod: d.paymentMethod || 'online'
             };
         });
 

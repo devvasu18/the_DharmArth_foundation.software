@@ -136,4 +136,82 @@ router.delete('/:id', protect, checkPermission('Events', 'delete'), async (req, 
     }
 });
 
+// Send Notifications for Event
+router.post('/:id/notify', protect, checkPermission('Events', 'edit'), async (req, res) => {
+    try {
+        const { targetType, userIds, channels } = req.body;
+        const event = await Event.findById(req.params.id);
+        if (!event) return res.status(404).json({ message: 'Event not found' });
+
+        const User = require('../models/User');
+        const EventNotificationLog = require('../models/EventNotificationLog');
+        const whatsappService = require('../services/whatsappService');
+        const Notification = require('../models/Notification');
+
+        let users = [];
+        if (targetType === 'all') {
+            users = await User.find({ isSuperAdmin: false, roles: { $size: 0 }, isSuspended: false });
+        } else if (targetType === 'selected') {
+            users = await User.find({ _id: { $in: userIds } });
+        }
+
+        if (users.length === 0) {
+            return res.status(400).json({ message: 'No users found for the selected criteria' });
+        }
+
+        const log = new EventNotificationLog({
+            event: event._id,
+            admin: req.user._id,
+            targetType,
+            channels,
+            totalUsers: users.length,
+            status: 'queued'
+        });
+        await log.save();
+
+        // Non-blocking processing
+        const processNotifications = async (targetUsers, eventData, selectedChannels, logId) => {
+            let sent = 0;
+            let failed = 0;
+
+            for (const user of targetUsers) {
+                try {
+                    let userSent = false;
+                    if (selectedChannels.includes('whatsapp') && user.mobile) {
+                        await whatsappService.sendEventNotification(user.mobile, user.name, eventData);
+                        userSent = true;
+                    }
+                    if (selectedChannels.includes('app')) {
+                        await Notification.create({
+                            type: 'EVENT',
+                            user: user._id,
+                            message: `New Event: ${eventData.title}. Check it out!`,
+                            referenceId: eventData._id,
+                            onModel: 'Event'
+                        });
+                        userSent = true;
+                    }
+                    if (userSent) sent++;
+                } catch (err) {
+                    console.error(`Error notifying user ${user._id}:`, err);
+                    failed++;
+                }
+            }
+
+            await EventNotificationLog.findByIdAndUpdate(logId, {
+                sentUsersCount: sent,
+                failedUsersCount: failed,
+                status: failed === 0 ? 'completed' : (sent === 0 ? 'failed' : 'partially_completed')
+            });
+        };
+
+        processNotifications(users, event, channels, log._id).catch(err => console.error("Notification Processing Error:", err));
+
+        res.json({ message: `Notifications queued for ${users.length} users`, logId: log._id });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api, { API_BASE_URL } from '../../services/api';
-import { Plus, Edit, Trash2, Eye, Video, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Video, Image as ImageIcon, RefreshCw, Layers, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const AdminEventHeaders = () => {
@@ -127,15 +127,93 @@ const AdminEventHeaders = () => {
 
     return (
         <div style={{ padding: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <h2>Events Header Manager</h2>
+            {/* Header Section */}
+            <div style={{
+                background: 'white',
+                padding: '2rem',
+                borderRadius: '24px',
+                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.06)',
+                marginBottom: '2rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                border: '1px solid #f1f5f9'
+            }}>
                 <div>
-                    <button className="btn-secondary" onClick={handleSeed} style={{ marginRight: 10 }}>
-                        Seed Dummy Banners
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+                        <div style={{ background: '#f0fdf4', padding: '8px', borderRadius: '12px' }}>
+                            <Layers size={24} color="#10b981" />
+                        </div>
+                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: '#1e293b' }}>Events Header Manager</h2>
+                    </div>
+                    <p style={{ margin: 0, color: '#64748b', fontSize: '0.95rem' }}>Manage and customize the main hero carousel on the events page</p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <button 
+                        className="btn-secondary" 
+                        onClick={fetchHeaders}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '10px 16px',
+                            borderRadius: '12px',
+                            background: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            color: '#475569',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                        Refresh
                     </button>
+                    
+                    <button 
+                        className="btn-secondary" 
+                        onClick={handleSeed}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '10px 16px',
+                            borderRadius: '12px',
+                            background: '#fff7ed',
+                            border: '1px solid #ffedd5',
+                            color: '#c2410c',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        <Zap size={18} />
+                        Seed Banners
+                    </button>
+
                     {!isEditing && (
-                        <button className="btn-primary" onClick={() => setIsEditing(true)}>
-                            <Plus size={18} /> Add New Slide
+                        <button 
+                            onClick={() => setIsEditing(true)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '10px 24px',
+                                borderRadius: '12px',
+                                background: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)',
+                                border: 'none',
+                                color: 'white',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 6px -1px rgba(0, 191, 165, 0.3)',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                            <Plus size={20} />
+                            Add New Slide
                         </button>
                     )}
                 </div>

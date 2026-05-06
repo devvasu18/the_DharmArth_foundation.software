@@ -25,6 +25,7 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const Events = lazy(() => import('./pages/Events'));
 const EventDetail = lazy(() => import('./pages/EventDetail'));
 const DynamicPage = lazy(() => import('./pages/DynamicPage'));
+const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 
 // Admin Components
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
@@ -81,6 +82,7 @@ const router = createBrowserRouter(
       <Route path="/signup" element={<Signup />} />
       <Route path="/donate" element={<DonationPage />} />
       <Route path="/start-fundraiser" element={<StartFundraiser />} />
+      <Route path="/leaderboard" element={<Leaderboard />} />
       
       {/* Protected User Routes */}
       <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />

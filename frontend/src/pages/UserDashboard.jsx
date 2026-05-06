@@ -72,6 +72,42 @@ const UserDashboard = () => {
     const [l2FilterYear, setL2FilterYear] = useState(new Date().getFullYear());
     const [l2Summary, setL2Summary] = useState({ lifetimeEarning: 0, prevMonthEarning: 0 });
 
+    // Wallet Donation States
+    const [isWalletDonationModalOpen, setIsWalletDonationModalOpen] = useState(false);
+    const [donationAmount, setDonationAmount] = useState('');
+    const [isDonating, setIsDonating] = useState(false);
+    const [isOtpSent, setIsOtpSent] = useState(false);
+    const [otpInput, setOtpInput] = useState('');
+    const [isSendingOtp, setIsSendingOtp] = useState(false);
+    const [otpTimer, setOtpTimer] = useState(0);
+    const [walletSettings, setWalletSettings] = useState({
+        btnText: 'Donate From Wallet',
+        btnText_hi: 'वॉलेट से दान करें'
+    });
+
+    useEffect(() => {
+        let interval;
+        if (otpTimer > 0) {
+            interval = setInterval(() => {
+                setOtpTimer(prev => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [otpTimer]);
+
+    const fetchWalletSettings = async () => {
+        try {
+            const res = await api.get('/content/settings');
+            const data = res.data;
+            setWalletSettings({
+                btnText: data.wallet_donate_btn_text || 'Donate From Wallet',
+                btnText_hi: data.wallet_donate_btn_text_hi || 'वॉलेट से दान करें'
+            });
+        } catch (error) {
+            console.error("Error fetching wallet settings", error);
+        }
+    };
+
     const fetchInitialData = async () => {
         try {
             setIsLoadingWallet(true);
@@ -94,6 +130,7 @@ const UserDashboard = () => {
     useEffect(() => {
         if (!user?._id || user?.isSuperAdmin || (user?.roles && user.roles.length > 0)) return;
         fetchInitialData();
+        fetchWalletSettings();
     }, [user?._id]);
 
     const fetchTransactions = async (pageNum, isInitial = false) => {
@@ -307,6 +344,73 @@ const UserDashboard = () => {
         }
     };
 
+    const handleSendOtp = async () => {
+        const amt = parseFloat(donationAmount);
+        if (!amt || amt <= 0) {
+            toast.error("Please enter a valid amount");
+            return;
+        }
+        if (amt > wallet.balance) {
+            toast.error("Insufficient wallet balance");
+            return;
+        }
+
+        setIsSendingOtp(true);
+        try {
+            const res = await api.post('/donate/wallet/send-otp');
+            if (res.data.success) {
+                toast.success("OTP sent to your WhatsApp!");
+                setIsOtpSent(true);
+                setOtpTimer(60);
+            }
+        } catch (error) {
+            console.error("Failed to send OTP", error);
+            toast.error(error.response?.data?.message || "Failed to send OTP");
+        } finally {
+            setIsSendingOtp(false);
+        }
+    };
+
+    const handleWalletDonation = async () => {
+        const amt = parseFloat(donationAmount);
+        if (!amt || amt <= 0) {
+            toast.error("Please enter a valid amount");
+            return;
+        }
+        if (amt > wallet.balance) {
+            toast.error("Insufficient wallet balance");
+            return;
+        }
+        if (!otpInput || otpInput.length !== 6) {
+            toast.error("Please enter a valid 6-digit OTP");
+            return;
+        }
+
+        setIsDonating(true);
+        try {
+            const res = await api.post('/donate/wallet', {
+                amount: amt,
+                donorName: user.name,
+                donorMobile: user.mobile,
+                donorEmail: user.email,
+                otp: otpInput
+            });
+            if (res.data.success) {
+                toast.success("Donation Successful! Thank you for your support.");
+                setIsWalletDonationModalOpen(false);
+                setDonationAmount('');
+                setOtpInput('');
+                setIsOtpSent(false);
+                refreshAllData();
+            }
+        } catch (error) {
+            console.error("Donation failed", error);
+            toast.error(error.response?.data?.message || "Donation failed. Please try again.");
+        } finally {
+            setIsDonating(false);
+        }
+    };
+
     return (
         <div className="dashboard-page">
             <Navbar />
@@ -415,6 +519,38 @@ const UserDashboard = () => {
                                 >
                                     Withdraw Now
                                 </button>
+
+                                <motion.button
+                                    className="wallet-donate-btn"
+                                    onClick={() => {
+                                        setIsWalletDonationModalOpen(true);
+                                        const balance = wallet?.balance || 0;
+                                        setDonationAmount(balance.toFixed(2));
+                                    }}
+                                    whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.2)' }}
+                                    whileTap={{ scale: 0.98 }}
+                                    style={{
+                                        marginTop: '12px',
+                                        width: '100%',
+                                        padding: '12px',
+                                        borderRadius: '12px',
+                                        border: '1px solid rgba(255,255,255,0.3)',
+                                        background: 'rgba(255,255,255,0.1)',
+                                        color: 'white',
+                                        fontWeight: '700',
+                                        cursor: 'pointer',
+                                        transition: 'background 0.2s',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '8px',
+                                        position: 'relative',
+                                        zIndex: 2
+                                    }}
+                                >
+                                    <Banknote size={18} />
+                                    {i18n.language === 'hi' ? walletSettings.btnText_hi : walletSettings.btnText}
+                                </motion.button>
                             </motion.div>
 
                             {/* SHARE CARD */}
@@ -480,8 +616,8 @@ const UserDashboard = () => {
                                 </div>
 
 
-                             </motion.div>
-                         </div>
+                            </motion.div>
+                        </div>
 
 
 
@@ -583,7 +719,7 @@ const UserDashboard = () => {
                                         </thead>
                                         <tbody>
                                             {transactions.filter(txn => {
-                                                if (txnTypeFilter === 'Donation') return txn.isDonation;
+                                                if (txnTypeFilter === 'Donation') return txn.isDonation || txn.reason === 'wallet_donation';
                                                 if (txnTypeFilter === 'Commission') {
                                                     if (txn.type !== 'credit') return false;
                                                     if (commissionLevelFilter === 'Direct') return !txn.description?.toLowerCase().includes('l2');
@@ -612,12 +748,14 @@ const UserDashboard = () => {
                                                             <span className={`status-badge ${txn.reason === 'payout' && txn.status === 'pending' ? 'badge-processing' :
                                                                 txn.status === 'failed' ? 'badge-rejected' :
                                                                     txn.reason === 'payout' && (txn.status === 'success' || txn.status === 'completed') ? 'badge-completed' :
-                                                                        txn.type === 'credit' || txn.isDonation ? 'badge-credit' : 'badge-debit'
+                                                                        txn.type === 'credit' || txn.isDonation || txn.reason === 'wallet_donation' ? 'badge-credit' : 'badge-debit'
                                                                 }`}>
                                                                 {txn.reason === 'payout' && txn.status === 'pending' ? 'IN PROCESS' :
                                                                     txn.status === 'failed' ? 'FAILED' :
                                                                         txn.isHelpResolved ? 'HELP RESOLVED' :
-                                                                            txn.type === 'credit' ? 'Commission' : (txn.isDonation ? 'Donation' : (txn.reason === 'payout' ? (txn.status === 'failed' ? 'FAILED' : 'COMPLETED') : txn.type))}
+                                                                            txn.type === 'credit' ? 'Commission' : 
+                                                                            (txn.isDonation || txn.reason === 'wallet_donation' ? 'Donation' : 
+                                                                            (txn.reason === 'payout' ? (txn.status === 'failed' ? 'FAILED' : 'COMPLETED') : txn.type.toUpperCase()))}
                                                             </span>
 
                                                             {txn.reason === 'payout' && (
@@ -830,8 +968,8 @@ const UserDashboard = () => {
                                                 value={userReplyText}
                                                 onChange={(e) => setUserReplyText(e.target.value)}
                                             ></textarea>
-                                            <button 
-                                                className="btn-proceed" 
+                                            <button
+                                                className="btn-proceed"
                                                 style={{ marginTop: '0.75rem', width: '100%', margin: '0.75rem 0 0' }}
                                                 onClick={handleUserReply}
                                                 disabled={isReplying}
@@ -1195,6 +1333,167 @@ const UserDashboard = () => {
 
                             <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9', padding: '1.25rem' }}>
                                 <button className="btn-proceed" style={{ margin: 0, width: '100%' }} onClick={() => setIsL2ModalOpen(false)}>Close</button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {/* WALLET DONATION MODAL */}
+                {isWalletDonationModalOpen && (
+                    <div className="payout-modal-overlay" onClick={() => {
+                        setIsWalletDonationModalOpen(false);
+                        setIsOtpSent(false);
+                        setOtpInput('');
+                    }}>
+                        <motion.div
+                            className="payout-modal"
+                            onClick={e => e.stopPropagation()}
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            style={{ maxWidth: '450px' }}
+                        >
+                            <button className="payout-modal-close" onClick={() => {
+                                setIsWalletDonationModalOpen(false);
+                                setIsOtpSent(false);
+                                setOtpInput('');
+                            }}>
+                                <X size={24} />
+                            </button>
+
+                            <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center', marginBottom: '8px' }}>
+                                    <Wallet size={28} color="white" />
+                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>Donate from Wallet</h2>
+                                </div>
+                                <p style={{ margin: 0, opacity: 0.9 }}>Support the foundation using your balance.</p>
+                            </div>
+
+                            <div className="conditions-container" style={{ padding: '1.5rem', background: '#ffffff', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                                        Donation Amount (₹)
+                                    </label>
+                                    <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#00bfa5', background: '#f0fdfa', padding: '2px 8px', borderRadius: '6px' }}>
+                                        Wallet Balance: ₹{(wallet?.balance || 0).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div style={{ position: 'relative' }}>
+                                    <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', fontSize: '1.25rem', fontWeight: 700, color: '#64748b' }}>₹</div>
+                                    <input
+                                        type="number"
+                                        className="modern-amount-input"
+                                        placeholder="Enter amount"
+                                        value={donationAmount}
+                                        max={wallet?.balance || 0}
+                                        onChange={(e) => {
+                                            const val = parseFloat(e.target.value);
+                                            const balance = wallet?.balance || 0;
+                                            if (val > balance) {
+                                                setDonationAmount(balance.toFixed(2));
+                                            } else {
+                                                setDonationAmount(e.target.value);
+                                            }
+                                        }}
+                                        style={{ paddingLeft: '2.5rem', width: '100%', height: '60px', fontSize: '1.5rem' }}
+                                        disabled={isOtpSent}
+                                    />
+                                </div>
+                                {donationAmount > (wallet?.balance || 0) && (
+                                    <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '6px', fontWeight: 600, textAlign: 'center' }}>
+                                        Amount exceeds available balance
+                                    </p>
+                                )}
+
+
+
+                                {isOtpSent && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        style={{ marginTop: '0.5rem', padding: '1.25rem', background: '#f0fdfa', borderRadius: '16px', border: '1px solid #ccfbf1' }}
+                                    >
+                                        <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>
+                                            6-Digit OTP (WhatsApp)
+                                        </label>
+                                        <div style={{ position: 'relative' }}>
+                                            <ShieldCheck style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} size={20} color="#0d9488" />
+                                            <input
+                                                type="text"
+                                                className="modern-amount-input"
+                                                placeholder="0 0 0 0 0 0"
+                                                maxLength={6}
+                                                value={otpInput}
+                                                onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
+                                                style={{ paddingLeft: '3rem', letterSpacing: '8px', textAlign: 'center', fontSize: '1.5rem', fontWeight: 800, height: '60px', background: 'white' }}
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                                            <button
+                                                className="text-teal-600 font-bold text-xs hover:underline disabled:opacity-50"
+                                                onClick={handleSendOtp}
+                                                disabled={otpTimer > 0 || isSendingOtp}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                                            >
+                                                {otpTimer > 0 ? `Resend in ${otpTimer}s` : 'Resend OTP'}
+                                            </button>
+                                            <button
+                                                className="text-slate-500 font-bold text-xs hover:underline"
+                                                onClick={() => {
+                                                    setIsOtpSent(false);
+                                                    setOtpInput('');
+                                                }}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                                            >
+                                                Change Amount
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+
+                                <div style={{ display: 'flex', gap: '12px', marginTop: '1.5rem' }}>
+                                    <button
+                                        style={{
+                                            flex: 1,
+                                            border: '1px solid #e2e8f0',
+                                            background: 'white',
+                                            borderRadius: '12px',
+                                            padding: '12px',
+                                            fontWeight: 700,
+                                            color: '#64748b',
+                                            cursor: 'pointer'
+                                        }}
+                                        onClick={() => {
+                                            setIsWalletDonationModalOpen(false);
+                                            setIsOtpSent(false);
+                                            setOtpInput('');
+                                        }}
+                                        disabled={isDonating || isSendingOtp}
+                                    >
+                                        Cancel
+                                    </button>
+                                    {!isOtpSent ? (
+                                        <button
+                                            className="btn-proceed"
+                                            onClick={handleSendOtp}
+                                            disabled={isSendingOtp || !donationAmount || donationAmount > (wallet?.balance || 0)}
+                                            style={{ flex: 1, background: '#00bfa5', margin: 0 }}
+                                        >
+                                            {isSendingOtp ? 'Sending...' : 'Send OTP'}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="btn-proceed"
+                                            onClick={handleWalletDonation}
+                                            disabled={isDonating || otpInput.length !== 6}
+                                            style={{ flex: 1, background: '#00bfa5', margin: 0 }}
+                                        >
+                                            {isDonating ? 'Processing...' : 'Verify & Donate'}
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </motion.div>
                     </div>

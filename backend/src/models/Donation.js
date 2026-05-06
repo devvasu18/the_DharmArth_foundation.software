@@ -10,6 +10,7 @@ const donationSchema = new mongoose.Schema({
     state: { type: String, maxlength: 100 },
     amount: { type: Number, required: true },
     status: { type: String, enum: ['pending', 'success', 'failed'], default: 'pending' },
+    paymentMethod: { type: String, default: 'online' }, // 'online' (Razorpay/PayU), 'wallet'
 
     // Commission / Referral info
     motivatorMobile: { type: String },

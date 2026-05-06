@@ -27,6 +27,36 @@ class WhatsappService {
     }
 
     /**
+     * Internal: Get the recipient's language preference
+     */
+    async _getRecipientLanguage(mobile) {
+        try {
+            const User = require('../models/User');
+            // Clean mobile and look for last 10 digits
+            const cleanMobile = String(mobile).replace(/\D/g, '').slice(-10);
+            const user = await User.findOne({ mobile: { $regex: cleanMobile + '$' } });
+            return user?.language || 'hi';
+        } catch (error) {
+            return 'hi';
+        }
+    }
+
+    /**
+     * Internal: Get dynamic template based on language
+     */
+    async _getTemplate(baseKey, lang) {
+        const Setting = require('../models/Setting');
+        const key = lang === 'hi' ? `${baseKey}_hi` : baseKey;
+        const setting = await Setting.findOne({ key });
+        if (setting?.value) return setting.value;
+
+        // Fallback to other language
+        const fallbackKey = lang === 'hi' ? baseKey : `${baseKey}_hi`;
+        const fallbackSetting = await Setting.findOne({ key: fallbackKey });
+        return fallbackSetting?.value;
+    }
+
+    /**
      * Process pending notifications in the queue
      */
     async processQueue() {
@@ -212,9 +242,22 @@ class WhatsappService {
      * Specialized: Send Donation Thank You WhatsApp Notification
      */
     async sendDonationNotification(donorMobile, donorName, amount, donationId) {
-        const Setting = require('../models/Setting');
-        const setting = await Setting.findOne({ key: 'whatsapp_donation_template' });
-        const template = setting?.value || "Dear {name}, thank you for your generous donation of ₹{amount} to The DharmArth Foundation. 🙏";
+        const lang = await this._getRecipientLanguage(donorMobile);
+        const template = await this._getTemplate('whatsapp_donation_template', lang) 
+            || (lang === 'hi' ? "नमस्ते {name}, दान के लिए धन्यवाद।" : "Dear {name}, thank you for your donation.");
+        
+        const message = template.replace('{name}', donorName).replace('{amount}', amount);
+        return this.sendMessage(donorMobile, message, { donationId });
+    }
+
+    /**
+     * Specialized: Send Wallet Donation Thank You WhatsApp Notification
+     */
+    async sendWalletDonationNotification(donorMobile, donorName, amount, donationId) {
+        const lang = await this._getRecipientLanguage(donorMobile);
+        const template = await this._getTemplate('whatsapp_wallet_donation_template', lang) 
+            || (lang === 'hi' ? "नमस्ते {name}, आपके वॉलेट से ₹{amount} के दान के लिए धन्यवाद।" : "Dear {name}, thank you for your donation of ₹{amount} from your wallet.");
+        
         const message = template.replace('{name}', donorName).replace('{amount}', amount);
         return this.sendMessage(donorMobile, message, { donationId });
     }
@@ -223,9 +266,10 @@ class WhatsappService {
      * Specialized: Send Payout Completion WhatsApp Notification
      */
     async sendWithdrawalNotification(mobile, name, amount) {
-        const Setting = require('../models/Setting');
-        const setting = await Setting.findOne({ key: 'whatsapp_withdrawal_template' });
-        const template = setting?.value || "Dear {name}, your payout request of ₹{amount} has been successfully processed. 🙏";
+        const lang = await this._getRecipientLanguage(mobile);
+        const template = await this._getTemplate('whatsapp_withdrawal_template', lang)
+            || (lang === 'hi' ? "नमस्ते {name}, आपका भुगतान ₹{amount} सफल रहा।" : "Dear {name}, your payout of ₹{amount} was successful.");
+            
         const message = template.replace('{name}', name).replace('{amount}', amount);
         return this.sendMessage(mobile, message);
     }
@@ -242,9 +286,9 @@ class WhatsappService {
      * Specialized: Send L1 Motivator Commission Notification
      */
     async sendL1MotivatorNotification(motivatorMobile, data) {
-        const Setting = require('../models/Setting');
-        const setting = await Setting.findOne({ key: 'whatsapp_motivator_l1_template' });
-        const template = setting?.value || "Congratulations {motivator_name}! You received ₹{commission} commission for a donation from {donor_name}. 🙏";
+        const lang = await this._getRecipientLanguage(motivatorMobile);
+        const template = await this._getTemplate('whatsapp_motivator_l1_template', lang)
+            || (lang === 'hi' ? "बधाई हो {motivator_name}! आपको कमीशन मिला।" : "Congratulations {motivator_name}! You received commission.");
 
         const message = template
             .replace(/{motivator_name}/g, data.motivatorName)
@@ -260,9 +304,9 @@ class WhatsappService {
      * Specialized: Send L2 Motivator Commission Notification
      */
     async sendL2MotivatorNotification(motivatorMobile, data) {
-        const Setting = require('../models/Setting');
-        const setting = await Setting.findOne({ key: 'whatsapp_motivator_l2_template' });
-        const template = setting?.value || "Level 2 Bonus! {motivator_name}, you received ₹{commission} commission via {l1_motivator_name}. 🙏";
+        const lang = await this._getRecipientLanguage(motivatorMobile);
+        const template = await this._getTemplate('whatsapp_motivator_l2_template', lang)
+            || (lang === 'hi' ? "बधाई हो {motivator_name}! आपको स्तर 2 कमीशन मिला।" : "Congratulations {motivator_name}! You received Level 2 commission.");
 
         const message = template
             .replace(/{motivator_name}/g, data.motivatorName)
@@ -301,11 +345,40 @@ class WhatsappService {
     }
 
     /**
+     * Specialized: Send OTP for Wallet Donation via WhatsApp
+     */
+    async sendWalletDonationOTP(mobile, otp) {
+        const lang = await this._getRecipientLanguage(mobile);
+        const template = await this._getTemplate('whatsapp_wallet_otp_template', lang)
+            || (lang === 'hi' ? "The DharmArth Foundation वॉलेट दान के लिए आपका OTP है: *{otp}*। यह 10 मिनट के लिए मान्य है।" : "Your OTP for The DharmArth Foundation *Wallet Donation* is: *{otp}*. Valid for 10 minutes.");
+            
+        const message = template.replace('{otp}', otp);
+        return this._sendWhatsAppNow(mobile, message); // Direct send for time-critical OTP
+    }
+
+    /**
      * Specialized: Send OTP via WhatsApp
      */
     async sendOTP(mobile, otp) {
         const message = `Your OTP for The DharmArth Foundation login is: *${otp}*. Valid for 10 minutes`;
         return this._sendWhatsAppNow(mobile, message); // Direct send for time-critical OTP
+    }
+
+    /**
+     * Specialized: Send Event Notification WhatsApp
+     */
+    async sendEventNotification(mobile, name, event) {
+        const lang = await this._getRecipientLanguage(mobile);
+        const eventUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/events/${event.slug}`;
+        
+        let message;
+        if (lang === 'hi') {
+            message = `नमस्ते ${name}! 🙏\n\nहमने एक नया कार्यक्रम आयोजित किया है: *${event.title}*\n📅 तिथि: ${new Date(event.date).toLocaleDateString('hi-IN')}\n📍 स्थान: ${event.location || 'ऑनलाइन'}\n\n${event.shortDescription || ''}\n\nअधिक जानकारी और पंजीकरण के लिए यहाँ क्लिक करें: ${eventUrl}`;
+        } else {
+            message = `Hello ${name}! 🙏\n\nWe have organized a new event: *${event.title}*\n📅 Date: ${new Date(event.date).toLocaleDateString('en-IN')}\n📍 Location: ${event.location || 'Online'}\n\n${event.shortDescription || ''}\n\nClick here for more details and registration: ${eventUrl}`;
+        }
+        
+        return this.sendMessage(mobile, message, { type: 'event_notification', eventId: event._id });
     }
 
     /**

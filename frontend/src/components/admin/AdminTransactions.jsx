@@ -215,9 +215,9 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
     const filteredL1Users = useMemo(() => {
         if (!referralTree?.level1Users) return [];
         const sorted = [...referralTree.level1Users].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-        
+
         if (dateFilter.preset === 'ALL') return sorted;
-        
+
         return sorted.filter(user => {
             const userDate = new Date(user.createdAt).toISOString().split('T')[0];
             return userDate >= dateFilter.start && userDate <= dateFilter.end;
@@ -782,7 +782,7 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
                                             title="Expand View"
                                         >
                                             <Maximize2 size={20} />
-                                            Expand View
+                                            Expand
                                         </button>
                                     </div>
 

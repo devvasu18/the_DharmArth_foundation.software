@@ -369,7 +369,8 @@ const TransactionManagement = () => {
                 "L1 Commission": (txn.level1UserId || txn.motivatorMobile) ? (txn.amount * 0.10) : 'No',
                 "L2 Commission": txn.level2UserId?.name ? (txn.amount * 0.03) : 'No',
                 "80G": txn.is80G ? 'Yes' : 'No',
-                Status: txn.status
+                Status: txn.status,
+                "Payment Method": txn.paymentMethod || 'online'
             };
         });
     };
@@ -937,14 +938,22 @@ const TransactionManagement = () => {
                                 return (
                                     <tr key={idx} onClick={() => setSelectedTransaction(txn)} className="cursor-pointer hover:bg-gray-50 transition-colors">
                                         <td className="py-3 px-4">
-                                            <div className="flex flex-col">
-                                                <span className="text-[11px] font-bold text-indigo-600 font-mono tracking-tight" title="Razorpay Payment ID">
-                                                    {txn.transactionId || '---'}
-                                                </span>
-                                                <span className="text-[9px] text-gray-400 font-mono" title="Razorpay Order ID">
-                                                    {txn.orderId || txn._id}
-                                                </span>
-                                            </div>
+                                            {txn.paymentMethod === 'wallet' ? (
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-bold text-teal-600 uppercase tracking-wider bg-teal-50 px-2 py-0.5 rounded border border-teal-100">
+                                                        Paid By Wallet
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col">
+                                                    <span className="text-[11px] font-bold text-indigo-600 font-mono tracking-tight" title="Razorpay Payment ID">
+                                                        {txn.transactionId || '---'}
+                                                    </span>
+                                                    <span className="text-[9px] text-gray-400 font-mono" title="Razorpay Order ID">
+                                                        {txn.orderId || txn._id}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </td>
                                         <td>{formatDate(txn.createdAt)}</td>
                                         <td><strong>{txn.donorName}</strong></td>
@@ -953,8 +962,20 @@ const TransactionManagement = () => {
                                         <td>
                                             {txn.level1UserId?.name || (txn.motivatorMobile ? `(Mobile: ${txn.motivatorMobile})` : '-')}
                                         </td>
-                                        <td>{(txn.level1UserId || txn.motivatorMobile) ? formatCurrency(txn.amount * 0.10) : <span className="status-badge badge-neutral">No</span>}</td>
-                                        <td>{txn.level2UserId ? formatCurrency(txn.amount * 0.03) : <span className="status-badge badge-neutral">No</span>}</td>
+                                        <td>
+                                            {txn.paymentMethod === 'wallet' ? (
+                                                <span className="text-xs text-slate-400 italic">Not Applicable</span>
+                                            ) : (
+                                                (txn.level1UserId || txn.motivatorMobile) ? formatCurrency(txn.amount * 0.10) : <span className="status-badge badge-neutral">No</span>
+                                            )}
+                                        </td>
+                                        <td>
+                                            {txn.paymentMethod === 'wallet' ? (
+                                                <span className="text-xs text-slate-400 italic">Not Applicable</span>
+                                            ) : (
+                                                txn.level2UserId ? formatCurrency(txn.amount * 0.03) : <span className="status-badge badge-neutral">No</span>
+                                            )}
+                                        </td>
                                         <td onClick={(e) => e.stopPropagation()}>
                                             <div className="flex items-center gap-2">
                                                 {txn.is80G ? (
@@ -1065,17 +1086,26 @@ const TransactionManagement = () => {
                                 <div className="breakdown-row">
                                     <span>Mode</span> 
                                     <strong>
-                                        {selectedTransaction.orderId ? 'One-time' : 'Monthly (AutoPay)'}
+                                        {selectedTransaction.paymentMethod === 'wallet' ? 'Wallet Balance' : (selectedTransaction.orderId ? 'One-time' : 'Monthly (AutoPay)')}
                                     </strong>
                                 </div>
-                                <div className="breakdown-row pt-2 border-t border-slate-100 mt-2">
-                                    <span className="text-[10px] uppercase font-bold text-slate-400">Razorpay Payment ID</span> 
-                                    <strong className="text-indigo-600 font-mono text-[11px]">{selectedTransaction.transactionId || '---'}</strong>
-                                </div>
-                                <div className="breakdown-row">
-                                    <span className="text-[10px] uppercase font-bold text-slate-400">Razorpay Order ID</span> 
-                                    <strong className="text-slate-500 font-mono text-[11px]">{selectedTransaction.orderId || selectedTransaction._id}</strong>
-                                </div>
+                                {selectedTransaction.paymentMethod === 'wallet' ? (
+                                    <div className="breakdown-row pt-2 border-t border-slate-100 mt-2">
+                                        <span className="text-[10px] uppercase font-bold text-teal-600">Payment Source</span> 
+                                        <strong className="text-teal-700 font-bold text-[11px] bg-teal-50 px-2 py-0.5 rounded">WALLET BALANCE</strong>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="breakdown-row pt-2 border-t border-slate-100 mt-2">
+                                            <span className="text-[10px] uppercase font-bold text-slate-400">Razorpay Payment ID</span> 
+                                            <strong className="text-indigo-600 font-mono text-[11px]">{selectedTransaction.transactionId || '---'}</strong>
+                                        </div>
+                                        <div className="breakdown-row">
+                                            <span className="text-[10px] uppercase font-bold text-slate-400">Razorpay Order ID</span> 
+                                            <strong className="text-slate-500 font-mono text-[11px]">{selectedTransaction.orderId || selectedTransaction._id}</strong>
+                                        </div>
+                                    </>
+                                )}
                                 <div className="breakdown-row"><span>Mobile</span> <strong>{selectedTransaction.donorMobile}</strong></div>
                                 {selectedTransaction.address && (
                                     <div className="breakdown-row" style={{ alignItems: 'flex-start' }}>
@@ -1172,7 +1202,15 @@ const TransactionManagement = () => {
                                 )}
                             </div>
 
-                            {(selectedTransaction.level1UserId || selectedTransaction.motivatorMobile) ? (
+                            {selectedTransaction.paymentMethod === 'wallet' ? (
+                                <div className="breakdown-card bg-teal-50 border-teal-200 mt-4">
+                                    <div className="flex items-center gap-2 text-teal-700 font-bold mb-2">
+                                        <Wallet size={20} />
+                                        <span>Wallet Donation</span>
+                                    </div>
+                                    <p className="text-sm text-teal-700">This donation was made directly from the user's wallet balance. <strong>Commissions and referral distributions are disabled</strong> for this transaction.</p>
+                                </div>
+                            ) : (selectedTransaction.level1UserId || selectedTransaction.motivatorMobile) ? (
                                 <>
                                     <h4 className="font-bold mb-4 text-slate-800">Commission Distribution</h4>
 

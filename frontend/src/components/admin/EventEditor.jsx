@@ -3,11 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api, { API_BASE_URL } from '../../services/api';
 import {
     Save, ArrowLeft, Image as ImageIcon, Video, Type, Youtube, Instagram,
-    Trash2, ArrowUp, ArrowDown, Move, Loader2, AlertTriangle
+    Trash2, ArrowUp, ArrowDown, Move, Loader2, AlertTriangle, Bell, Users, CheckCircle2, MessageSquare, Info
 } from 'lucide-react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import toast from 'react-hot-toast';
+import UserSelectorModal from './UserSelectorModal';
 import './EventEditor.css';
 
 const EventEditor = () => {
@@ -34,6 +35,15 @@ const EventEditor = () => {
         metaDescription: '',
         isPublished: false
     });
+
+    const [notificationData, setNotificationData] = useState({
+        sendNotification: false,
+        targetType: 'none', // 'all', 'selected', 'none'
+        userIds: [],
+        channels: ['whatsapp', 'app']
+    });
+
+    const [userSelectorOpen, setUserSelectorOpen] = useState(false);
 
     useEffect(() => {
         if (isEditMode) {
@@ -129,14 +139,33 @@ const EventEditor = () => {
 
         setSaving(true);
         try {
+            let savedEvent;
             if (isEditMode) {
-                await api.put(`/events/${id}`, formData);
+                const res = await api.put(`/events/${id}`, formData);
+                savedEvent = res.data;
                 toast.success('Event updated successfully');
             } else {
-                await api.post('/events', formData);
+                const res = await api.post('/events', formData);
+                savedEvent = res.data;
                 toast.success('Event created successfully');
-                navigate('/admin/events');
             }
+
+            // Send Notifications if enabled
+            if (notificationData.sendNotification && notificationData.targetType !== 'none') {
+                try {
+                    await api.post(`/events/${savedEvent._id}/notify`, {
+                        targetType: notificationData.targetType,
+                        userIds: notificationData.userIds,
+                        channels: notificationData.channels
+                    });
+                    toast.success('Notifications queued successfully');
+                } catch (err) {
+                    console.error("Notification failed", err);
+                    toast.error('Event saved but notifications failed to queue');
+                }
+            }
+
+            if (!isEditMode) navigate('/admin/events');
         } catch (error) {
             console.error(error);
             toast.error(error.response?.data?.message || 'Error saving event');
@@ -192,6 +221,16 @@ const EventEditor = () => {
                         <h2>{isEditMode ? 'Edit Event' : 'Create New Event'}</h2>
                     </div>
                     <div className="editor-actions">
+                        {isEditMode && (
+                            <button 
+                                type="button" 
+                                className="btn-secondary-modern" 
+                                style={{ marginRight: '10px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}
+                                onClick={() => setNotificationData({ ...notificationData, sendNotification: true })}
+                            >
+                                <Bell size={18} /> Resend Notification
+                            </button>
+                        )}
                         <button type="submit" className="btn-save-premium" disabled={saving}>
                             {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                             {saving ? ' Saving Changes...' : ' Save Event'}
@@ -558,6 +597,121 @@ const EventEditor = () => {
 
                 <div className="editor-section">
                     <div className="section-title-row">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Bell size={20} color="#00bfa5" />
+                            <h3>Send Notification</h3>
+                        </div>
+                        <div className="modern-switch-row">
+                            <label className="modern-checkbox-label">
+                                <input
+                                    type="checkbox"
+                                    checked={notificationData.sendNotification}
+                                    onChange={(e) => setNotificationData({ ...notificationData, sendNotification: e.target.checked })}
+                                />
+                                <span>Enable Notifications</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    {notificationData.sendNotification && (
+                        <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                            <div className="form-grid">
+                                <div className="form-group full-width">
+                                    <label className="modern-label">Target Audience</label>
+                                    <div style={{ display: 'flex', gap: '20px', marginTop: '10px' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                            <input
+                                                type="radio" name="targetType" value="all"
+                                                checked={notificationData.targetType === 'all'}
+                                                onChange={() => setNotificationData({ ...notificationData, targetType: 'all' })}
+                                            />
+                                            <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>All Users</span>
+                                        </label>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                            <input
+                                                type="radio" name="targetType" value="selected"
+                                                checked={notificationData.targetType === 'selected'}
+                                                onChange={() => setNotificationData({ ...notificationData, targetType: 'selected' })}
+                                            />
+                                            <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Selected Users</span>
+                                        </label>
+                                    </div>
+
+                                    {notificationData.targetType === 'selected' && (
+                                        <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#475569' }}>
+                                                    <Users size={18} />
+                                                    <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>
+                                                        {notificationData.userIds.length} users selected
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setUserSelectorOpen(true)}
+                                                    style={{
+                                                        padding: '6px 16px', borderRadius: '8px', border: '1px solid #00bfa5',
+                                                        background: '#f0fdfa', color: '#00bfa5', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    Select Users
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="form-group full-width">
+                                    <label className="modern-label">Notification Channels</label>
+                                    <div style={{ display: 'flex', gap: '30px', marginTop: '10px' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={notificationData.channels.includes('whatsapp')}
+                                                onChange={(e) => {
+                                                    const channels = e.target.checked 
+                                                        ? [...notificationData.channels, 'whatsapp']
+                                                        : notificationData.channels.filter(c => c !== 'whatsapp');
+                                                    setNotificationData({ ...notificationData, channels });
+                                                }}
+                                            />
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <MessageSquare size={16} color="#25D366" />
+                                                <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>WhatsApp</span>
+                                            </div>
+                                        </label>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={notificationData.channels.includes('app')}
+                                                onChange={(e) => {
+                                                    const channels = e.target.checked 
+                                                        ? [...notificationData.channels, 'app']
+                                                        : notificationData.channels.filter(c => c !== 'app');
+                                                    setNotificationData({ ...notificationData, channels });
+                                                }}
+                                            />
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <Bell size={16} color="#00bfa5" />
+                                                <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>App Notification</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(0, 191, 165, 0.05)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Info size={14} color="#00bfa5" />
+                                        <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
+                                            {notificationData.channels.includes('whatsapp') && "WhatsApp messages include title, date, location and link. "}
+                                            {notificationData.channels.includes('app') && "App notifications will appear in user dashboards."}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="editor-section">
+                    <div className="section-title-row">
                         <h3>SEO & Social Sharing</h3>
                     </div>
                     <div className="form-grid">
@@ -572,6 +726,13 @@ const EventEditor = () => {
                     </div>
                 </div>
             </form>
+
+            <UserSelectorModal
+                isOpen={userSelectorOpen}
+                onClose={() => setUserSelectorOpen(false)}
+                onSelect={(ids) => setNotificationData({ ...notificationData, userIds: ids })}
+                initialSelected={notificationData.userIds}
+            />
         </div>
     );
 };

@@ -213,7 +213,11 @@ const AdminUsers = () => {
             "Name": u.name,
             "Mobile": u.mobile,
             "Wallet Balance": u.walletBalance || 0,
-            "Referred By": u.referredBy ? `${u.referredBy.name} (${u.referredBy.mobile})` : 'Direct',
+            "Referred By": u.referredBy
+                ? `${u.referredBy.name} (${u.referredBy.mobile})`
+                : u.lastMotivatorMobile
+                    ? `${u.lastMotivatorName || ''} (${u.lastMotivatorMobile})`.trim()
+                    : 'Direct',
             "Email": u.email || '-',
             "Joined Date": new Date(u.createdAt).toLocaleDateString(),
             "Status": u.isSuspended ? 'Suspended' : 'Active'
@@ -632,7 +636,15 @@ const AdminUsers = () => {
                                     <td style={{ fontWeight: 'bold', color: '#2d3748' }}>₹{user.walletBalance?.toLocaleString() || 0}</td>
                                     <td>
                                         {user.referredBy ? (
-                                            <span>{user.referredBy.name} <small style={{ color: '#64748b' }}>({user.referredBy.mobile})</small></span>
+                                            <span>
+                                                {user.referredBy.name}{' '}
+                                                <small style={{ color: '#64748b' }}>({user.referredBy.mobile})</small>
+                                            </span>
+                                        ) : user.lastMotivatorMobile ? (
+                                            <span>
+                                                {user.lastMotivatorName || ''}{' '}
+                                                <small style={{ color: '#64748b' }}>({user.lastMotivatorMobile})</small>
+                                            </span>
                                         ) : (
                                             <span style={{ color: '#059669', fontSize: '0.9rem', fontWeight: '500', background: '#ecfdf5', padding: '2px 8px', borderRadius: '4px' }}>Direct Joined</span>
                                         )}

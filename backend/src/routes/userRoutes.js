@@ -73,9 +73,23 @@ router.get('/', protect, checkPermission('User Management', 'view'), async (req,
             if (w.user) walletMap[w.user.toString()] = w.balance;
         });
 
+        // Resolve lastMotivatorMobile -> name for users without referredBy
+        const mobilesToResolve = users
+            .filter(u => !u.referredBy && u.lastMotivatorMobile)
+            .map(u => u.lastMotivatorMobile);
+
+        let motivatorMap = {};
+        if (mobilesToResolve.length > 0) {
+            const motivators = await User.find({ mobile: { $in: mobilesToResolve } }).select('name mobile');
+            motivators.forEach(m => { motivatorMap[m.mobile] = m.name; });
+        }
+
         const usersWithWallet = users.map(user => ({
             ...user.toObject(),
-            walletBalance: walletMap[user._id.toString()] || 0
+            walletBalance: walletMap[user._id.toString()] || 0,
+            lastMotivatorName: (!user.referredBy && user.lastMotivatorMobile)
+                ? (motivatorMap[user.lastMotivatorMobile] || null)
+                : undefined
         }));
 
         res.json({

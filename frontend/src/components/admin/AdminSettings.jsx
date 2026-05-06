@@ -10,7 +10,12 @@ const AdminSettings = () => {
     const [settings, setSettings] = useState({});
     const [loading, setLoading] = useState(true);
     const [labelModalOpen, setLabelModalOpen] = useState(false);
-    const [editLabel, setEditLabel] = useState({ en: '', hi: '' });
+    const [editLabel, setEditLabel] = useState({ en: '', hi: '', link: '', btnText: '', btnTextHi: '' });
+    const [subtitleTab, setSubtitleTab] = useState('en');
+
+    // Leaderboard Config State
+    const [leaderboardModalOpen, setLeaderboardModalOpen] = useState(false);
+    const [leaderboardLimit, setLeaderboardLimit] = useState(10);
 
     // Banner Config State
     const [configModalOpen, setConfigModalOpen] = useState(false);
@@ -29,11 +34,20 @@ const AdminSettings = () => {
 
     // WhatsApp Config State
     const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
+    const [whatsappTab, setWhatsappTab] = useState('en');
     const [whatsappConfig, setWhatsappConfig] = useState({
         donationTemplate: '',
+        donationTemplate_hi: '',
         withdrawalTemplate: '',
+        withdrawalTemplate_hi: '',
         l1MotivatorTemplate: '',
-        l2MotivatorTemplate: ''
+        l1MotivatorTemplate_hi: '',
+        l2MotivatorTemplate: '',
+        l2MotivatorTemplate_hi: '',
+        walletOtpTemplate: '',
+        walletOtpTemplate_hi: '',
+        walletDonationTemplate: '',
+        walletDonationTemplate_hi: ''
     });
 
     // Payout Config State
@@ -41,6 +55,14 @@ const AdminSettings = () => {
     const [payoutConfig, setPayoutConfig] = useState({
         minBalance: 500,
         successMessage: 'Your payment will be received in your bank account in the next 5-7 working days.'
+    });
+
+    // Wallet Config State
+    const [walletModalOpen, setWalletModalOpen] = useState(false);
+    const [walletTab, setWalletTab] = useState('en');
+    const [walletConfig, setWalletConfig] = useState({
+        donateBtnText: 'Donate From Wallet',
+        donateBtnText_hi: 'वॉलेट से दान करें'
     });
 
     useEffect(() => {
@@ -65,15 +87,31 @@ const AdminSettings = () => {
             // WhatsApp Config
             setWhatsappConfig({
                 donationTemplate: data.whatsapp_donation_template || "Dear {name}, thank you for your generous donation of ₹{amount} to The DharmArth Foundation. Your support helps us make a big difference! 🙏",
+                donationTemplate_hi: data.whatsapp_donation_template_hi || "नमस्ते {name}, The DharmArth Foundation को ₹{amount} का उदार दान देने के लिए धन्यवाद। आपका समर्थन हमें बड़ा बदलाव लाने में मदद करता है! 🙏",
                 withdrawalTemplate: data.whatsapp_withdrawal_template || "Dear {name}, your payout request of ₹{amount} has been successfully processed and completed. The funds have been transferred as per your provided details. Thank you for your continued support! 🙏",
+                withdrawalTemplate_hi: data.whatsapp_withdrawal_template_hi || "नमस्ते {name}, आपके ₹{amount} के भुगतान के अनुरोध को सफलतापूर्वक संसाधित और पूरा कर लिया गया है। आपके द्वारा प्रदान किए गए विवरण के अनुसार धनराशि स्थानांतरित कर दी गई है। आपके निरंतर समर्थन के लिए धन्यवाद! 🙏",
                 l1MotivatorTemplate: data.whatsapp_motivator_l1_template || "Congratulations {motivator_name}! You received ₹{commission} commission for a donation of ₹{donation_amount} from {donor_name} ({donor_mobile}). Level: 1 🙏",
-                l2MotivatorTemplate: data.whatsapp_motivator_l2_template || "Level 2 Bonus! {motivator_name}, you received ₹{commission} commission via {l1_motivator_name} ({l1_motivator_mobile}) for a donation from {donor_name} ({donor_mobile}). Level: 2 🙏"
+                l1MotivatorTemplate_hi: data.whatsapp_motivator_l1_template_hi || "बधाई हो {motivator_name}! आपको {donor_name} ({donor_mobile}) से ₹{donation_amount} के दान के लिए ₹{commission} कमीशन प्राप्त हुआ। स्तर: 1 🙏",
+                l2MotivatorTemplate: data.whatsapp_motivator_l2_template || "Level 2 Bonus! {motivator_name}, you received ₹{commission} commission via {l1_motivator_name} ({l1_motivator_mobile}) for a donation from {donor_name} ({donor_mobile}). Level: 2 🙏",
+                l2MotivatorTemplate_hi: data.whatsapp_motivator_l2_template_hi || "स्तर 2 बोनस! {motivator_name}, आपको {donor_name} ({donor_mobile}) से दान के लिए {l1_motivator_name} ({l1_motivator_mobile}) के माध्यम से ₹{commission} कमीशन प्राप्त हुआ। स्तर: 2 🙏",
+                walletOtpTemplate_hi: data.whatsapp_wallet_otp_template_hi || "The DharmArth Foundation वॉलेट दान के लिए आपका OTP है: *{otp}*। यह 10 मिनट के लिए मान्य है।",
+                walletDonationTemplate: data.whatsapp_wallet_donation_template || "Dear {name}, thank you for your donation of ₹{amount} from your wallet.",
+                walletDonationTemplate_hi: data.whatsapp_wallet_donation_template_hi || "नमस्ते {name}, आपके वॉलेट से ₹{amount} के दान के लिए धन्यवाद।"
             });
 
             // Payout Config
             setPayoutConfig({
                 minBalance: data.payout_min_balance || 500,
                 successMessage: data.payout_success_message || 'Your payment will be received in your bank account in the next 5-7 working days.'
+            });
+
+            // Leaderboard Limit
+            setLeaderboardLimit(data.leaderboard_limit || 10);
+
+            // Wallet Config
+            setWalletConfig({
+                donateBtnText: data.wallet_donate_btn_text || 'Donate From Wallet',
+                donateBtnText_hi: data.wallet_donate_btn_text_hi || 'वॉलेट से दान करें'
             });
         } catch (error) {
             console.error("Failed to fetch settings", error);
@@ -140,7 +178,7 @@ const AdminSettings = () => {
     };
 
     const handleAddPlan = () => {
-        if (donationConfig.plans.length < 6) {
+        if (donationConfig.plans.length < 9) {
             setDonationConfig({ ...donationConfig, plans: [...donationConfig.plans, 1000] });
         }
     };
@@ -157,7 +195,10 @@ const AdminSettings = () => {
     const openLabelModal = () => {
         setEditLabel({
             en: settings.donation_label || '',
-            hi: settings.donation_label_hi || ''
+            hi: settings.donation_label_hi || '',
+            link: settings.donation_label_link || '',
+            btnText: settings.donation_label_btn_text || '',
+            btnTextHi: settings.donation_label_btn_text_hi || ''
         });
         setLabelModalOpen(true);
     };
@@ -165,7 +206,10 @@ const AdminSettings = () => {
     const handleSaveLabel = async () => {
         const updates = {
             donation_label: editLabel.en,
-            donation_label_hi: editLabel.hi
+            donation_label_hi: editLabel.hi,
+            donation_label_link: editLabel.link,
+            donation_label_btn_text: editLabel.btnText,
+            donation_label_btn_text_hi: editLabel.btnTextHi
         };
         try {
             await api.put('/content/settings', updates);
@@ -200,9 +244,15 @@ const AdminSettings = () => {
         try {
             const updates = {
                 whatsapp_donation_template: whatsappConfig.donationTemplate,
+                whatsapp_donation_template_hi: whatsappConfig.donationTemplate_hi,
                 whatsapp_withdrawal_template: whatsappConfig.withdrawalTemplate,
-                whatsapp_motivator_l1_template: whatsappConfig.l1MotivatorTemplate,
-                whatsapp_motivator_l2_template: whatsappConfig.l2MotivatorTemplate
+                whatsapp_withdrawal_template_hi: whatsappConfig.withdrawalTemplate_hi,
+                whatsapp_motivator_l1_template_hi: whatsappConfig.l1MotivatorTemplate_hi,
+                whatsapp_motivator_l2_template: whatsappConfig.l2MotivatorTemplate,
+                whatsapp_motivator_l2_template_hi: whatsappConfig.l2MotivatorTemplate_hi,
+                whatsapp_wallet_otp_template_hi: whatsappConfig.walletOtpTemplate_hi,
+                whatsapp_wallet_donation_template: whatsappConfig.walletDonationTemplate,
+                whatsapp_wallet_donation_template_hi: whatsappConfig.walletDonationTemplate_hi
             };
             await api.put('/content/settings', updates);
             setSettings({ ...settings, ...updates });
@@ -232,6 +282,40 @@ const AdminSettings = () => {
         } catch (error) {
             console.error("Save failed", error);
             toast.error("Failed to save payout configuration");
+        }
+    };
+
+    // --- Leaderboard Logic ---
+    const openLeaderboardModal = () => {
+        setLeaderboardLimit(settings.leaderboard_limit || 10);
+        setLeaderboardModalOpen(true);
+    };
+
+    const handleSaveLeaderboardConfig = async () => {
+        try {
+            await api.put('/content/settings', { leaderboard_limit: Number(leaderboardLimit) });
+            setSettings({ ...settings, leaderboard_limit: Number(leaderboardLimit) });
+            setLeaderboardModalOpen(false);
+            toast.success("Leaderboard Limit Saved!");
+        } catch (error) {
+            console.error("Save failed", error);
+            toast.error("Failed to save leaderboard limit");
+        }
+    };
+
+    const handleSaveWalletConfig = async () => {
+        try {
+            const updates = {
+                wallet_donate_btn_text: walletConfig.donateBtnText,
+                wallet_donate_btn_text_hi: walletConfig.donateBtnText_hi
+            };
+            await api.put('/content/settings', updates);
+            setSettings({ ...settings, ...updates });
+            setWalletModalOpen(false);
+            toast.success("Wallet Configuration Saved!");
+        } catch (error) {
+            console.error("Save failed", error);
+            toast.error("Failed to save wallet configuration");
         }
     };
 
@@ -341,6 +425,39 @@ const AdminSettings = () => {
                             </button>
                         </td>
                     </tr>
+
+                    {/* Wallet Config Row */}
+                    <tr>
+                        <td><strong>Wallet Configuration</strong> (Donate From Wallet Button)</td>
+                        <td>
+                            <div><strong>EN:</strong> {walletConfig.donateBtnText}</div>
+                            <div style={{ marginTop: '5px' }}><strong>HI:</strong> {walletConfig.donateBtnText_hi}</div>
+                        </td>
+                        <td>
+                            <button
+                                className="btn btn-outline"
+                                onClick={() => setWalletModalOpen(true)}
+                            >
+                                Configure
+                            </button>
+                        </td>
+                    </tr>
+
+                    {/* Leaderboard Row */}
+                    <tr>
+                        <td><strong>Leaderboard Configuration</strong> (Top Donors Limit)</td>
+                        <td>
+                            Displaying Top {settings.leaderboard_limit || 10} Donors
+                        </td>
+                        <td>
+                            <button
+                                className="btn btn-outline"
+                                onClick={openLeaderboardModal}
+                            >
+                                Configure
+                            </button>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
 
@@ -417,7 +534,7 @@ const AdminSettings = () => {
                 }}>
                     <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', minWidth: '500px', maxWidth: '90%' }}>
                         <h4>Configure Donation Plans</h4>
-                        <p style={{ fontSize: '0.9rem', color: '#666' }}>Manage donation amounts (Max 6). Select one as Popular.</p>
+                        <p style={{ fontSize: '0.9rem', color: '#666' }}>Manage donation amounts (Max 9). Select one as Popular.</p>
 
                         <div style={{ margin: '1.5rem 0', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             {donationConfig.plans.map((plan, index) => (
@@ -453,7 +570,7 @@ const AdminSettings = () => {
                                 </div>
                             ))}
 
-                            {donationConfig.plans.length < 6 && (
+                            {donationConfig.plans.length < 9 && (
                                 <button className="btn btn-outline" onClick={handleAddPlan}>
                                     + Add Plan
                                 </button>
@@ -538,7 +655,7 @@ const AdminSettings = () => {
                                         <span style={{ fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Available Placeholders</span>
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                        {['{name}', '{amount}', '{commission}', '{motivator_name}', '{donor_name}', '{donor_mobile}', '{l1_motivator_name}', '{l1_motivator_mobile}'].map(tag => (
+                                        {['{name}', '{amount}', '{commission}', '{motivator_name}', '{donor_name}', '{donor_mobile}', '{l1_motivator_name}', '{l1_motivator_mobile}', '{otp}'].map(tag => (
                                             <span key={tag} style={{
                                                 background: '#f1f5f9',
                                                 color: '#475569',
@@ -562,35 +679,128 @@ const AdminSettings = () => {
                                     </p>
                                 </div>
 
+                                {/* Language Tabs */}
+                                <div style={{
+                                    display: 'flex',
+                                    background: '#f1f5f9',
+                                    padding: '4px',
+                                    borderRadius: '12px',
+                                    marginBottom: '2rem',
+                                    width: 'fit-content'
+                                }}>
+                                    <button
+                                        onClick={() => setWhatsappTab('en')}
+                                        style={{
+                                            padding: '8px 24px',
+                                            borderRadius: '10px',
+                                            border: 'none',
+                                            background: whatsappTab === 'en' ? 'white' : 'transparent',
+                                            color: whatsappTab === 'en' ? '#00bfa5' : '#64748b',
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            boxShadow: whatsappTab === 'en' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                                            transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        English
+                                    </button>
+                                    <button
+                                        onClick={() => setWhatsappTab('hi')}
+                                        style={{
+                                            padding: '8px 24px',
+                                            borderRadius: '10px',
+                                            border: 'none',
+                                            background: whatsappTab === 'hi' ? 'white' : 'transparent',
+                                            color: whatsappTab === 'hi' ? '#00bfa5' : '#64748b',
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            boxShadow: whatsappTab === 'hi' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                                            transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        Hindi
+                                    </button>
+                                </div>
+
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                     {/* Primary Templates */}
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                         <div className="template-card">
-                                            <label style={{ display: 'block', marginBottom: '10px', fontWeight: 700, color: '#334155', fontSize: '0.9rem' }}>Donation Thank You</label>
+                                            <label style={{ display: 'block', marginBottom: '10px', fontWeight: 700, color: '#334155', fontSize: '0.9rem' }}>
+                                                Donation Thank You ({whatsappTab === 'en' ? 'EN' : 'HI'})
+                                            </label>
                                             <textarea
                                                 className="form-input"
                                                 style={{ width: '100%', minHeight: '120px', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.95rem', background: 'white', lineHeight: '1.5' }}
-                                                value={whatsappConfig.donationTemplate}
-                                                onChange={(e) => setWhatsappConfig({ ...whatsappConfig, donationTemplate: e.target.value })}
-                                                placeholder="Enter thank you message..."
+                                                value={whatsappTab === 'en' ? whatsappConfig.donationTemplate : whatsappConfig.donationTemplate_hi}
+                                                onChange={(e) => setWhatsappConfig({ 
+                                                    ...whatsappConfig, 
+                                                    [whatsappTab === 'en' ? 'donationTemplate' : 'donationTemplate_hi']: e.target.value 
+                                                })}
+                                                placeholder={`Enter ${whatsappTab === 'en' ? 'English' : 'Hindi'} thank you message...`}
                                             />
                                         </div>
                                         <div className="template-card">
-                                            <label style={{ display: 'block', marginBottom: '10px', fontWeight: 700, color: '#334155', fontSize: '0.9rem' }}>Payout Completion</label>
+                                            <label style={{ display: 'block', marginBottom: '10px', fontWeight: 700, color: '#334155', fontSize: '0.9rem' }}>
+                                                Payout Completion ({whatsappTab === 'en' ? 'EN' : 'HI'})
+                                            </label>
                                             <textarea
                                                 className="form-input"
                                                 style={{ width: '100%', minHeight: '120px', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.95rem', background: 'white', lineHeight: '1.5' }}
-                                                value={whatsappConfig.withdrawalTemplate}
-                                                onChange={(e) => setWhatsappConfig({ ...whatsappConfig, withdrawalTemplate: e.target.value })}
-                                                placeholder="Enter payout confirmation message..."
+                                                value={whatsappTab === 'en' ? whatsappConfig.withdrawalTemplate : whatsappConfig.withdrawalTemplate_hi}
+                                                onChange={(e) => setWhatsappConfig({ 
+                                                    ...whatsappConfig, 
+                                                    [whatsappTab === 'en' ? 'withdrawalTemplate' : 'withdrawalTemplate_hi']: e.target.value 
+                                                })}
+                                                placeholder={`Enter ${whatsappTab === 'en' ? 'English' : 'Hindi'} payout confirmation message...`}
                                             />
                                         </div>
+                                    </div>
+
+                                    {/* Wallet OTP Template */}
+                                    <div className="template-card" style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                                        <label style={{ display: 'block', marginBottom: '10px', fontWeight: 700, color: '#334155', fontSize: '0.9rem' }}>
+                                            Wallet Donation OTP Verification ({whatsappTab === 'en' ? 'EN' : 'HI'})
+                                        </label>
+                                        <textarea
+                                            className="form-input"
+                                            style={{ width: '100%', minHeight: '100px', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.95rem', background: 'white', lineHeight: '1.5' }}
+                                            value={whatsappTab === 'en' ? whatsappConfig.walletOtpTemplate : whatsappConfig.walletOtpTemplate_hi}
+                                            onChange={(e) => setWhatsappConfig({ 
+                                                ...whatsappConfig, 
+                                                [whatsappTab === 'en' ? 'walletOtpTemplate' : 'walletOtpTemplate_hi']: e.target.value 
+                                            })}
+                                            placeholder={`Enter ${whatsappTab === 'en' ? 'English' : 'Hindi'} wallet OTP message...`}
+                                        />
+                                        <p style={{ marginTop: '8px', fontSize: '0.8rem', color: '#64748b' }}>
+                                            Must include <strong>{'{otp}'}</strong> placeholder.
+                                        </p>
+                                    </div>
+
+                                    {/* Wallet Donation Success Template */}
+                                    <div className="template-card" style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                                        <label style={{ display: 'block', marginBottom: '10px', fontWeight: 700, color: '#334155', fontSize: '0.9rem' }}>
+                                            Wallet Donation Thank You ({whatsappTab === 'en' ? 'EN' : 'HI'})
+                                        </label>
+                                        <textarea
+                                            className="form-input"
+                                            style={{ width: '100%', minHeight: '100px', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.95rem', background: 'white', lineHeight: '1.5' }}
+                                            value={whatsappTab === 'en' ? whatsappConfig.walletDonationTemplate : whatsappConfig.walletDonationTemplate_hi}
+                                            onChange={(e) => setWhatsappConfig({ 
+                                                ...whatsappConfig, 
+                                                [whatsappTab === 'en' ? 'walletDonationTemplate' : 'walletDonationTemplate_hi']: e.target.value 
+                                            })}
+                                            placeholder={`Enter ${whatsappTab === 'en' ? 'English' : 'Hindi'} wallet donation success message...`}
+                                        />
+                                        <p style={{ marginTop: '8px', fontSize: '0.8rem', color: '#64748b' }}>
+                                            Placeholders: <strong>{'{name}'}</strong>, <strong>{'{amount}'}</strong>
+                                        </p>
                                     </div>
 
                                     {/* Motivator Alerts */}
                                     <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
                                         <h4 style={{ margin: '0 0 1.5rem 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Zap size={20} color="#00bfa5" /> Motivator Notifications
+                                            <Zap size={20} color="#00bfa5" /> Motivator Notifications ({whatsappTab === 'en' ? 'EN' : 'HI'})
                                         </h4>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                             <div>
@@ -598,8 +808,11 @@ const AdminSettings = () => {
                                                 <textarea
                                                     className="form-input"
                                                     style={{ width: '100%', minHeight: '120px', padding: '12px', borderRadius: '12px', fontSize: '0.9rem', border: '1px solid #cbd5e1' }}
-                                                    value={whatsappConfig.l1MotivatorTemplate}
-                                                    onChange={(e) => setWhatsappConfig({ ...whatsappConfig, l1MotivatorTemplate: e.target.value })}
+                                                    value={whatsappTab === 'en' ? whatsappConfig.l1MotivatorTemplate : whatsappConfig.l1MotivatorTemplate_hi}
+                                                    onChange={(e) => setWhatsappConfig({ 
+                                                        ...whatsappConfig, 
+                                                        [whatsappTab === 'en' ? 'l1MotivatorTemplate' : 'l1MotivatorTemplate_hi']: e.target.value 
+                                                    })}
                                                 />
                                             </div>
                                             <div>
@@ -607,8 +820,11 @@ const AdminSettings = () => {
                                                 <textarea
                                                     className="form-input"
                                                     style={{ width: '100%', minHeight: '120px', padding: '12px', borderRadius: '12px', fontSize: '0.9rem', border: '1px solid #cbd5e1' }}
-                                                    value={whatsappConfig.l2MotivatorTemplate}
-                                                    onChange={(e) => setWhatsappConfig({ ...whatsappConfig, l2MotivatorTemplate: e.target.value })}
+                                                    value={whatsappTab === 'en' ? whatsappConfig.l2MotivatorTemplate : whatsappConfig.l2MotivatorTemplate_hi}
+                                                    onChange={(e) => setWhatsappConfig({ 
+                                                        ...whatsappConfig, 
+                                                        [whatsappTab === 'en' ? 'l2MotivatorTemplate' : 'l2MotivatorTemplate_hi']: e.target.value 
+                                                    })}
                                                 />
                                             </div>
                                         </div>
@@ -729,48 +945,139 @@ const AdminSettings = () => {
                             This text appears directly under the main title on the donation page.
                         </p>
 
-                        <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.9rem' }}>
-                                    Subtitle Text (English)
-                                </label>
-                                <textarea
-                                    className="form-input"
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        borderRadius: '12px',
-                                        border: '1px solid #e2e8f0',
-                                        minHeight: '80px',
-                                        fontSize: '0.95rem',
-                                        lineHeight: '1.5'
-                                    }}
-                                    value={editLabel.en}
-                                    onChange={(e) => setEditLabel({ ...editLabel, en: e.target.value })}
-                                    placeholder="English subtitle..."
-                                />
-                            </div>
+                        <div style={{
+                            display: 'flex',
+                            background: '#f1f5f9',
+                            padding: '4px',
+                            borderRadius: '12px',
+                            marginBottom: '1.5rem'
+                        }}>
+                            <button
+                                onClick={() => setSubtitleTab('en')}
+                                style={{
+                                    flex: 1,
+                                    padding: '8px',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    background: subtitleTab === 'en' ? 'white' : 'transparent',
+                                    color: subtitleTab === 'en' ? '#00bfa5' : '#64748b',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    boxShadow: subtitleTab === 'en' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                English
+                            </button>
+                            <button
+                                onClick={() => setSubtitleTab('hi')}
+                                style={{
+                                    flex: 1,
+                                    padding: '8px',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    background: subtitleTab === 'hi' ? 'white' : 'transparent',
+                                    color: subtitleTab === 'hi' ? '#00bfa5' : '#64748b',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    boxShadow: subtitleTab === 'hi' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Hindi
+                            </button>
+                        </div>
 
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.9rem' }}>
-                                    Subtitle Text (Hindi)
-                                </label>
-                                <textarea
-                                    className="form-input"
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        borderRadius: '12px',
-                                        border: '1px solid #e2e8f0',
-                                        minHeight: '80px',
-                                        fontSize: '0.95rem',
-                                        lineHeight: '1.5'
-                                    }}
-                                    value={editLabel.hi}
-                                    onChange={(e) => setEditLabel({ ...editLabel, hi: e.target.value })}
-                                    placeholder="Hindi subtitle..."
-                                />
-                            </div>
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            {subtitleTab === 'en' ? (
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.9rem' }}>
+                                        Subtitle Text (English)
+                                    </label>
+                                    <textarea
+                                        className="form-input"
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            borderRadius: '12px',
+                                            border: '1px solid #e2e8f0',
+                                            minHeight: '120px',
+                                            fontSize: '0.95rem',
+                                            lineHeight: '1.5'
+                                        }}
+                                        value={editLabel.en}
+                                        onChange={(e) => setEditLabel({ ...editLabel, en: e.target.value })}
+                                        placeholder="English subtitle..."
+                                    />
+                                </div>
+                            ) : (
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.9rem' }}>
+                                        Subtitle Text (Hindi)
+                                    </label>
+                                    <textarea
+                                        className="form-input"
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            borderRadius: '12px',
+                                            border: '1px solid #e2e8f0',
+                                            minHeight: '120px',
+                                            fontSize: '0.95rem',
+                                            lineHeight: '1.5'
+                                        }}
+                                        value={editLabel.hi}
+                                        onChange={(e) => setEditLabel({ ...editLabel, hi: e.target.value })}
+                                        placeholder="Hindi subtitle..."
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.9rem' }}>
+                                Link URL (Optional)
+                            </label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                style={{
+                                    width: '100%',
+                                    padding: '12px',
+                                    borderRadius: '12px',
+                                    border: '1px solid #e2e8f0',
+                                    fontSize: '0.95rem'
+                                }}
+                                value={editLabel.link}
+                                onChange={(e) => setEditLabel({ ...editLabel, link: e.target.value })}
+                                placeholder="https://example.com/more-info"
+                            />
+                        </div>
+
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569', fontSize: '0.9rem' }}>
+                                Button Text ({subtitleTab === 'en' ? 'English' : 'Hindi'})
+                            </label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                style={{
+                                    width: '100%',
+                                    padding: '12px',
+                                    borderRadius: '12px',
+                                    border: '1px solid #e2e8f0',
+                                    fontSize: '0.95rem'
+                                }}
+                                value={subtitleTab === 'en' ? editLabel.btnText : editLabel.btnTextHi}
+                                onChange={(e) => {
+                                    if (subtitleTab === 'en') {
+                                        setEditLabel({ ...editLabel, btnText: e.target.value });
+                                    } else {
+                                        setEditLabel({ ...editLabel, btnTextHi: e.target.value });
+                                    }
+                                }}
+                                placeholder={subtitleTab === 'en' ? "Learn More" : "अधिक जानें"}
+                            />
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
@@ -805,6 +1112,157 @@ const AdminSettings = () => {
                 </div>
             )}
 
+            {/* Leaderboard Config Modal */}
+            {leaderboardModalOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 2000
+                }}>
+                    <div style={{ background: 'white', padding: '2rem', borderRadius: '24px', minWidth: '400px', maxWidth: '90%' }}>
+                        <h4 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Leaderboard Limit</h4>
+                        <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1.5rem' }}>Set the maximum number of top donors to display on the leaderboard.</p>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>Top Donors Count</label>
+                                <select
+                                    className="form-input"
+                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                                    value={leaderboardLimit}
+                                    onChange={(e) => setLeaderboardLimit(e.target.value)}
+                                >
+                                    <option value={5}>Top 5</option>
+                                    <option value={10}>Top 10</option>
+                                    <option value={15}>Top 15</option>
+                                    <option value={20}>Top 20</option>
+                                    <option value={30}>Top 30</option>
+                                    <option value={50}>Top 50</option>
+                                    <option value={100}>Top 100</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                            <button className="btn btn-outline" onClick={() => setLeaderboardModalOpen(false)} style={{ borderRadius: '10px' }}>Cancel</button>
+                            <button
+                                className="btn bg-primary text-white"
+                                onClick={handleSaveLeaderboardConfig}
+                                style={{ borderRadius: '10px', background: '#00bfa5', fontWeight: 700 }}
+                            >
+                                Save Limit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Wallet Config Modal */}
+            {walletModalOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 2000
+                }}>
+                    <div style={{ background: 'white', padding: '2rem', borderRadius: '24px', minWidth: '500px', maxWidth: '95%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <div>
+                                <h4 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Wallet Configuration</h4>
+                                <p style={{ fontSize: '0.9rem', color: '#666' }}>Configure settings for the user wallet and donations.</p>
+                            </div>
+                            <button onClick={() => setWalletModalOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }}><X size={24} /></button>
+                        </div>
+
+                        {/* Language Tabs */}
+                        <div style={{
+                            display: 'flex',
+                            background: '#f1f5f9',
+                            padding: '4px',
+                            borderRadius: '12px',
+                            marginBottom: '1.5rem',
+                            width: 'fit-content'
+                        }}>
+                            <button
+                                onClick={() => setWalletTab('en')}
+                                style={{
+                                    padding: '8px 24px',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    background: walletTab === 'en' ? 'white' : 'transparent',
+                                    color: walletTab === 'en' ? '#00bfa5' : '#64748b',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    boxShadow: walletTab === 'en' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                English
+                            </button>
+                            <button
+                                onClick={() => setWalletTab('hi')}
+                                style={{
+                                    padding: '8px 24px',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    background: walletTab === 'hi' ? 'white' : 'transparent',
+                                    color: walletTab === 'hi' ? '#00bfa5' : '#64748b',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    boxShadow: walletTab === 'hi' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Hindi
+                            </button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>
+                                    Donate Button Text ({walletTab === 'en' ? 'English' : 'Hindi'})
+                                </label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                                    value={walletTab === 'en' ? walletConfig.donateBtnText : walletConfig.donateBtnText_hi}
+                                    onChange={(e) => {
+                                        if (walletTab === 'en') {
+                                            setWalletConfig({ ...walletConfig, donateBtnText: e.target.value });
+                                        } else {
+                                            setWalletConfig({ ...walletConfig, donateBtnText_hi: e.target.value });
+                                        }
+                                    }}
+                                    placeholder={walletTab === 'en' ? "Donate From Wallet" : "वॉलेट से दान करें"}
+                                />
+                                <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '6px' }}>
+                                    {walletTab === 'en' ? "This text will appear on the donation button in the User Dashboard wallet section." : "यह टेक्स्ट यूजर डैशबोर्ड के वॉलेट सेक्शन में दान बटन पर दिखाई देगा।"}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2.5rem' }}>
+                            <button className="btn btn-outline" onClick={() => setWalletModalOpen(false)} style={{ borderRadius: '10px' }}>Cancel</button>
+                            <button
+                                className="btn bg-primary text-white"
+                                onClick={handleSaveWalletConfig}
+                                style={{
+                                    borderRadius: '10px',
+                                    background: '#00bfa5',
+                                    fontWeight: 700,
+                                    padding: '12px 32px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                }}
+                            >
+                                <Save size={18} />
+                                Save Wallet Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

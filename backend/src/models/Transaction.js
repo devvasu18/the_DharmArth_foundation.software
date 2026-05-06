@@ -17,7 +17,7 @@ const transactionSchema = new mongoose.Schema({
     },
     reason: {
         type: String,
-        enum: ['referral_commission_l1', 'referral_commission_l2', 'payout'],
+        enum: ['referral_commission_l1', 'referral_commission_l2', 'payout', 'wallet_donation'],
         required: true
     },
     referenceId: {

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Donation = require('../models/Donation');
 const User = require('../models/User');
+const Setting = require('../models/Setting');
 const Notification = require('../models/Notification');
 const { processDonationCommission } = require('../services/commissionService');
 const certificateService = require('../services/certificateService');
@@ -338,6 +339,160 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
     }
 });
 
+// @desc    Send OTP for Wallet Donation
+// @route   POST /api/donate/wallet/send-otp
+router.post('/wallet/send-otp', protect, async (req, res) => {
+    const whatsappService = require('../services/whatsappService');
+    const User = require('../models/User');
+
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        user.otp = otp;
+        user.otpExpires = otpExpires;
+        await user.save();
+
+        const success = await whatsappService.sendWalletDonationOTP(user.mobile, otp);
+
+        if (success) {
+            res.json({ 
+                success: true, 
+                message: 'OTP sent successfully to your WhatsApp' 
+            });
+        } else {
+            res.status(500).json({ message: 'Failed to send OTP. Please try again.' });
+        }
+    } catch (error) {
+        console.error("Wallet OTP Error:", error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Donate using Wallet Balance
+// @route   POST /api/donate/wallet
+router.post('/wallet', protect, async (req, res) => {
+    const mongoose = require('mongoose');
+    const Wallet = require('../models/Wallet');
+    const Transaction = require('../models/Transaction');
+    const Donation = require('../models/Donation');
+    const Notification = require('../models/Notification');
+    const User = require('../models/User');
+    const whatsappService = require('../services/whatsappService');
+    const crypto = require('crypto');
+
+    const { amount, donorName, donorEmail, donorMobile, panNumber, aadhaarNumber, address, city, state, otp } = req.body;
+
+    if (!amount || amount <= 0) {
+        return res.status(400).json({ message: 'Invalid amount' });
+    }
+
+    if (!otp) {
+        return res.status(400).json({ message: 'OTP is required' });
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        // 1. Verify OTP
+        const user = await User.findById(req.user._id).session(session);
+        if (!user || !user.otp || user.otp !== otp || user.otpExpires < new Date()) {
+            await session.abortTransaction();
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+
+        // 2. Get Wallet
+        const wallet = await Wallet.findOne({ user: req.user._id }).session(session);
+        if (!wallet || wallet.balance < amount) {
+            await session.abortTransaction();
+            return res.status(400).json({ message: 'Insufficient wallet balance' });
+        }
+
+        // 3. Create Donation Record (Success immediately)
+        const donationId = 'WAL_' + crypto.randomBytes(8).toString('hex').toUpperCase();
+        const donationArr = await Donation.create([{
+            amount,
+            donorName: donorName || req.user.name,
+            donorMobile: donorMobile || req.user.mobile,
+            donorEmail: donorEmail || req.user.email,
+            panNumber,
+            aadhaarNumber,
+            address,
+            city,
+            state,
+            status: 'success',
+            paymentMethod: 'wallet',
+            transactionId: donationId,
+            receiptNumber: donationId,
+            is80G: !!(panNumber && panNumber.trim().length > 0)
+        }], { session });
+
+        const newDonation = donationArr[0];
+
+        // 4. Deduct from Wallet
+        wallet.balance -= amount;
+        await wallet.save({ session });
+
+        // 5. Create Wallet Transaction Record
+        await Transaction.create([{
+            wallet: wallet._id,
+            amount,
+            type: 'debit',
+            reason: 'wallet_donation',
+            referenceId: newDonation._id,
+            description: `Donated ₹${amount} to Foundation from Wallet`
+        }], { session });
+
+        // 6. Clear OTP
+        user.otp = undefined;
+        user.otpExpires = undefined;
+        await user.save({ session });
+
+        await session.commitTransaction();
+        session.endSession();
+
+        // --- Post-transaction tasks (Async) ---
+        
+        // Notification
+        try {
+            const io = req.app.get('io');
+            const notification = await Notification.create({
+                type: 'DONATION',
+                message: `New wallet donation of ₹${amount} from ${newDonation.donorName}`,
+                referenceId: newDonation._id,
+                onModel: 'Donation',
+                isRead: false
+            });
+            if (io) io.to('admin_notifications').emit('new_donation', notification);
+        } catch (e) { console.error("Notification error:", e); }
+
+        // WhatsApp
+        try {
+            await whatsappService.sendWalletDonationNotification(newDonation.donorMobile, newDonation.donorName, amount, newDonation._id);
+        } catch (e) { console.error("WhatsApp error:", e); }
+
+        res.status(201).json({
+            success: true,
+            message: 'Donation successful using wallet balance',
+            donationId: newDonation._id
+        });
+
+    } catch (error) {
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
+        session.endSession();
+        console.error("Wallet donation error:", error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @desc    Get Previous Motivator for a mobile number (Auto-fill)
 // @route   GET /api/donate/previous-motivator/:mobile
 router.get('/previous-motivator/:mobile', async (req, res) => {
@@ -465,6 +620,59 @@ router.get('/analytics/traffic-sources', async (req, res) => {
         };
 
         res.json(responseData);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Get Leaderboard Data
+// @route   GET /api/donate/leaderboard
+router.get('/leaderboard', async (req, res) => {
+    try {
+        const { period = 'all-time' } = req.query;
+        let match = { status: 'success' };
+
+        const now = new Date();
+        if (period === 'today') {
+            const startOfDay = new Date(now);
+            startOfDay.setHours(0, 0, 0, 0);
+            match.createdAt = { $gte: startOfDay };
+        } else if (period === 'week') {
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - now.getDay());
+            startOfWeek.setHours(0, 0, 0, 0);
+            match.createdAt = { $gte: startOfWeek };
+        } else if (period === 'month') {
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            match.createdAt = { $gte: startOfMonth };
+        }
+
+        // Fetch limit from settings
+        const limitSetting = await Setting.findOne({ key: 'leaderboard_limit' });
+        const limit = limitSetting ? Number(limitSetting.value) : 10;
+
+        const leaderboard = await Donation.aggregate([
+            { $match: match },
+            {
+                $group: {
+                    _id: "$donorMobile",
+                    name: { $last: "$donorName" }, // Use the latest name provided by this mobile
+                    totalAmount: { $sum: "$amount" }
+                }
+            },
+            { $sort: { totalAmount: -1 } },
+            { $limit: limit },
+            {
+                $project: {
+                    _id: 0,
+                    name: 1,
+                    totalAmount: 1,
+                    mobile: "$_id"
+                }
+            }
+        ]);
+
+        res.json(leaderboard);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

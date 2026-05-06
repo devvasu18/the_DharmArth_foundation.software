@@ -106,7 +106,17 @@ const UserDetailModal = ({ user, onClose }) => {
                             </h5>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                 <InfoItem icon={<Wallet size={16} />} label="Wallet Balance" value={`₹${user.walletBalance?.toLocaleString() || 0}`} valueStyle={{ color: '#2b6cb0', fontWeight: 'bold' }} />
-                                <InfoItem icon={<LinkIcon size={16} />} label="Referred By" value={user.referredBy ? `${user.referredBy.name} (${user.referredBy.mobile})` : 'Direct Join'} />
+                                <InfoItem
+                                    icon={<LinkIcon size={16} />}
+                                    label="Referred By"
+                                    value={
+                                        user.referredBy
+                                            ? `${user.referredBy.name} (${user.referredBy.mobile})`
+                                            : user.lastMotivatorMobile
+                                                ? `${user.lastMotivatorName || ''} (${user.lastMotivatorMobile})`.trim()
+                                                : 'Direct Join'
+                                    }
+                                />
                                 <InfoItem icon={<Calendar size={16} />} label="Joined On" value={formatDate(user.createdAt)} />
                                 <InfoItem icon={<Calendar size={16} />} label="Last Updated" value={formatDate(user.updatedAt)} />
                             </div>

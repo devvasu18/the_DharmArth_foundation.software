@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useConfirm } from '../../context/ConfirmContext';
-import { User, Smartphone, Mail, MapPin, CreditCard, BadgeCheck, CheckCircle, Lock, ArrowRight } from 'lucide-react';
+import { User, Smartphone, Mail, MapPin, CreditCard, BadgeCheck, CheckCircle, Lock, ArrowRight, ExternalLink } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import './DonationForm.css';
@@ -27,6 +27,9 @@ const DonationForm = ({ onSuccess }) => {
     const [donationType] = useState('monthly'); // Always monthly now
     const [donationLabel, setDonationLabel] = useState('');
     const [donationLabelHi, setDonationLabelHi] = useState('');
+    const [donationLabelLink, setDonationLabelLink] = useState('');
+    const [donationLabelBtnText, setDonationLabelBtnText] = useState('');
+    const [donationLabelBtnTextHi, setDonationLabelBtnTextHi] = useState('');
 
     // Form States
     const [fullName, setFullName] = useState('');
@@ -89,6 +92,9 @@ const DonationForm = ({ onSuccess }) => {
                 }
                 if (data.donation_label) setDonationLabel(data.donation_label);
                 if (data.donation_label_hi) setDonationLabelHi(data.donation_label_hi);
+                if (data.donation_label_link) setDonationLabelLink(data.donation_label_link);
+                if (data.donation_label_btn_text) setDonationLabelBtnText(data.donation_label_btn_text);
+                if (data.donation_label_btn_text_hi) setDonationLabelBtnTextHi(data.donation_label_btn_text_hi);
             } catch (error) {
                 console.error("Failed to load donation config", error);
             }
@@ -108,6 +114,9 @@ const DonationForm = ({ onSuccess }) => {
                 setIsMotivatorLocked(true);
             } else if (authUser.lastMotivatorMobile && !params.get('motivator') && !params.get('ref')) {
                 setMotivatorMobile(authUser.lastMotivatorMobile);
+                setIsMotivatorLocked(true);
+                // Also fetch name if possible or use a placeholder
+                if (authUser.lastMotivatorName) setMotivatorName(authUser.lastMotivatorName);
             }
         }
     }, [authUser, location.search]);
@@ -123,6 +132,7 @@ const DonationForm = ({ onSuccess }) => {
                     if (data.motivatorMobile) {
                         setMotivatorMobile(data.motivatorMobile);
                         if (data.motivatorName) setMotivatorName(data.motivatorName);
+                        setIsMotivatorLocked(true);
                         toast.success("Welcome back! Your previous motivator has been auto-selected.", {
                             icon: '👋',
                             duration: 3000
@@ -169,8 +179,8 @@ const DonationForm = ({ onSuccess }) => {
     // Debounce motivator check
     useEffect(() => {
         const checkMotivator = async () => {
-            // Skip if locked (loaded from user profile)
-            if (isMotivatorLocked) return;
+            // Skip if locked AND we already have the name
+            if (isMotivatorLocked && motivatorName) return;
 
             // Prevent self-referral
             if (motivatorMobile && mobile && motivatorMobile === mobile) {
@@ -545,6 +555,40 @@ const DonationForm = ({ onSuccess }) => {
                         fontWeight: 500
                     }}>
                         {i18n.language === 'hi' ? donationLabelHi : donationLabel}
+                        {donationLabelLink && (
+                            <div style={{ marginTop: '0.75rem' }}>
+                                <a
+                                    href={donationLabelLink}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '6px 16px',
+                                        background: '#f0fdfa',
+                                        color: '#00bfa5',
+                                        borderRadius: '8px',
+                                        fontSize: '0.85rem',
+                                        fontWeight: 700,
+                                        textDecoration: 'none',
+                                        border: '1px solid rgba(0, 191, 165, 0.2)',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    onMouseOver={(e) => {
+                                        e.currentTarget.style.background = '#00bfa5';
+                                        e.currentTarget.style.color = 'white';
+                                    }}
+                                    onMouseOut={(e) => {
+                                        e.currentTarget.style.background = '#f0fdfa';
+                                        e.currentTarget.style.color = '#00bfa5';
+                                    }}
+                                >
+                                    {i18n.language === 'hi' ? (donationLabelBtnTextHi || 'अधिक जानें') : (donationLabelBtnText || 'Learn More')}
+                                    <ExternalLink size={14} />
+                                </a>
+                            </div>
+                        )}
                     </p>
                 )}
 
