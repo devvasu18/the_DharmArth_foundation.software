@@ -1385,6 +1385,8 @@
     flex-direction: column;
     align-items: center;
     flex: 1;
+    text-align: center;
+    padding: 0 5px;
 }
 
 .stat-item:first-child {
@@ -1397,11 +1399,38 @@
 }
 
 .stat-lbl {
-    font-size: 0.65rem;
-    opacity: 0.8;
-    text-transform: uppercase;
+    font-size: 0.85rem;
+    opacity: 0.9;
     font-weight: 700;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
+    line-height: 1.2;
+    margin-top: 2px;
+}
+
+/* Mobile Responsive Fix for Wallet Stats */
+@media (max-width: 480px) {
+    .stat-row.secondary {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .stat-item {
+        width: 100%;
+        align-items: flex-start;
+        text-align: left;
+        border-right: none !important;
+        padding: 0;
+    }
+    
+    .stat-item:first-child {
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .stat-lbl {
+        font-size: 0.9rem;
+    }
 }
 
 /* Motivator Upsell & Onboarding */

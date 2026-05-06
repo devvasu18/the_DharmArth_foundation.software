@@ -23,6 +23,7 @@ const AdminLayout = () => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [isHomeDropdownOpen, setHomeDropdownOpen] = useState(false);
     const [isEventsDropdownOpen, setEventsDropdownOpen] = useState(false);
     const [isReportsDropdownOpen, setReportsDropdownOpen] = useState(false);
     const [isDoctorsDropdownOpen, setDoctorsDropdownOpen] = useState(false);
@@ -198,14 +199,40 @@ const AdminLayout = () => {
                         <MessageSquare size={20} title={isSidebarCollapsed ? "Leads & Inquiries" : ""} />
                         <span className="admin-link-text">Leads & Inquiries</span>
                     </NavLink>
-                    <NavLink to="/admin/sliders" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
-                        <Image size={20} title={isSidebarCollapsed ? "Hero Sliders" : ""} />
-                        <span className="admin-link-text">Hero Sliders</span>
-                    </NavLink>
-                    <NavLink to="/admin/crowdfunding" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
-                        <TrendingUp size={20} title={isSidebarCollapsed ? "Crowdfunding" : ""} />
-                        <span className="admin-link-text">Crowdfunding</span>
-                    </NavLink>
+                    {/* Home Management Dropdown */}
+                    <div className="admin-link-dropdown-container">
+                        <div
+                            className={`admin-link ${location.pathname === '/admin/sliders' ||
+                                location.pathname === '/admin/crowdfunding'
+                                ? 'active' : ''
+                                }`}
+                            onClick={() => {
+                                setHomeDropdownOpen(!isHomeDropdownOpen);
+                                setEventsDropdownOpen(false);
+                                setDoctorsDropdownOpen(false);
+                                setPharmacyDropdownOpen(false);
+                                setReportsDropdownOpen(false);
+                            }}
+                            style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <Image size={20} title={isSidebarCollapsed ? "Home Management" : ""} />
+                                <span className="admin-link-text">Home Management</span>
+                            </div>
+                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isHomeDropdownOpen || location.pathname === '/admin/sliders' || location.pathname === '/admin/crowdfunding' ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
+                        </div>
+
+                        {isHomeDropdownOpen && (
+                            <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
+                                <NavLink to="/admin/sliders" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
+                                    Hero Sliders
+                                </NavLink>
+                                <NavLink to="/admin/crowdfunding" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
+                                    Home crowdfunding
+                                </NavLink>
+                            </div>
+                        )}
+                    </div>
                     <NavLink to="/admin/cms" className={({ isActive }) => `admin-link ${isActive ? 'active' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                         <Globe size={20} title={isSidebarCollapsed ? "Page Management" : ""} />
                         <span className="admin-link-text">Page Management</span>
@@ -478,9 +505,9 @@ const AdminLayout = () => {
                                                     onClick={() => handleNotificationClick(notif)}
                                                 >
                                                     <div className="notif-icon">
-                                                        {notif.onModel === 'PayoutRequest' ? '💸' : 
-                                                         notif.type === 'DONATION' ? '💰' : 
-                                                         notif.type === 'SUBSCRIPTION_CANCELLED' ? '🛑' : '📢'}
+                                                        {notif.onModel === 'PayoutRequest' ? '💸' :
+                                                            notif.type === 'DONATION' ? '💰' :
+                                                                notif.type === 'SUBSCRIPTION_CANCELLED' ? '🛑' : '📢'}
                                                     </div>
                                                     <div className="notif-content">
                                                         <p className="notif-msg">{notif.message}</p>
