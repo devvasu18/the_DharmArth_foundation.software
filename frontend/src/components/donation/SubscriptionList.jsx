@@ -825,7 +825,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                 }
                 .user-amount-cell strong {
                     font-size: 1.1rem;
-                    color: #7c3aed;
+                    color: #059669;
                     display: block;
                 }
                 .user-amount-cell .freq {
