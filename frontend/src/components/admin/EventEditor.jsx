@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api, { API_BASE_URL } from '../../services/api';
 import {
     Save, ArrowLeft, Image as ImageIcon, Video, Type, Youtube, Instagram,
-    Trash2, ArrowUp, ArrowDown, Move, Loader2
+    Trash2, ArrowUp, ArrowDown, Move, Loader2, AlertTriangle
 } from 'lucide-react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
@@ -186,25 +186,29 @@ const EventEditor = () => {
             <form onSubmit={handleSubmit}>
                 <div className="editor-header">
                     <div className="header-left">
-                        <button type="button" onClick={() => navigate('/admin/events')} className="btn-back" style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
-                            <ArrowLeft size={20} /> Back
+                        <button type="button" onClick={() => navigate('/admin/events')} className="btn-back-modern">
+                            <ArrowLeft size={18} /> Back to Events
                         </button>
                         <h2>{isEditMode ? 'Edit Event' : 'Create New Event'}</h2>
                     </div>
                     <div className="editor-actions">
-                        <button type="submit" className="btn-primary" disabled={saving}>
+                        <button type="submit" className="btn-save-premium" disabled={saving}>
                             {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                            {saving ? ' Saving...' : ' Save Event'}
+                            {saving ? ' Saving Changes...' : ' Save Event'}
                         </button>
                     </div>
                 </div>
 
                 <div className="editor-section">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                    <div className="section-title-row">
                         <h3>Basic Information</h3>
-                        <div style={{ background: '#f0f0f0', padding: 4, borderRadius: 20, display: 'flex' }}>
-                            <button type="button" onClick={() => setGlobalLang('en')} style={{ padding: '5px 20px', borderRadius: 16, border: 'none', background: globalLang === 'en' ? 'white' : 'transparent', fontWeight: globalLang === 'en' ? 600 : 400, cursor: 'pointer' }}>English</button>
-                            <button type="button" onClick={() => setGlobalLang('hi')} style={{ padding: '5px 20px', borderRadius: 16, border: 'none', background: globalLang === 'hi' ? 'white' : 'transparent', fontWeight: globalLang === 'hi' ? 600 : 400, cursor: 'pointer' }}>Hindi</button>
+                        <div className="lang-switch-modern">
+                            <button type="button" 
+                                className={`lang-btn ${globalLang === 'en' ? 'active' : ''}`}
+                                onClick={() => setGlobalLang('en')}>English</button>
+                            <button type="button" 
+                                className={`lang-btn ${globalLang === 'hi' ? 'active' : ''}`}
+                                onClick={() => setGlobalLang('hi')}>Hindi</button>
                         </div>
                     </div>
 
@@ -212,72 +216,78 @@ const EventEditor = () => {
                         {globalLang === 'en' ? (
                             <>
                                 <div className="form-group full-width">
-                                    <label>Event Title (EN)</label>
+                                    <label className="modern-label">Event Title (English)</label>
                                     <input
-                                        type="text" name="title" className="form-control" required
+                                        type="text" name="title" className="modern-input" required
                                         value={formData.title} onChange={handleInputChange}
+                                        placeholder="Enter event name..."
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Location (EN)</label>
+                                    <label className="modern-label">Location (English)</label>
                                     <input
-                                        type="text" name="location" className="form-control"
+                                        type="text" name="location" className="modern-input"
                                         value={formData.location} onChange={handleInputChange}
+                                        placeholder="Where is the event?"
                                     />
                                 </div>
                                 <div className="form-group full-width">
-                                    <label>Short Description (EN)</label>
+                                    <label className="modern-label">Short Description (English)</label>
                                     <textarea
-                                        name="shortDescription" className="form-control" rows="3"
+                                        name="shortDescription" className="modern-textarea" rows="3"
                                         value={formData.shortDescription} onChange={handleInputChange}
+                                        placeholder="Brief summary of the event..."
                                     ></textarea>
                                 </div>
                             </>
                         ) : (
                             <>
                                 <div className="form-group full-width">
-                                    <label>Event Title (HI)</label>
+                                    <label className="modern-label">Event Title (Hindi)</label>
                                     <input
-                                        type="text" name="title_hi" className="form-control"
+                                        type="text" name="title_hi" className="modern-input"
                                         value={formData.title_hi || ''} onChange={handleInputChange}
+                                        placeholder="कार्यक्रम का नाम..."
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Location (HI)</label>
+                                    <label className="modern-label">Location (Hindi)</label>
                                     <input
-                                        type="text" name="location_hi" className="form-control"
+                                        type="text" name="location_hi" className="modern-input"
                                         value={formData.location_hi || ''} onChange={handleInputChange}
+                                        placeholder="स्थान..."
                                     />
                                 </div>
                                 <div className="form-group full-width">
-                                    <label>Short Description (HI)</label>
+                                    <label className="modern-label">Short Description (Hindi)</label>
                                     <textarea
-                                        name="shortDescription_hi" className="form-control" rows="3"
+                                        name="shortDescription_hi" className="modern-textarea" rows="3"
                                         value={formData.shortDescription_hi || ''} onChange={handleInputChange}
+                                        placeholder="संक्षिप्त विवरण..."
                                     ></textarea>
                                 </div>
                             </>
                         )}
 
                         <div className="form-group">
-                            <label>Slug (URL Friendly)</label>
+                            <label className="modern-label">URL Slug</label>
                             <input
-                                type="text" name="slug" className="form-control"
+                                type="text" name="slug" className="modern-input"
                                 value={formData.slug} onChange={handleInputChange}
-                                placeholder="Auto-generated from title if empty"
+                                placeholder="auto-generated-url-friendly"
                             />
                         </div>
                         <div className="form-group">
-                            <label>Status</label>
-                            <select name="status" className="form-control" value={formData.status} onChange={handleInputChange}>
+                            <label className="modern-label">Status</label>
+                            <select name="status" className="modern-select" value={formData.status} onChange={handleInputChange}>
                                 <option value="upcoming">Upcoming</option>
                                 <option value="ongoing">Ongoing</option>
                                 <option value="completed">Completed</option>
                             </select>
                         </div>
                         <div className="form-group">
-                            <label>Category</label>
-                            <select name="category" className="form-control" value={formData.category || 'Social Event'} onChange={handleInputChange}>
+                            <label className="modern-label">Category</label>
+                            <select name="category" className="modern-select" value={formData.category || 'Social Event'} onChange={handleInputChange}>
                                 <option value="Social Event">Social Event</option>
                                 <option value="Health Blog">Health Blog</option>
                                 <option value="Medical Camp">Medical Camp</option>
@@ -285,136 +295,159 @@ const EventEditor = () => {
                             </select>
                         </div>
                         <div className="form-group">
-                            <label>Event Date</label>
+                            <label className="modern-label">Event Date</label>
                             <input
-                                type="date" name="date" className="form-control"
+                                type="date" name="date" className="modern-input"
                                 max={formData.status === 'completed' ? new Date().toLocaleDateString('en-CA') : undefined}
                                 value={formData.date ? new Date(formData.date).toISOString().slice(0, 10) : ''} onChange={handleInputChange}
                             />
                         </div>
                         <div className="form-group full-width">
-                            <label>Cover Image URL (or upload)</label>
-                            <div style={{ display: 'flex', gap: 10 }}>
-                                <input
-                                    type="text" name="coverImage" className="form-control"
-                                    value={formData.coverImage} onChange={handleInputChange}
-                                />
-                                <input type="file" onChange={(e) => handleFileUpload(e, 'coverImage')} style={{ width: 100 }} />
-                            </div>
-                            {formData.coverImage && <img src={formData.coverImage.startsWith('http') ? formData.coverImage : `${API_BASE_URL}${formData.coverImage.startsWith('/') ? '' : '/'}${formData.coverImage}`} className="preview-img" alt="Cover" />}
-                        </div>
-                        <div className="form-group full-width">
-                            <label>Hero Slider Images (Optional - overrides Cover Image on page)</label>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 10 }}>
-                                {formData.heroImages && formData.heroImages.map((img, idx) => (
-                                    <div key={idx} style={{ position: 'relative', width: 100, height: 60 }}>
-                                        <img src={img.startsWith('http') ? img : `${API_BASE_URL}${img.startsWith('/') ? '' : '/'}${img}`} alt="Hero" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4 }} />
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const newImages = formData.heroImages.filter((_, i) => i !== idx);
-                                                setFormData({ ...formData, heroImages: newImages });
-                                            }}
-                                            style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', borderRadius: '50%', width: 18, height: 18, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}
-                                        >X</button>
+                            <label className="modern-label">Main Cover Image</label>
+                            <div className="image-upload-wrapper">
+                                <div className="url-upload-row">
+                                    <input
+                                        type="text" name="coverImage" className="modern-input"
+                                        value={formData.coverImage} onChange={handleInputChange}
+                                        placeholder="Paste image URL or upload file"
+                                    />
+                                    <label className="btn-upload-modern">
+                                        <ImageIcon size={18} /> Upload
+                                        <input type="file" onChange={(e) => handleFileUpload(e, 'coverImage')} />
+                                    </label>
+                                </div>
+                                {formData.coverImage && (
+                                    <div className="preview-container">
+                                        <img 
+                                            src={formData.coverImage.startsWith('http') ? formData.coverImage : `${API_BASE_URL}${formData.coverImage.startsWith('/') ? '' : '/'}${formData.coverImage}`} 
+                                            className="premium-preview-img" alt="Cover" 
+                                        />
                                     </div>
-                                ))}
-                            </div>
-                            <div style={{ display: 'flex', gap: 10 }}>
-                                <input type="file" multiple onChange={async (e) => {
-                                    const files = Array.from(e.target.files);
-                                    for (const file of files) {
-                                        const uploadData = new FormData();
-                                        uploadData.append('image', file);
-                                        try {
-                                            const res = await api.post('/upload', uploadData, {
-                                                headers: { 'Content-Type': 'multipart/form-data' }
-                                            });
-                                            setFormData(prev => ({
-                                                ...prev,
-                                                heroImages: [...(prev.heroImages || []), res.data.imageUrl]
-                                            }));
-                                        } catch (err) {
-                                            toast.error('Failed to upload an image');
-                                        }
-                                    }
-                                }} />
+                                )}
                             </div>
                         </div>
                         <div className="form-group full-width">
-                            <label>Short Description</label>
-                            <textarea
-                                name="shortDescription" className="form-control" rows="3"
-                                value={formData.shortDescription} onChange={handleInputChange}
-                            ></textarea>
+                            <label className="modern-label">Gallery Slider Images (Optional)</label>
+                            <div className="image-upload-wrapper">
+                                {formData.heroImages && formData.heroImages.length > 0 && (
+                                    <div className="multi-image-grid">
+                                        {formData.heroImages.map((img, idx) => (
+                                            <div key={idx} className="multi-image-item">
+                                                <img src={img.startsWith('http') ? img : `${API_BASE_URL}${img.startsWith('/') ? '' : '/'}${img}`} alt="Hero" />
+                                                <button
+                                                    type="button"
+                                                    className="btn-remove-img"
+                                                    onClick={() => {
+                                                        const newImages = formData.heroImages.filter((_, i) => i !== idx);
+                                                        setFormData({ ...formData, heroImages: newImages });
+                                                    }}
+                                                ><Trash2 size={12} /></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <label className="btn-upload-modern" style={{ width: 'fit-content' }}>
+                                    <ImageIcon size={18} /> Add Images to Gallery
+                                    <input type="file" multiple onChange={async (e) => {
+                                        const files = Array.from(e.target.files);
+                                        for (const file of files) {
+                                            const uploadData = new FormData();
+                                            uploadData.append('image', file);
+                                            try {
+                                                const res = await api.post('/upload', uploadData, {
+                                                    headers: { 'Content-Type': 'multipart/form-data' }
+                                                });
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    heroImages: [...(prev.heroImages || []), res.data.imageUrl]
+                                                }));
+                                            } catch (err) {
+                                                toast.error('Failed to upload an image');
+                                            }
+                                        }
+                                    }} />
+                                </label>
+                            </div>
                         </div>
                         <div className="form-group">
-                            <label>
+                            <label className="modern-checkbox-label">
                                 <input
                                     type="checkbox" name="isPublished"
                                     checked={formData.isPublished} onChange={handleInputChange}
-                                /> Publish Event
+                                /> 
+                                <span>Visible to Public</span>
                             </label>
                         </div>
                     </div>
                 </div>
 
                 <div className="editor-section">
-                    <h3>Content Blocks</h3>
+                    <div className="section-title-row">
+                        <h3>Content Blocks</h3>
+                    </div>
+                    
                     <div className="blocks-container">
                         {formData.blocks.map((block, index) => (
-                            <div key={block.id || index} className="content-block">
+                            <div key={block.id || index} className="premium-block">
                                 <div className="block-header">
-                                    <span className="block-type-badge">{block.type}</span>
-                                    <div className="block-controls">
-                                        <button type="button" className="control-btn" onClick={() => moveBlock(index, 'up')} title="Move Up"><ArrowUp size={14} /></button>
-                                        <button type="button" className="control-btn" onClick={() => moveBlock(index, 'down')} title="Move Down"><ArrowDown size={14} /></button>
-                                        <button type="button" className="control-btn delete" onClick={() => removeBlock(index)} title="Remove"><Trash2 size={14} /></button>
+                                    <div className="block-type-chip">
+                                        {block.type === 'text' && <Type size={14} />}
+                                        {block.type === 'image' && <ImageIcon size={14} />}
+                                        {block.type === 'video' && <Video size={14} />}
+                                        {block.type === 'youtube' && <Youtube size={14} />}
+                                        {block.type === 'instagram' && <Instagram size={14} />}
+                                        {block.type}
+                                    </div>
+                                    <div className="block-actions">
+                                        <button type="button" className="action-btn-mini" onClick={() => moveBlock(index, 'up')} title="Move Up"><ArrowUp size={16} /></button>
+                                        <button type="button" className="action-btn-mini" onClick={() => moveBlock(index, 'down')} title="Move Down"><ArrowDown size={16} /></button>
+                                        <button type="button" className="action-btn-mini delete" onClick={() => removeBlock(index)} title="Remove"><Trash2 size={16} /></button>
                                     </div>
                                 </div>
 
                                 <div className="block-content">
                                     {block.type === 'image' && (
-                                        <div className="image-block-grid">
+                                        <div className="form-grid">
                                             <div className="form-group">
-                                                <label>Image URL</label>
-                                                <div style={{ display: 'flex', gap: 5 }}>
-                                                    <input type="text" className="form-control" value={block.content.url} onChange={(e) => updateBlock(index, 'url', e.target.value)} />
-                                                    <input type="file" onChange={(e) => handleBlockFileUpload(e, index, 'url')} style={{ width: 80 }} />
+                                                <label className="modern-label">Image URL / Upload</label>
+                                                <div className="url-upload-row">
+                                                    <input type="text" className="modern-input" value={block.content.url} onChange={(e) => updateBlock(index, 'url', e.target.value)} />
+                                                    <label className="btn-upload-modern">
+                                                        <ImageIcon size={16} />
+                                                        <input type="file" onChange={(e) => handleBlockFileUpload(e, index, 'url')} />
+                                                    </label>
                                                 </div>
-                                                {block.content.url && <img src={block.content.url.startsWith('http') ? block.content.url : `${API_BASE_URL}${block.content.url.startsWith('/') ? '' : '/'}${block.content.url}`} className="preview-img" alt="Preview" />}
+                                                {block.content.url && (
+                                                    <div className="preview-container" style={{ marginTop: '1rem', maxWidth: '200px' }}>
+                                                        <img src={block.content.url.startsWith('http') ? block.content.url : `${API_BASE_URL}${block.content.url.startsWith('/') ? '' : '/'}${block.content.url}`} className="premium-preview-img" alt="Preview" />
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="form-group">
-                                                <label>Title/Caption</label>
-                                                <input type="text" className="form-control" value={block.content.title} onChange={(e) => updateBlock(index, 'title', e.target.value)} />
+                                                <label className="modern-label">Image Caption</label>
+                                                <input type="text" className="modern-input" value={block.content.title} onChange={(e) => updateBlock(index, 'title', e.target.value)} placeholder="Describe this image..." />
                                             </div>
                                         </div>
                                     )}
 
                                     {block.type === 'text' && (
-                                        <div className="form-group">
-                                            <div className="language-tabs" style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+                                        <div className="form-group full-width">
+                                            <div className="block-tabs">
                                                 <button
                                                     type="button"
-                                                    className={`btn-tab ${!blockTabs[block.id] || blockTabs[block.id] === 'en' ? 'active' : ''}`}
+                                                    className={`tab-pill ${(!blockTabs[block.id] || blockTabs[block.id] === 'en') ? 'active' : ''}`}
                                                     onClick={() => setBlockTabs({ ...blockTabs, [block.id]: 'en' })}
-                                                    style={{ padding: '5px 10px', cursor: 'pointer', background: (!blockTabs[block.id] || blockTabs[block.id] === 'en') ? '#007bff' : '#eee', color: (!blockTabs[block.id] || blockTabs[block.id] === 'en') ? '#fff' : '#333', border: 'none', borderRadius: 4 }}
-                                                >
-                                                    English
-                                                </button>
+                                                >English</button>
                                                 <button
                                                     type="button"
-                                                    className={`btn-tab ${blockTabs[block.id] === 'hi' ? 'active' : ''}`}
+                                                    className={`tab-pill ${blockTabs[block.id] === 'hi' ? 'active' : ''}`}
                                                     onClick={() => setBlockTabs({ ...blockTabs, [block.id]: 'hi' })}
-                                                    style={{ padding: '5px 10px', cursor: 'pointer', background: blockTabs[block.id] === 'hi' ? '#007bff' : '#eee', color: blockTabs[block.id] === 'hi' ? '#fff' : '#333', border: 'none', borderRadius: 4 }}
-                                                >
-                                                    Hindi
-                                                </button>
+                                                >Hindi</button>
                                             </div>
 
                                             {(!blockTabs[block.id] || blockTabs[block.id] === 'en') && (
-                                                <>
-                                                    <label>Content (English)</label>
+                                                <div className="editor-wrapper">
+                                                    <label className="modern-label">Content (English)</label>
                                                     <CKEditor
                                                         editor={ClassicEditor}
                                                         data={block.content.html || ''}
@@ -423,12 +456,12 @@ const EventEditor = () => {
                                                             updateBlock(index, 'html', data);
                                                         }}
                                                     />
-                                                </>
+                                                </div>
                                             )}
 
                                             {blockTabs[block.id] === 'hi' && (
-                                                <>
-                                                    <label>Content (Hindi)</label>
+                                                <div className="editor-wrapper">
+                                                    <label className="modern-label">Content (Hindi)</label>
                                                     <CKEditor
                                                         editor={ClassicEditor}
                                                         data={block.content.htmlHi || ''}
@@ -437,16 +470,16 @@ const EventEditor = () => {
                                                             updateBlock(index, 'htmlHi', data);
                                                         }}
                                                     />
-                                                </>
+                                                </div>
                                             )}
                                         </div>
                                     )}
 
                                     {block.type === 'youtube' && (
-                                        <div className="form-group">
-                                            <label>YouTube Link</label>
+                                        <div className="form-group full-width">
+                                            <label className="modern-label">YouTube Link</label>
                                             <input
-                                                type="text" className="form-control"
+                                                type="text" className="modern-input"
                                                 value={block.content.url}
                                                 onChange={(e) => updateBlock(index, 'url', e.target.value)}
                                                 placeholder="https://youtube.com/watch?v=..."
@@ -455,27 +488,34 @@ const EventEditor = () => {
                                     )}
 
                                     {block.type === 'video' && (
-                                        <div className="image-block-grid">
+                                        <div className="form-grid">
                                             <div className="form-group">
-                                                <label>Video URL (MP4/WebM)</label>
-                                                <div style={{ display: 'flex', gap: 5 }}>
-                                                    <input type="text" className="form-control" value={block.content.url} onChange={(e) => updateBlock(index, 'url', e.target.value)} />
-                                                    <input type="file" onChange={(e) => handleBlockFileUpload(e, index, 'url')} style={{ width: 80 }} />
+                                                <label className="modern-label">Video URL / Upload</label>
+                                                <div className="url-upload-row">
+                                                    <input type="text" className="modern-input" value={block.content.url} onChange={(e) => updateBlock(index, 'url', e.target.value)} />
+                                                    <label className="btn-upload-modern">
+                                                        <Video size={16} />
+                                                        <input type="file" onChange={(e) => handleBlockFileUpload(e, index, 'url')} />
+                                                    </label>
                                                 </div>
-                                                {block.content.url && <video src={block.content.url.startsWith('http') ? block.content.url : `${API_BASE_URL}${block.content.url.startsWith('/') ? '' : '/'}${block.content.url}`} className="preview-img" controls />}
+                                                {block.content.url && (
+                                                    <div className="preview-container" style={{ marginTop: '1rem', maxWidth: '300px' }}>
+                                                        <video src={block.content.url.startsWith('http') ? block.content.url : `${API_BASE_URL}${block.content.url.startsWith('/') ? '' : '/'}${block.content.url}`} className="premium-preview-img" controls />
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="form-group">
-                                                <label>Caption</label>
-                                                <input type="text" className="form-control" value={block.content.caption} onChange={(e) => updateBlock(index, 'caption', e.target.value)} />
+                                                <label className="modern-label">Video Caption</label>
+                                                <input type="text" className="modern-input" value={block.content.caption} onChange={(e) => updateBlock(index, 'caption', e.target.value)} />
                                             </div>
                                         </div>
                                     )}
 
                                     {block.type === 'instagram' && (
-                                        <div className="form-group">
-                                            <label>Instagram Post/Reel Link</label>
+                                        <div className="form-group full-width">
+                                            <label className="modern-label">Instagram Link</label>
                                             <input
-                                                type="text" className="form-control"
+                                                type="text" className="modern-input"
                                                 value={block.content.url}
                                                 onChange={(e) => updateBlock(index, 'url', e.target.value)}
                                                 placeholder="https://instagram.com/reel/..."
@@ -487,44 +527,47 @@ const EventEditor = () => {
                         ))}
 
                         {formData.blocks.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: 20, color: '#888' }}>
-                                No content blocks yet. Add one below!
+                            <div className="empty-state-notice">
+                                <AlertTriangle size={32} opacity={0.3} />
+                                <p>No content blocks yet. Add one below to build your event page!</p>
                             </div>
                         )}
                     </div>
 
                     <div className="add-block-section">
-                        <h4>Add Content Block</h4>
-                        <div className="add-block-buttons">
-                            <button type="button" className="add-btn" onClick={() => addBlock('text')}>
-                                <Type size={16} /> Text
+                        <h4>Build Page Content</h4>
+                        <div className="add-block-grid">
+                            <button type="button" className="btn-add-type" onClick={() => addBlock('text')}>
+                                <Type size={18} /> Add Text
                             </button>
-                            <button type="button" className="add-btn" onClick={() => addBlock('image')}>
-                                <ImageIcon size={16} /> Image
+                            <button type="button" className="btn-add-type" onClick={() => addBlock('image')}>
+                                <ImageIcon size={18} /> Add Image
                             </button>
-                            <button type="button" className="add-btn" onClick={() => addBlock('video')}>
-                                <Video size={16} /> Video
+                            <button type="button" className="btn-add-type" onClick={() => addBlock('video')}>
+                                <Video size={18} /> Add Video
                             </button>
-                            <button type="button" className="add-btn" onClick={() => addBlock('youtube')}>
-                                <Youtube size={16} /> YouTube
+                            <button type="button" className="btn-add-type" onClick={() => addBlock('youtube')}>
+                                <Youtube size={18} /> YouTube
                             </button>
-                            <button type="button" className="add-btn" onClick={() => addBlock('instagram')}>
-                                <Instagram size={16} /> Instagram
+                            <button type="button" className="btn-add-type" onClick={() => addBlock('instagram')}>
+                                <Instagram size={18} /> Instagram
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="editor-section">
-                    <h3>SEO Settings</h3>
+                    <div className="section-title-row">
+                        <h3>SEO & Social Sharing</h3>
+                    </div>
                     <div className="form-grid">
                         <div className="form-group">
-                            <label>Meta Title</label>
-                            <input type="text" name="metaTitle" className="form-control" value={formData.metaTitle} onChange={handleInputChange} />
+                            <label className="modern-label">Meta Title (Browser Tab)</label>
+                            <input type="text" name="metaTitle" className="modern-input" value={formData.metaTitle} onChange={handleInputChange} placeholder="How the page title appears in Google" />
                         </div>
                         <div className="form-group">
-                            <label>Meta Description</label>
-                            <input type="text" name="metaDescription" className="form-control" value={formData.metaDescription} onChange={handleInputChange} />
+                            <label className="modern-label">Meta Description</label>
+                            <textarea name="metaDescription" className="modern-textarea" rows="2" value={formData.metaDescription} onChange={handleInputChange} placeholder="Brief summary for search engines..." />
                         </div>
                     </div>
                 </div>

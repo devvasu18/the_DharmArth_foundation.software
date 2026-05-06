@@ -91,14 +91,50 @@ const AdminEventVideos = () => {
     };
 
     return (
-        <div className="admin-events-container">
-            <div className="admin-header">
-                <h2>Event YouTube Videos</h2>
+        <div className="admin-events-container" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+            <div className="admin-header" style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                marginBottom: '2.5rem',
+                background: 'white',
+                padding: '1.5rem 2rem',
+                borderRadius: '20px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+                border: '1px solid #f1f5f9'
+            }}>
+                <div className="header-title">
+                    <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#1e293b', letterSpacing: '-0.02em' }}>Event YouTube Videos</h2>
+                    <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.9rem' }}>Manage video highlights from your foundation events</p>
+                </div>
                 <button
-                    className="btn-add-event"
+                    className="btn-add-premium"
                     onClick={() => { resetForm(); setIsEditing(true); }}
+                    style={{
+                        background: 'linear-gradient(135deg, #00bfa5 0%, #00897b 100%)',
+                        color: 'white',
+                        border: 'none',
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '12px',
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 15px rgba(0, 191, 165, 0.3)',
+                        transition: 'all 0.3s ease',
+                        fontSize: '0.95rem'
+                    }}
+                    onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 191, 165, 0.4)';
+                    }}
+                    onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 191, 165, 0.3)';
+                    }}
                 >
-                    <Plus size={18} /> Add New Video
+                    <Plus size={20} strokeWidth={3} /> Add New Video
                 </button>
             </div>
 
@@ -148,22 +184,103 @@ const AdminEventVideos = () => {
                 </div>
             )}
 
-            <div className="videos-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
+            <div className="videos-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
                 {videos.map((video, index) => (
-                    <div key={video._id} className="video-card-admin" style={{ background: 'white', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', border: '1px solid #eee' }}>
-                        <div className="video-thumb" style={{ position: 'relative', height: 160 }}>
-                            <img src={video.thumbnail} alt={video.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            <a href={video.videoUrl} target="_blank" rel="noreferrer" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(255,0,0,0.8)', color: 'white', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Play size={20} fill="white" />
-                            </a>
+                    <div key={video._id} className="video-card-premium" style={{ 
+                        background: 'white', 
+                        borderRadius: '24px', 
+                        overflow: 'hidden', 
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.02)', 
+                        border: '1px solid #f1f5f9',
+                        transition: 'all 0.3s ease'
+                    }}>
+                        <div className="video-thumb" style={{ position: 'relative', height: '180px', overflow: 'hidden' }}>
+                            <img src={video.thumbnail} alt={video.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }} className="thumb-img" />
+                            <div className="overlay" style={{ 
+                                position: 'absolute', 
+                                inset: 0, 
+                                background: 'rgba(0,0,0,0.2)', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                transition: 'background 0.3s ease'
+                            }}>
+                                <a href={video.videoUrl} target="_blank" rel="noreferrer" style={{ 
+                                    background: 'rgba(255,255,255,0.9)', 
+                                    color: '#ef4444', 
+                                    borderRadius: '50%', 
+                                    width: '50px', 
+                                    height: '50px', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                                    transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                                }} className="play-btn-circle">
+                                    <Play size={24} fill="#ef4444" />
+                                </a>
+                            </div>
                         </div>
-                        <div className="video-info" style={{ padding: 15 }}>
-                            <h4 style={{ margin: '0 0 5px', fontSize: '1rem' }}>{video.title}</h4>
-                            <div className="video-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 15 }}>
-                                <button onClick={() => { setCurrentVideo(video); setIsEditing(true); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666' }}>Edit</button>
-                                <button onClick={() => handleDelete(video._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'red' }}>
-                                    <Trash2 size={16} />
-                                </button>
+                        <div className="video-info" style={{ padding: '1.5rem' }}>
+                            <h4 style={{ margin: '0 0 1rem', fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', lineHeight: '1.4' }}>{video.title}</h4>
+                            <div className="video-actions" style={{ 
+                                display: 'flex', 
+                                justifyContent: 'space-between', 
+                                alignItems: 'center',
+                                borderTop: '1px solid #f1f5f9',
+                                paddingTop: '1rem',
+                                marginTop: '0.5rem'
+                            }}>
+                                <span style={{ 
+                                    fontSize: '0.75rem', 
+                                    fontWeight: 700, 
+                                    color: video.isActive ? '#059669' : '#94a3b8',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                }}>
+                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' }} />
+                                    {video.isActive ? 'Active' : 'Hidden'}
+                                </span>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <button 
+                                        onClick={() => { setCurrentVideo(video); setIsEditing(true); }} 
+                                        style={{ 
+                                            background: '#f8fafc', 
+                                            border: '1px solid #e2e8f0', 
+                                            borderRadius: '8px',
+                                            padding: '6px 12px',
+                                            fontSize: '0.85rem',
+                                            fontWeight: 600,
+                                            color: '#64748b',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseOver={(e) => { e.currentTarget.style.borderColor = '#00bfa5'; e.currentTarget.style.color = '#00bfa5'; }}
+                                        onMouseOut={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#64748b'; }}
+                                    >Edit</button>
+                                    <button 
+                                        onClick={() => handleDelete(video._id)} 
+                                        style={{ 
+                                            background: '#fff1f2', 
+                                            border: '1px solid #ffe4e6', 
+                                            borderRadius: '8px',
+                                            padding: '6px',
+                                            color: '#ef4444',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseOver={(e) => { e.currentTarget.style.background = '#fecdd3'; }}
+                                        onMouseOut={(e) => { e.currentTarget.style.background = '#fff1f2'; }}
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
