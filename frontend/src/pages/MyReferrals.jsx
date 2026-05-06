@@ -224,12 +224,19 @@ const MyReferrals = () => {
                                     <tbody>
                                         {referrals.map((ref) => (
                                             <tr key={ref._id}>
-                                                <td>
+                                                 <td>
                                                     <div className="donor-info-cell">
                                                         <div className="donor-avatar-small">
                                                             {ref.donorName.charAt(0).toUpperCase()}
                                                         </div>
-                                                        <span className="donor-name-text">{ref.donorName}</span>
+                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                <span className={`level-badge ${ref.level1UserId === user?._id ? 'l1' : 'l2'}`}>
+                                                                    {ref.level1UserId === user?._id ? 'L1' : 'L2'}
+                                                                </span>
+                                                                <span className="donor-name-text">{ref.donorName}</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td>{ref.donorMobile}</td>
@@ -269,7 +276,12 @@ const MyReferrals = () => {
                                             <div className="donor-info">
                                                 <div className="donor-avatar">{ref.donorName.charAt(0).toUpperCase()}</div>
                                                 <div>
-                                                    <div className="name">{ref.donorName}</div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <span className={`level-badge ${ref.level1UserId === user?._id ? 'l1' : 'l2'}`}>
+                                                            {ref.level1UserId === user?._id ? 'L1' : 'L2'}
+                                                        </span>
+                                                        <div className="name">{ref.donorName}</div>
+                                                    </div>
                                                     <div className="mobile">{ref.donorMobile}</div>
                                                 </div>
                                             </div>
@@ -541,6 +553,17 @@ const MyReferrals = () => {
                     font-weight: 600;
                     color: #1e293b;
                 }
+
+                .level-badge {
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    font-size: 0.65rem;
+                    font-weight: 800;
+                    color: white;
+                    text-transform: uppercase;
+                }
+                .level-badge.l1 { background: #7c3aed; }
+                .level-badge.l2 { background: #00bfa5; }
 
                 .amount-text {
                     font-weight: 700;

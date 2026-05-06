@@ -70,6 +70,9 @@ const DonationForm = ({ onSuccess }) => {
         const fetchSettings = async () => {
             try {
                 const { data } = await api.get('/content/settings');
+                const params = new URLSearchParams(location.search);
+                const hasUrlAmount = params.get('amount');
+
                 if (data.donation_config) {
                     const config = typeof data.donation_config === 'string'
                         ? JSON.parse(data.donation_config)
@@ -77,36 +80,37 @@ const DonationForm = ({ onSuccess }) => {
 
                     if (config && config.plans && config.plans.length > 0) {
                         setDonationConfig(config);
-                        setAmount(config.popularAmount || config.plans[0]);
-                        setCustomAmount(config.popularAmount || config.plans[0]);
+                        // Only set default if no amount in URL
+                        if (!hasUrlAmount) {
+                            setAmount(config.popularAmount || config.plans[0]);
+                            setCustomAmount(config.popularAmount || config.plans[0]);
+                        }
                     }
                 }
-                if (data.donation_label) {
-                    setDonationLabel(data.donation_label);
-                }
-                if (data.donation_label_hi) {
-                    setDonationLabelHi(data.donation_label_hi);
-                }
+                if (data.donation_label) setDonationLabel(data.donation_label);
+                if (data.donation_label_hi) setDonationLabelHi(data.donation_label_hi);
             } catch (error) {
                 console.error("Failed to load donation config", error);
             }
         };
         fetchSettings();
 
-        // Auto-fill user details if logged in
+        // Auto-fill user details if logged in AND not provided in URL
         if (authUser) {
-            setFullName(authUser.name || '');
-            setMobile(authUser.mobile || '');
-            setEmail(authUser.email || '');
-            if (authUser.referredBy) {
+            const params = new URLSearchParams(location.search);
+            if (!params.get('name')) setFullName(authUser.name || '');
+            if (!params.get('mobile')) setMobile(authUser.mobile || '');
+            if (!params.get('email')) setEmail(authUser.email || '');
+
+            if (authUser.referredBy && !params.get('motivator') && !params.get('ref')) {
                 setMotivatorMobile(authUser.referredBy.mobile || authUser.referredBy.referralCode || '');
                 setMotivatorName(authUser.referredBy.name || '');
                 setIsMotivatorLocked(true);
-            } else if (authUser.lastMotivatorMobile) {
+            } else if (authUser.lastMotivatorMobile && !params.get('motivator') && !params.get('ref')) {
                 setMotivatorMobile(authUser.lastMotivatorMobile);
             }
         }
-    }, [authUser]);
+    }, [authUser, location.search]);
 
     // Auto-fetch motivator by phone number for non-logged in users
     useEffect(() => {

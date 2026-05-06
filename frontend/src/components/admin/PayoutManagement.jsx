@@ -99,23 +99,24 @@ const PayoutManagement = () => {
 
         try {
             const today = new Date();
-            const dateStr = today.toISOString().split('T')[0].replace(/-/g, '');
-            const fileName = `MODY${dateStr}Z1`;
+            const dateStr = today.toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
+            const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD
+            const fileNameForSheet = `MODY2021${dateStr}`;
             
             const totalAmount = toExport.reduce((sum, p) => sum + p.amount, 0);
 
             // Row 4 & 5 (Header Data)
             const mainHeaderRow = [
-                "File name (28 Characters - Unique for each file)",
-                "Transaction date (YYYYMMDD)",
-                "Type of Debit (Always in Capital letter)",
+                "File name",
+                "Transaction Date",
+                "Type of Debit",
                 "Transaction Count",
                 "Amount",
                 "Transaction Type"
             ];
             
             const mainDataRow = [
-                fileName,
+                fileNameForSheet,
                 dateStr,
                 "MDMC",
                 toExport.length,
@@ -125,48 +126,48 @@ const PayoutManagement = () => {
 
             // Row 10 (Column Headers)
             const columnHeaders = [
-                "Transaction Reference (16 Characters - Unique for each file)",
-                "Remitter Account Number (35 Characters)",
-                "Remitter Account Name (50 Characters - As per CBS)",
-                "Remitter Address 1 (35 Characters)",
-                "Remitter Address 2 (35 Characters)",
-                "Remitter Address 3 (35 Characters)",
-                "Remitter Address 4 (35 Characters)",
-                "Sender Account Type (2 Characters)",
-                "Transaction Amount (Without Comma Separator)",
+                "Transaction Reference",
+                "Remitter Account",
+                "Remitter Name",
+                "Remitter Address",
+                "Remitter Address 1",
+                "Remitter Address 2",
+                "Remitter Address 3",
+                "Sender Account Type",
+                "Transaction Amount",
                 "Charges",
-                "Beneficiary Name (50 Characters)",
-                "Beneficiary Account (35 Characters)",
-                "Beneficiary Account Type (2 Characters)",
-                "Beneficiary address line 1 (35 Characters)",
-                "Beneficiary address line 2 (35 Characters)",
-                "Beneficiary address line 3 (35 Characters)",
-                "Beneficiary IFSC (11 Characters - Always capital letter)",
-                "Beneficiary Email Id (50 Characters)",
-                "Mobile Number (10 Characters)",
+                "Beneficiary Name",
+                "Beneficiary Account",
+                "Beneficiary IFSC",
+                "Beneficiary Bank Name",
+                "Beneficiary Address",
+                "Beneficiary Address 1",
+                "Beneficiary Address 2",
+                "Beneficiary Address 3",
+                "Mobile Number",
                 "Purpose of Remittance (30 Characters)"
             ];
 
             // Payout Data Rows
             const dataRows = toExport.map((p, index) => [
                 `Z-${index + 1}`,
-                "10228982563", // Remitter Account Number (Placeholder)
-                "S.S.Mody Vidya Vihar", // Remitter Account Name (Placeholder)
+                "10228982563", // Remitter Account
+                "S.S.Mody Vidya Vihar", // Remitter Name
                 "JHUNJHUNU", // Remitter Address
+                "", // Address 1
                 "", // Address 2
                 "", // Address 3
-                "", // Address 4
                 "10", // Sender Account Type
                 p.amount.toString(),
                 "0.00",
                 p.payoutDetails?.accountHolderName || p.user?.name || "",
                 p.payoutDetails?.accountNumber || "",
-                "11", // Beneficiary Account Type (Default to Savings/Current)
+                p.payoutDetails?.ifscCode || "",
+                p.payoutDetails?.bankName || "",
+                "", // Beneficiary Addr
                 "", // Beneficiary Addr 1
                 "", // Beneficiary Addr 2
                 "", // Beneficiary Addr 3
-                p.payoutDetails?.ifscCode || "",
-                p.user?.email || "",
                 p.user?.mobile || "",
                 "MOTIVATOR PAYOUT"
             ]);
@@ -192,7 +193,7 @@ const PayoutManagement = () => {
             const ws = XLSX.utils.aoa_to_sheet(wsData);
             XLSX.utils.book_append_sheet(wb, ws, "Sample file format");
 
-            XLSX.writeFile(wb, `${fileName}.xlsx`);
+            XLSX.writeFile(wb, `payout-${formattedDate}.xlsx`);
 
             // After successful file save, update status in backend
             await api.put('/payouts/bulk/status', {

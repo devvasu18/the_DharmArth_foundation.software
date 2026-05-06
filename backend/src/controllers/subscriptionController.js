@@ -238,7 +238,12 @@ exports.getMotivatorReferrals = async (req, res) => {
         const motivatorId = req.user._id;
         const { status, page = 1, limit = 10, exportAll } = req.query;
         
-        let query = { level1UserId: motivatorId };
+        let query = { 
+            $or: [
+                { level1UserId: motivatorId },
+                { level2UserId: motivatorId }
+            ]
+        };
         
         if (status === 'active') {
             query.status = 'active';
