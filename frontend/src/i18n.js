@@ -155,10 +155,12 @@ i18n
                         "confirmDonate": "Confirm & Donate"
                     },
                     "authFooter": {
-                        "privacy": "Privacy Policy",
-                        "terms": "Terms & Conditions",
                         "support": "Support",
                         "rights": "All rights reserved."
+                    },
+                    "userDashboard": {
+                        "l1Donors": "Inspired Donor L1",
+                        "l2Donors": "Inspired Donor L2"
                     }
                 }
 
@@ -306,8 +308,11 @@ i18n
                         "terms": "नियम और शर्तें",
                         "support": "सहायता",
                         "rights": "सर्वाधिकार सुरक्षित।"
+                    },
+                    "userDashboard": {
+                        "l1Donors": "प्रेरित दानवीर L1",
+                        "l2Donors": "साथी द्वारा प्रेरित दानवीर L2"
                     }
-
                 }
             }
         }

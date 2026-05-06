@@ -347,15 +347,6 @@ const SubscriptionList = ({ isAdmin = false }) => {
             <div className="list-controls-row">
                 <div className="export-tools-unified">
                     <div className="export-group">
-                        <span className="export-label">Export Page:</span>
-                        <button className="export-btn excel-icon" title="Excel Page" onClick={() => exportExcel(false)}>
-                            <Download size={14} />
-                        </button>
-                        <button className="export-btn pdf-icon" title="PDF Page" onClick={() => exportPDF(false)}>
-                            <FilePdf size={14} />
-                        </button>
-                    </div>
-                    <div className="export-group">
                         <span className="export-label">Export All:</span>
                         <button className="export-btn-text excel-text" onClick={() => exportExcel(true)}>Excel</button>
                         <button className="export-btn-text pdf-text" onClick={() => exportPDF(true)}>PDF</button>

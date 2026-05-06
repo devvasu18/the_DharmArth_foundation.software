@@ -8,12 +8,14 @@ import 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import './UserDashboard.css';
 import PayoutModal from './PayoutModal';
 import OnboardingModal from './OnboardingModal';
 import SubscriptionList from '../components/donation/SubscriptionList';
 
 const UserDashboard = () => {
+    const { t, i18n } = useTranslation();
     const { user, setUser } = useAuth();
     const [wallet, setWallet] = useState(null);
     const [isLoadingWallet, setIsLoadingWallet] = useState(true);
@@ -376,7 +378,7 @@ const UserDashboard = () => {
                                                     <Eye size={14} />
                                                 </button>
                                             </div>
-                                            <span className="stat-lbl">L1 Donors</span>
+                                            <span className="stat-lbl">{t('userDashboard.l1Donors')}</span>
                                         </div>
                                         <div className="stat-item">
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -393,7 +395,7 @@ const UserDashboard = () => {
                                                     <Eye size={14} />
                                                 </button>
                                             </div>
-                                            <span className="stat-lbl">L2 Donors</span>
+                                            <span className="stat-lbl">{t('userDashboard.l2Donors')}</span>
                                         </div>
                                     </div>
                                 </div>

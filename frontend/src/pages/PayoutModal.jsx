@@ -30,6 +30,7 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess, onEditDetails }
                     const { data } = await api.get('/content/settings');
                     setPayoutRules({
                         minBalance: data.payout_min_balance || 500,
+                        successMessage: data.payout_success_message || 'Your payment will be received in your bank account in the next 5-7 working days.',
                         lockInMonths: data.payout_lock_in_months || 0,
                         lockInDays: data.payout_lock_in_days || 0,
                         lockInHours: data.payout_lock_in_hours || 0,
@@ -220,7 +221,7 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess, onEditDetails }
                                     fontSize: '0.95rem',
                                     lineHeight: '1.6'
                                 }}>
-                                    Your payment will be received in your bank account in the next <strong>5-7 working days</strong>.
+                                {payoutRules.successMessage}
                                 </div>
                             </motion.div>
                         ) : showConfirmStep ? (

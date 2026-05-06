@@ -187,15 +187,6 @@ const MyReferrals = () => {
 
                     <div className="export-actions">
                         <div className="export-group">
-                            <span className="export-label">Export page:</span>
-                            <button className="btn-export excel" onClick={() => exportToExcel(false)} disabled={isExporting}>
-                                <FileSpreadsheet size={16} />
-                            </button>
-                            <button className="btn-export pdf" onClick={() => exportToPDF(false)} disabled={isExporting}>
-                                <FilePdf size={16} />
-                            </button>
-                        </div>
-                        <div className="export-group">
                             <span className="export-label">Export All:</span>
                             <button className="btn-export-all excel" onClick={() => exportToExcel(true)} disabled={isExporting}>
                                 Excel

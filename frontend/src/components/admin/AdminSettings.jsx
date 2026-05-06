@@ -39,7 +39,8 @@ const AdminSettings = () => {
     // Payout Config State
     const [payoutModalOpen, setPayoutModalOpen] = useState(false);
     const [payoutConfig, setPayoutConfig] = useState({
-        minBalance: 500
+        minBalance: 500,
+        successMessage: 'Your payment will be received in your bank account in the next 5-7 working days.'
     });
 
     useEffect(() => {
@@ -71,7 +72,8 @@ const AdminSettings = () => {
 
             // Payout Config
             setPayoutConfig({
-                minBalance: data.payout_min_balance || 500
+                minBalance: data.payout_min_balance || 500,
+                successMessage: data.payout_success_message || 'Your payment will be received in your bank account in the next 5-7 working days.'
             });
         } catch (error) {
             console.error("Failed to fetch settings", error);
@@ -220,7 +222,8 @@ const AdminSettings = () => {
     const handleSavePayoutConfig = async () => {
         try {
             const updates = {
-                payout_min_balance: Number(payoutConfig.minBalance)
+                payout_min_balance: Number(payoutConfig.minBalance),
+                payout_success_message: payoutConfig.successMessage
             };
             await api.put('/content/settings', updates);
             setSettings({ ...settings, ...updates });
@@ -327,7 +330,7 @@ const AdminSettings = () => {
                     <tr>
                         <td><strong>Payout Configuration</strong> (Min Balance & Lock-in)</td>
                         <td>
-                            Min: ₹{payoutConfig.minBalance}
+                            Min: ₹{payoutConfig.minBalance} | Success Message: {payoutConfig.successMessage.substring(0, 30)}...
                         </td>
                         <td>
                             <button
@@ -672,6 +675,17 @@ const AdminSettings = () => {
                                     value={payoutConfig.minBalance}
                                     onChange={(e) => setPayoutConfig({ ...payoutConfig, minBalance: e.target.value })}
                                 />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>Payout Success Message</label>
+                                <textarea
+                                    className="form-input"
+                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', minHeight: '100px' }}
+                                    value={payoutConfig.successMessage}
+                                    onChange={(e) => setPayoutConfig({ ...payoutConfig, successMessage: e.target.value })}
+                                    placeholder="Enter the message users see after requesting a payout..."
+                                />
+                                <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '5px' }}>This full text will be displayed in the success modal after a withdrawal request.</p>
                             </div>
                         </div>
 
