@@ -649,7 +649,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                         <input
                             type="text"
                             maxLength="6"
-                            placeholder="Enter 6-digit OTP"
+
                             value={otpValue}
                             onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ''))}
                             className="otp-input-field"
@@ -1117,9 +1117,9 @@ const SubscriptionList = ({ isAdmin = false }) => {
                     color: #1e293b;
                 }
                 .otp-input-field:focus {
-                    border-color: #7c3aed;
+                    border-color: #00bfa5;
                     outline: none;
-                    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+                    box-shadow: 0 0 0 3px rgba(0, 191, 165, 0.1);
                 }
                 .otp-modal-footer {
                     display: flex;
@@ -1143,12 +1143,12 @@ const SubscriptionList = ({ isAdmin = false }) => {
                     background: #e2e8f0;
                 }
                 .btn-primary {
-                    background: #7c3aed;
+                    background: #00bfa5;
                     color: white;
                     border: none;
                 }
                 .btn-primary:hover:not(:disabled) {
-                    background: #6d28d9;
+                    background: #00897b;
                 }
                 .btn-primary:disabled {
                     opacity: 0.5;
@@ -1301,7 +1301,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                     .amount-info .amount {
                         font-size: 1.2rem;
                         font-weight: 800;
-                        color: #7c3aed;
+                        color: #00bfa5;
                         display: block;
                     }
                     .amount-info .freq {
@@ -1323,7 +1323,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                     }
                     .info-row .label { color: #94a3b8; font-weight: 600; }
                     .info-row .value { color: #1e293b; font-weight: 700; }
-                    .info-row .value.highlight { color: #7c3aed; }
+                    .info-row .value.highlight { color: #00bfa5; }
                     
                     .sub-mobile-card .card-footer {
                         padding: 0.75rem 1rem;
@@ -1347,7 +1347,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                         color: #ef4444;
                     }
                     .mobile-action-btn.retry {
-                        background: #7c3aed;
+                        background: #00bfa5;
                         color: white;
                         margin-bottom: 8px;
                     }

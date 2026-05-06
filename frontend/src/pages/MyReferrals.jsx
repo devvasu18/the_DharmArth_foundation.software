@@ -385,7 +385,7 @@ const MyReferrals = () => {
                     margin-bottom: 0.5rem;
                 }
                 .header-icon {
-                    color: #7c3aed;
+                    color: #00bfa5;
                 }
                 .referrals-header p {
                     color: #64748b;
@@ -469,9 +469,9 @@ const MyReferrals = () => {
                     transition: all 0.2s;
                 }
                 .btn-export:hover {
-                    border-color: #7c3aed;
-                    color: #7c3aed;
-                    background: #f5f3ff;
+                    border-color: #00bfa5;
+                    color: #00bfa5;
+                    background: #e6fffa;
                 }
                 .btn-export.pdf:hover {
                     border-color: #ef4444;
@@ -546,7 +546,7 @@ const MyReferrals = () => {
                     align-items: center;
                     justify-content: center;
                     font-weight: 700;
-                    color: #7c3aed;
+                    color: #00bfa5;
                     font-size: 0.85rem;
                 }
                 .donor-name-text {
@@ -562,12 +562,12 @@ const MyReferrals = () => {
                     color: white;
                     text-transform: uppercase;
                 }
-                .level-badge.l1 { background: #7c3aed; }
-                .level-badge.l2 { background: #00bfa5; }
+                .level-badge.l1 { background: #00bfa5; }
+                .level-badge.l2 { background: #10b981; }
 
                 .amount-text {
                     font-weight: 700;
-                    color: #7c3aed;
+                    color: #00bfa5;
                 }
 
                 .status-pill-small {
@@ -641,14 +641,14 @@ const MyReferrals = () => {
                     transition: all 0.2s;
                 }
                 .p-btn:hover:not(:disabled) {
-                    border-color: #7c3aed;
-                    color: #7c3aed;
-                    background: #f5f3ff;
+                    border-color: #00bfa5;
+                    color: #00bfa5;
+                    background: #e6fffa;
                 }
                 .p-btn.active {
-                    background: #7c3aed;
+                    background: #00bfa5;
                     color: white;
-                    border-color: #7c3aed;
+                    border-color: #00bfa5;
                 }
                 .p-btn:disabled {
                     opacity: 0.5;
@@ -722,8 +722,8 @@ const MyReferrals = () => {
                     .donor-avatar {
                         width: 40px;
                         height: 40px;
-                        background: #f5f3ff;
-                        color: #7c3aed;
+                        background: #e6fffa;
+                        color: #00bfa5;
                         border-radius: 10px;
                         display: flex;
                         align-items: center;
