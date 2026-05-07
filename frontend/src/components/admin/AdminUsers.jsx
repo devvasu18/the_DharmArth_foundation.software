@@ -374,7 +374,7 @@ const AdminUsers = () => {
                         <Search size={16} className="text-gray-500" />
                         <input
                             type="text"
-                            placeholder="Search by name..."
+                            placeholder="Search name, mobile or code..."
                             value={searchQuery}
                             onChange={handleSearchInput}
                             onFocus={() => setActiveDropdown('USER')}

@@ -73,6 +73,9 @@ const userSchema = new mongoose.Schema({
     address: String,
     city: String,
     state: String,
+    profileImage: String, // Cloudinary URL
+    work: { type: String, maxlength: 100 }, // Designation/Profession
+    bio: { type: String, maxlength: 500 }, // Short personal bio
     lastMotivatorMobile: String,
     isSuspended: {
         type: Boolean,

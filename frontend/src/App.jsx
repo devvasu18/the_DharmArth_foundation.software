@@ -26,6 +26,8 @@ const Events = lazy(() => import('./pages/Events'));
 const EventDetail = lazy(() => import('./pages/EventDetail'));
 const DynamicPage = lazy(() => import('./pages/DynamicPage'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard'));
+const UserProfile = lazy(() => import('./pages/UserProfile'));
+const PublicVolunteerCard = lazy(() => import('./pages/PublicVolunteerCard'));
 
 // Admin Components
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
@@ -83,9 +85,11 @@ const router = createBrowserRouter(
       <Route path="/donate" element={<DonationPage />} />
       <Route path="/start-fundraiser" element={<StartFundraiser />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
+      <Route path="/v/:referralCode" element={<PublicVolunteerCard />} />
       
       {/* Protected User Routes */}
       <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
       <Route path="/my-subscriptions" element={<ProtectedRoute><MySubscriptions /></ProtectedRoute>} />
       <Route path="/my-referrals" element={<ProtectedRoute><MyReferrals /></ProtectedRoute>} />
       

@@ -234,6 +234,7 @@ const Navbar = () => {
                                 }}>
                                     {!user.isSuperAdmin && !isDeliveryPartner && (
                                         <>
+                                            <Link to="/profile" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>My Profile</Link>
                                             <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.wallet')}</Link>
                                             <Link to="/my-subscriptions" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.subscriptions') || 'My Subscriptions'}</Link>
                                             <Link to="/my-referrals" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>My Referrals</Link>
@@ -293,9 +294,9 @@ const Navbar = () => {
                     <Calendar size={20} className="nav-icon" />
                     <span>{t('navbar.fundraiseFor')}</span>
                 </NavLink>
-                <NavLink to={user ? "/dashboard" : "/login"} className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                <NavLink to={user ? "/profile" : "/login"} className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
                     <UserIcon size={20} className="nav-icon" />
-                    <span>{user ? t('navbar.userDashboard') : t('navbar.signIn')}</span>
+                    <span>{user ? 'My Profile' : t('navbar.signIn')}</span>
                 </NavLink>
             </div>
 

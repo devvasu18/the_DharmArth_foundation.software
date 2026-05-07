@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import api from '../services/api';
-import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, Users, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown, FileSpreadsheet, FileText as FilePdf, CheckCircle, AlertCircle } from 'lucide-react';
+import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, Users, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown, FileSpreadsheet, FileText as FilePdf, CheckCircle, AlertCircle, Award } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -615,6 +615,36 @@ const UserDashboard = () => {
                                     >
                                         Facebook
                                     </button>
+                                </div>
+
+                                <div className="id-card-actions" style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+                                    <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#475569', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Award size={16} color="#00bfa5" /> Volunteer Identity Card
+                                    </h4>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                        <button 
+                                            onClick={() => window.location.href = '/profile'}
+                                            className="share-action-btn"
+                                            style={{ background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' }}
+                                        >
+                                            <User size={14} /> Edit Profile
+                                        </button>
+                                        <button 
+                                            onClick={async () => {
+                                                const toastId = toast.loading("Generating ID Card...");
+                                                try {
+                                                    // Dynamic import or temporary render to generate card
+                                                    window.location.href = '/profile'; // Redirect for now, or implement silent render
+                                                } catch (e) {
+                                                    toast.error("Failed to generate card", { id: toastId });
+                                                }
+                                            }}
+                                            className="share-action-btn"
+                                            style={{ background: '#00bfa5', color: 'white' }}
+                                        >
+                                            <Download size={14} /> Download ID
+                                        </button>
+                                    </div>
                                 </div>
 
 

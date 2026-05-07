@@ -31,7 +31,8 @@ router.get('/', protect, checkPermission('User Management', 'view'), async (req,
             query.$or = [
                 { name: searchRegex },
                 { mobile: searchRegex },
-                { email: searchRegex }
+                { email: searchRegex },
+                { referralCode: searchRegex }
             ];
         }
 
@@ -389,6 +390,58 @@ router.put('/become-motivator', protect, async (req, res) => {
             message: error.message,
             detail: "Internal server error during motivator registration" 
         });
+    }
+});
+
+// @desc    Update current user profile
+// @route   PUT /api/users/profile
+// @access  Private
+router.put('/profile', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const { name, work, bio, city, state, address, profileImage, email } = req.body;
+
+        if (name) user.name = name;
+        if (work !== undefined) user.work = work;
+        if (bio !== undefined) user.bio = bio;
+        if (city !== undefined) user.city = city;
+        if (state !== undefined) user.state = state;
+        if (address !== undefined) user.address = address;
+        if (profileImage !== undefined) user.profileImage = profileImage;
+        if (email) user.email = email;
+
+        await user.save();
+        
+        const sanitized = user.toObject();
+        delete sanitized.password;
+        
+        res.json({
+            message: 'Profile updated successfully',
+            user: sanitized
+        });
+    } catch (error) {
+        console.error("Profile Update Error:", error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Get public profile by referral code
+// @route   GET /api/users/v/:referralCode
+// @access  Public
+router.get('/v/:referralCode', async (req, res) => {
+    try {
+        const user = await User.findOne({ referralCode: req.params.referralCode })
+            .select('name work bio profileImage city state mobile referralCode createdAt isMotivator');
+            
+        if (!user || !user.isMotivator) {
+            return res.status(404).json({ message: 'Volunteer profile not found' });
+        }
+        
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 

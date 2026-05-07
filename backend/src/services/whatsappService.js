@@ -244,7 +244,9 @@ class WhatsappService {
     async sendDonationNotification(donorMobile, donorName, amount, donationId) {
         const lang = await this._getRecipientLanguage(donorMobile);
         const template = await this._getTemplate('whatsapp_donation_template', lang) 
-            || (lang === 'hi' ? "नमस्ते {name}, दान के लिए धन्यवाद।" : "Dear {name}, thank you for your donation.");
+            || (lang === 'hi' 
+                ? "नमस्ते {name}, The DharmArth Foundation को ₹{amount} का उदार दान देने के लिए धन्यवाद। आपका समर्थन हमें बड़ा बदलाव लाने में मदद करता है! 🙏" 
+                : "Dear {name}, thank you for your generous donation of ₹{amount} to The DharmArth Foundation. Your support helps us make a big difference! 🙏");
         
         const message = template.replace('{name}', donorName).replace('{amount}', amount);
         return this.sendMessage(donorMobile, message, { donationId });
@@ -256,7 +258,9 @@ class WhatsappService {
     async sendWalletDonationNotification(donorMobile, donorName, amount, donationId) {
         const lang = await this._getRecipientLanguage(donorMobile);
         const template = await this._getTemplate('whatsapp_wallet_donation_template', lang) 
-            || (lang === 'hi' ? "नमस्ते {name}, आपके वॉलेट से ₹{amount} के दान के लिए धन्यवाद।" : "Dear {name}, thank you for your donation of ₹{amount} from your wallet.");
+            || (lang === 'hi' 
+                ? "नमस्ते {name}, आपके वॉलेट से ₹{amount} के दान के लिए धन्यवाद।" 
+                : "Dear {name}, thank you for your donation of ₹{amount} from your wallet.");
         
         const message = template.replace('{name}', donorName).replace('{amount}', amount);
         return this.sendMessage(donorMobile, message, { donationId });
