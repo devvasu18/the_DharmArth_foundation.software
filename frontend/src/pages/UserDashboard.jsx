@@ -609,7 +609,10 @@ const UserDashboard = () => {
                                 <div className="share-actions">
                                     <button
                                         className="share-action-btn btn-whatsapp"
-                                        onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent("Join me in supporting this cause! Donate here: " + donationLink)}`, '_blank')}
+                                        onClick={() => {
+                                            const message = `Namaste! 🙏 Join me in making a difference with The DharmArth Foundation. 🕉️\n\nYour small contribution can bring big changes to someone's life. 🤝\n\n✨ Donate here: ${donationLink}\n📜 View my Volunteer Profile: ${profileLink}\n\nThank you for your support! ❤️`;
+                                            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+                                        }}
                                     >
                                         WhatsApp
                                     </button>

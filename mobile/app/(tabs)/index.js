@@ -45,8 +45,12 @@ export default function Dashboard() {
   }, []);
 
   const donationLink = user?.referralCode
-    ? `https://dharmarthfoundation.org/donate?ref=${user.referralCode}`
-    : `https://dharmarthfoundation.org/donate?ref=${user?.mobile}`;
+    ? `https://the-dharm-arth-foundation-software.vercel.app/donate?ref=${user.referralCode}`
+    : `https://the-dharm-arth-foundation-software.vercel.app/donate?ref=${user?.mobile}`;
+
+  const profileLink = user?.referralCode
+    ? `https://the-dharm-arth-foundation-software.vercel.app/v/${user.referralCode}`
+    : `https://the-dharm-arth-foundation-software.vercel.app/v/${user?.mobile}`;
 
   const copyToClipboard = async () => {
     await Clipboard.setStringAsync(donationLink);
@@ -55,8 +59,9 @@ export default function Dashboard() {
 
   const onShare = async () => {
     try {
+      const message = `Namaste! 🙏 Join me in making a difference with The DharmArth Foundation. 🕉️\n\nYour small contribution can bring big changes to someone's life. 🤝\n\n✨ Donate here: ${donationLink}\n📜 View my Volunteer Profile: ${profileLink}\n\nThank you for your support! ❤️`;
       await Share.share({
-        message: `Join me in supporting this cause! Donate here: ${donationLink}`,
+        message: message,
       });
     } catch (error) {
       console.error(error.message);
