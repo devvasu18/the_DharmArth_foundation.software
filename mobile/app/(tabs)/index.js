@@ -12,11 +12,13 @@ import {
 } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 import api, { API_BASE_URL } from '../../src/services/api';
+import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const router = useRouter();
   const [wallet, setWallet] = useState(null);
   const [stats, setStats] = useState({ l1Donors: 0, l2Donors: 0 });
   const [loading, setLoading] = useState(true);
@@ -108,9 +110,12 @@ export default function Dashboard() {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.withdrawButton}>
-          <Text style={styles.withdrawButtonText}>Withdraw Earnings</Text>
-          <Ionicons name="arrow-forward" size={18} color="#00695c" />
+        <TouchableOpacity 
+          style={styles.withdrawButton}
+          onPress={() => router.push('/volunteer-card')}
+        >
+          <Text style={styles.withdrawButtonText}>Volunteer Identity Card</Text>
+          <Ionicons name="card-outline" size={18} color="#00695c" />
         </TouchableOpacity>
       </View>
 
