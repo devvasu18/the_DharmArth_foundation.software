@@ -62,9 +62,23 @@
     color: var(--text-muted);
     line-height: 1.8;
     font-weight: 400;
-    text-align: justify;
-    hyphens: auto;
-    text-justify: inter-word;
+}
+
+.crowd-text p {
+    margin-bottom: var(--spacing-4);
+}
+
+.crowd-text ul, .crowd-text ol {
+    margin-bottom: var(--spacing-4);
+    padding-left: var(--spacing-6);
+}
+
+.crowd-text ul {
+    list-style-type: disc;
+}
+
+.crowd-text ol {
+    list-style-type: decimal;
 }
 
 /* Responsive adjustments */

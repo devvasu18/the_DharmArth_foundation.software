@@ -1367,6 +1367,7 @@
 .stat-row {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: var(--spacing-2);
     font-weight: 600;
     width: 100%;
@@ -1375,7 +1376,7 @@
 .stat-row.secondary {
     display: flex;
     justify-content: space-between;
-    padding-top: var(--spacing-3);
+    padding-top: var(--spacing-4);
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     width: 100%;
 }
@@ -1384,9 +1385,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 8px;
     flex: 1;
-    text-align: center;
-    padding: 0 5px;
+    justify-content: center;
+    padding: var(--spacing-2) 0;
 }
 
 .stat-item:first-child {
@@ -1396,6 +1398,8 @@
 .stat-val {
     font-size: 1.25rem;
     font-weight: 800;
+    min-width: 35px; /* Fixed width to ensure icons/labels start from equal position */
+    display: inline-block;
 }
 
 .stat-lbl {
@@ -1404,32 +1408,34 @@
     font-weight: 700;
     letter-spacing: 0.3px;
     line-height: 1.2;
-    margin-top: 2px;
+    margin-top: 4px;
 }
 
 /* Mobile Responsive Fix for Wallet Stats */
 @media (max-width: 480px) {
     .stat-row.secondary {
         flex-direction: column;
-        gap: 15px;
         align-items: flex-start;
+        gap: var(--spacing-4);
+        padding-left: 10%;
     }
-    
+
     .stat-item {
+        flex-direction: row;
         width: 100%;
-        align-items: flex-start;
-        text-align: left;
+        justify-content: flex-start;
+        gap: 15px;
         border-right: none !important;
-        padding: 0;
     }
-    
-    .stat-item:first-child {
-        padding-bottom: 10px;
+
+    .stat-item:not(:last-child) {
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: var(--spacing-4);
     }
-    
+
     .stat-lbl {
         font-size: 0.9rem;
+        margin-top: 0;
     }
 }
 

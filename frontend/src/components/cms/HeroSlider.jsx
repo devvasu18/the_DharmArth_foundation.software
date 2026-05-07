@@ -147,9 +147,8 @@ const HeroSlider = ({ data }) => {
                                         <h1 
                                             className="text-5xl md:text-8xl font-black mb-6 uppercase tracking-tighter"
                                             style={{ color: slide.titleColor || '#ffffff' }}
-                                        >
-                                            {slide.title || 'United Hope Foundation'}
-                                        </h1>
+                                            dangerouslySetInnerHTML={{ __html: slide.title || 'United Hope Foundation' }}
+                                        />
                                         
                                         <div 
                                             className={`w-20 h-2 mb-8 ${align === 'center' ? 'mx-auto' : align === 'right' ? 'ml-auto' : ''}`} 
@@ -159,9 +158,8 @@ const HeroSlider = ({ data }) => {
                                         <p 
                                             className="text-lg md:text-2xl mb-12 font-medium uppercase tracking-widest"
                                             style={{ color: slide.subtitleColor || 'rgba(255,255,255,0.9)' }}
-                                        >
-                                            {slide.subtitle || 'Empowering Communities. Changing Lives.'}
-                                        </p>
+                                            dangerouslySetInnerHTML={{ __html: slide.subtitle || 'Empowering Communities. Changing Lives.' }}
+                                        />
 
                                         <div className={`flex flex-wrap gap-6 ${align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : ''}`}>
                                             <a 

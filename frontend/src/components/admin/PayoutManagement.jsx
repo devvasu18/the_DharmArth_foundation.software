@@ -566,37 +566,68 @@ const PayoutManagement = () => {
                 </div>
             )}
 
-            {/* Pagination Controls */}
-            {!loading && metadata.pages > 1 && (
+            {/* Pagination Controls - Always Visible */}
+            {!loading && metadata.total > 0 && (
                 <div className="pagination-footer">
                     <div className="pagination-info">
-                        Showing {(page - 1) * 20 + 1} - {Math.min(page * 20, metadata.total)} of {metadata.total}
+                        {metadata.total <= 20
+                            ? `Showing all ${metadata.total} result${metadata.total !== 1 ? 's' : ''}`
+                            : `Showing ${(page - 1) * 20 + 1}–${Math.min(page * 20, metadata.total)} of ${metadata.total}`
+                        }
                     </div>
-                    <div className="pagination-btns">
-                        <button 
-                            disabled={page === 1} 
-                            onClick={() => setPage(p => p - 1)}
-                            className="p-btn"
-                        >
-                            Prev
-                        </button>
-                        {[...Array(metadata.pages)].map((_, i) => (
-                            <button 
-                                key={i + 1}
-                                className={`p-btn ${page === i + 1 ? 'active' : ''}`}
-                                onClick={() => setPage(i + 1)}
+
+                    {metadata.pages > 1 && (
+                        <div className="pagination-btns">
+                            {/* Prev */}
+                            <button
+                                disabled={page === 1}
+                                onClick={() => setPage(p => p - 1)}
+                                className="p-btn"
                             >
-                                {i + 1}
+                                ‹ Prev
                             </button>
-                        ))}
-                        <button 
-                            disabled={page === metadata.pages} 
-                            onClick={() => setPage(p => p + 1)}
-                            className="p-btn"
-                        >
-                            Next
-                        </button>
-                    </div>
+
+                            {/* Smart windowed page numbers */}
+                            {(() => {
+                                const totalPages = metadata.pages;
+                                const delta = 2;
+                                const pages = [];
+                                let prev = null;
+
+                                for (let i = 1; i <= totalPages; i++) {
+                                    if (
+                                        i === 1 ||
+                                        i === totalPages ||
+                                        (i >= page - delta && i <= page + delta)
+                                    ) {
+                                        if (prev !== null && i - prev > 1) {
+                                            pages.push(<span key={`ellipsis-${i}`} className="p-ellipsis">…</span>);
+                                        }
+                                        pages.push(
+                                            <button
+                                                key={i}
+                                                className={`p-btn ${page === i ? 'active' : ''}`}
+                                                onClick={() => setPage(i)}
+                                            >
+                                                {i}
+                                            </button>
+                                        );
+                                        prev = i;
+                                    }
+                                }
+                                return pages;
+                            })()}
+
+                            {/* Next */}
+                            <button
+                                disabled={page === metadata.pages}
+                                onClick={() => setPage(p => p + 1)}
+                                className="p-btn"
+                            >
+                                Next ›
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 

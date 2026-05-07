@@ -520,37 +520,39 @@ const UserDashboard = () => {
                                     Withdraw Now
                                 </button>
 
-                                <motion.button
-                                    className="wallet-donate-btn"
-                                    onClick={() => {
-                                        setIsWalletDonationModalOpen(true);
-                                        const balance = wallet?.balance || 0;
-                                        setDonationAmount(balance.toFixed(2));
-                                    }}
-                                    whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.2)' }}
-                                    whileTap={{ scale: 0.98 }}
-                                    style={{
-                                        marginTop: '12px',
-                                        width: '100%',
-                                        padding: '12px',
-                                        borderRadius: '12px',
-                                        border: '1px solid rgba(255,255,255,0.3)',
-                                        background: 'rgba(255,255,255,0.1)',
-                                        color: 'white',
-                                        fontWeight: '700',
-                                        cursor: 'pointer',
-                                        transition: 'background 0.2s',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '8px',
-                                        position: 'relative',
-                                        zIndex: 2
-                                    }}
-                                >
-                                    <Banknote size={18} />
-                                    {i18n.language === 'hi' ? walletSettings.btnText_hi : walletSettings.btnText}
-                                </motion.button>
+                                {wallet?.balance > 0 && (
+                                    <motion.button
+                                        className="wallet-donate-btn"
+                                        onClick={() => {
+                                            setIsWalletDonationModalOpen(true);
+                                            const balance = wallet?.balance || 0;
+                                            setDonationAmount(balance.toFixed(2));
+                                        }}
+                                        whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.2)' }}
+                                        whileTap={{ scale: 0.98 }}
+                                        style={{
+                                            marginTop: '12px',
+                                            width: '100%',
+                                            padding: '12px',
+                                            borderRadius: '12px',
+                                            border: '1px solid rgba(255,255,255,0.3)',
+                                            background: 'rgba(255,255,255,0.1)',
+                                            color: 'white',
+                                            fontWeight: '700',
+                                            cursor: 'pointer',
+                                            transition: 'background 0.2s',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '8px',
+                                            position: 'relative',
+                                            zIndex: 2
+                                        }}
+                                    >
+                                        <Banknote size={18} />
+                                        {i18n.language === 'hi' ? walletSettings.btnText_hi : walletSettings.btnText}
+                                    </motion.button>
+                                )}
                             </motion.div>
 
                             {/* SHARE CARD */}

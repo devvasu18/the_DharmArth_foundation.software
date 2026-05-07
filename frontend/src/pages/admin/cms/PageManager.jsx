@@ -3,6 +3,8 @@ import { Plus, Edit2, Trash2, Globe, Layout, X, Save, ArrowRight, ArrowUp, Arrow
 import api from '../../../services/api';
 import ConfirmationModal from '../../../components/admin/ConfirmationModal';
 import toast from 'react-hot-toast';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import './CMS.css';
 
 const AVAILABLE_COMPONENTS = [
@@ -528,14 +530,22 @@ const PageManager = () => {
 // Sub-component for editing component data
 const DataEditor = ({ component, onClose, onSave }) => {
     const [data, setData] = useState({ ...component.data });
+    const [activeLang, setActiveLang] = useState('en');
+
+    const TRANSLATABLE_KEYS = ['title', 'subtitle', 'buttonText', 'content', 'name', 'text', 'description', 'question', 'answer', 'label', 'placeholder'];
+    const RICHTEXT_KEYS = ['content', 'description', 'text', 'answer', 'title', 'subtitle', 'question'];
+
+    const isTranslatable = (key) => TRANSLATABLE_KEYS.includes(key);
 
     const handleChange = (key, value) => {
-        setData({ ...data, [key]: value });
+        const actualKey = (activeLang === 'hi' && isTranslatable(key)) ? `${key}_hi` : key;
+        setData({ ...data, [actualKey]: value });
     };
 
     const handleArrayChange = (arrayKey, index, key, value) => {
+        const actualKey = (activeLang === 'hi' && isTranslatable(key)) ? `${key}_hi` : key;
         const newArray = [...data[arrayKey]];
-        newArray[index] = { ...newArray[index], [key]: value };
+        newArray[index] = { ...newArray[index], [actualKey]: value };
         setData({ ...data, [arrayKey]: newArray });
     };
 
@@ -592,17 +602,72 @@ const DataEditor = ({ component, onClose, onSave }) => {
                     <button onClick={onClose} className="icon-btn"><X size={20} /></button>
                 </div>
                 <div className="cms-modal-body">
+                    {/* Language Switcher */}
+                    <div className="flex items-center justify-center mb-10">
+                        <div style={{
+                            backgroundColor: '#f1f5f9',
+                            padding: '6px',
+                            borderRadius: '9999px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)',
+                            border: '1px solid #e2e8f0'
+                        }}>
+                            <button 
+                                type="button"
+                                onClick={() => setActiveLang('en')}
+                                style={{
+                                    padding: '12px 40px',
+                                    borderRadius: '9999px',
+                                    fontSize: '14px',
+                                    fontWeight: '700',
+                                    transition: 'all 0.3s ease',
+                                    border: 'none',
+                                    outline: 'none',
+                                    cursor: 'pointer',
+                                    backgroundColor: activeLang === 'en' ? '#ffffff' : 'transparent',
+                                    color: activeLang === 'en' ? '#00bfa5' : '#64748b',
+                                    boxShadow: activeLang === 'en' ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none'
+                                }}
+                            >
+                                English
+                            </button>
+                            <button 
+                                type="button"
+                                onClick={() => setActiveLang('hi')}
+                                style={{
+                                    padding: '12px 40px',
+                                    borderRadius: '9999px',
+                                    fontSize: '14px',
+                                    fontWeight: '700',
+                                    transition: 'all 0.3s ease',
+                                    border: 'none',
+                                    outline: 'none',
+                                    cursor: 'pointer',
+                                    backgroundColor: activeLang === 'hi' ? '#ffffff' : 'transparent',
+                                    color: activeLang === 'hi' ? '#00bfa5' : '#64748b',
+                                    boxShadow: activeLang === 'hi' ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none'
+                                }}
+                            >
+                                Hindi
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Basic Fields */}
                     <div className="space-y-6 mb-12">
-                        {Object.keys(data).map(key => {
+                        {Object.keys(data).filter(k => !k.endsWith('_hi')).map(key => {
                             if (typeof data[key] === 'string' || typeof data[key] === 'number') {
                                 if (key === 'buttonPosition') {
                                     return (
                                         <div key={key} className="cms-form-group mb-0">
-                                            <label className="cms-label">Button Position</label>
+                                            <label className="cms-label flex items-center gap-2">
+                                                Button Position
+                                                {activeLang === 'hi' && isTranslatable(key) && <span className="text-[9px] bg-teal-100 text-teal-600 px-1.5 py-0.5 rounded uppercase font-black">Hindi</span>}
+                                            </label>
                                             <select
                                                 className="cms-select"
-                                                value={data[key]}
+                                                value={(activeLang === 'hi' && isTranslatable(key)) ? (data[`${key}_hi`] || '') : (data[key] || '')}
                                                 onChange={(e) => handleChange(key, e.target.value)}
                                             >
                                                 <option value="left">Left Aligned</option>
@@ -614,59 +679,83 @@ const DataEditor = ({ component, onClose, onSave }) => {
                                 }
                                 return (
                                     <div key={key} className="cms-form-group mb-0">
-                                        <label className="cms-label">{key.replace(/([A-Z])/g, ' $1')}</label>
-                                        <div className="flex flex-col gap-2 w-full">
-                                            {data[key] && (data[key].startsWith('http') || data[key].startsWith('/')) && (
-                                                <div className="relative w-24 h-16 rounded-xl overflow-hidden border border-gray-100 shadow-sm mb-2 bg-black">
-                                                    {key === 'videoUrl' ? (
-                                                        <img 
-                                                            src={`https://img.youtube.com/vi/${(() => {
-                                                                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-                                                                const match = data[key].match(regExp);
-                                                                return (match && match[2].length === 11) ? match[2] : '';
-                                                            })()}/hqdefault.jpg`} 
-                                                            alt="" 
-                                                            className="w-full h-full object-cover opacity-80" 
-                                                        />
-                                                    ) : (
-                                                        <img src={data[key]} alt="" className="w-full h-full object-cover" />
-                                                    )}
-                                                    {key === 'videoUrl' && (
-                                                        <div className="absolute inset-0 flex items-center justify-center">
-                                                            <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white">
-                                                                <Play size={14} fill="currentColor" />
+                                        <label className="cms-label flex items-center gap-2">
+                                            {key.replace(/([A-Z])/g, ' $1')}
+                                            {activeLang === 'hi' && isTranslatable(key) && <span className="text-[9px] bg-teal-100 text-teal-600 px-1.5 py-0.5 rounded uppercase font-black">Hindi</span>}
+                                        </label>
+                                            <div className="flex flex-col gap-2 w-full">
+                                                {((activeLang === 'hi' && isTranslatable(key)) ? data[`${key}_hi`] : data[key]) && (((activeLang === 'hi' && isTranslatable(key)) ? data[`${key}_hi`] : data[key]).startsWith('http') || ((activeLang === 'hi' && isTranslatable(key)) ? data[`${key}_hi`] : data[key]).startsWith('/')) && (
+                                                    <div className="relative w-24 h-16 rounded-xl overflow-hidden border border-gray-100 shadow-sm mb-2 bg-black">
+                                                        {key === 'videoUrl' ? (
+                                                            <img
+                                                                src={`https://img.youtube.com/vi/${(() => {
+                                                                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                                                                    const val = (activeLang === 'hi' && isTranslatable(key)) ? data[`${key}_hi`] : data[key];
+                                                                    const match = val?.match(regExp);
+                                                                    return (match && match[2].length === 11) ? match[2] : '';
+                                                                })()}/hqdefault.jpg`}
+                                                                alt=""
+                                                                className="w-full h-full object-cover opacity-80"
+                                                            />
+                                                        ) : (
+                                                            <img src={(activeLang === 'hi' && isTranslatable(key)) ? data[`${key}_hi`] : data[key]} alt="" className="w-full h-full object-cover" />
+                                                        )}
+                                                        {key === 'videoUrl' && (
+                                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                                <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white">
+                                                                    <Play size={14} fill="currentColor" />
+                                                                </div>
                                                             </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                <div className="flex flex-col gap-2">
+                                                    {RICHTEXT_KEYS.includes(key) ? (
+                                                        <div className="cms-ckeditor-wrapper">
+                                                            <CKEditor
+                                                                editor={ClassicEditor}
+                                                                data={(activeLang === 'hi' && isTranslatable(key)) ? (data[`${key}_hi`] || '') : (data[key] || '')}
+                                                                onChange={(event, editor) => {
+                                                                    const val = editor.getData();
+                                                                    handleChange(key, val);
+                                                                }}
+                                                                config={{
+                                                                    toolbar: ['bold', 'italic', 'link', 'bulletedList', 'numberedList', 'undo', 'redo'],
+                                                                    placeholder: activeLang === 'hi' ? "हिंदी में लिखें..." : "Enter content here..."
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex gap-2">
+                                                            <input
+                                                                type="text"
+                                                                className="cms-input"
+                                                                value={(activeLang === 'hi' && isTranslatable(key)) ? (data[`${key}_hi`] || '') : (data[key] || '')}
+                                                                placeholder={activeLang === 'hi' ? "हिंदी में लिखें..." : "Enter value..."}
+                                                                onChange={(e) => handleChange(key, e.target.value)}
+                                                            />
+                                                            {(key.toLowerCase().includes('image') || key.toLowerCase().includes('photo')) && (
+                                                                <label className="cms-action-btn edit flex-shrink-0 cursor-pointer relative overflow-hidden flex items-center gap-2 px-4 h-11 min-w-[100px] justify-center bg-teal-50 text-teal-600 border-teal-100 hover:bg-teal-500 hover:text-white transition-all rounded-xl shadow-sm">
+                                                                    {uploading ? (
+                                                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                                                                    ) : (
+                                                                        <>
+                                                                            <input
+                                                                                type="file"
+                                                                                style={{ display: 'none' }}
+                                                                                accept="image/*"
+                                                                                onChange={(e) => handleImageUpload(e, key)}
+                                                                            />
+                                                                            <Image size={14} strokeWidth={3} />
+                                                                            <span className="text-[10px] font-black uppercase tracking-[0.1em]">Upload</span>
+                                                                        </>
+                                                                    )}
+                                                                </label>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
-                                            )}
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    className="cms-input"
-                                                    value={data[key]}
-                                                    placeholder="Enter image URL or upload..."
-                                                    onChange={(e) => handleChange(key, e.target.value)}
-                                                />
-                                                {(key.toLowerCase().includes('image') || key.toLowerCase().includes('photo')) && (
-                                                    <label className="cms-action-btn edit flex-shrink-0 cursor-pointer relative overflow-hidden">
-                                                        {uploading ? (
-                                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-teal-500 border-t-transparent" />
-                                                        ) : (
-                                                            <>
-                                                                <input
-                                                                    type="file"
-                                                                    className="hidden"
-                                                                    accept="image/*"
-                                                                    onChange={(e) => handleImageUpload(e, key)}
-                                                                />
-                                                                <Image size={18} />
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                )}
                                             </div>
-                                        </div>
                                     </div>
                                 );
                             }
@@ -690,14 +779,31 @@ const DataEditor = ({ component, onClose, onSave }) => {
                                     </div>
                                     <div className="space-y-8">
                                         {data[key].map((item, idx) => (
-                                            <div key={idx} className="p-8 bg-white rounded-3xl relative border border-gray-100 shadow-sm hover:shadow-md transition-all">
-
-                                                <div className="grid grid-cols-1 gap-6">
-                                                    {Object.keys(item).map(subKey => (
-                                                        <div key={subKey}>
-                                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">{subKey.replace(/([A-Z])/g, ' $1')}</label>
-                                                            {subKey.toLowerCase().includes('color') ? (
-                                                                <div className="cms-color-group">
+                                            <div key={idx} className="bg-white rounded-3xl relative border border-gray-100 shadow-sm hover:shadow-lg transition-all overflow-hidden mb-10 last:mb-0">
+                                                <div className="flex justify-between items-center px-8 py-5 bg-[#fcfdfe] border-b border-gray-100">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-teal-500"></div>
+                                                        <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Slide / Item #{idx + 1}</span>
+                                                    </div>
+                                                    <button 
+                                                        onClick={() => removeItem(key, idx)}
+                                                        className="group flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 border border-red-100"
+                                                        title="Remove Item"
+                                                    >
+                                                        <Trash2 size={13} />
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider">Remove</span>
+                                                    </button>
+                                                </div>
+                                                <div className="p-8">
+                                                    <div className="grid grid-cols-1 gap-6">
+                                                        {Object.keys(item).filter(k => !k.endsWith('_hi')).map(subKey => (
+                                                            <div key={subKey}>
+                                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                                                    {subKey.replace(/([A-Z])/g, ' $1')}
+                                                                    {activeLang === 'hi' && isTranslatable(subKey) && <span className="text-[8px] bg-teal-50 text-teal-600 px-1 py-0.5 rounded font-black">Hindi</span>}
+                                                                </label>
+                                                                {subKey.toLowerCase().includes('color') ? (
+                                                                    <div className="cms-color-group">
                                                                     <input
                                                                         type="color"
                                                                         className="cms-color-input"
@@ -726,30 +832,50 @@ const DataEditor = ({ component, onClose, onSave }) => {
                                                                             <img src={item[subKey]} alt="" className="w-full h-full object-cover" />
                                                                         </div>
                                                                     )}
-                                                                    <div className="flex gap-2">
-                                                                        <input
-                                                                            type="text"
-                                                                            className="cms-input"
-                                                                            value={item[subKey]}
-                                                                            placeholder="Enter image URL or upload..."
-                                                                            onChange={(e) => handleArrayChange(key, idx, subKey, e.target.value)}
-                                                                        />
-                                                                        {(subKey.toLowerCase().includes('image') || subKey.toLowerCase().includes('photo')) && (
-                                                                            <label className="cms-action-btn edit flex-shrink-0 cursor-pointer relative overflow-hidden">
-                                                                                {uploading ? (
-                                                                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-teal-500 border-t-transparent" />
-                                                                                ) : (
-                                                                                    <>
-                                                                                        <input
-                                                                                            type="file"
-                                                                                            className="hidden"
-                                                                                            accept="image/*"
-                                                                                            onChange={(e) => handleImageUpload(e, key, idx, subKey)}
-                                                                                        />
-                                                                                        <Image size={18} />
-                                                                                    </>
+                                                                    <div className="flex flex-col gap-2">
+                                                                        {RICHTEXT_KEYS.includes(subKey) ? (
+                                                                            <div className="cms-ckeditor-wrapper">
+                                                                                <CKEditor
+                                                                                    editor={ClassicEditor}
+                                                                                    data={(activeLang === 'hi' && isTranslatable(subKey)) ? (item[`${subKey}_hi`] || '') : (item[subKey] || '')}
+                                                                                    onChange={(event, editor) => {
+                                                                                        const val = editor.getData();
+                                                                                        handleArrayChange(key, idx, subKey, val);
+                                                                                    }}
+                                                                                    config={{
+                                                                                        toolbar: ['bold', 'italic', 'link', 'bulletedList', 'numberedList', 'undo', 'redo'],
+                                                                                        placeholder: activeLang === 'hi' ? "हिंदी में लिखें..." : "Enter content here..."
+                                                                                    }}
+                                                                                />
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="flex gap-2">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    className="cms-input"
+                                                                                    value={(activeLang === 'hi' && isTranslatable(subKey)) ? (item[`${subKey}_hi`] || '') : (item[subKey] || '')}
+                                                                                    placeholder={activeLang === 'hi' ? "हिंदी में लिखें..." : "Enter value..."}
+                                                                                    onChange={(e) => handleArrayChange(key, idx, subKey, e.target.value)}
+                                                                                />
+                                                                                {(subKey.toLowerCase().includes('image') || subKey.toLowerCase().includes('photo')) && (
+                                                                                    <label className="cms-action-btn edit flex-shrink-0 cursor-pointer relative overflow-hidden flex items-center gap-2 px-4 h-11 min-w-[100px] justify-center bg-teal-50 text-teal-600 border-teal-100 hover:bg-teal-500 hover:text-white transition-all rounded-xl shadow-sm">
+                                                                                        {uploading ? (
+                                                                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                                                                                        ) : (
+                                                                                            <>
+                                                                                                <input
+                                                                                                    type="file"
+                                                                                                    style={{ display: 'none' }}
+                                                                                                    accept="image/*"
+                                                                                                    onChange={(e) => handleImageUpload(e, key, idx, subKey)}
+                                                                                                />
+                                                                                                <Image size={14} strokeWidth={3} />
+                                                                                                <span className="text-[10px] font-black uppercase tracking-[0.1em]">Upload</span>
+                                                                                            </>
+                                                                                        )}
+                                                                                    </label>
                                                                                 )}
-                                                                            </label>
+                                                                            </div>
                                                                         )}
                                                                     </div>
                                                                 </div>
@@ -758,6 +884,7 @@ const DataEditor = ({ component, onClose, onSave }) => {
                                                     ))}
                                                 </div>
                                             </div>
+                                        </div>
                                         ))}
                                     </div>
                                 </div>

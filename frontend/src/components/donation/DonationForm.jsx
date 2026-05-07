@@ -35,6 +35,9 @@ const DonationForm = ({ onSuccess }) => {
     const [fullName, setFullName] = useState('');
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
+    const [address, setAddress] = useState('');
+    const [isDetecting, setIsDetecting] = useState(false);
+    const [showLocationModal, setShowLocationModal] = useState(false);
     const [pan, setPan] = useState('');
     const [aadhaar, setAadhaar] = useState('');
     const [errors, setErrors] = useState({});
@@ -221,6 +224,50 @@ const DonationForm = ({ onSuccess }) => {
         return () => clearTimeout(timer);
     }, [motivatorMobile, mobile, isMotivatorLocked]);
 
+    // Auto-detect location on mount
+    useEffect(() => {
+        detectLocation();
+    }, []);
+
+    const detectLocation = () => {
+        if (!navigator.geolocation) {
+            toast.error("Geolocation is not supported by your browser");
+            return;
+        }
+
+        setIsDetecting(true);
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                try {
+                    const { latitude, longitude } = position.coords;
+                    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+                    const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`);
+                    const data = await response.json();
+
+                    if (data.status === 'OK' && data.results[0]) {
+                        setAddress(data.results[0].formatted_address);
+                        toast.success("Location detected!");
+                    } else {
+                        toast.error("Failed to fetch address. Please enter manually.");
+                    }
+                } catch (error) {
+                    console.error("Location error:", error);
+                    toast.error("Error detecting location");
+                } finally {
+                    setIsDetecting(false);
+                }
+            },
+            (error) => {
+                setIsDetecting(false);
+                if (error.code === error.PERMISSION_DENIED) {
+                    setShowLocationModal(true);
+                } else {
+                    toast.error("Location access failed. Please enter address manually.");
+                }
+            }
+        );
+    };
+
     const submitDonation = async () => {
         setLoading(true);
         const finalAmount = customAmount ? Number(customAmount) : amount;
@@ -231,6 +278,7 @@ const DonationForm = ({ onSuccess }) => {
                 donorName: fullName,
                 donorMobile: mobile,
                 donorEmail: email,
+                address: address,
                 motivatorMobile: motivatorMobile || null,
                 referralSource: referralSource || null,
                 panNumber: need80G ? pan : null,
@@ -546,13 +594,16 @@ const DonationForm = ({ onSuccess }) => {
                 </h2>
 
                 {(i18n.language === 'hi' ? donationLabelHi : donationLabel) && (
-                    <p className="donation-subtitle" style={{ 
-                        textAlign: 'center', 
-                        color: 'var(--text-secondary)', 
-                        marginTop: '-1rem', 
+                    <p className="donation-subtitle" style={{
+                        textAlign: 'center',
+                        color: 'var(--text-secondary)',
+                        marginTop: '-1rem',
                         marginBottom: '2rem',
                         fontSize: '1.1rem',
-                        fontWeight: 500
+                        fontWeight: 500,
+                        wordBreak: 'break-word',
+                        overflowWrap: 'anywhere',
+                        padding: '0 1rem'
                     }}>
                         {i18n.language === 'hi' ? donationLabelHi : donationLabel}
                         {donationLabelLink && (
@@ -681,6 +732,55 @@ const DonationForm = ({ onSuccess }) => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                             />
+                        </div>
+                    </div>
+
+                    <div className="donation-input-group">
+                        <label className="input-label">Address (Optional)</label>
+                        <div className="input-group-wrapper" style={{ position: 'relative' }}>
+                            <textarea
+                                className="form-control"
+                                placeholder={isDetecting ? "Detecting address..." : "Ex. H.No 123, Sector 4, New Delhi"}
+                                value={address}
+                                onChange={(e) => setAddress(e.target.value)}
+                                style={{ minHeight: '80px', paddingTop: '12px', paddingRight: '100px' }}
+                            />
+                            <button
+                                type="button"
+                                className="detect-location-btn"
+                                onClick={detectLocation}
+                                disabled={isDetecting}
+                                style={{
+                                    position: 'absolute',
+                                    right: '10px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: '#f0fdfa',
+                                    color: '#00bfa5',
+                                    border: '1px solid rgba(0, 191, 165, 0.2)',
+                                    borderRadius: '8px',
+                                    padding: '6px 12px',
+                                    fontSize: '12px',
+                                    fontWeight: 700,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    zIndex: 10
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.background = '#00bfa5';
+                                    e.currentTarget.style.color = 'white';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.background = '#f0fdfa';
+                                    e.currentTarget.style.color = '#00bfa5';
+                                }}
+                            >
+                                <MapPin size={14} />
+                                <span>{isDetecting ? '...' : 'Detect'}</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -888,6 +988,83 @@ const DonationForm = ({ onSuccess }) => {
                                 {loading ? t('donatePage.processingShort', 'Processing...') : t('donatePage.confirmDonate')}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+            {/* Location Permission Modal */}
+            {showLocationModal && (
+                <div
+                    className="modal-overlay"
+                    style={{
+                        position: 'fixed',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.6)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 2000,
+                        backdropFilter: 'blur(4px)'
+                    }}
+                    onClick={() => setShowLocationModal(false)}
+                >
+                    <div
+                        className="location-modal-content"
+                        style={{
+                            background: 'white',
+                            padding: '40px',
+                            borderRadius: '24px',
+                            maxWidth: '450px',
+                            width: '90%',
+                            textAlign: 'center',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div style={{
+                            width: '70px',
+                            height: '70px',
+                            background: '#f0fdfa',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 24px',
+                            color: '#00bfa5'
+                        }}>
+                            <MapPin size={32} />
+                        </div>
+                        <h3 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '12px', color: '#1e293b' }}>
+                            Location Access Denied
+                        </h3>
+                        <p style={{ color: '#64748b', lineHeight: 1.6, marginBottom: '20px' }}>
+                            We couldn't detect your location because permissions are turned off.
+                            Please enable location access in your browser settings or enter your address manually.
+                        </p>
+
+                        <div style={{ textAlign: 'left', background: '#f8fafc', padding: '16px', borderRadius: '16px', fontSize: '13px', marginBottom: '24px', border: '1px solid #e2e8f0' }}>
+                            <p style={{ fontWeight: 700, marginBottom: '8px', color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <div style={{ width: '6px', height: '6px', background: '#00bfa5', borderRadius: '50%' }}></div>
+                                How to enable in Chrome/Mobile:
+                            </p>
+                            <ol style={{ paddingLeft: '18px', color: '#64748b', margin: 0, lineHeight: 1.5 }}>
+                                <li style={{ marginBottom: '6px' }}>Click the <b>lock</b> or <b>settings icon</b> (left of URL).</li>
+                                <li style={{ marginBottom: '6px' }}>Find <b>Location</b> and switch it to <b>Allow</b>.</li>
+                                <li>Refresh the page or click <b>Enable Location</b> below.</li>
+                            </ol>
+                        </div>
+                        <button
+                            className="donate-btn"
+                            type="button"
+                            style={{
+                                width: '100%',
+                                padding: '16px',
+                                fontSize: '16px',
+                                marginTop: 0
+                            }}
+                            onClick={() => setShowLocationModal(false)}
+                        >
+                            <span className="btn-content">Enter Manually</span>
+                        </button>
                     </div>
                 </div>
             )}

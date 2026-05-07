@@ -1083,6 +1083,12 @@ const TransactionManagement = () => {
                                     </strong>
                                 </div>
                                 <div className="breakdown-row"><span>Date</span> <strong>{formatDate(selectedTransaction.createdAt)}</strong></div>
+                                {selectedTransaction.address && (
+                                    <div className="breakdown-row">
+                                        <span>Donor Address</span> 
+                                        <strong className="text-right text-[11px] leading-tight max-w-[200px]">{selectedTransaction.address}</strong>
+                                    </div>
+                                )}
                                 <div className="breakdown-row">
                                     <span>Mode</span> 
                                     <strong>

@@ -93,7 +93,7 @@
 .cms-input, .cms-select, .cms-textarea {
     width: 100%;
     padding: 14px 18px;
-    border: 2px solid #f1f5f9;
+    border: 2px solid #cbd5e1;
     border-radius: 14px;
     font-size: 0.95rem;
     color: #1e293b;
@@ -115,7 +115,7 @@
     background: #f8fafc;
     padding: 8px 16px;
     border-radius: 12px;
-    border: 1px solid #f1f5f9;
+    border: 1px solid #cbd5e1;
 }
 
 .cms-color-input {
@@ -152,7 +152,7 @@
 .cms-modal-footer {
     padding: 24px 32px;
     background: #fff;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid #cbd5e1;
     display: flex;
     justify-content: flex-end;
     gap: 16px;
@@ -162,7 +162,7 @@
 .cms-builder-header {
     height: 100px;
     background: #fff;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #cbd5e1;
     padding: 0 40px;
     display: flex;
     justify-content: space-between;
@@ -194,7 +194,7 @@
     height: 44px;
     border-radius: 14px;
     background: #f8fafc;
-    border: 1px solid #f1f5f9;
+    border: 1px solid #cbd5e1;
     color: #64748b;
     display: flex;
     align-items: center;
@@ -321,7 +321,8 @@
 }
 
 .cms-action-btn {
-    width: 44px;
+    min-width: 44px;
+    width: auto;
     height: 44px;
     border-radius: 12px;
     display: flex;
@@ -351,6 +352,66 @@
     color: #ef4444;
     border-color: #fecaca;
     background: #fef2f2;
+}
+
+.cms-item-remove-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #fee2e2;
+    background: #fef2f2;
+    color: #ef4444;
+    cursor: pointer;
+    transition: all 0.2s;
+    z-index: 10;
+}
+
+.cms-item-remove-btn:hover {
+    background-color: #ef4444;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* CKEditor Custom Styling */
+.cms-ckeditor-wrapper {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.cms-ckeditor-wrapper .ck-editor__editable_inline {
+    min-height: 120px;
+    padding: 0 15px !important;
+    border-radius: 0 0 12px 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    font-size: 14px;
+    color: #334155;
+}
+
+.cms-ckeditor-wrapper .ck-toolbar {
+    border-radius: 12px 12px 0 0 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-bottom: none !important;
+    background: #f8fafc !important;
+}
+
+.cms-ckeditor-wrapper .ck.ck-editor__main>.ck-editor__editable:not(.ck-focused) {
+    border-color: #e2e8f0 !important;
+}
+
+.cms-ckeditor-wrapper .ck.ck-editor__main>.ck-editor__editable.ck-focused {
+    border-color: #00bfa5 !important;
+    box-shadow: 0 0 0 3px rgba(0, 191, 165, 0.1) !important;
+}
+
+/* Fix for CKEditor dropdowns in modal */
+.ck-body {
+    z-index: 10000 !important;
 }
 
 /* Component Picker */

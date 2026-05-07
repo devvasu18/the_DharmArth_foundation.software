@@ -3,6 +3,9 @@ import api from '../../services/api';
 import { useConfirm } from '../../context/ConfirmContext';
 import toast from 'react-hot-toast';
 import { Trash2, Edit, Plus, X, Save, Image as ImageIcon, Globe } from 'lucide-react';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import DOMPurify from 'dompurify';
 
 const AdminCrowdfunding = () => {
     const { showAlert, showConfirm } = useConfirm();
@@ -181,14 +184,20 @@ const AdminCrowdfunding = () => {
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">Text (English)</label>
-                                            <textarea 
-                                                className="form-input" 
-                                                style={{ minHeight: '120px' }}
-                                                value={formData.text} 
-                                                onChange={e => setFormData({...formData, text: e.target.value})} 
-                                                placeholder="Enter detailed description..."
-                                                required 
-                                            />
+                                            <div className="editor-wrapper">
+                                                <CKEditor
+                                                    editor={ClassicEditor}
+                                                    data={formData.text}
+                                                    onChange={(event, editor) => {
+                                                        const data = editor.getData();
+                                                        setFormData({ ...formData, text: data });
+                                                    }}
+                                                    config={{
+                                                        placeholder: 'Enter detailed description...',
+                                                        toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo']
+                                                    }}
+                                                />
+                                            </div>
                                         </div>
                                     </>
                                 ) : (
@@ -204,13 +213,20 @@ const AdminCrowdfunding = () => {
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">Text (Hindi)</label>
-                                            <textarea 
-                                                className="form-input" 
-                                                style={{ minHeight: '120px' }}
-                                                value={formData.text_hi} 
-                                                onChange={e => setFormData({...formData, text_hi: e.target.value})} 
-                                                placeholder="विवरण हिंदी में..."
-                                            />
+                                            <div className="editor-wrapper">
+                                                <CKEditor
+                                                    editor={ClassicEditor}
+                                                    data={formData.text_hi}
+                                                    onChange={(event, editor) => {
+                                                        const data = editor.getData();
+                                                        setFormData({ ...formData, text_hi: data });
+                                                    }}
+                                                    config={{
+                                                        placeholder: 'विवरण हिंदी में...',
+                                                        toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo']
+                                                    }}
+                                                />
+                                            </div>
                                         </div>
                                     </>
                                 )}
@@ -295,11 +311,11 @@ const AdminCrowdfunding = () => {
                                 </td>
                                 <td>
                                     <div style={{ fontWeight: 700 }}>{section.title}</div>
-                                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{section.text?.substring(0, 50)}...</div>
+                                    <div style={{ fontSize: '0.85rem', color: '#64748b' }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.text?.substring(0, 100) || '') + '...' }}></div>
                                 </td>
                                 <td>
                                     <div style={{ fontWeight: 700 }}>{section.title_hi || '---'}</div>
-                                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{section.text_hi?.substring(0, 50)}...</div>
+                                    <div style={{ fontSize: '0.85rem', color: '#64748b' }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.text_hi?.substring(0, 100) || '') + '...' }}></div>
                                 </td>
                                 <td style={{ width: '150px' }}>
                                     <div style={{ display: 'flex', gap: '8px' }}>

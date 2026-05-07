@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
+import DOMPurify from 'dompurify';
 import './CrowdfundingSection.css';
 
 const CrowdfundingSection = () => {
@@ -34,9 +35,12 @@ const CrowdfundingSection = () => {
                             <h2 className="crowd-title">
                                 {i18n.language === 'hi' && section.title_hi ? section.title_hi : section.title}
                             </h2>
-                            <p className="crowd-text">
-                                {i18n.language === 'hi' && section.text_hi ? section.text_hi : section.text}
-                            </p>
+                            <div 
+                                className="crowd-text"
+                                dangerouslySetInnerHTML={{ 
+                                    __html: DOMPurify.sanitize(i18n.language === 'hi' && section.text_hi ? section.text_hi : section.text) 
+                                }}
+                            />
                         </div>
                         <div className="crowd-image-wrapper">
                             <img 
