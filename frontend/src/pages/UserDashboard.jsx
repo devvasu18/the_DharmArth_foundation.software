@@ -252,8 +252,8 @@ const UserDashboard = () => {
 
 
     const shareLink = user?.referralCode
-        ? `${window.location.origin}/donate?ref=${user.referralCode}`
-        : `${window.location.origin}/donate?ref=${user?.mobile}`;
+        ? `${window.location.origin}/v/${user.referralCode}`
+        : `${window.location.origin}/v/${user?.mobile}`;
 
     const handleCopy = () => {
         navigator.clipboard.writeText(shareLink);
@@ -630,19 +630,25 @@ const UserDashboard = () => {
                                             <User size={14} /> Edit Profile
                                         </button>
                                         <button 
-                                            onClick={async () => {
-                                                const toastId = toast.loading("Generating ID Card...");
-                                                try {
-                                                    // Dynamic import or temporary render to generate card
-                                                    window.location.href = '/profile'; // Redirect for now, or implement silent render
-                                                } catch (e) {
-                                                    toast.error("Failed to generate card", { id: toastId });
+                                            onClick={() => {
+                                                if (navigator.share) {
+                                                    navigator.share({
+                                                        title: 'My Volunteer Profile',
+                                                        text: 'Check out my verified volunteer profile at The DharmArth Foundation.',
+                                                        url: shareLink
+                                                    }).catch(() => {
+                                                        navigator.clipboard.writeText(shareLink);
+                                                        toast.success("Profile link copied!");
+                                                    });
+                                                } else {
+                                                    navigator.clipboard.writeText(shareLink);
+                                                    toast.success("Profile link copied!");
                                                 }
                                             }}
                                             className="share-action-btn"
                                             style={{ background: '#00bfa5', color: 'white' }}
                                         >
-                                            <Download size={14} /> Download ID
+                                            <Share2 size={14} /> Share Profile
                                         </button>
                                     </div>
                                 </div>

@@ -432,10 +432,15 @@ router.put('/profile', protect, async (req, res) => {
 // @access  Public
 router.get('/v/:referralCode', async (req, res) => {
     try {
-        const user = await User.findOne({ referralCode: req.params.referralCode })
+        const user = await User.findOne({ 
+            $or: [
+                { referralCode: req.params.referralCode.toUpperCase() },
+                { mobile: req.params.referralCode }
+            ]
+        })
             .select('name work bio profileImage city state mobile referralCode createdAt isMotivator');
             
-        if (!user || !user.isMotivator) {
+        if (!user) {
             return res.status(404).json({ message: 'Volunteer profile not found' });
         }
         

@@ -104,7 +104,7 @@ const UserProfile = () => {
             // But since it's the same data as the visible one, they should be cached
             const canvas = await html2canvas(downloadRef.current, {
                 useCORS: true,
-                scale: 3, 
+                scale: 3,
                 backgroundColor: null,
                 width: 650,
                 height: 480,
@@ -128,12 +128,12 @@ const UserProfile = () => {
     };
 
     const handleShare = () => {
-        const shareLink = user?.referralCode
-            ? `${window.location.origin}/donate?ref=${user.referralCode}`
-            : `${window.location.origin}/donate?ref=${user?.mobile}`;
+        const publicLink = user?.referralCode
+            ? `${window.location.origin}/v/${user.referralCode}`
+            : `${window.location.origin}/v/${user?.mobile}`;
 
-        navigator.clipboard.writeText(shareLink);
-        toast.success("Link copied to clipboard!");
+        navigator.clipboard.writeText(publicLink);
+        toast.success("Public profile link copied!");
     };
 
     const previewContainerRef = useRef(null);
@@ -241,18 +241,18 @@ const UserProfile = () => {
                                 <div style={{ position: 'relative' }}>
                                     <Info style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} size={18} />
                                     <textarea
-                                        name="bio" 
-                                        value={formData.bio} 
+                                        name="bio"
+                                        value={formData.bio}
                                         onChange={handleInputChange}
                                         maxLength={100}
                                         className="form-control with-icon textarea"
                                         placeholder="A short sentence about your mission..."
                                     />
-                                    <div style={{ 
-                                        position: 'absolute', 
-                                        bottom: '8px', 
-                                        right: '12px', 
-                                        fontSize: '11px', 
+                                    <div style={{
+                                        position: 'absolute',
+                                        bottom: '8px',
+                                        right: '12px',
+                                        fontSize: '11px',
                                         color: formData.bio.length >= 100 ? '#ef4444' : '#94a3b8',
                                         fontWeight: '600'
                                     }}>
@@ -302,8 +302,16 @@ const UserProfile = () => {
                                 <button onClick={downloadCard} className="action-btn download">
                                     <Download size={16} /> Download
                                 </button>
-                                <button onClick={handleShare} className="action-btn share">
-                                    <Share2 size={16} /> Share Link
+
+                            </div>
+                        </div>
+
+                        <div className="public-link-box">
+                            <span className="link-label">Your Public Volunteer Page:</span>
+                            <div className="link-display">
+                                <span className="link-url">{window.location.origin}/v/{user?.referralCode || user?.mobile}</span>
+                                <button className="copy-icon-btn" onClick={handleShare}>
+                                    <Share2 size={14} />
                                 </button>
                             </div>
                         </div>
@@ -330,7 +338,7 @@ const UserProfile = () => {
 
                 </div>
             </div>
-            
+
             {/* Hidden capture area for downloads - NOT scaled, absolute positioned off-screen */}
             <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
                 <div ref={downloadRef} className="download-capture-area" style={{ width: '650px', height: '480px' }}>
@@ -528,6 +536,49 @@ const UserProfile = () => {
                     background: #f0fdfa;
                     border: 1px solid #00bfa5;
                     color: #00bfa5;
+                }
+                
+                .public-link-box {
+                    width: 100%;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 12px;
+                    padding: 0.75rem 1rem;
+                    margin-bottom: 1.5rem;
+                }
+                .link-label {
+                    display: block;
+                    font-size: 0.7rem;
+                    font-weight: 700;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    margin-bottom: 4px;
+                }
+                .link-display {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 8px;
+                }
+                .link-url {
+                    font-size: 0.85rem;
+                    color: #1e293b;
+                    font-weight: 600;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .copy-icon-btn {
+                    background: white;
+                    border: 1px solid #e2e8f0;
+                    padding: 4px;
+                    border-radius: 6px;
+                    color: #00bfa5;
+                    cursor: pointer;
+                    display: flex;
+                }
+                .copy-icon-btn:hover {
+                    background: #f0fdfa;
                 }
                 
                 .card-outer-wrapper {
