@@ -234,8 +234,8 @@ const Navbar = () => {
                                 }}>
                                     {!user.isSuperAdmin && !isDeliveryPartner && (
                                         <>
-                                            <Link to="/profile" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>My Profile</Link>
                                             <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.wallet')}</Link>
+                                            <Link to="/profile" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>My Profile</Link>
                                             <Link to="/my-subscriptions" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.subscriptions') || 'My Subscriptions'}</Link>
                                             <Link to="/my-referrals" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>My Referrals</Link>
                                         </>
