@@ -1,0 +1,42 @@
+name: Android Build
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+          
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          
+      - name: Install Dependencies
+        working-directory: ./mobile
+        run: npm install
+        
+      - name: Prebuild Android
+        working-directory: ./mobile
+        run: npx expo prebuild --platform android
+        
+      - name: Build APK (Debug)
+        working-directory: ./mobile/android
+        run: ./gradlew assembleDebug
+        
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: dharmarth-foundation-debug-apk
+          path: mobile/android/app/build/outputs/apk/debug/*.apk
