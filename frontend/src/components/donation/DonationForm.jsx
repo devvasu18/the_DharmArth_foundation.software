@@ -927,23 +927,25 @@ const DonationForm = ({ onSuccess }) => {
                     )}
                 </div>
 
-                <div className="fixed-bottom-bar">
-                    <button
-                        className="donate-btn"
-                        onClick={handleDonate}
-                        disabled={!isFormValid || loading}
-                    >
-                        <span className="btn-content">
-                            {loading ? t('donatePage.processing') : `${t('donatePage.donateBtn')} ₹${(customAmount ? Number(customAmount) : amount).toLocaleString()}`}
-                        </span>
-                    </button>
+                {!(showPanModal || showLocationModal) && (
+                    <div className="fixed-bottom-bar">
+                        <button
+                            className="donate-btn"
+                            onClick={handleDonate}
+                            disabled={!isFormValid || loading}
+                        >
+                            <span className="btn-content">
+                                {loading ? t('donatePage.processing') : `${t('donatePage.donateBtn')} ₹${(customAmount ? Number(customAmount) : amount).toLocaleString()}`}
+                            </span>
+                        </button>
 
-                    <div className="text-center mt-2">
-                        <small className="text-muted" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
-                            <Lock size={12} /> {t('donatePage.securePayment')}
-                        </small>
+                        <div className="text-center mt-2">
+                            <small className="text-muted" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                                <Lock size={12} /> {t('donatePage.securePayment')}
+                            </small>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {showPanModal && (

@@ -262,7 +262,7 @@ const Navbar = () => {
                     {!isDeliveryPartner && (
                         <>
                             {/* <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.doctorAvailability')}</NavLink> */}
-                            <NavLink to="/how-it-works" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.howItWorks')}</NavLink>
+                            {/* <NavLink to="/how-it-works" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.howItWorks')}</NavLink> */}
                         </>
                     )}
 
@@ -270,6 +270,15 @@ const Navbar = () => {
 
                     {isDeliveryPartner && (
                         <NavLink to="/delivery-boy" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>Delivery Feed</NavLink>
+                    )}
+
+                    {user && !user.isSuperAdmin && !isDeliveryPartner && (
+                        <>
+                            <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.wallet')}</NavLink>
+                            <NavLink to="/profile" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>My Profile</NavLink>
+                            <NavLink to="/my-subscriptions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.subscriptions') || 'My Subscriptions'}</NavLink>
+                            <NavLink to="/my-referrals" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>My Referrals</NavLink>
+                        </>
                     )}
                     {!user ? (
                         <NavLink to="/login" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.signIn')}</NavLink>
