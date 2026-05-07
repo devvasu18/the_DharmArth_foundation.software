@@ -148,6 +148,12 @@ const AdminDoctors = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        if (file.size > 4 * 1024 * 1024) {
+            toast.error("Please select an image smaller than 4MB");
+            e.target.value = null;
+            return;
+        }
+
         const uploadData = new FormData();
         uploadData.append('image', file);
 
@@ -390,6 +396,7 @@ const AdminDoctors = () => {
                                             )}
                                         </label>
                                     </div>
+                                    <small className="upload-hint" style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>Maximum upload size: 4MB</small>
                                     {formData.photo && (
                                         <div className="image-preview">
                                             <img src={formData.photo.startsWith('http') ? formData.photo : `${API_BASE_URL}${formData.photo.startsWith('/') ? '' : '/'}${formData.photo}`} alt="Preview" />

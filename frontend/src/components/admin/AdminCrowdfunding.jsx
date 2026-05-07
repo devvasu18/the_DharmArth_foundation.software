@@ -40,6 +40,12 @@ const AdminCrowdfunding = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        if (file.size > 4 * 1024 * 1024) {
+            toast.error("Please select an image smaller than 4MB");
+            e.target.value = null;
+            return;
+        }
+
         const uploadData = new FormData();
         uploadData.append('image', file);
 
@@ -272,6 +278,7 @@ const AdminCrowdfunding = () => {
                                             <span style={{ marginTop: '1rem', color: '#64748b' }}>Click to upload image</span>
                                         </label>
                                     )}
+                                    <small style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '8px', display: 'block', textAlign: 'center' }}>Maximum upload size: 4MB</small>
                                     <input id="file-upload" type="file" style={{ display: 'none' }} onChange={handleFileChange} accept="image/*" />
                                     {uploading && <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Uploading...</div>}
                                 </div>

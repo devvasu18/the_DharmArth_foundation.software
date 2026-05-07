@@ -58,6 +58,12 @@ const AdminDelivery = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        if (file.size > 4 * 1024 * 1024) {
+            triggerModal('error', 'File Too Large', 'Please select an image smaller than 4MB.');
+            e.target.value = null;
+            return;
+        }
+
         const formData = new FormData();
         formData.append('image', file);
 
@@ -474,6 +480,7 @@ const AdminDelivery = () => {
                                                             </label>
                                                         )}
                                                     </div>
+                                                    <small className="up-hint" style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '6px', display: 'block' }}>Maximum upload size: 4MB</small>
                                                 </div>
                                                 <div className="f-group"></div>
                                             </div>

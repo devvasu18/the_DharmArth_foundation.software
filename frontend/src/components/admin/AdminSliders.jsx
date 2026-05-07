@@ -42,6 +42,12 @@ const AdminSliders = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        if (file.size > 4 * 1024 * 1024) {
+            toast.error("Please select an image smaller than 4MB");
+            e.target.value = null;
+            return;
+        }
+
         const uploadData = new FormData();
         uploadData.append('image', file);
 
@@ -304,6 +310,7 @@ const AdminSliders = () => {
                                                 </div>
                                             )}
                                         </label>
+                                        <small style={{ color: '#64748b', marginTop: '10px', display: 'block' }}>Maximum upload size: 4MB</small>
                                         {uploading && <p style={{ marginTop: '1rem', color: '#008080' }}>Uploading...</p>}
                                     </div>
                                 </div>

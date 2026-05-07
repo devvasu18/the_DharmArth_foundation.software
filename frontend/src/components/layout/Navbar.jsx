@@ -294,7 +294,7 @@ const Navbar = () => {
                     <Calendar size={20} className="nav-icon" />
                     <span>{t('navbar.fundraiseFor')}</span>
                 </NavLink>
-                <NavLink to={user ? "/profile" : "/login"} className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                <NavLink to={user ? "/dashboard" : "/login"} className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
                     <UserIcon size={20} className="nav-icon" />
                     <span>{user ? 'My Profile' : t('navbar.signIn')}</span>
                 </NavLink>

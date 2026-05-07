@@ -118,6 +118,11 @@ const OrderMedicine = () => {
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
+            if (selectedFile.size > 4 * 1024 * 1024) {
+                toast.error("Please select an image smaller than 4MB");
+                e.target.value = null;
+                return;
+            }
             setFile(selectedFile);
             setPreview(URL.createObjectURL(selectedFile));
             setError(null);
@@ -307,7 +312,8 @@ const OrderMedicine = () => {
                                                     <Upload size={32} />
                                                 </div>
                                                 <p>Drop your prescription image here</p>
-                                                <span>Supports JPG, PNG (Max 5MB)</span>
+                                                <span>Supports JPG, PNG (Max 4MB)</span>
+                                                <small className="text-gray-500 mt-2 block">Maximum upload size: 4MB</small>
                                             </div>
                                         )}
                                         <input

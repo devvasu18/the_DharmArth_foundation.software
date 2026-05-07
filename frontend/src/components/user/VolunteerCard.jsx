@@ -1,6 +1,9 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Award, ShieldCheck, QrCode, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+const DEFAULT_AVATAR_URL = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778152272/dharmarth_foundation/default_guest_avatar.jpg';
+
+
 
 const VolunteerCard = ({ userData, cardRef }) => {
     const { t } = useTranslation();
@@ -12,7 +15,7 @@ const VolunteerCard = ({ userData, cardRef }) => {
     const bio = userData?.bio || 'Dedicated to supporting humanity and spreading kindness through The DharmArth Foundation.';
     const location = userData?.city ? `${userData.city}, ${userData.state || ''}` : 'India';
     const referralCode = userData?.referralCode || 'DF0000';
-    const profileImage = userData?.profileImage || 'https://res.cloudinary.com/dzt6v8uxp/image/upload/v1/dharmarth_foundation/default_avatar.png';
+    const profileImage = userData?.profileImage || DEFAULT_AVATAR_URL;
     const joinedDate = userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '2026';
 
     const cardStyles = {
@@ -194,7 +197,18 @@ const VolunteerCard = ({ userData, cardRef }) => {
                     <img src={profileImage} alt={name} style={cardStyles.photo} />
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#000', fontWeight: 800, fontSize: '16px', textTransform: 'uppercase' }}>
+                <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    color: '#000', 
+                    fontWeight: 800, 
+                    fontSize: '16px', 
+                    textTransform: 'uppercase',
+                    border: '1.5px solid #000',
+                    padding: '6px 16px',
+                    borderRadius: '99px'
+                }}>
                     <Award size={18} color="#000" /> Official Volunteer
                 </div>
 

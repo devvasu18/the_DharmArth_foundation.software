@@ -8,6 +8,9 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import VolunteerCard from '../components/user/VolunteerCard';
+const DEFAULT_AVATAR_URL = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778152272/dharmarth_foundation/default_guest_avatar.jpg';
+
+
 
 const UserProfile = () => {
     const { user, setUser, refreshUser } = useAuth();
@@ -53,8 +56,8 @@ const UserProfile = () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        if (file.size > 2 * 1024 * 1024) {
-            toast.error("Image size should be less than 2MB");
+        if (file.size > 4 * 1024 * 1024) {
+            toast.error("Please select an image smaller than 4MB");
             return;
         }
 
@@ -181,7 +184,7 @@ const UserProfile = () => {
                                         {formData.profileImage ? (
                                             <img src={formData.profileImage} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         ) : (
-                                            <Camera size={40} color="#94a3b8" />
+                                            <img src={DEFAULT_AVATAR_URL} alt="Default Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7 }} />
                                         )}
                                         {isUploading && (
                                             <div className="upload-overlay">
@@ -624,6 +627,9 @@ const UserProfile = () => {
                     }
                     .section-title {
                         font-size: 1.3rem;
+                    }
+                    .submit-btn {
+                        margin-bottom: 2rem;
                     }
                 }
 

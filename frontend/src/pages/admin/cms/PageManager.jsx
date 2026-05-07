@@ -563,6 +563,12 @@ const DataEditor = ({ component, onClose, onSave }) => {
         const file = e.target.files[0];
         if (!file) return;
 
+        if (file.size > 4 * 1024 * 1024) {
+            toast.error("Please select an image smaller than 4MB");
+            e.target.value = null;
+            return;
+        }
+
         const formData = new FormData();
         formData.append('image', file);
 
@@ -754,6 +760,9 @@ const DataEditor = ({ component, onClose, onSave }) => {
                                                             )}
                                                         </div>
                                                     )}
+                                                    {(key.toLowerCase().includes('image') || key.toLowerCase().includes('photo')) && (
+                                                        <small className="text-[10px] text-gray-400 mt-1 block">Maximum upload size: 4MB</small>
+                                                    )}
                                                 </div>
                                             </div>
                                     </div>
@@ -876,6 +885,9 @@ const DataEditor = ({ component, onClose, onSave }) => {
                                                                                     </label>
                                                                                 )}
                                                                             </div>
+                                                                        )}
+                                                                        {(subKey.toLowerCase().includes('image') || subKey.toLowerCase().includes('photo')) && (
+                                                                            <small className="text-[10px] text-gray-400 mt-1 block">Maximum upload size: 4MB</small>
                                                                         )}
                                                                     </div>
                                                                 </div>

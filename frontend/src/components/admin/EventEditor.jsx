@@ -178,6 +178,12 @@ const EventEditor = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        if (file.size > 4 * 1024 * 1024) {
+            toast.error("Please select a file smaller than 4MB");
+            e.target.value = null;
+            return;
+        }
+
         const uploadData = new FormData();
         uploadData.append('image', file);
 
@@ -355,6 +361,7 @@ const EventEditor = () => {
                                         <input type="file" onChange={(e) => handleFileUpload(e, 'coverImage')} />
                                     </label>
                                 </div>
+                                <small className="text-gray-400 text-xs mt-1 block">Maximum upload size: 4MB</small>
                                 {formData.coverImage && (
                                     <div className="preview-container">
                                         <img 
@@ -389,7 +396,12 @@ const EventEditor = () => {
                                     <ImageIcon size={18} /> Add Images to Gallery
                                     <input type="file" multiple onChange={async (e) => {
                                         const files = Array.from(e.target.files);
-                                        for (const file of files) {
+                                        const oversizedFiles = files.filter(f => f.size > 4 * 1024 * 1024);
+                                        if (oversizedFiles.length > 0) {
+                                            toast.error(`${oversizedFiles.length} files were larger than 4MB and skipped`);
+                                        }
+                                        const validFiles = files.filter(f => f.size <= 4 * 1024 * 1024);
+                                        for (const file of validFiles) {
                                             const uploadData = new FormData();
                                             uploadData.append('image', file);
                                             try {
@@ -406,6 +418,7 @@ const EventEditor = () => {
                                         }
                                     }} />
                                 </label>
+                                <small className="text-gray-400 text-xs mt-1 block">Maximum upload size: 4MB per image</small>
                             </div>
                         </div>
                         <div className="form-group">
@@ -456,6 +469,7 @@ const EventEditor = () => {
                                                         <input type="file" onChange={(e) => handleBlockFileUpload(e, index, 'url')} />
                                                     </label>
                                                 </div>
+                                                <small className="text-gray-400 text-xs mt-1 block">Maximum upload size: 4MB</small>
                                                 {block.content.url && (
                                                     <div className="preview-container" style={{ marginTop: '1rem', maxWidth: '200px' }}>
                                                         <img src={block.content.url.startsWith('http') ? block.content.url : `${API_BASE_URL}${block.content.url.startsWith('/') ? '' : '/'}${block.content.url}`} className="premium-preview-img" alt="Preview" />
@@ -537,6 +551,7 @@ const EventEditor = () => {
                                                         <input type="file" onChange={(e) => handleBlockFileUpload(e, index, 'url')} />
                                                     </label>
                                                 </div>
+                                                <small className="text-gray-400 text-xs mt-1 block">Maximum upload size: 4MB</small>
                                                 {block.content.url && (
                                                     <div className="preview-container" style={{ marginTop: '1rem', maxWidth: '300px' }}>
                                                         <video src={block.content.url.startsWith('http') ? block.content.url : `${API_BASE_URL}${block.content.url.startsWith('/') ? '' : '/'}${block.content.url}`} className="premium-preview-img" controls />

@@ -47,6 +47,12 @@ const AdminEventHeaders = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        if (file.size > 4 * 1024 * 1024) {
+            toast.error("Please select a file smaller than 4MB");
+            e.target.value = null;
+            return;
+        }
+
         const uploadData = new FormData();
         uploadData.append('image', file);
 
@@ -258,6 +264,7 @@ const AdminEventHeaders = () => {
                                     />
                                     <input type="file" onChange={handleFileUpload} style={{ width: 100 }} />
                                 </div>
+                                <small style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Maximum upload size: 4MB</small>
                                 {formData.type === 'image' && formData.url && (
                                     <img src={formData.url} alt="Preview" style={{ height: 100, marginTop: 10, borderRadius: 4 }} />
                                 )}
