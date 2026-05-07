@@ -23,7 +23,8 @@
     "react-native-screens": "~4.16.0"
   },
   "devDependencies": {
-    "@react-native-community/cli": "latest"
+    "@react-native-community/cli": "latest",
+    "@react-native/metro-config": "latest"
   },
   "private": true
 }
