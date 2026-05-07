@@ -112,7 +112,7 @@ const handleSubscriptionCharged = async (subscriptionId, paymentId, payload, io)
                 donorUser.address = subscription.address || donorUser.address;
                 donorUser.city = subscription.city || donorUser.city;
                 donorUser.state = subscription.state || donorUser.state;
-                donorUser.lastMotivatorMobile = subscription.motivatorMobile || donorUser.lastMotivatorMobile;
+                donorUser.lastMotivatorMobile = donorUser.lastMotivatorMobile || subscription.motivatorMobile;
             } else {
                 donorUser = new User({
                     name: subscription.donorName,

@@ -111,11 +111,11 @@ const DonationForm = ({ onSuccess }) => {
             if (!params.get('mobile')) setMobile(authUser.mobile || '');
             if (!params.get('email')) setEmail(authUser.email || '');
 
-            if (authUser.referredBy && !params.get('motivator') && !params.get('ref')) {
+            if (authUser.referredBy) {
                 setMotivatorMobile(authUser.referredBy.mobile || authUser.referredBy.referralCode || '');
                 setMotivatorName(authUser.referredBy.name || '');
                 setIsMotivatorLocked(true);
-            } else if (authUser.lastMotivatorMobile && !params.get('motivator') && !params.get('ref')) {
+            } else if (authUser.lastMotivatorMobile) {
                 setMotivatorMobile(authUser.lastMotivatorMobile);
                 setIsMotivatorLocked(true);
                 // Also fetch name if possible or use a placeholder
@@ -153,6 +153,9 @@ const DonationForm = ({ onSuccess }) => {
 
     // Check for referral link and pre-fill data
     useEffect(() => {
+        // If user is already logged in with a motivator, don't let URL params override it
+        if (authUser && (authUser.referredBy || authUser.lastMotivatorMobile)) return;
+
         const params = new URLSearchParams(location.search);
         const ref = params.get('ref');
         const motivator = params.get('motivator');
@@ -163,7 +166,7 @@ const DonationForm = ({ onSuccess }) => {
         const aadhaarParam = params.get('aadhaar');
         const g80 = params.get('is80G');
 
-        if (ref || motivator) {
+        if ((ref || motivator) && !isMotivatorLocked) {
             setMotivatorMobile(ref || motivator);
             setIsMotivatorLocked(true);
         }

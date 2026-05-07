@@ -251,14 +251,18 @@ const UserDashboard = () => {
 
 
 
-    const shareLink = user?.referralCode
+    const donationLink = user?.referralCode
+        ? `${window.location.origin}/donate?ref=${user.referralCode}`
+        : `${window.location.origin}/donate?ref=${user?.mobile}`;
+
+    const profileLink = user?.referralCode
         ? `${window.location.origin}/v/${user.referralCode}`
         : `${window.location.origin}/v/${user?.mobile}`;
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(shareLink);
+        navigator.clipboard.writeText(donationLink);
         setCopied(true);
-        toast.success("Link copied to clipboard!");
+        toast.success("Donation link copied!");
         setTimeout(() => setCopied(false), 2000);
     };
 
@@ -595,7 +599,7 @@ const UserDashboard = () => {
                                 </div>
 
                                 <div className="share-input-group">
-                                    <span className="share-link">{shareLink}</span>
+                                    <span className="share-link">{donationLink}</span>
                                     <button onClick={handleCopy} className="copy-btn">
                                         {copied ? <Check size={14} /> : <Copy size={14} />}
                                         {copied ? 'Copied' : 'Copy'}
@@ -605,13 +609,13 @@ const UserDashboard = () => {
                                 <div className="share-actions">
                                     <button
                                         className="share-action-btn btn-whatsapp"
-                                        onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent("Join me in supporting this cause! Donate here: " + shareLink)}`, '_blank')}
+                                        onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent("Join me in supporting this cause! Donate here: " + donationLink)}`, '_blank')}
                                     >
                                         WhatsApp
                                     </button>
                                     <button
                                         className="share-action-btn btn-facebook"
-                                        onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareLink)}`, '_blank')}
+                                        onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(donationLink)}`, '_blank')}
                                     >
                                         Facebook
                                     </button>
@@ -635,13 +639,13 @@ const UserDashboard = () => {
                                                     navigator.share({
                                                         title: 'My Volunteer Profile',
                                                         text: 'Check out my verified volunteer profile at The DharmArth Foundation.',
-                                                        url: shareLink
+                                                        url: profileLink
                                                     }).catch(() => {
-                                                        navigator.clipboard.writeText(shareLink);
+                                                        navigator.clipboard.writeText(profileLink);
                                                         toast.success("Profile link copied!");
                                                     });
                                                 } else {
-                                                    navigator.clipboard.writeText(shareLink);
+                                                    navigator.clipboard.writeText(profileLink);
                                                     toast.success("Profile link copied!");
                                                 }
                                             }}

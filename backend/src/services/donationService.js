@@ -93,7 +93,7 @@ exports.completeDonation = async (orderId, paymentId, io) => {
                 donorUser.address = address || donorUser.address;
                 donorUser.city = city || donorUser.city;
                 donorUser.state = state || donorUser.state;
-                donorUser.lastMotivatorMobile = motivatorMobile || donorUser.lastMotivatorMobile;
+                donorUser.lastMotivatorMobile = donorUser.lastMotivatorMobile || motivatorMobile;
             } else {
                 donorUser = new User({
                     name: donorName,

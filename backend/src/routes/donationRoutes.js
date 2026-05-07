@@ -127,11 +127,23 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
         let level1UserId = null;
         let level2UserId = null;
 
-        if (motivatorMobile) {
+        let finalMotivatorMobile = motivatorMobile;
+
+        // Backend Protection: If user is logged in, prioritize their existing motivator
+        if (req.user) {
+            const user = await User.findById(req.user._id).populate('referredBy');
+            if (user && user.referredBy) {
+                finalMotivatorMobile = user.referredBy.mobile || user.referredBy.referralCode;
+            } else if (user && user.lastMotivatorMobile) {
+                finalMotivatorMobile = user.lastMotivatorMobile;
+            }
+        }
+
+        if (finalMotivatorMobile) {
             const motivator = await User.findOne({
                 $or: [
-                    { mobile: motivatorMobile },
-                    { referralCode: motivatorMobile.toUpperCase() }
+                    { mobile: finalMotivatorMobile },
+                    { referralCode: finalMotivatorMobile.toUpperCase() }
                 ]
             }).populate('referredBy');
 
@@ -144,7 +156,7 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
         }
 
         // self-referral check
-        const isSelfReferral = donorMobile === motivatorMobile || 
+        const isSelfReferral = donorMobile === finalMotivatorMobile || 
                              (level1UserId && level1UserId.toString() === donorMobile);
 
         if (donationType === 'monthly') {
@@ -163,7 +175,7 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
                 // Add metadata for webhook tracking
                 notes: {
                     donorMobile,
-                    motivatorMobile: isSelfReferral ? '' : (motivatorMobile || '')
+                    motivatorMobile: isSelfReferral ? '' : (finalMotivatorMobile || '')
                 }
             });
 
@@ -173,7 +185,7 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
                 donorName,
                 donorMobile,
                 donorEmail,
-                motivatorMobile: isSelfReferral ? null : motivatorMobile,
+                motivatorMobile: isSelfReferral ? null : finalMotivatorMobile,
                 level1UserId: isSelfReferral ? null : level1UserId,
                 level2UserId: isSelfReferral ? null : level2UserId,
                 status: 'created',
@@ -212,7 +224,7 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
             donorName,
             donorMobile,
             donorEmail,
-            motivatorMobile: isSelfReferral ? null : motivatorMobile,
+            motivatorMobile: isSelfReferral ? null : finalMotivatorMobile,
             referralSource,
             panNumber,
             aadhaarNumber,
@@ -310,7 +322,7 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
                 donorUser.address = address || donorUser.address;
                 donorUser.city = city || donorUser.city;
                 donorUser.state = state || donorUser.state;
-                donorUser.lastMotivatorMobile = motivatorMobile || donorUser.lastMotivatorMobile;
+                donorUser.lastMotivatorMobile = donorUser.lastMotivatorMobile || finalMotivatorMobile;
             } else {
                 donorUser = new User({
                     name: donorName,
@@ -319,7 +331,7 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
                     address,
                     city,
                     state,
-                    lastMotivatorMobile: motivatorMobile
+                    lastMotivatorMobile: finalMotivatorMobile
                 });
             }
             await donorUser.save(); // Triggers pre('save') for referralCode
