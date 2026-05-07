@@ -18,11 +18,21 @@ app.use(express.json({
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
-    origin: [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'].filter(Boolean),
+    origin: (origin, callback) => {
+        // Allow all origins in development or requests from mobile apps (no origin)
+        if (!origin || process.env.NODE_ENV !== 'production') {
+            return callback(null, true);
+        }
+        callback(null, true); // Keep it open for now to fix user issues
+    },
     credentials: true
 }));
 app.use(helmet());
 app.use(morgan('dev'));
+app.use((req, res, next) => {
+    console.log(`[REQUEST] ${req.method} ${req.url} from ${req.ip}`);
+    next();
+});
 
 // Trust proxy (Required for Render, Heroku, etc.)
 app.set('trust proxy', 1);

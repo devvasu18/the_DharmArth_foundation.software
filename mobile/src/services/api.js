@@ -37,6 +37,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
+        console.error(`[API ERROR] ${error.config?.method?.toUpperCase()} ${error.config?.url}:`, error.message);
+        if (error.response) {
+            console.error(`[API ERROR DATA]`, error.response.data);
+        } else if (error.request) {
+            console.error(`[API ERROR REQUEST] No response received. Check if backend is reachable at ${API_BASE_URL}`);
+        }
+        
         if (error.response?.status === 401) {
             console.warn("Session expired or unauthorized - clearing local user state");
             await AsyncStorage.removeItem('user');
