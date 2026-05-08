@@ -28,6 +28,7 @@ const DynamicPage = lazy(() => import('./pages/DynamicPage'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 const UserProfile = lazy(() => import('./pages/UserProfile'));
 const PublicVolunteerCard = lazy(() => import('./pages/PublicVolunteerCard'));
+const MyNetwork = lazy(() => import('./pages/MyNetwork'));
 
 // Admin Components
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
@@ -92,6 +93,7 @@ const router = createBrowserRouter(
       <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
       <Route path="/my-subscriptions" element={<ProtectedRoute><MySubscriptions /></ProtectedRoute>} />
       <Route path="/my-referrals" element={<ProtectedRoute><MyReferrals /></ProtectedRoute>} />
+      <Route path="/my-network" element={<ProtectedRoute><MyNetwork /></ProtectedRoute>} />
       
       <Route path="/events" element={<Events />} />
       <Route path="/events/:slug" element={<EventDetail />} />

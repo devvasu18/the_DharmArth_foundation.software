@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import api from '../services/api';
-import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, Users, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown, FileSpreadsheet, FileText as FilePdf, CheckCircle, AlertCircle, Award } from 'lucide-react';
+import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, Users, Network, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown, FileSpreadsheet, FileText as FilePdf, CheckCircle, AlertCircle, Award } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -505,6 +506,22 @@ const UserDashboard = () => {
                                             </div>
                                             <span className="stat-lbl">{t('userDashboard.l2Donors')}</span>
                                         </div>
+                                    </div>
+                                    <div className="stat-row" style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem' }}>
+                                        <Link to="/my-network" className="view-tree-link" style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '8px', 
+                                            color: 'white', 
+                                            fontSize: '0.9rem', 
+                                            fontWeight: '600',
+                                            textDecoration: 'none',
+                                            opacity: 0.9
+                                        }}>
+                                            <Network size={16} />
+                                            View Network Tree Structure
+                                            <ArrowRight size={14} />
+                                        </Link>
                                     </div>
                                 </div>
 

@@ -274,7 +274,70 @@ router.get('/users/paginated', async (req, res) => {
     }
 });
 
-// Search users by name or mobile
+// @desc    Get current user's referral tree
+// @route   GET /api/transactions/my-referral-tree
+// @access  Private
+router.get('/my-referral-tree', protect, async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        // Get the current user
+        const user = await User.findById(userId)
+            .select('name mobile email referredBy createdAt')
+            .populate('referredBy', 'name mobile');
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Get direct referrals (Level 1)
+        const level1ByReferral = await User.find({ referredBy: userId })
+            .select('name mobile email createdAt referredBy lastMotivatorMobile')
+            .sort({ createdAt: -1 });
+
+        const level1ByMotivator = await User.find({
+            referredBy: null,
+            lastMotivatorMobile: user.mobile,
+            _id: { $nin: level1ByReferral.map(u => u._id) }
+        })
+            .select('name mobile email createdAt referredBy lastMotivatorMobile')
+            .sort({ createdAt: -1 });
+
+        const level1Users = [...level1ByReferral, ...level1ByMotivator];
+
+        // Get Level 2 referrals
+        const level2Data = [];
+        for (const l1User of level1Users) {
+            const l2ByReferral = await User.find({ referredBy: l1User._id })
+                .select('name mobile email createdAt')
+                .sort({ createdAt: -1 });
+
+            const l2ByMotivator = await User.find({
+                referredBy: null,
+                lastMotivatorMobile: l1User.mobile,
+                _id: { $nin: l2ByReferral.map(u => u._id) }
+            })
+                .select('name mobile email createdAt')
+                .sort({ createdAt: -1 });
+
+            level2Data.push({
+                level1User: l1User,
+                level2Users: [...l2ByReferral, ...l2ByMotivator]
+            });
+        }
+
+        res.json({
+            user,
+            level1Users,
+            level2Data
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @desc    Search users by name or mobile
 router.get('/users/search', async (req, res) => {
     try {
         const { query } = req.query;

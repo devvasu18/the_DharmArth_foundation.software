@@ -1,0 +1,447 @@
+/* MyNetwork.css */
+:root {
+    --primary: #00bfa5;
+    --secondary: #0f172a;
+    --accent: #6366f1;
+    --bg-light: #f8fafc;
+    --text-muted: #64748b;
+    --radius-lg: 24px;
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.my-network-page {
+    min-height: 100vh;
+    background-color: #f1f5f9;
+}
+
+.my-network-container {
+    width: 100%;
+    max-width: 1800px;
+    margin: 1rem auto;
+    padding: 0 1rem;
+}
+
+.network-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Changed to center for better row alignment */
+    margin-bottom: 2rem;
+    gap: 2rem;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    flex: 1;
+}
+
+.header-text h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--secondary);
+    margin: 0;
+}
+
+.header-text p {
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+    font-size: 0.95rem;
+}
+
+.expand-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    background: white;
+    border: 1px solid rgba(0, 191, 165, 0.2);
+    border-radius: 12px;
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.expand-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 191, 165, 0.2);
+}
+
+.network-stats-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.mini-stat {
+    background: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.mini-stat svg {
+    color: var(--primary);
+    background: rgba(0, 191, 165, 0.1);
+    padding: 8px;
+    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+}
+
+.mini-stat .val {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--secondary);
+    line-height: 1;
+}
+
+.mini-stat .lbl {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* TREE VIEWPORT */
+.main-tree-viewport {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    height: calc(100vh - 160px);
+    min-height: 700px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.tree-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: radial-gradient(circle at 50% 50%, #fcfcfc 0%, #f8fafc 100%);
+}
+
+.sticky-root-wrapper {
+    padding: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(to bottom, white 80%, transparent);
+    z-index: 10;
+}
+
+.motivator-node-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.motivator-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    background: rgba(99, 102, 241, 0.1);
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.scrollable-tree-content {
+    flex: 1;
+    overflow: auto;
+    padding: 0 10vw 4rem;
+    cursor: grab;
+}
+
+.scrollable-tree-content:active {
+    cursor: grabbing;
+}
+
+.family-track {
+    display: flex;
+    justify-content: center;
+    gap: 2.5rem;
+    min-width: max-content;
+    padding-top: 1.5rem;
+}
+
+.family-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* NODES */
+.tree-node {
+    position: relative;
+    z-index: 2;
+}
+
+.node-content {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 18px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 220px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tree-node:hover .node-content {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    border-color: var(--primary);
+}
+
+.node-icon {
+    color: var(--primary);
+    background: #f0fdf9;
+    padding: 6px;
+    border-radius: 10px;
+}
+
+.you-node .node-content {
+    background: #e6fffa;
+    border: 2px solid var(--primary);
+    box-shadow: 0 15px 35px rgba(0, 191, 165, 0.15);
+}
+
+.node-info h5, .node-info h6 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--secondary);
+}
+
+.node-info p {
+    margin: 2px 0 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.node-date {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+/* CONNECTORS */
+.connector-vertical {
+    width: 2px;
+    height: 3rem;
+    background: #cbd5e1;
+    margin: 0 auto;
+}
+
+.level-2-group {
+    padding-top: 2rem;
+    position: relative;
+}
+
+.level-nodes {
+    display: flex;
+    gap: 2rem;
+    padding-top: 2rem;
+    position: relative;
+}
+
+.level-nodes::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: #cbd5e1;
+}
+
+.tree-node::before {
+    content: '';
+    position: absolute;
+    top: -2rem;
+    left: 50%;
+    width: 2px;
+    height: 2rem;
+    background: #cbd5e1;
+}
+
+.root-node::before {
+    display: none;
+}
+
+/* BADGES */
+.level-badge-mini {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: white;
+    border: 2px solid white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.level-badge-mini.l1 { background: var(--primary); }
+.level-badge-mini.l2 { background: var(--accent); }
+
+/* LEGEND */
+.tree-legend {
+    padding: 1.5rem;
+    border-top: 1px solid #edf2f7;
+    background: white;
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dot.l1 { background: var(--primary); }
+.dot.l2 { background: var(--accent); }
+
+/* MODAL */
+.tree-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tree-modal-content {
+    width: 95vw;
+    height: 90vh;
+    background: white;
+    border-radius: 32px;
+    overflow: hidden;
+}
+
+.close-modal-btn {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    z-index: 10000;
+    color: #ef4444;
+    transition: all 0.3s;
+}
+
+.close-modal-btn:hover {
+    transform: rotate(90deg) scale(1.1);
+}
+
+/* EMPTY STATE */
+.empty-network-tree {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10rem 0;
+    width: 100%;
+    color: #94a3b8;
+}
+
+.empty-network-tree svg {
+    margin-bottom: 1.5rem;
+    opacity: 0.3;
+}
+
+/* LOADING */
+.my-network-loading {
+    min-height: 100vh;
+    background: #f8fafc;
+}
+
+.loading-spinner-container {
+    height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(0, 191, 165, 0.1);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+    .network-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .network-stats-row {
+        flex-direction: column;
+    }
+    .main-tree-viewport {
+        height: 500px;
+    }
+    .expand-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
