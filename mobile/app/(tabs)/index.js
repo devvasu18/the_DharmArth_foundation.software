@@ -22,6 +22,7 @@ const LandingScreen = () => {
   const [crowdfunding, setCrowdfunding] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentSliderIndex, setCurrentSliderIndex] = useState(0);
+  const sliderRef = React.useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,6 +41,18 @@ const LandingScreen = () => {
     };
     fetchData();
   }, []);
+
+  // Auto-scroll logic
+  useEffect(() => {
+    if (sliders.length > 1) {
+      const interval = setInterval(() => {
+        const nextIndex = (currentSliderIndex + 1) % sliders.length;
+        sliderRef.current?.scrollTo({ x: nextIndex * width, animated: true });
+        setCurrentSliderIndex(nextIndex);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [sliders, currentSliderIndex]);
 
   const handleDonate = () => {
     Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/donate');
@@ -78,6 +91,7 @@ const LandingScreen = () => {
         {/* Hero Slider Section */}
         <View style={styles.heroSection}>
           <ScrollView 
+            ref={sliderRef}
             horizontal 
             pagingEnabled 
             showsHorizontalScrollIndicator={false}
