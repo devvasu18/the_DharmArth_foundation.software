@@ -34,8 +34,8 @@ const PublicVolunteerCard = () => {
             const width = window.innerWidth;
             // Accounting for content-container padding and glass-container padding with extra breathing room
             const horizontalPadding = width < 640 ? 100 : 120;
-            if (width < 880) {
-                setCardScale((width - horizontalPadding) / 750);
+            if (width < 980) {
+                setCardScale((width - horizontalPadding) / 850);
             } else {
                 setCardScale(1);
             }
@@ -62,7 +62,7 @@ const PublicVolunteerCard = () => {
                     {/* Header Info */}
                     <div className="profile-header">
 
-
+                        <h1 className="volunteer-name">{volunteer.name}</h1>
                         <p className="foundation-mission">
                             Official Volunteer at <strong>The DharmArth Foundation</strong>
                         </p>
@@ -72,12 +72,12 @@ const PublicVolunteerCard = () => {
                     <div className="card-section">
                         <div className="glass-container">
                             <div style={{
-                                width: `${750 * cardScale}px`,
+                                width: `${850 * cardScale}px`,
                                 height: `${(window.innerWidth < 650 ? 1100 : 1000) * cardScale}px`,
                                 position: 'relative'
                             }}>
                                 <div className="card-wrapper" style={{
-                                    width: '750px',
+                                    width: '850px',
                                     height: `${window.innerWidth < 650 ? 1100 : 1000}px`,
                                     transform: `scale(${cardScale})`,
                                     transformOrigin: 'top left'

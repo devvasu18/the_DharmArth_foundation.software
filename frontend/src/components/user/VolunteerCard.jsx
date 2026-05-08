@@ -7,11 +7,11 @@ const DEFAULT_AVATAR_URL = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1
 
 const VolunteerCard = ({ userData, cardRef }) => {
     const { t } = useTranslation();
-    const [cardHeight, setCardHeight] = React.useState(window.innerWidth < 650 ? '1100px' : '550px');
+    const [cardHeight, setCardHeight] = React.useState(window.innerWidth < 650 ? '1100px' : '1000px');
 
     React.useEffect(() => {
         const handleResize = () => {
-            setCardHeight(window.innerWidth < 650 ? '1100px' : '550px');
+            setCardHeight(window.innerWidth < 650 ? '1100px' : '1000px');
         };
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
@@ -27,18 +27,18 @@ const VolunteerCard = ({ userData, cardRef }) => {
     const profileImage = userData?.profileImage || DEFAULT_AVATAR_URL;
     const joinedDate = userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '2026';
 
-    const isMobileView = window.innerWidth < 650;
+    const isMobileView = cardHeight === '700px';
 
     const cardStyles = {
         container: {
-            width: '100%',
-            maxWidth: '750px',
+            width: '850px',
+            maxWidth: '850px',
             height: cardHeight,
             background: 'white',
             borderRadius: '24px',
             overflow: 'hidden',
             display: 'flex',
-            flexDirection: isMobileView ? 'column' : 'row',
+            flexDirection: 'column',
             position: 'relative',
             boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
             border: '1px solid #e2e8f0',
@@ -48,24 +48,24 @@ const VolunteerCard = ({ userData, cardRef }) => {
             WebkitFontSmoothing: 'antialiased'
         },
         leftPane: {
-            width: isMobileView ? '100%' : '35%',
+            width: '100%',
             background: 'linear-gradient(135deg, #00bfa5 0%, #00897b 100%)',
-            padding: isMobileView ? '30px 40px' : '40px 20px',
+            padding: '30px 40px',
             display: 'flex',
-            flexDirection: isMobileView ? 'row' : 'column',
+            flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: isMobileView ? 'space-between' : 'center',
+            justifyContent: 'space-between',
             color: 'white',
             position: 'relative'
         },
         photoWrapper: {
-            width: isMobileView ? '180px' : '170px',
-            height: isMobileView ? '220px' : '200px',
+            width: '180px',
+            height: '220px',
             borderRadius: '16px',
             border: '4px solid rgba(255,255,255,0.4)',
             overflow: 'hidden',
             backgroundColor: '#f1f5f9',
-            marginBottom: isMobileView ? '0' : '25px',
+            marginBottom: '0',
             boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
         },
         photo: {
@@ -87,8 +87,8 @@ const VolunteerCard = ({ userData, cardRef }) => {
             gap: '6px'
         },
         rightPane: {
-            width: isMobileView ? '100%' : '65%',
-            padding: isMobileView ? '40px 50px' : '30px 40px',
+            width: '100%',
+            padding: '40px 50px',
             display: 'flex',
             flexDirection: 'column',
             position: 'relative',
@@ -105,13 +105,13 @@ const VolunteerCard = ({ userData, cardRef }) => {
             flexDirection: 'column'
         },
         foundationName: {
-            fontSize: isMobileView ? '32px' : '22px',
+            fontSize: '40px',
             fontWeight: 900,
             color: '#00bfa5',
             letterSpacing: '0'
         },
         tagline: {
-            fontSize: isMobileView ? '18px' : '12px',
+            fontSize: '22px',
             color: '#64748b',
             textTransform: 'uppercase',
             fontWeight: 700,
@@ -124,26 +124,26 @@ const VolunteerCard = ({ userData, cardRef }) => {
             justifyContent: isMobileView ? 'center' : 'flex-start'
         },
         userName: {
-            fontSize: isMobileView ? '60px' : '40px',
+            fontSize: '60px',
             fontWeight: 800,
             color: '#000000',
-            marginBottom: '8px',
+            marginBottom: '12px',
             lineHeight: 1
         },
         userWork: {
-            fontSize: isMobileView ? '34px' : '22px',
+            fontSize: '34px',
             fontWeight: 700,
             color: '#00bfa5',
-            marginBottom: isMobileView ? '30px' : '15px',
+            marginBottom: '30px',
             textTransform: 'uppercase'
         },
         userBio: {
-            fontSize: isMobileView ? '26px' : '17px',
+            fontSize: '26px',
             color: '#000000',
             lineHeight: 1.6,
-            marginBottom: isMobileView ? '60px' : '25px',
+            marginBottom: '60px',
             fontStyle: 'italic',
-            maxHeight: isMobileView ? '250px' : '90px',
+            maxHeight: '250px',
             overflow: 'hidden'
         },
         detailsGrid: {
@@ -159,21 +159,21 @@ const VolunteerCard = ({ userData, cardRef }) => {
         detailIcon: {
             color: '#000000',
             flexShrink: 0,
-            width: isMobileView ? 36 : 24,
-            height: isMobileView ? 36 : 24
+            width: 36,
+            height: 36
         },
         detailContent: {
             display: 'flex',
             flexDirection: 'column'
         },
         detailLabel: {
-            fontSize: isMobileView ? '20px' : '14px',
+            fontSize: '20px',
             color: '#64748b',
             fontWeight: 700,
             textTransform: 'uppercase'
         },
         detailValue: {
-            fontSize: isMobileView ? '28px' : '18px',
+            fontSize: '28px',
             color: '#1e293b',
             fontWeight: 800
         },
@@ -248,8 +248,8 @@ const VolunteerCard = ({ userData, cardRef }) => {
                         <span style={cardStyles.tagline}>Spreading Humanity & Hope</span>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '20px', fontWeight: 700, color: '#94a3b8' }}>CARD NO.</div>
-                        <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b' }}>{referralCode}</div>
+                        <div style={{ fontSize: '24px', fontWeight: 700, color: '#94a3b8' }}>VOLUNTEER ID</div>
+                        <div style={{ fontSize: '40px', fontWeight: 800, color: '#1e293b' }}>{referralCode}</div>
                     </div>
                 </div>
 

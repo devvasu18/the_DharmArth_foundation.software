@@ -106,7 +106,7 @@ const UserProfile = () => {
                 useCORS: true,
                 scale: 3,
                 backgroundColor: null,
-                width: 750,
+                width: 850,
                 height: window.innerWidth < 650 ? 1100 : 1000,
                 onclone: (clonedDoc) => {
                     // Ensure the cloned element is visible for capture
@@ -143,10 +143,10 @@ const UserProfile = () => {
         const updateScale = () => {
             if (previewContainerRef.current) {
                 const containerWidth = previewContainerRef.current.offsetWidth;
-                // The card is 750px wide. We add a little buffer
+                // The card is 850px wide. We add a little buffer
                 const availableWidth = containerWidth;
-                if (availableWidth < 750) {
-                    setCardScale(availableWidth / 750);
+                if (availableWidth < 850) {
+                    setCardScale(availableWidth / 850);
                 } else {
                     setCardScale(1);
                 }
@@ -341,7 +341,7 @@ const UserProfile = () => {
 
             {/* Hidden capture area for downloads - NOT scaled, absolute positioned off-screen */}
             <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-                <div ref={downloadRef} className="download-capture-area" style={{ width: '750px', height: window.innerWidth < 650 ? '1100px' : '1000px' }}>
+                <div ref={downloadRef} className="download-capture-area" style={{ width: '850px', height: window.innerWidth < 650 ? '1100px' : '1000px' }}>
                     <VolunteerCard userData={{ ...formData, mobile: user?.mobile, referralCode: user?.referralCode, createdAt: user?.createdAt }} />
                 </div>
             </div>
@@ -591,7 +591,7 @@ const UserProfile = () => {
                     transform-origin: top center;
                     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
                     border-radius: 24px;
-                    width: 750px;
+                    width: 850px;
                     flex-shrink: 0;
                     transform: scale(1);
                 }
