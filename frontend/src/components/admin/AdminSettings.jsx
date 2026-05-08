@@ -47,7 +47,9 @@ const AdminSettings = () => {
         walletOtpTemplate: '',
         walletOtpTemplate_hi: '',
         walletDonationTemplate: '',
-        walletDonationTemplate_hi: ''
+        walletDonationTemplate_hi: '',
+        suspensionOtpTemplate: '',
+        suspensionOtpTemplate_hi: ''
     });
 
     // Payout Config State
@@ -63,6 +65,12 @@ const AdminSettings = () => {
     const [walletConfig, setWalletConfig] = useState({
         donateBtnText: 'Donate From Wallet',
         donateBtnText_hi: 'वॉलेट से दान करें'
+    });
+
+    // Security Config State
+    const [securityModalOpen, setSecurityModalOpen] = useState(false);
+    const [securityConfig, setSecurityConfig] = useState({
+        adminSuspensionMobile: ''
     });
 
     useEffect(() => {
@@ -97,7 +105,9 @@ const AdminSettings = () => {
                 walletOtpTemplate: data.whatsapp_wallet_otp_template || "Your OTP for The DharmArth Foundation *Wallet Donation* is: *{otp}*. Valid for 10 minutes. Please do not share this code with anyone.",
                 walletOtpTemplate_hi: data.whatsapp_wallet_otp_template_hi || "The DharmArth Foundation वॉलेट दान के लिए आपका OTP है: *{otp}*। यह 10 मिनट के लिए मान्य है।",
                 walletDonationTemplate: data.whatsapp_wallet_donation_template || "Dear {name}, thank you for your donation of ₹{amount} from your wallet.",
-                walletDonationTemplate_hi: data.whatsapp_wallet_donation_template_hi || "नमस्ते {name}, आपके वॉलेट से ₹{amount} के दान के लिए धन्यवाद।"
+                walletDonationTemplate_hi: data.whatsapp_wallet_donation_template_hi || "नमस्ते {name}, आपके वॉलेट से ₹{amount} के दान के लिए धन्यवाद।" ,
+                suspensionOtpTemplate: data.whatsapp_suspension_otp_template || "The DharmArth Foundation: Your OTP for User Suspension/Activation is: *{otp}*. Please do not share this code with anyone.",
+                suspensionOtpTemplate_hi: data.whatsapp_suspension_otp_template_hi || "The DharmArth Foundation: यूजर सस्पेंड/एक्टिवेट करने के लिए आपका OTP है: *{otp}*। कृपया इसे किसी के साथ साझा न करें।"
             });
 
             // Payout Config
@@ -113,6 +123,11 @@ const AdminSettings = () => {
             setWalletConfig({
                 donateBtnText: data.wallet_donate_btn_text || 'Donate From Wallet',
                 donateBtnText_hi: data.wallet_donate_btn_text_hi || 'वॉलेट से दान करें'
+            });
+
+            // Security Config
+            setSecurityConfig({
+                adminSuspensionMobile: data.admin_suspension_mobile || ''
             });
         } catch (error) {
             console.error("Failed to fetch settings", error);
@@ -255,7 +270,9 @@ const AdminSettings = () => {
                 whatsapp_wallet_otp_template: whatsappConfig.walletOtpTemplate,
                 whatsapp_wallet_otp_template_hi: whatsappConfig.walletOtpTemplate_hi,
                 whatsapp_wallet_donation_template: whatsappConfig.walletDonationTemplate,
-                whatsapp_wallet_donation_template_hi: whatsappConfig.walletDonationTemplate_hi
+                whatsapp_wallet_donation_template_hi: whatsappConfig.walletDonationTemplate_hi,
+                whatsapp_suspension_otp_template: whatsappConfig.suspensionOtpTemplate,
+                whatsapp_suspension_otp_template_hi: whatsappConfig.suspensionOtpTemplate_hi
             };
             await api.put('/content/settings', updates);
             setSettings({ ...settings, ...updates });
@@ -322,6 +339,21 @@ const AdminSettings = () => {
         }
     };
 
+    const handleSaveSecurityConfig = async () => {
+        try {
+            const updates = {
+                admin_suspension_mobile: securityConfig.adminSuspensionMobile
+            };
+            await api.put('/content/settings', updates);
+            setSettings({ ...settings, ...updates });
+            setSecurityModalOpen(false);
+            toast.success("Security Configuration Saved!");
+        } catch (error) {
+            console.error("Save failed", error);
+            toast.error("Failed to save security configuration");
+        }
+    };
+
     if (loading) return <div>Loading settings...</div>;
 
     return (
@@ -348,19 +380,20 @@ const AdminSettings = () => {
                             }
                         </td>
                         <td>
-                            <button
-                                className="btn btn-outline"
-                                onClick={() => handleToggle('show_save_life_banner', settings.show_save_life_banner)}
-                            >
-                                {settings.show_save_life_banner ? 'Disable' : 'Enable'}
-                            </button>
-                            <button
-                                className="btn btn-outline"
-                                style={{ marginLeft: '10px' }}
-                                onClick={openConfigModal}
-                            >
-                                Configure
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <button
+                                    className="btn btn-outline"
+                                    onClick={() => handleToggle('show_save_life_banner', settings.show_save_life_banner)}
+                                >
+                                    {settings.show_save_life_banner ? 'Disable' : 'Enable'}
+                                </button>
+                                <button
+                                    className="btn btn-outline"
+                                    onClick={openConfigModal}
+                                >
+                                    Configure
+                                </button>
+                            </div>
                         </td>
                     </tr>
 
@@ -456,6 +489,22 @@ const AdminSettings = () => {
                             <button
                                 className="btn btn-outline"
                                 onClick={openLeaderboardModal}
+                            >
+                                Configure
+                            </button>
+                        </td>
+                    </tr>
+
+                    {/* Security Row */}
+                    <tr>
+                        <td><strong>Security Configuration</strong> (Admin Suspension OTP)</td>
+                        <td>
+                            Admin Mobile: {settings.admin_suspension_mobile || <span style={{ color: '#ef4444' }}>Not Configured</span>}
+                        </td>
+                        <td>
+                            <button
+                                className="btn btn-outline"
+                                onClick={() => setSecurityModalOpen(true)}
                             >
                                 Configure
                             </button>
@@ -797,6 +846,26 @@ const AdminSettings = () => {
                                         />
                                         <p style={{ marginTop: '8px', fontSize: '0.8rem', color: '#64748b' }}>
                                             Placeholders: <strong>{'{name}'}</strong>, <strong>{'{amount}'}</strong>
+                                        </p>
+                                    </div>
+
+                                    {/* Suspension OTP Template */}
+                                    <div className="template-card" style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                                        <label style={{ display: 'block', marginBottom: '10px', fontWeight: 700, color: '#334155', fontSize: '0.9rem' }}>
+                                            Admin Suspension/Activation OTP ({whatsappTab === 'en' ? 'EN' : 'HI'})
+                                        </label>
+                                        <textarea
+                                            className="form-input"
+                                            style={{ width: '100%', minHeight: '100px', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.95rem', background: 'white', lineHeight: '1.5' }}
+                                            value={whatsappTab === 'en' ? whatsappConfig.suspensionOtpTemplate : whatsappConfig.suspensionOtpTemplate_hi}
+                                            onChange={(e) => setWhatsappConfig({
+                                                ...whatsappConfig,
+                                                [whatsappTab === 'en' ? 'suspensionOtpTemplate' : 'suspensionOtpTemplate_hi']: e.target.value
+                                            })}
+                                            placeholder={`Enter ${whatsappTab === 'en' ? 'English' : 'Hindi'} suspension OTP message...`}
+                                        />
+                                        <p style={{ marginTop: '8px', fontSize: '0.8rem', color: '#64748b' }}>
+                                            Must include <strong>{'{otp}'}</strong> placeholder.
                                         </p>
                                     </div>
 
@@ -1261,6 +1330,53 @@ const AdminSettings = () => {
                             >
                                 <Save size={18} />
                                 Save Wallet Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Security Config Modal */}
+            {securityModalOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{ background: 'white', padding: '2rem', borderRadius: '12px', minWidth: '400px', maxWidth: '90%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h4 style={{ margin: 0 }}>Security Configuration</h4>
+                            <button onClick={() => setSecurityModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#475569' }}>
+                                Admin OTP Mobile Number
+                            </label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                                value={securityConfig.adminSuspensionMobile}
+                                onChange={(e) => setSecurityConfig({ ...securityConfig, adminSuspensionMobile: e.target.value })}
+                                placeholder="Enter mobile number (e.g. 9876543210)"
+                            />
+                            <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '8px' }}>
+                                This mobile number will receive a WhatsApp OTP whenever an administrator attempts to suspend or activate a user account.
+                            </p>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                            <button className="btn btn-outline" onClick={() => setSecurityModalOpen(false)}>Cancel</button>
+                            <button 
+                                className="btn bg-primary text-white" 
+                                onClick={handleSaveSecurityConfig}
+                                style={{ background: '#00bfa5', display: 'flex', alignItems: 'center', gap: '8px' }}
+                            >
+                                <Save size={18} />
+                                Save Configuration
                             </button>
                         </div>
                     </div>

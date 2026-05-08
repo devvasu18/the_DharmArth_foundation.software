@@ -4,6 +4,43 @@ const User = require('../models/User');
 const Wallet = require('../models/Wallet');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 
+// @desc    Send OTP to Admin for User Suspension
+// @route   POST /api/users/admin/send-suspension-otp
+// @access  Private/Admin
+router.post('/admin/send-suspension-otp', protect, checkPermission('User Management', 'edit'), async (req, res) => {
+    console.log("[OTP] Received request to send suspension OTP");
+    try {
+        const Setting = require('../models/Setting');
+        const whatsappService = require('../services/whatsappService');
+        
+        const setting = await Setting.findOne({ key: 'admin_suspension_mobile' });
+        const adminMobile = setting ? setting.value : process.env.ADMIN_MOBILE;
+
+        if (!adminMobile) {
+            return res.status(400).json({ message: 'Admin mobile not configured in settings.' });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+        // Store OTP on the performing admin's record
+        const admin = await User.findById(req.user._id);
+        admin.otp = otp;
+        admin.otpExpires = otpExpires;
+        await admin.save();
+
+        const success = await whatsappService.sendSuspensionOTP(adminMobile, otp);
+        if (success) {
+            res.json({ success: true, message: `OTP sent to Admin Mobile (${adminMobile.substring(0, 2)}******${adminMobile.substring(8)})` });
+        } else {
+            res.status(500).json({ message: 'Failed to send OTP to Admin via WhatsApp.' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
 // @desc    Get all normal users (non-staff)
 // @route   GET /api/users
 // @access  Private/Admin
@@ -217,6 +254,7 @@ router.get('/:id', protect, checkPermission('User Management', 'view'), async (r
     }
 });
 
+
 // @desc    Suspend/Unsuspend User
 // @route   PUT /api/users/:id/suspend
 // @access  Private/Admin (Edit User permission)
@@ -231,6 +269,23 @@ router.put('/:id/suspend', protect, checkPermission('User Management', 'edit'), 
         if (user.isSuperAdmin) {
             return res.status(400).json({ message: 'Cannot suspend Super Admin' });
         }
+
+        const { otp } = req.body;
+
+        if (!otp) {
+            return res.status(400).json({ message: 'OTP is required for suspension actions.' });
+        }
+
+        // Verify OTP against the performing admin
+        const admin = await User.findById(req.user._id);
+        if (!admin || !admin.otp || admin.otp !== otp || admin.otpExpires < new Date()) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+
+        // Clear OTP
+        admin.otp = undefined;
+        admin.otpExpires = undefined;
+        await admin.save();
 
         user.isSuspended = !user.isSuspended;
         await user.save();

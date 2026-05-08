@@ -142,9 +142,12 @@ const Navbar = () => {
                     {!isDeliveryPartner && (
                         <>
 
-
+                            <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.home')}</NavLink>
                             <NavLink to="/events" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.fundraiseFor')}</NavLink>
                             <NavLink to="/p/join-and-earn" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('Join & Earn')}</NavLink>
+                            {user && (
+                                <NavLink to={`/v/${user.referralCode || user.mobile}`} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Share & Earn</NavLink>
+                            )}
                             <NavLink to="/leaderboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Leaderboard</NavLink>
                             <NavLink to="/p/about-us" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>About Us</NavLink>
                             {/* <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.doctorAvailability')}</NavLink>
@@ -234,8 +237,8 @@ const Navbar = () => {
                                 }}>
                                     {!user.isSuperAdmin && !isDeliveryPartner && (
                                         <>
-                                            <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.wallet')}</Link>
-                                            <Link to="/profile" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>My Profile</Link>
+                                            <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>My Earnings</Link>
+                                            <Link to="/profile" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}> Profile</Link>
                                             <Link to="/my-subscriptions" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.subscriptions') || 'My Subscriptions'}</Link>
                                             <Link to="/my-referrals" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>My Referrals</Link>
                                         </>
@@ -274,10 +277,11 @@ const Navbar = () => {
 
                     {user && !user.isSuperAdmin && !isDeliveryPartner && (
                         <>
-                            <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.wallet')}</NavLink>
-                            <NavLink to="/profile" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>My Profile</NavLink>
+                            <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>My Earning</NavLink>
+                            <NavLink to="/profile" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}> Profile</NavLink>
                             <NavLink to="/my-subscriptions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.subscriptions') || 'My Subscriptions'}</NavLink>
                             <NavLink to="/my-referrals" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>My Referrals</NavLink>
+                            <NavLink to={`/v/${user.referralCode || user.mobile}`} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>Share & Earn</NavLink>
                         </>
                     )}
                     {!user ? (

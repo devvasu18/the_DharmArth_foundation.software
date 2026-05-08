@@ -402,6 +402,20 @@ class WhatsappService {
     }
 
     /**
+     * Specialized: Send Suspension/Activation OTP via WhatsApp
+     */
+    async sendSuspensionOTP(mobile, otp) {
+        const lang = await this._getRecipientLanguage(mobile);
+        const template = await this._getTemplate('whatsapp_suspension_otp_template', lang)
+            || (lang === 'hi'
+                ? "The DharmArth Foundation: यूजर सस्पेंड/एक्टिवेट करने के लिए आपका OTP है: *{otp}*। कृपया इसे किसी के साथ साझा न करें।"
+                : "The DharmArth Foundation: Your OTP for User Suspension/Activation is: *{otp}*. Please do not share this code with anyone.");
+            
+        const message = this._replacePlaceholders(template, { otp });
+        return this._sendWhatsAppNow(mobile, message); 
+    }
+
+    /**
      * Specialized: Send Event Notification WhatsApp
      */
     async sendEventNotification(mobile, name, event) {

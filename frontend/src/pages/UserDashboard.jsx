@@ -81,8 +81,8 @@ const UserDashboard = () => {
     const [isSendingOtp, setIsSendingOtp] = useState(false);
     const [otpTimer, setOtpTimer] = useState(0);
     const [walletSettings, setWalletSettings] = useState({
-        btnText: 'Donate From Wallet',
-        btnText_hi: 'वॉलेट से दान करें'
+        btnText: 'Donate From My Earnings',
+        btnText_hi: 'मेरी कमाई से दान करें'
     });
 
     useEffect(() => {
@@ -100,8 +100,8 @@ const UserDashboard = () => {
             const res = await api.get('/content/settings');
             const data = res.data;
             setWalletSettings({
-                btnText: data.wallet_donate_btn_text || 'Donate From Wallet',
-                btnText_hi: data.wallet_donate_btn_text_hi || 'वॉलेट से दान करें'
+                btnText: data.wallet_donate_btn_text || 'Donate From My Earnings',
+                btnText_hi: data.wallet_donate_btn_text_hi || 'मेरी कमाई से दान करें'
             });
         } catch (error) {
             console.error("Error fetching wallet settings", error);
@@ -509,7 +509,7 @@ const UserDashboard = () => {
                                 </div>
 
 
-                                <button
+                                <motion.button
                                     className="payout-btn"
                                     onClick={() => {
                                         const hasPayoutDetails = user?.payoutCredentials && user?.payoutCredentials.accountNumber;
@@ -520,9 +520,30 @@ const UserDashboard = () => {
                                             setIsPayoutModalOpen(true);
                                         }
                                     }}
+                                    whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.2)' }}
+                                    whileTap={{ scale: 0.98 }}
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px',
+                                        borderRadius: '12px',
+                                        border: '1px solid rgba(255,255,255,0.3)',
+                                        background: 'rgba(255,255,255,0.1)',
+                                        color: 'white',
+                                        fontWeight: '700',
+                                        cursor: 'pointer',
+                                        transition: 'background 0.2s',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '8px',
+                                        position: 'relative',
+                                        zIndex: 2,
+                                        textTransform: 'uppercase',
+                                        fontSize: '1.2rem'
+                                    }}
                                 >
                                     Withdraw Now
-                                </button>
+                                </motion.button>
 
                                 {wallet?.balance > 0 && (
                                     <motion.button
@@ -532,25 +553,27 @@ const UserDashboard = () => {
                                             const balance = wallet?.balance || 0;
                                             setDonationAmount(balance.toFixed(2));
                                         }}
-                                        whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.2)' }}
+                                        whileHover={{ scale: 1.02, backgroundColor: '#ffffff' }}
                                         whileTap={{ scale: 0.98 }}
                                         style={{
                                             marginTop: '12px',
                                             width: '100%',
-                                            padding: '12px',
+                                            background: 'white',
+                                            color: '#00695c',
+                                            border: 'none',
+                                            padding: '1rem',
                                             borderRadius: '12px',
-                                            border: '1px solid rgba(255,255,255,0.3)',
-                                            background: 'rgba(255,255,255,0.1)',
-                                            color: 'white',
-                                            fontWeight: '700',
+                                            fontWeight: '800',
+                                            fontSize: '1.2rem',
                                             cursor: 'pointer',
-                                            transition: 'background 0.2s',
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            gap: '8px',
-                                            position: 'relative',
-                                            zIndex: 2
+                                            gap: '0.5rem',
+                                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px'
                                         }}
                                     >
                                         <Banknote size={18} />

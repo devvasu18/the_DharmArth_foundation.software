@@ -11,6 +11,8 @@ const SubscriptionList = ({ isAdmin = false }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [amountFilter, setAmountFilter] = useState('');
+    const [minAmount, setMinAmount] = useState('');
+    const [maxAmount, setMaxAmount] = useState('');
     const [uniqueAmounts, setUniqueAmounts] = useState([]);
     const [subscriptions, setSubscriptions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -37,7 +39,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                 params: {
                     search: searchTerm,
                     status: statusFilter,
-                    amount: amountFilter,
+                    amount: amountFilter === 'custom' ? (minAmount && maxAmount ? `${minAmount}-${maxAmount}` : '') : amountFilter,
                     page: page,
                     limit: limit
                 }
@@ -381,18 +383,55 @@ const SubscriptionList = ({ isAdmin = false }) => {
                         </select>
                     </div>
 
-                    <div className="filter-group">
+                    <div className="filter-group" style={{ gap: '10px' }}>
                         <CreditCard size={18} />
                         <select
                             value={amountFilter}
-                            onChange={(e) => setAmountFilter(e.target.value)}
+                            onChange={(e) => {
+                                setAmountFilter(e.target.value);
+                                if (e.target.value !== 'custom') {
+                                    setMinAmount('');
+                                    setMaxAmount('');
+                                }
+                            }}
                             className="admin-select"
+                            style={{ minWidth: '130px' }}
                         >
                             <option value="">All Amounts</option>
+                            <option value="custom">Custom Range</option>
                             {uniqueAmounts.map(amt => (
                                 <option key={amt} value={amt}>₹{amt.toLocaleString()}</option>
                             ))}
                         </select>
+
+                        {amountFilter === 'custom' && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <input
+                                    type="number"
+                                    placeholder="Min"
+                                    value={minAmount}
+                                    onChange={(e) => setMinAmount(e.target.value)}
+                                    className="admin-input"
+                                    style={{ width: '80px', padding: '6px 10px' }}
+                                />
+                                <span style={{ color: '#64748b' }}>to</span>
+                                <input
+                                    type="number"
+                                    placeholder="Max"
+                                    value={maxAmount}
+                                    onChange={(e) => setMaxAmount(e.target.value)}
+                                    className="admin-input"
+                                    style={{ width: '80px', padding: '6px 10px' }}
+                                />
+                                <button 
+                                    onClick={() => fetchSubscriptions(1)}
+                                    className="admin-btn-primary"
+                                    style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                                >
+                                    Apply
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

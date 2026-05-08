@@ -32,8 +32,10 @@ const PublicVolunteerCard = () => {
     useEffect(() => {
         const updateScale = () => {
             const width = window.innerWidth;
-            if (width < 700) {
-                setCardScale((width - 32) / 650);
+            // Accounting for content-container padding and glass-container padding with extra breathing room
+            const horizontalPadding = width < 640 ? 100 : 120;
+            if (width < 780) {
+                setCardScale((width - horizontalPadding) / 650);
             } else {
                 setCardScale(1);
             }
@@ -51,18 +53,15 @@ const PublicVolunteerCard = () => {
     return (
         <div className="public-profile-page">
             <Navbar />
-            
+
             <div className="main-content">
                 {/* Hero Section */}
                 <div className="hero-bg"></div>
-                
+
                 <div className="content-container">
                     {/* Header Info */}
                     <div className="profile-header">
-                        <div className="verified-badge">
-                            <ShieldCheck size={18} />
-                            <span>Verified Volunteer Identity</span>
-                        </div>
+
                         <h1 className="volunteer-name">{volunteer.name}</h1>
                         <p className="foundation-mission">
                             Official Volunteer at <strong>The DharmArth Foundation</strong>
@@ -72,15 +71,22 @@ const PublicVolunteerCard = () => {
                     {/* ID Card Card */}
                     <div className="card-section">
                         <div className="glass-container">
-                            <div className="card-wrapper" style={{ 
-                                height: `${480 * cardScale}px`,
-                                transform: `scale(${cardScale})`,
-                                transformOrigin: 'top center'
+                            <div style={{
+                                width: `${650 * cardScale}px`,
+                                height: `${(window.innerWidth < 650 ? 700 : 480) * cardScale}px`,
+                                position: 'relative'
                             }}>
-                                <VolunteerCard userData={volunteer} />
+                                <div className="card-wrapper" style={{
+                                    width: '650px',
+                                    height: `${window.innerWidth < 650 ? 700 : 480}px`,
+                                    transform: `scale(${cardScale})`,
+                                    transformOrigin: 'top left'
+                                }}>
+                                    <VolunteerCard userData={volunteer} />
+                                </div>
                             </div>
                         </div>
-                        
+
                         <div className="trust-badges">
                             <div className="trust-item">
                                 <Award size={20} />
@@ -105,17 +111,17 @@ const PublicVolunteerCard = () => {
                             <p>
                                 I am volunteering to help The DharmArth Foundation raise funds for healthcare, education, and social welfare. Every contribution matters.
                             </p>
-                            
-                            <button 
+
+                            <button
                                 onClick={() => navigate(`/donate?ref=${volunteer.referralCode || volunteer.mobile}`)}
                                 className="donate-primary-btn"
                             >
                                 <Heart size={20} fill="white" />
                                 <span>Donate Now via My Link</span>
                             </button>
-                            
+
                             <div className="social-actions">
-                                <button 
+                                <button
                                     className="secondary-action-btn"
                                     onClick={() => {
                                         navigator.share({
@@ -218,14 +224,13 @@ const PublicVolunteerCard = () => {
                 .glass-container {
                     background: rgba(255, 255, 255, 0.7);
                     backdrop-filter: blur(20px);
-                    padding: 2rem;
+                    padding: 3rem 2.5rem;
                     border-radius: 32px;
                     border: 1px solid rgba(255, 255, 255, 0.8);
                     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
                     display: flex;
                     justify-content: center;
-                    margin-bottom: 1.5rem;
-                    overflow: hidden;
+                    margin-bottom: 2rem;
                 }
                 .card-wrapper {
                     width: 650px;
@@ -363,7 +368,7 @@ const PublicVolunteerCard = () => {
                         height: 350px;
                     }
                     .glass-container {
-                        padding: 1rem;
+                        padding: 1.5rem;
                         border-radius: 24px;
                     }
                     .action-card {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import UserDetailModal from './UserDetailModal';
+import toast from 'react-hot-toast';
 import AdminTransactions from './AdminTransactions';
 import ConfirmationModal from './ConfirmationModal';
 import AlertModal from './AlertModal';
@@ -42,6 +43,14 @@ const AdminUsers = () => {
         title: '',
         message: '',
         type: 'success'
+    });
+
+    // OTP Modal State
+    const [otpModal, setOtpModal] = useState({
+        isOpen: false,
+        userId: null,
+        otp: '',
+        loading: false
     });
 
     useEffect(() => {
@@ -330,10 +339,40 @@ const AdminUsers = () => {
         });
     };
 
-    const handleSuspendAction = async () => {
-        const { userId, isSuspended } = confirmModal;
+    // New: Request OTP from Admin
+    const handleRequestOtp = async () => {
+        const { userId } = confirmModal;
+        setConfirmModal({ ...confirmModal, isOpen: false }); // Close confirm modal
+        
         try {
-            const { data } = await api.put(`/users/${userId}/suspend`);
+            const { data } = await api.post('/users/admin/send-suspension-otp');
+            setOtpModal({
+                isOpen: true,
+                userId: userId,
+                otp: '',
+                loading: false
+            });
+            toast.success(data.message);
+        } catch (error) {
+            setAlertModal({
+                isOpen: true,
+                title: 'Error',
+                message: "Failed to send OTP: " + (error.response?.data?.message || error.message),
+                type: 'error'
+            });
+        }
+    };
+
+    const handleSuspendAction = async () => {
+        const { userId, otp } = otpModal;
+        if (!otp || otp.length < 6) {
+            toast.error("Please enter a valid 6-digit OTP");
+            return;
+        }
+
+        setOtpModal({ ...otpModal, loading: true });
+        try {
+            const { data } = await api.put(`/users/${userId}/suspend`, { otp });
             // Update local state
             setUsers(users.map(u => u._id === userId ? { ...u, isSuspended: data.isSuspended } : u));
             setAlertModal({
@@ -342,15 +381,15 @@ const AdminUsers = () => {
                 message: data.message,
                 type: 'success'
             });
+            setOtpModal({ ...otpModal, isOpen: false, loading: false });
         } catch (error) {
             setAlertModal({
                 isOpen: true,
                 title: 'Error',
-                message: "Failed to update status: " + (error.response?.data?.message || error.message),
+                message: "Action failed: " + (error.response?.data?.message || error.message),
                 type: 'error'
             });
-        } finally {
-            setConfirmModal({ ...confirmModal, isOpen: false }); // Close modal
+            setOtpModal({ ...otpModal, loading: false });
         }
     };
 
@@ -762,11 +801,44 @@ const AdminUsers = () => {
             <ConfirmationModal
                 isOpen={confirmModal.isOpen}
                 onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
-                onConfirm={handleSuspendAction}
+                onConfirm={handleRequestOtp}
                 title={confirmModal.isSuspended ? "Activate User" : "Suspend User"}
-                message={`Are you sure you want to ${confirmModal.isSuspended ? 'activate' : 'suspend'} this user? This action can be reversed.`}
-                confirmText={confirmModal.isSuspended ? "Activate" : "Suspend"}
+                message={`Are you sure you want to ${confirmModal.isSuspended ? 'activate' : 'suspend'} this user? For security, an OTP will be sent to the Admin mobile number for verification.`}
+                confirmText="Send OTP"
                 confirmColor={confirmModal.isSuspended ? "blue" : "red"}
+            />
+
+            {/* OTP Verification Modal */}
+            <ConfirmationModal
+                isOpen={otpModal.isOpen}
+                onClose={() => setOtpModal({ ...otpModal, isOpen: false })}
+                onConfirm={handleSuspendAction}
+                title="Verify OTP"
+                message={
+                    <div style={{ textAlign: 'center' }}>
+                        <p style={{ marginBottom: '1rem' }}>Enter the 6-digit OTP sent to the Admin's registered mobile number.</p>
+                        <input
+                            type="text"
+                            maxLength={6}
+                            placeholder="Enter 6-digit OTP"
+                            value={otpModal.otp}
+                            onChange={(e) => setOtpModal({ ...otpModal, otp: e.target.value.replace(/\D/g, '') })}
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                fontSize: '1.25rem',
+                                textAlign: 'center',
+                                letterSpacing: '4px',
+                                borderRadius: '8px',
+                                border: '2px solid #e2e8f0',
+                                outline: 'none'
+                            }}
+                        />
+                        {otpModal.loading && <p style={{ marginTop: '0.5rem', color: '#00bfa5' }}>Verifying...</p>}
+                    </div>
+                }
+                confirmText={otpModal.loading ? "Verifying..." : "Verify & Proceed"}
+                confirmColor="teal"
             />
 
             <AlertModal

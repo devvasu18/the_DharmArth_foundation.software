@@ -1051,3 +1051,45 @@
         transform: scale(1);
     }
 }
+
+/* Tree Controls & Expand Button Styling */
+.tree-controls {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 101; /* Ensure it stays above tree elements but below high-level overlays */
+    display: flex;
+    gap: 0.8rem;
+}
+
+.control-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1.2rem;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 191, 165, 0.2);
+    border-radius: var(--radius-md, 12px);
+    color: var(--secondary, #0f172a);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+}
+
+.control-btn:hover {
+    background: var(--primary, #00bfa5);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 191, 165, 0.2);
+    border-color: var(--primary, #00bfa5);
+}
+
+.control-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}

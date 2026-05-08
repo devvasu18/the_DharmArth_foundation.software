@@ -18,9 +18,11 @@ const Home = () => {
             <section className="home-welcome" style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
                 <div className="container">
                     <div style={{ textAlign: 'center', }}>
-                        <h7 style={{
+                        <h2 style={{
+                            display: 'block',
                             fontSize: 'clamp(2.25rem, 6vw, 3.5rem)',
                             fontWeight: 500,
+                            paddingTop: 'var(--spacing-16)',
                             marginBottom: 'var(--spacing-4)',
                             background: 'linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%)',
                             WebkitBackgroundClip: 'text',
@@ -29,7 +31,7 @@ const Home = () => {
                             letterSpacing: '-0.03em'
                         }}>
                             {t('home.welcomeTitle')}
-                        </h7>
+                        </h2>
                         <div style={{
                             width: '80px',
                             height: '5px',

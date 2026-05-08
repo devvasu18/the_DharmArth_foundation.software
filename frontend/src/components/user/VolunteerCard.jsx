@@ -7,6 +7,15 @@ const DEFAULT_AVATAR_URL = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1
 
 const VolunteerCard = ({ userData, cardRef }) => {
     const { t } = useTranslation();
+    const [cardHeight, setCardHeight] = React.useState(window.innerWidth < 650 ? '700px' : '480px');
+
+    React.useEffect(() => {
+        const handleResize = () => {
+            setCardHeight(window.innerWidth < 650 ? '700px' : '480px');
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Fallback values
     const name = userData?.name || 'Your Name';
@@ -18,11 +27,13 @@ const VolunteerCard = ({ userData, cardRef }) => {
     const profileImage = userData?.profileImage || DEFAULT_AVATAR_URL;
     const joinedDate = userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '2026';
 
+    const isMobileView = cardHeight === '700px';
+
     const cardStyles = {
         container: {
             width: '100%',
             maxWidth: '650px',
-            height: '480px',
+            height: cardHeight,
             background: 'white',
             borderRadius: '24px',
             overflow: 'hidden',
@@ -38,7 +49,7 @@ const VolunteerCard = ({ userData, cardRef }) => {
         leftPane: {
             width: '35%',
             background: 'linear-gradient(135deg, #00bfa5 0%, #00897b 100%)',
-            padding: '30px',
+            padding: isMobileView ? '50px 30px' : '30px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -47,13 +58,13 @@ const VolunteerCard = ({ userData, cardRef }) => {
             position: 'relative'
         },
         photoWrapper: {
-            width: '160px',
-            height: '190px',
+            width: isMobileView ? '180px' : '160px',
+            height: isMobileView ? '220px' : '190px',
             borderRadius: '16px',
             border: '4px solid rgba(255,255,255,0.4)',
             overflow: 'hidden',
             backgroundColor: '#f1f5f9',
-            marginBottom: '20px',
+            marginBottom: isMobileView ? '40px' : '20px',
             boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
         },
         photo: {
@@ -76,7 +87,7 @@ const VolunteerCard = ({ userData, cardRef }) => {
         },
         rightPane: {
             width: '65%',
-            padding: '40px',
+            padding: isMobileView ? '60px 40px' : '40px',
             display: 'flex',
             flexDirection: 'column',
             position: 'relative'
@@ -85,7 +96,7 @@ const VolunteerCard = ({ userData, cardRef }) => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-start',
-            marginBottom: '25px'
+            marginBottom: isMobileView ? '40px' : '25px'
         },
         logoArea: {
             display: 'flex',
@@ -105,35 +116,38 @@ const VolunteerCard = ({ userData, cardRef }) => {
             marginTop: '2px'
         },
         userInfo: {
-            flexGrow: 1
+            flexGrow: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: isMobileView ? 'center' : 'flex-start'
         },
         userName: {
-            fontSize: '34px',
+            fontSize: isMobileView ? '40px' : '34px',
             fontWeight: 800,
             color: '#000000',
-            marginBottom: '4px',
-            lineHeight: 1.2
+            marginBottom: isMobileView ? '12px' : '4px',
+            lineHeight: 1.1
         },
         userWork: {
-            fontSize: '18px',
+            fontSize: isMobileView ? '20px' : '18px',
             fontWeight: 700,
             color: '#00bfa5',
-            marginBottom: '15px',
+            marginBottom: isMobileView ? '25px' : '15px',
             textTransform: 'uppercase'
         },
         userBio: {
-            fontSize: '16px',
+            fontSize: isMobileView ? '18px' : '16px',
             color: '#000000',
             lineHeight: 1.5,
-            marginBottom: '20px',
+            marginBottom: isMobileView ? '40px' : '20px',
             fontStyle: 'italic',
-            maxHeight: '75px',
+            maxHeight: isMobileView ? '120px' : '75px',
             overflow: 'hidden'
         },
         detailsGrid: {
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: '15px'
+            gap: isMobileView ? '30px 15px' : '15px'
         },
         detailItem: {
             display: 'flex',
@@ -142,20 +156,22 @@ const VolunteerCard = ({ userData, cardRef }) => {
         },
         detailIcon: {
             color: '#000000',
-            flexShrink: 0
+            flexShrink: 0,
+            width: isMobileView ? 24 : 18,
+            height: isMobileView ? 24 : 18
         },
         detailContent: {
             display: 'flex',
             flexDirection: 'column'
         },
         detailLabel: {
-            fontSize: '13px',
+            fontSize: isMobileView ? '15px' : '13px',
             color: '#000000',
             fontWeight: 700,
             textTransform: 'uppercase'
         },
         detailValue: {
-            fontSize: '16px',
+            fontSize: isMobileView ? '20px' : '16px',
             color: '#000000',
             fontWeight: 600
         },
@@ -197,13 +213,13 @@ const VolunteerCard = ({ userData, cardRef }) => {
                     <img src={profileImage} alt={name} style={cardStyles.photo} />
                 </div>
 
-                <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px', 
-                    color: '#000', 
-                    fontWeight: 800, 
-                    fontSize: '16px', 
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    color: '#000',
+                    fontWeight: 800,
+                    fontSize: '16px',
                     textTransform: 'uppercase',
                     border: '1.5px solid #000',
                     padding: '6px 16px',
@@ -242,28 +258,28 @@ const VolunteerCard = ({ userData, cardRef }) => {
 
                     <div style={cardStyles.detailsGrid}>
                         <div style={cardStyles.detailItem}>
-                            <Phone size={18} style={cardStyles.detailIcon} />
+                            <Phone size={isMobileView ? 24 : 18} style={cardStyles.detailIcon} />
                             <div style={cardStyles.detailContent}>
                                 <span style={cardStyles.detailLabel}>Contact</span>
-                                <span style={cardStyles.detailValue}>+91 {mobile}</span>
+                                <span style={cardStyles.detailValue}> {mobile}</span>
                             </div>
                         </div>
                         <div style={cardStyles.detailItem}>
-                            <MapPin size={18} style={cardStyles.detailIcon} />
+                            <MapPin size={isMobileView ? 24 : 18} style={cardStyles.detailIcon} />
                             <div style={cardStyles.detailContent}>
                                 <span style={cardStyles.detailLabel}>Location</span>
                                 <span style={cardStyles.detailValue}>{location}</span>
                             </div>
                         </div>
                         <div style={cardStyles.detailItem}>
-                            <Award size={18} style={cardStyles.detailIcon} />
+                            <Award size={isMobileView ? 24 : 18} style={cardStyles.detailIcon} />
                             <div style={cardStyles.detailContent}>
                                 <span style={cardStyles.detailLabel}>Verified Since</span>
                                 <span style={cardStyles.detailValue}>{joinedDate}</span>
                             </div>
                         </div>
                         <div style={cardStyles.detailItem}>
-                            <ShieldCheck size={18} style={cardStyles.detailIcon} />
+                            <ShieldCheck size={isMobileView ? 24 : 18} style={cardStyles.detailIcon} />
                             <div style={cardStyles.detailContent}>
                                 <span style={cardStyles.detailLabel}>Status</span>
                                 <span style={cardStyles.detailValue}>Active Member</span>

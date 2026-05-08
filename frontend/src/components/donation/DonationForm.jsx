@@ -665,11 +665,11 @@ const DonationForm = ({ onSuccess }) => {
                 <div className="custom-amount">
                     <span className="currency-symbol">₹</span>
                     <input
-
                         type="number"
                         placeholder={t('donatePage.customPlaceholder')}
                         value={customAmount}
                         onChange={(e) => { setCustomAmount(e.target.value); setAmount(0); }}
+                        onWheel={(e) => e.target.blur()}
                     />
                 </div>
 

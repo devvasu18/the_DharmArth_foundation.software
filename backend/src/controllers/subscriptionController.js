@@ -57,7 +57,19 @@ exports.getAllSubscriptions = async (req, res) => {
         let query = {};
 
         if (status) query.status = status;
-        if (amount) query.amount = parseInt(amount);
+        if (amount) {
+            if (amount.includes('-')) {
+                const [min, max] = amount.split('-').map(Number);
+                if (!isNaN(min) && !isNaN(max)) {
+                    query.amount = { $gte: min, $lte: max };
+                }
+            } else {
+                const parsed = parseInt(amount);
+                if (!isNaN(parsed)) {
+                    query.amount = parsed;
+                }
+            }
+        }
         if (search) {
             const User = require('../models/User');
             // Find users matching the search as a referral code
