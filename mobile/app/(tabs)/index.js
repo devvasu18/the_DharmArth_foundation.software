@@ -15,6 +15,9 @@ import api, { API_BASE_URL } from '../../src/services/api';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
+import { Image } from 'react-native';
+
+const DEFAULT_AVATAR = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778152272/dharmarth_foundation/default_guest_avatar.jpg';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -86,8 +89,21 @@ export default function Dashboard() {
       }
     >
       <View style={styles.header}>
-        <Text style={styles.greeting}>Namaste, {user?.name}!</Text>
-        <Text style={styles.subtitle}>Here is your impact summary</Text>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.greeting}>Namaste, {user?.name}!</Text>
+            <Text style={styles.subtitle}>Here is your impact summary</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.profileIconBtn}
+            onPress={() => router.push('/profile')}
+          >
+            <Image 
+              source={{ uri: user?.profileImage || DEFAULT_AVATAR }} 
+              style={styles.headerAvatar} 
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Wallet Card */}
@@ -218,6 +234,25 @@ const styles = StyleSheet.create({
   header: {
     padding: 24,
     paddingTop: 16,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  profileIconBtn: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   greeting: {
     fontSize: 22,
