@@ -376,7 +376,7 @@ const PublicVolunteerCard = () => {
                         height: 350px;
                     }
                     .glass-container {
-                        padding: 1.5rem;
+                        padding: 3rem 1.5rem;
                         border-radius: 24px;
                     }
                     .action-card {
