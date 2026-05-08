@@ -183,8 +183,46 @@ const LandingScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>© 2026 The DharmArth Foundation</Text>
+        {/* Detailed Footer */}
+        <View style={styles.footerDetailed}>
+          <View style={styles.footerBrand}>
+            <Text style={styles.footerBrandName}>Dharmarth</Text>
+            <View style={styles.socialRow}>
+              <Ionicons name="logo-facebook" size={20} color="#475569" />
+              <Ionicons name="logo-twitter" size={20} color="#475569" />
+              <Ionicons name="logo-linkedin" size={20} color="#475569" />
+              <Ionicons name="logo-youtube" size={20} color="#475569" />
+              <Ionicons name="logo-instagram" size={20} color="#475569" />
+            </View>
+            <View style={styles.contactInfo}>
+              <Text style={styles.contactText}>Email: info@Dharmarth.org</Text>
+              <Text style={styles.contactText}>Contact: +91 9900000000</Text>
+            </View>
+          </View>
+
+          <View style={styles.footerLinksGrid}>
+            <View style={styles.footerCol}>
+              <Text style={styles.footerColTitle}>Causes</Text>
+              <Text style={styles.footerLink}>Medical Crowdfunding</Text>
+              <Text style={styles.footerLink}>Cancer Crowdfunding</Text>
+              <Text style={styles.footerLink}>Education Crowdfunding</Text>
+            </View>
+            <View style={styles.footerCol}>
+              <Text style={styles.footerColTitle}>About Us</Text>
+              <Text style={styles.footerLink}>Team Dharmarth</Text>
+              <Text style={styles.footerLink}>Success Stories</Text>
+              <Text style={styles.footerLink}>Our Blog</Text>
+            </View>
+          </View>
+
+          <View style={styles.footerBottom}>
+            <View style={styles.paymentIcons}>
+              <Text style={styles.paymentTag}>VISA</Text>
+              <Text style={styles.paymentTag}>UPI</Text>
+              <Text style={styles.paymentTag}>SECURE</Text>
+            </View>
+            <Text style={styles.copyrightText}>© 2026 The DharmArth Foundation. All Rights Reserved.</Text>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -428,14 +466,81 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
-  footer: {
-    padding: 40,
+  // Detailed Footer
+  footerDetailed: {
+    padding: 32,
+    backgroundColor: '#f8fafc',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+  },
+  footerBrand: {
+    marginBottom: 32,
+  },
+  footerBrandName: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#1e293b',
+    marginBottom: 16,
+  },
+  socialRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 20,
+  },
+  contactInfo: {
+    gap: 4,
+  },
+  contactText: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  footerLinksGrid: {
+    flexDirection: 'row',
+    gap: 40,
+    marginBottom: 40,
+  },
+  footerCol: {
+    flex: 1,
+  },
+  footerColTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#1e293b',
+    marginBottom: 16,
+  },
+  footerLink: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 12,
+    fontWeight: '500',
+  },
+  footerBottom: {
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    paddingTop: 32,
     alignItems: 'center',
   },
-  footerText: {
+  paymentIcons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  paymentTag: {
+    fontSize: 10,
+    fontWeight: '900',
     color: '#94a3b8',
-    fontSize: 12,
-    fontWeight: '600',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 4,
+  },
+  copyrightText: {
+    fontSize: 11,
+    color: '#94a3b8',
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });
 
