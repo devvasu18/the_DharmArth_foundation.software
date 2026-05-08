@@ -73,12 +73,12 @@ const PublicVolunteerCard = () => {
                         <div className="glass-container">
                             <div style={{
                                 width: `${650 * cardScale}px`,
-                                height: `${(window.innerWidth < 650 ? 700 : 480) * cardScale}px`,
+                                height: `${(window.innerWidth < 650 ? 1100 : 1000) * cardScale}px`,
                                 position: 'relative'
                             }}>
                                 <div className="card-wrapper" style={{
                                     width: '650px',
-                                    height: `${window.innerWidth < 650 ? 700 : 480}px`,
+                                    height: `${window.innerWidth < 650 ? 1100 : 1000}px`,
                                     transform: `scale(${cardScale})`,
                                     transformOrigin: 'top left'
                                 }}>

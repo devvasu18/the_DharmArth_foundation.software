@@ -88,7 +88,7 @@ const MyNetwork = () => {
                     {/* CURRENT USER (YOU) */}
                     <div className="tree-node root-node you-node">
                         <div className="node-content">
-                            <User size={24} className="node-icon" />
+
                             <div className="node-info">
                                 <h5>You ({referralTree.user.name})</h5>
                                 <p>{referralTree.user.mobile}</p>
@@ -121,17 +121,16 @@ const MyNetwork = () => {
                                 return (
                                     <div key={l1User._id} className="family-column">
                                         {/* L1 NODE */}
-                                        <div className="tree-node level-1-node" style={{ marginBottom: hasL2 ? '3rem' : '0' }}>
+                                        <div className="tree-node level-1-node">
                                             <div className="node-content">
                                                 <div className="level-badge-mini l1">L1</div>
-                                                <User size={20} />
+
                                                 <div className="node-info">
                                                     <h5>{l1User.name}</h5>
                                                     <p>{l1User.mobile}</p>
                                                     <span className="node-date">{formatDate(l1User.createdAt)}</span>
                                                 </div>
                                             </div>
-                                            {hasL2 && <div className="connector-vertical"></div>}
                                         </div>
 
                                         {/* L2 GROUP */}
@@ -142,7 +141,7 @@ const MyNetwork = () => {
                                                         <div key={l2User._id} className="tree-node level-2-node">
                                                             <div className="node-content">
                                                                 <div className="level-badge-mini l2">L2</div>
-                                                                <User size={18} />
+
                                                                 <div className="node-info">
                                                                     <h6>{l2User.name}</h6>
                                                                     <p>{l2User.mobile}</p>
@@ -161,11 +160,7 @@ const MyNetwork = () => {
                     </div>
                 </div>
 
-                {/* Legend / Info */}
-                <div className="tree-legend">
-                    <div className="legend-item"><span className="dot l1"></span> Level 1 (Direct - 10%)</div>
-                    <div className="legend-item"><span className="dot l2"></span> Level 2 (Indirect - 3%)</div>
-                </div>
+
             </div>
         );
     };

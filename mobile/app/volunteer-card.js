@@ -1,11 +1,11 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Image, 
-  ScrollView, 
-  Dimensions, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ScrollView,
+  Dimensions,
   TouchableOpacity,
   Platform
 } from 'react-native';
@@ -35,7 +35,7 @@ export default function VolunteerCardScreen() {
   return (
     <ScrollView style={styles.container}>
       <Stack.Screen options={{ title: 'Identity Card', headerTitleAlign: 'center' }} />
-      
+
       <View style={styles.header}>
         <View style={styles.verifiedBadge}>
           <Ionicons name="shield-checkmark" size={16} color="#00bfa5" />
@@ -52,7 +52,7 @@ export default function VolunteerCardScreen() {
             <View style={styles.photoWrapper}>
               <Image source={{ uri: profileImage }} style={styles.photo} />
             </View>
-            
+
             <View style={styles.officialBadge}>
               <Ionicons name="ribbon" size={14} color="#000" />
               <Text style={styles.officialBadgeText}>Official</Text>
@@ -72,7 +72,7 @@ export default function VolunteerCardScreen() {
                 <Text style={styles.tagline}>Spreading Hope</Text>
               </View>
               <View style={styles.cardNoArea}>
-                <Text style={styles.cardNoLabel}>CARD NO.</Text>
+                <Text style={styles.cardNoLabel}>Reff Code</Text>
                 <Text style={styles.cardNoValue}>{referralCode}</Text>
               </View>
             </View>
@@ -109,13 +109,13 @@ export default function VolunteerCardScreen() {
         <TrustItem icon="people" label="Trusted" />
       </View>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.backButton}
         onPress={() => router.back()}
       >
         <Text style={styles.backButtonText}>Back to Dashboard</Text>
       </TouchableOpacity>
-      
+
       <View style={{ height: 40 }} />
     </ScrollView>
   );

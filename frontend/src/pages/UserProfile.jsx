@@ -107,7 +107,7 @@ const UserProfile = () => {
                 scale: 3,
                 backgroundColor: null,
                 width: 650,
-                height: 480,
+                height: window.innerWidth < 650 ? 1100 : 1000,
                 onclone: (clonedDoc) => {
                     // Ensure the cloned element is visible for capture
                     const el = clonedDoc.querySelector('.download-capture-area');
@@ -317,7 +317,7 @@ const UserProfile = () => {
                         </div>
 
                         {/* ID Card Display */}
-                        <div className="card-outer-wrapper" style={{ height: `${480 * cardScale}px` }}>
+                        <div className="card-outer-wrapper" style={{ height: `${(window.innerWidth < 650 ? 1100 : 1000) * cardScale}px` }}>
                             <div className="card-inner-scale" style={{ transform: `scale(${cardScale})` }}>
                                 <VolunteerCard userData={{ ...formData, mobile: user?.mobile, referralCode: user?.referralCode, createdAt: user?.createdAt }} cardRef={cardRef} />
                             </div>
@@ -341,7 +341,7 @@ const UserProfile = () => {
 
             {/* Hidden capture area for downloads - NOT scaled, absolute positioned off-screen */}
             <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-                <div ref={downloadRef} className="download-capture-area" style={{ width: '650px', height: '480px' }}>
+                <div ref={downloadRef} className="download-capture-area" style={{ width: '650px', height: window.innerWidth < 650 ? '1100px' : '1000px' }}>
                     <VolunteerCard userData={{ ...formData, mobile: user?.mobile, referralCode: user?.referralCode, createdAt: user?.createdAt }} />
                 </div>
             </div>

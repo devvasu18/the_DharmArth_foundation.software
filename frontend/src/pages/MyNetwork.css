@@ -175,7 +175,7 @@
 .family-track {
     display: flex;
     justify-content: center;
-    gap: 2.5rem;
+    gap: 1.5rem;
     min-width: max-content;
     padding-top: 1.5rem;
 }
@@ -194,14 +194,17 @@
 
 .node-content {
     background: white;
-    padding: 1rem 1.5rem;
-    border-radius: 18px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0.5rem 0.8rem;
+    border-radius: 14px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.04);
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1rem;
-    min-width: 220px;
+    text-align: center;
+    min-width: 110px;
+    width: fit-content;
+    position: relative; /* Added for badge positioning */
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -226,14 +229,14 @@
 
 .node-info h5, .node-info h6 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: var(--secondary);
 }
 
 .node-info p {
-    margin: 2px 0 0;
-    font-size: 0.85rem;
+    margin: 1px 0 0;
+    font-size: 0.8rem;
     color: var(--text-muted);
 }
 
@@ -258,31 +261,44 @@
     position: relative;
 }
 
+/* Level 2 group layout - vertical list */
 .level-nodes {
     display: flex;
-    gap: 2rem;
-    padding-top: 2rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0; /* Gap handled by connectors */
+    padding-top: 0;
     position: relative;
 }
 
 .level-nodes::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 10%;
-    right: 10%;
-    height: 2px;
-    background: #cbd5e1;
+    display: none; /* Hide the old horizontal bar */
 }
 
+/* Vertical connector above each L2 node */
+.level-2-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.level-2-node::before {
+    content: '';
+    display: block;
+    width: 2px;
+    height: 1.5rem;
+    background: #cbd5e1;
+    position: static; /* Back to normal flow */
+}
+
+/* Root and L1 connectors */
 .tree-node::before {
     content: '';
-    position: absolute;
-    top: -2rem;
-    left: 50%;
+    display: block;
     width: 2px;
     height: 2rem;
     background: #cbd5e1;
+    margin: 0 auto;
 }
 
 .root-node::before {
@@ -292,19 +308,20 @@
 /* BADGES */
 .level-badge-mini {
     position: absolute;
-    top: -10px;
-    right: -10px;
-    width: 24px;
-    height: 24px;
+    top: -8px;
+    right: -8px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 800;
     color: white;
-    border: 2px solid white;
+    border: 1.5px solid white;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 5;
 }
 
 .level-badge-mini.l1 { background: var(--primary); }

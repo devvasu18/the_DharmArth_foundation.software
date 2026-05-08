@@ -7,11 +7,11 @@ const DEFAULT_AVATAR_URL = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1
 
 const VolunteerCard = ({ userData, cardRef }) => {
     const { t } = useTranslation();
-    const [cardHeight, setCardHeight] = React.useState(window.innerWidth < 650 ? '700px' : '480px');
+    const [cardHeight, setCardHeight] = React.useState(window.innerWidth < 650 ? '1100px' : '1000px');
 
     React.useEffect(() => {
         const handleResize = () => {
-            setCardHeight(window.innerWidth < 650 ? '700px' : '480px');
+            setCardHeight(window.innerWidth < 650 ? '1100px' : '1000px');
         };
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
@@ -38,6 +38,7 @@ const VolunteerCard = ({ userData, cardRef }) => {
             borderRadius: '24px',
             overflow: 'hidden',
             display: 'flex',
+            flexDirection: 'column',
             position: 'relative',
             boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
             border: '1px solid #e2e8f0',
@@ -47,24 +48,24 @@ const VolunteerCard = ({ userData, cardRef }) => {
             WebkitFontSmoothing: 'antialiased'
         },
         leftPane: {
-            width: '35%',
+            width: '100%',
             background: 'linear-gradient(135deg, #00bfa5 0%, #00897b 100%)',
-            padding: isMobileView ? '50px 30px' : '30px',
+            padding: '30px 40px',
             display: 'flex',
-            flexDirection: 'column',
+            flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'space-between',
             color: 'white',
             position: 'relative'
         },
         photoWrapper: {
-            width: isMobileView ? '180px' : '160px',
-            height: isMobileView ? '220px' : '190px',
+            width: '180px',
+            height: '220px',
             borderRadius: '16px',
             border: '4px solid rgba(255,255,255,0.4)',
             overflow: 'hidden',
             backgroundColor: '#f1f5f9',
-            marginBottom: isMobileView ? '40px' : '20px',
+            marginBottom: '0',
             boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
         },
         photo: {
@@ -86,11 +87,12 @@ const VolunteerCard = ({ userData, cardRef }) => {
             gap: '6px'
         },
         rightPane: {
-            width: '65%',
-            padding: isMobileView ? '60px 40px' : '40px',
+            width: '100%',
+            padding: '40px 50px',
             display: 'flex',
             flexDirection: 'column',
-            position: 'relative'
+            position: 'relative',
+            flexGrow: 1
         },
         header: {
             display: 'flex',
@@ -103,13 +105,13 @@ const VolunteerCard = ({ userData, cardRef }) => {
             flexDirection: 'column'
         },
         foundationName: {
-            fontSize: '18px',
+            fontSize: '32px',
             fontWeight: 900,
             color: '#00bfa5',
             letterSpacing: '0'
         },
         tagline: {
-            fontSize: '10px',
+            fontSize: '18px',
             color: '#64748b',
             textTransform: 'uppercase',
             fontWeight: 700,
@@ -122,58 +124,58 @@ const VolunteerCard = ({ userData, cardRef }) => {
             justifyContent: isMobileView ? 'center' : 'flex-start'
         },
         userName: {
-            fontSize: isMobileView ? '40px' : '34px',
+            fontSize: '60px',
             fontWeight: 800,
             color: '#000000',
-            marginBottom: isMobileView ? '12px' : '4px',
-            lineHeight: 1.1
+            marginBottom: '12px',
+            lineHeight: 1
         },
         userWork: {
-            fontSize: isMobileView ? '20px' : '18px',
+            fontSize: '34px',
             fontWeight: 700,
             color: '#00bfa5',
-            marginBottom: isMobileView ? '25px' : '15px',
+            marginBottom: '30px',
             textTransform: 'uppercase'
         },
         userBio: {
-            fontSize: isMobileView ? '18px' : '16px',
+            fontSize: '26px',
             color: '#000000',
-            lineHeight: 1.5,
-            marginBottom: isMobileView ? '40px' : '20px',
+            lineHeight: 1.6,
+            marginBottom: '60px',
             fontStyle: 'italic',
-            maxHeight: isMobileView ? '120px' : '75px',
+            maxHeight: '250px',
             overflow: 'hidden'
         },
         detailsGrid: {
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: isMobileView ? '30px 15px' : '15px'
+            gap: '30px 20px'
         },
         detailItem: {
             display: 'flex',
             alignItems: 'center',
-            gap: '10px'
+            gap: '12px'
         },
         detailIcon: {
             color: '#000000',
             flexShrink: 0,
-            width: isMobileView ? 24 : 18,
-            height: isMobileView ? 24 : 18
+            width: 36,
+            height: 36
         },
         detailContent: {
             display: 'flex',
             flexDirection: 'column'
         },
         detailLabel: {
-            fontSize: isMobileView ? '15px' : '13px',
-            color: '#000000',
+            fontSize: '20px',
+            color: '#64748b',
             fontWeight: 700,
             textTransform: 'uppercase'
         },
         detailValue: {
-            fontSize: isMobileView ? '20px' : '16px',
-            color: '#000000',
-            fontWeight: 600
+            fontSize: '28px',
+            color: '#1e293b',
+            fontWeight: 800
         },
         footer: {
             marginTop: 'auto',
@@ -246,8 +248,8 @@ const VolunteerCard = ({ userData, cardRef }) => {
                         <span style={cardStyles.tagline}>Spreading Humanity & Hope</span>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#94a3b8' }}>CARD NO.</div>
-                        <div style={{ fontSize: '18px', fontWeight: 800, color: '#1e293b' }}>{referralCode}</div>
+                        <div style={{ fontSize: '20px', fontWeight: 700, color: '#94a3b8' }}>CARD NO.</div>
+                        <div style={{ fontSize: '32px', fontWeight: 800, color: '#1e293b' }}>{referralCode}</div>
                     </div>
                 </div>
 
@@ -289,12 +291,12 @@ const VolunteerCard = ({ userData, cardRef }) => {
                 </div>
 
                 <div style={cardStyles.footer}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Globe size={18} color="#00bfa5" />
-                        <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>dharmarth.com</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <Globe size={32} color="#00bfa5" />
+                        <span style={{ fontSize: '24px', color: '#64748b', fontWeight: 600 }}>dharmarth.com</span>
                     </div>
                     <div style={cardStyles.qrCode}>
-                        <QrCode size={40} />
+                        <QrCode size={80} />
                     </div>
                 </div>
 
