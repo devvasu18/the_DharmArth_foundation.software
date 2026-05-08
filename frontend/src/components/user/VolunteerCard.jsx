@@ -1,17 +1,19 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Award, ShieldCheck, QrCode, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+
 const DEFAULT_AVATAR_URL = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778152272/dharmarth_foundation/default_guest_avatar.jpg';
-
-
 
 const VolunteerCard = ({ userData, cardRef }) => {
     const { t } = useTranslation();
+    const [isBigScreen, setIsBigScreen] = React.useState(window.innerWidth >= 1024);
     const [cardHeight, setCardHeight] = React.useState(window.innerWidth < 650 ? '1100px' : '1000px');
 
     React.useEffect(() => {
         const handleResize = () => {
-            setCardHeight(window.innerWidth < 650 ? '1100px' : '1000px');
+            const width = window.innerWidth;
+            setIsBigScreen(width >= 1024);
+            setCardHeight(width < 650 ? '1100px' : '1000px');
         };
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
@@ -27,8 +29,192 @@ const VolunteerCard = ({ userData, cardRef }) => {
     const profileImage = userData?.profileImage || DEFAULT_AVATAR_URL;
     const joinedDate = userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '2026';
 
-    const isMobileView = cardHeight === '700px';
+    if (isBigScreen) {
+        // --- BIG SCREEN DESIGN (Horizontal) ---
+        const desktopStyles = {
+            container: {
+                width: '1000px',
+                height: '600px',
+                background: 'white',
+                borderRadius: '32px',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'row',
+                position: 'relative',
+                boxShadow: '0 40px 80px rgba(0,0,0,0.2)',
+                border: '1px solid #e2e8f0',
+                fontFamily: "'Outfit', 'Inter', sans-serif",
+                margin: '0 auto'
+            },
+            leftCol: {
+                width: '40%',
+                background: 'linear-gradient(135deg, #00bfa5 0%, #00897b 100%)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '40px',
+                color: 'white',
+                position: 'relative',
+                gap: '30px'
+            },
+            photoFrame: {
+                width: '260px',
+                height: '320px',
+                borderRadius: '24px',
+                border: '6px solid rgba(255,255,255,0.3)',
+                overflow: 'hidden',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                flexShrink: 0
+            },
+            brandArea: {
+                textAlign: 'center',
+                flexShrink: 0
+            },
+            rightCol: {
+                width: '60%',
+                padding: '50px 60px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                background: 'white'
+            },
+            name: {
+                fontSize: '52px',
+                fontWeight: 900,
+                color: '#1e293b',
+                lineHeight: 1.1,
+                marginBottom: '8px'
+            },
+            role: {
+                fontSize: '28px',
+                fontWeight: 700,
+                color: '#00bfa5',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                marginBottom: '25px'
+            },
+            bio: {
+                fontSize: '22px',
+                color: '#475569',
+                lineHeight: 1.5,
+                fontStyle: 'italic',
+                marginBottom: '35px',
+                maxHeight: '100px',
+                overflow: 'hidden'
+            },
+            grid: {
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '25px 30px',
+                marginBottom: '20px'
+            },
+            item: {
+                display: 'flex',
+                alignItems: 'center',
+                gap: '15px'
+            },
+            label: {
+                fontSize: '13px',
+                color: '#94a3b8',
+                fontWeight: 700,
+                textTransform: 'uppercase'
+            },
+            value: {
+                fontSize: '20px',
+                color: '#1e293b',
+                fontWeight: 800
+            },
+            footer: {
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingTop: '25px',
+                borderTop: '1.5px solid #f1f5f9'
+            },
+            idLabel: {
+                fontSize: '16px',
+                fontWeight: 700,
+                color: '#94a3b8'
+            },
+            idValue: {
+                fontSize: '28px',
+                fontWeight: 900,
+                color: '#1e293b'
+            }
+        };
 
+        return (
+            <div ref={cardRef} className="volunteer-card-container" style={{ padding: '20px', display: 'flex', justifyContent: 'center' }}>
+                <div style={desktopStyles.container}>
+                    <div style={desktopStyles.leftCol}>
+                        <div style={desktopStyles.photoFrame}>
+                            <img src={profileImage} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                        <div style={desktopStyles.brandArea}>
+                            <div style={{ fontSize: '48px', fontWeight: 900, lineHeight: 1 }}>DharmArth</div>
+                            <div style={{ fontSize: '20px', fontWeight: 700, opacity: 0.8, textTransform: 'uppercase', letterSpacing: '4px' }}>Foundation</div>
+                        </div>
+                    </div>
+
+                    <div style={desktopStyles.rightCol}>
+                        <div>
+                            <div style={desktopStyles.name}>{name}</div>
+                            <div style={desktopStyles.role}>{work}</div>
+                            <div style={desktopStyles.bio}>"{bio}"</div>
+
+                            <div style={desktopStyles.grid}>
+                                <div style={desktopStyles.item}>
+                                    <Phone size={32} color="#00bfa5" />
+                                    <div>
+                                        <div style={desktopStyles.label}>Contact</div>
+                                        <div style={desktopStyles.value}>{mobile}</div>
+                                    </div>
+                                </div>
+                                <div style={desktopStyles.item}>
+                                    <MapPin size={32} color="#00bfa5" />
+                                    <div>
+                                        <div style={desktopStyles.label}>Location</div>
+                                        <div style={desktopStyles.value}>{location}</div>
+                                    </div>
+                                </div>
+                                <div style={desktopStyles.item}>
+                                    <ShieldCheck size={32} color="#00bfa5" />
+                                    <div>
+                                        <div style={desktopStyles.label}>Status</div>
+                                        <div style={desktopStyles.value}>Active Member</div>
+                                    </div>
+                                </div>
+                                <div style={desktopStyles.item}>
+                                    <Award size={32} color="#00bfa5" />
+                                    <div>
+                                        <div style={desktopStyles.label}>Verified Since</div>
+                                        <div style={desktopStyles.value}>{joinedDate}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={desktopStyles.footer}>
+                            <div>
+                                <div style={desktopStyles.idLabel}>OFFICIAL VOLUNTEER ID</div>
+                                <div style={desktopStyles.idValue}>{referralCode}</div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontSize: '18px', color: '#64748b', fontWeight: 600 }}>dharmarth.com</div>
+                                    <div style={{ fontSize: '14px', color: '#94a3b8' }}>Global Humanity Network</div>
+                                </div>
+                                <QrCode size={70} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // --- SMALL SCREEN DESIGN (Vertical - Current UI) ---
     const cardStyles = {
         container: {
             width: '850px',
@@ -73,19 +259,6 @@ const VolunteerCard = ({ userData, cardRef }) => {
             height: '100%',
             objectFit: 'cover'
         },
-        badge: {
-            background: 'white',
-            color: '#000',
-            padding: '4px 12px',
-            borderRadius: '99px',
-            fontSize: '13px',
-            fontWeight: 800,
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px'
-        },
         rightPane: {
             width: '100%',
             padding: '40px 50px',
@@ -98,7 +271,7 @@ const VolunteerCard = ({ userData, cardRef }) => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-start',
-            marginBottom: isMobileView ? '40px' : '25px'
+            marginBottom: '25px'
         },
         logoArea: {
             display: 'flex',
@@ -121,7 +294,7 @@ const VolunteerCard = ({ userData, cardRef }) => {
             flexGrow: 1,
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: isMobileView ? 'center' : 'flex-start'
+            justifyContent: 'flex-start'
         },
         userName: {
             fontSize: '60px',
@@ -178,24 +351,18 @@ const VolunteerCard = ({ userData, cardRef }) => {
             fontWeight: 800
         },
         footer: {
-            marginTop: 'auto',
-            paddingTop: '20px',
-            borderTop: '1px solid #f1f5f9',
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center'
+            alignItems: 'center',
+            marginTop: 'auto',
+            paddingTop: '20px',
+            borderTop: '1px solid #f1f5f9'
         },
         qrCode: {
-            width: '50px',
-            height: '50px',
-            background: '#f8fafc',
-            border: '1px solid #e2e8f0',
-            borderRadius: '8px',
-            padding: '4px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#1e293b'
+            background: 'white',
+            padding: '8px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
         },
         watermark: {
             position: 'absolute',
@@ -208,87 +375,85 @@ const VolunteerCard = ({ userData, cardRef }) => {
     };
 
     return (
-        <div ref={cardRef} style={cardStyles.container} className="volunteer-id-card">
-            {/* Left Pane - Photo & Brand */}
-            <div style={cardStyles.leftPane}>
-                <div style={cardStyles.photoWrapper}>
-                    <img src={profileImage} alt={name} style={cardStyles.photo} />
-                </div>
-
-                <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '56px', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-1px' }}>DharmArth</div>
-                    <div style={{ fontSize: '24px', fontWeight: 700, opacity: 0.9, textTransform: 'uppercase', letterSpacing: '4px', marginTop: '4px' }}>Foundation</div>
-                </div>
-
-
-
-                {/* Decorative Elements */}
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 50%)', pointerEvents: 'none' }}></div>
-            </div>
-
-            {/* Right Pane - Details */}
-            <div style={cardStyles.rightPane}>
-                <div style={cardStyles.header}>
-                    <div style={cardStyles.logoArea}>
-                        <span style={cardStyles.foundationName} className="foundation-name-hi">धर्मार्थ फाउंडेशन</span>
-                        <span style={cardStyles.tagline}>Spreading Humanity & Hope</span>
+        <div ref={cardRef} className="volunteer-card-container" style={{ padding: '10px', display: 'flex', justifyContent: 'center' }}>
+            <div style={cardStyles.container}>
+                {/* Top Section - Brand & Photo */}
+                <div style={cardStyles.leftPane}>
+                    <div style={cardStyles.photoWrapper}>
+                        <img src={profileImage} alt={name} style={cardStyles.photo} />
                     </div>
+
                     <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '24px', fontWeight: 700, color: '#94a3b8' }}>VOLUNTEER ID</div>
-                        <div style={{ fontSize: '40px', fontWeight: 800, color: '#1e293b' }}>{referralCode}</div>
+                        <div style={{ fontSize: '56px', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-1px' }}>DharmArth</div>
+                        <div style={{ fontSize: '24px', fontWeight: 700, opacity: 0.9, textTransform: 'uppercase', letterSpacing: '4px', marginTop: '4px' }}>Foundation</div>
                     </div>
+
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 50%)', pointerEvents: 'none' }}></div>
                 </div>
 
-                <div style={cardStyles.userInfo}>
-                    <div style={cardStyles.userName}>{name}</div>
-                    <div style={cardStyles.userWork}>{work}</div>
-                    <div style={cardStyles.userBio}>"{bio}"</div>
+                {/* Right Pane - Details */}
+                <div style={cardStyles.rightPane}>
+                    <div style={cardStyles.header}>
+                        <div style={cardStyles.logoArea}>
+                            <span style={cardStyles.foundationName} className="foundation-name-hi">धर्मार्थ फाउंडेशन</span>
+                            <span style={cardStyles.tagline}>Spreading Humanity & Hope</span>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '24px', fontWeight: 700, color: '#94a3b8' }}>VOLUNTEER ID</div>
+                            <div style={{ fontSize: '40px', fontWeight: 800, color: '#1e293b' }}>{referralCode}</div>
+                        </div>
+                    </div>
 
-                    <div style={cardStyles.detailsGrid}>
-                        <div style={cardStyles.detailItem}>
-                            <Phone size={isMobileView ? 24 : 18} style={cardStyles.detailIcon} />
-                            <div style={cardStyles.detailContent}>
-                                <span style={cardStyles.detailLabel}>Contact</span>
-                                <span style={cardStyles.detailValue}> {mobile}</span>
+                    <div style={cardStyles.userInfo}>
+                        <div style={cardStyles.userName}>{name}</div>
+                        <div style={cardStyles.userWork}>{work}</div>
+                        <div style={cardStyles.userBio}>"{bio}"</div>
+
+                        <div style={cardStyles.detailsGrid}>
+                            <div style={cardStyles.detailItem}>
+                                <Phone size={36} style={cardStyles.detailIcon} />
+                                <div style={cardStyles.detailContent}>
+                                    <span style={cardStyles.detailLabel}>Contact</span>
+                                    <span style={cardStyles.detailValue}> {mobile}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div style={cardStyles.detailItem}>
-                            <MapPin size={isMobileView ? 24 : 18} style={cardStyles.detailIcon} />
-                            <div style={cardStyles.detailContent}>
-                                <span style={cardStyles.detailLabel}>Location</span>
-                                <span style={cardStyles.detailValue}>{location}</span>
+                            <div style={cardStyles.detailItem}>
+                                <MapPin size={36} style={cardStyles.detailIcon} />
+                                <div style={cardStyles.detailContent}>
+                                    <span style={cardStyles.detailLabel}>Location</span>
+                                    <span style={cardStyles.detailValue}>{location}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div style={cardStyles.detailItem}>
-                            <Award size={isMobileView ? 24 : 18} style={cardStyles.detailIcon} />
-                            <div style={cardStyles.detailContent}>
-                                <span style={cardStyles.detailLabel}>Verified Since</span>
-                                <span style={cardStyles.detailValue}>{joinedDate}</span>
+                            <div style={cardStyles.detailItem}>
+                                <Award size={36} style={cardStyles.detailIcon} />
+                                <div style={cardStyles.detailContent}>
+                                    <span style={cardStyles.detailLabel}>Verified Since</span>
+                                    <span style={cardStyles.detailValue}>{joinedDate}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div style={cardStyles.detailItem}>
-                            <ShieldCheck size={isMobileView ? 24 : 18} style={cardStyles.detailIcon} />
-                            <div style={cardStyles.detailContent}>
-                                <span style={cardStyles.detailLabel}>Status</span>
-                                <span style={cardStyles.detailValue}>Active Member</span>
+                            <div style={cardStyles.detailItem}>
+                                <ShieldCheck size={36} style={cardStyles.detailIcon} />
+                                <div style={cardStyles.detailContent}>
+                                    <span style={cardStyles.detailLabel}>Status</span>
+                                    <span style={cardStyles.detailValue}>Active Member</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div style={cardStyles.footer}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <Globe size={32} color="#00bfa5" />
-                        <span style={{ fontSize: '24px', color: '#64748b', fontWeight: 600 }}>dharmarth.com</span>
+                    <div style={cardStyles.footer}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <Globe size={32} color="#00bfa5" />
+                            <span style={{ fontSize: '24px', color: '#64748b', fontWeight: 600 }}>dharmarth.com</span>
+                        </div>
+                        <div style={cardStyles.qrCode}>
+                            <QrCode size={80} />
+                        </div>
                     </div>
-                    <div style={cardStyles.qrCode}>
-                        <QrCode size={80} />
-                    </div>
-                </div>
 
-                {/* Watermark Logo */}
-                <div style={cardStyles.watermark}>
-                    <Award size={180} />
+                    <div style={cardStyles.watermark}>
+                        <Award size={180} />
+                    </div>
                 </div>
             </div>
         </div>
