@@ -62,7 +62,7 @@ const PublicVolunteerCard = () => {
                     {/* Header Info */}
                     <div className="profile-header">
 
-                        <h1 className="volunteer-name">{volunteer.name}</h1>
+
                         <p className="foundation-mission">
                             Official Volunteer at <strong>The DharmArth Foundation</strong>
                         </p>

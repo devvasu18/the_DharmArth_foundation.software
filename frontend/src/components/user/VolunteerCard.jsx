@@ -7,11 +7,11 @@ const DEFAULT_AVATAR_URL = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1
 
 const VolunteerCard = ({ userData, cardRef }) => {
     const { t } = useTranslation();
-    const [cardHeight, setCardHeight] = React.useState(window.innerWidth < 650 ? '1100px' : '1000px');
+    const [cardHeight, setCardHeight] = React.useState(window.innerWidth < 650 ? '1100px' : '550px');
 
     React.useEffect(() => {
         const handleResize = () => {
-            setCardHeight(window.innerWidth < 650 ? '1100px' : '1000px');
+            setCardHeight(window.innerWidth < 650 ? '1100px' : '550px');
         };
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
@@ -27,7 +27,7 @@ const VolunteerCard = ({ userData, cardRef }) => {
     const profileImage = userData?.profileImage || DEFAULT_AVATAR_URL;
     const joinedDate = userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '2026';
 
-    const isMobileView = cardHeight === '700px';
+    const isMobileView = window.innerWidth < 650;
 
     const cardStyles = {
         container: {
@@ -38,7 +38,7 @@ const VolunteerCard = ({ userData, cardRef }) => {
             borderRadius: '24px',
             overflow: 'hidden',
             display: 'flex',
-            flexDirection: 'column',
+            flexDirection: isMobileView ? 'column' : 'row',
             position: 'relative',
             boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
             border: '1px solid #e2e8f0',
@@ -48,24 +48,24 @@ const VolunteerCard = ({ userData, cardRef }) => {
             WebkitFontSmoothing: 'antialiased'
         },
         leftPane: {
-            width: '100%',
+            width: isMobileView ? '100%' : '35%',
             background: 'linear-gradient(135deg, #00bfa5 0%, #00897b 100%)',
-            padding: '30px 40px',
+            padding: isMobileView ? '30px 40px' : '40px 20px',
             display: 'flex',
-            flexDirection: 'row',
+            flexDirection: isMobileView ? 'row' : 'column',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            justifyContent: isMobileView ? 'space-between' : 'center',
             color: 'white',
             position: 'relative'
         },
         photoWrapper: {
-            width: '180px',
-            height: '220px',
+            width: isMobileView ? '180px' : '170px',
+            height: isMobileView ? '220px' : '200px',
             borderRadius: '16px',
             border: '4px solid rgba(255,255,255,0.4)',
             overflow: 'hidden',
             backgroundColor: '#f1f5f9',
-            marginBottom: '0',
+            marginBottom: isMobileView ? '0' : '25px',
             boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
         },
         photo: {
@@ -87,8 +87,8 @@ const VolunteerCard = ({ userData, cardRef }) => {
             gap: '6px'
         },
         rightPane: {
-            width: '100%',
-            padding: '40px 50px',
+            width: isMobileView ? '100%' : '65%',
+            padding: isMobileView ? '40px 50px' : '30px 40px',
             display: 'flex',
             flexDirection: 'column',
             position: 'relative',
@@ -105,13 +105,13 @@ const VolunteerCard = ({ userData, cardRef }) => {
             flexDirection: 'column'
         },
         foundationName: {
-            fontSize: '32px',
+            fontSize: isMobileView ? '32px' : '22px',
             fontWeight: 900,
             color: '#00bfa5',
             letterSpacing: '0'
         },
         tagline: {
-            fontSize: '18px',
+            fontSize: isMobileView ? '18px' : '12px',
             color: '#64748b',
             textTransform: 'uppercase',
             fontWeight: 700,
@@ -124,26 +124,26 @@ const VolunteerCard = ({ userData, cardRef }) => {
             justifyContent: isMobileView ? 'center' : 'flex-start'
         },
         userName: {
-            fontSize: '60px',
+            fontSize: isMobileView ? '60px' : '40px',
             fontWeight: 800,
             color: '#000000',
-            marginBottom: '12px',
+            marginBottom: '8px',
             lineHeight: 1
         },
         userWork: {
-            fontSize: '34px',
+            fontSize: isMobileView ? '34px' : '22px',
             fontWeight: 700,
             color: '#00bfa5',
-            marginBottom: '30px',
+            marginBottom: isMobileView ? '30px' : '15px',
             textTransform: 'uppercase'
         },
         userBio: {
-            fontSize: '26px',
+            fontSize: isMobileView ? '26px' : '17px',
             color: '#000000',
             lineHeight: 1.6,
-            marginBottom: '60px',
+            marginBottom: isMobileView ? '60px' : '25px',
             fontStyle: 'italic',
-            maxHeight: '250px',
+            maxHeight: isMobileView ? '250px' : '90px',
             overflow: 'hidden'
         },
         detailsGrid: {
@@ -159,21 +159,21 @@ const VolunteerCard = ({ userData, cardRef }) => {
         detailIcon: {
             color: '#000000',
             flexShrink: 0,
-            width: 36,
-            height: 36
+            width: isMobileView ? 36 : 24,
+            height: isMobileView ? 36 : 24
         },
         detailContent: {
             display: 'flex',
             flexDirection: 'column'
         },
         detailLabel: {
-            fontSize: '20px',
+            fontSize: isMobileView ? '20px' : '14px',
             color: '#64748b',
             fontWeight: 700,
             textTransform: 'uppercase'
         },
         detailValue: {
-            fontSize: '28px',
+            fontSize: isMobileView ? '28px' : '18px',
             color: '#1e293b',
             fontWeight: 800
         },
