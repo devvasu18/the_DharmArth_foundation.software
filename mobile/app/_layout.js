@@ -27,6 +27,33 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)/login" options={{ title: 'Login', headerShown: false }} />
       <Stack.Screen name="(auth)/signup" options={{ title: 'Sign Up', headerShown: false }} />
+      <Stack.Screen 
+        name="my-subscriptions" 
+        options={{ 
+          title: 'My Subscriptions',
+          headerStyle: { backgroundColor: 'white' },
+          headerTitleStyle: { fontWeight: '800', color: '#1e293b' },
+          headerTintColor: '#00bfa5'
+        }} 
+      />
+      <Stack.Screen 
+        name="my-referrals" 
+        options={{ 
+          title: 'My Referrals',
+          headerStyle: { backgroundColor: 'white' },
+          headerTitleStyle: { fontWeight: '800', color: '#1e293b' },
+          headerTintColor: '#00bfa5'
+        }} 
+      />
+      <Stack.Screen 
+        name="profile" 
+        options={{ 
+          title: 'My Profile',
+          headerStyle: { backgroundColor: 'white' },
+          headerTitleStyle: { fontWeight: '800', color: '#1e293b' },
+          headerTintColor: '#00bfa5'
+        }} 
+      />
     </Stack>
   );
 }
