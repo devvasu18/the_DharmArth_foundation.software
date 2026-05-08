@@ -93,33 +93,30 @@ export default function DashboardScreen() {
         
         {/* Wallet Card - mirrored from web */}
         <View style={styles.walletCard}>
-          <View style={styles.walletHeader}>
-            <Text style={styles.walletLabel}>My Wallet Balance</Text>
-            <View style={styles.walletIconBg}>
-              <Ionicons name="wallet" size={24} color="rgba(255,255,255,0.4)" />
-            </View>
+          <View style={styles.walletPattern}>
+            <Ionicons name="wallet" size={140} color="rgba(255,255,255,0.2)" />
           </View>
+          
+          <Text style={styles.walletLabel}>My Wallet Balance</Text>
           <Text style={styles.walletBalance}>₹ {wallet?.balance?.toLocaleString() || 0}</Text>
           
           <View style={styles.walletStats}>
-            <View style={styles.statRow}>
-              <Ionicons name="trending-up" size={16} color="white" />
-              <Text style={styles.statText}>Total Earned: ₹ {wallet?.totalEarned?.toLocaleString() || 0}</Text>
+            <Ionicons name="trending-up" size={16} color="white" />
+            <Text style={styles.statText}>Total Earned: ₹ {wallet?.totalEarned?.toLocaleString() || 0}</Text>
+          </View>
+
+          <View style={styles.statGrid}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{stats.l1Donors || 0}</Text>
+              <Text style={styles.statLabel}>L1 Donors</Text>
             </View>
-            <View style={styles.statGrid}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{stats.l1Donors || 0}</Text>
-                <Text style={styles.statLabel}>L1 Donors</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{stats.l2Donors || 0}</Text>
-                <Text style={styles.statLabel}>L2 Donors</Text>
-              </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{stats.l2Donors || 0}</Text>
+              <Text style={styles.statLabel}>L2 Donors</Text>
             </View>
           </View>
 
-          <TouchableOpacity style={styles.withdrawBtn} onPress={() => Alert.alert("Payout", "Please use web version for bank withdrawals for now.")}>
+          <TouchableOpacity style={styles.withdrawBtn} onPress={() => Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/dashboard')}>
             <Text style={styles.withdrawBtnText}>Withdraw Now</Text>
           </TouchableOpacity>
         </View>
@@ -130,33 +127,38 @@ export default function DashboardScreen() {
             <Ionicons name="share-social" size={24} color="#667eea" />
             <Text style={styles.shareTitle}>Share & Earn</Text>
           </View>
+          
           <Text style={styles.shareDesc}>
-            Share this personalized link with your network. When someone donates using your link, you receive a <Text style={{fontWeight:'700'}}>10% commission</Text> instantly!
+            Share this personalized link with your network. When someone donates using your link, you receive a <Text style={{color:'#00bfa5'}}>10% commission</Text> instantly in your wallet!
           </Text>
           
-          <View style={styles.refCodeBox}>
-            <Text style={styles.refLabel}>Referral Code: </Text>
-            <Text style={styles.refValue}>{user.referralCode || user.mobile}</Text>
+          <View style={styles.refCodeLabel}>
+            <Text style={styles.refText}>
+              Referral Code: <Text style={styles.refHighlight}>{user.referralCode || user.mobile}</Text>
+            </Text>
           </View>
 
           <View style={styles.linkBox}>
             <Text style={styles.linkText} numberOfLines={1}>
-              {`https://the-dharm-arth-foundation...`}
+              {`https://the-dharm-arth-foundation-software.vercel.app/donate?ref=${user.referralCode || user.mobile}`}
             </Text>
             <TouchableOpacity style={styles.copyBtn} onPress={handleCopyLink}>
-              <Ionicons name="copy-outline" size={16} color="white" />
               <Text style={styles.copyBtnText}>Copy</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.socialRow}>
             <TouchableOpacity style={[styles.socialBtn, {backgroundColor: '#25D366'}]} onPress={handleShare}>
-              <Ionicons name="logo-whatsapp" size={20} color="white" />
+              <Ionicons name="logo-whatsapp" size={24} color="white" />
               <Text style={styles.socialBtnText}>WhatsApp</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.socialBtn, {backgroundColor: '#1877F2'}]} onPress={handleShare}>
-              <Ionicons name="logo-facebook" size={20} color="white" />
+              <Ionicons name="logo-facebook" size={24} color="white" />
               <Text style={styles.socialBtnText}>Facebook</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.socialBtn, {backgroundColor: '#dc2743'}]} onPress={handleShare}>
+              <Ionicons name="logo-instagram" size={24} color="white" />
+              <Text style={styles.socialBtnText}>Instagram</Text>
             </TouchableOpacity>
           </View>
 
@@ -211,87 +213,147 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1, backgroundColor: '#f8fafc' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scrollContent: { padding: 20 },
+  scrollContent: { padding: 16 },
   
   // Wallet Card
   walletCard: { 
+    backgroundGradient: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)', // Handled by background color for now
     backgroundColor: '#00bfa5', 
     borderRadius: 24, 
     padding: 24, 
-    marginBottom: 20,
-    elevation: 8,
-    shadowColor: '#00bfa5',
+    marginBottom: 24,
+    elevation: 10,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+    position: 'relative',
+    overflow: 'hidden',
   },
-  walletHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  walletLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: '700' },
-  walletIconBg: { opacity: 0.5 },
-  walletBalance: { color: 'white', fontSize: 36, fontWeight: '900', marginVertical: 12 },
-  walletStats: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)', paddingTop: 16 },
-  statRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
-  statText: { color: 'white', fontSize: 14, fontWeight: '600' },
-  statGrid: { flexDirection: 'row', gap: 20 },
+  walletPattern: { position: 'absolute', top: -20, right: -20, opacity: 0.2 },
+  walletLabel: { 
+    color: 'rgba(255,255,255,0.95)', 
+    fontSize: 12, 
+    fontWeight: '700', 
+    letterSpacing: 1, 
+    textTransform: 'uppercase',
+    marginBottom: 8 
+  },
+  walletBalance: { 
+    color: 'white', 
+    fontSize: 48, 
+    fontWeight: '800', 
+    marginVertical: 8,
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4
+  },
+  walletStats: { 
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    alignSelf: 'flex-start',
+    marginBottom: 24,
+    gap: 8
+  },
+  statText: { color: 'white', fontSize: 13, fontWeight: '600' },
+  statGrid: { flexDirection: 'row', gap: 20, marginBottom: 20 },
   statItem: { flex: 1 },
-  statValue: { color: 'white', fontSize: 20, fontWeight: '800' },
+  statValue: { color: 'white', fontSize: 24, fontWeight: '800' },
   statLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
-  statDivider: { width: 1, height: 30, backgroundColor: 'rgba(255,255,255,0.2)' },
-  withdrawBtn: { backgroundColor: 'white', paddingVertical: 14, borderRadius: 12, alignItems: 'center', marginTop: 20 },
-  withdrawBtnText: { color: '#00bfa5', fontWeight: '800', fontSize: 16 },
+  withdrawBtn: { 
+    backgroundColor: 'white', 
+    paddingVertical: 16, 
+    borderRadius: 12, 
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+  },
+  withdrawBtnText: { color: '#00695c', fontWeight: '800', fontSize: 16, textTransform: 'uppercase', letterSpacing: 0.5 },
 
   // Share Card
   shareCard: { 
     backgroundColor: 'white', 
     borderRadius: 24, 
     padding: 24, 
-    marginBottom: 20,
+    marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
+    position: 'relative',
   },
-  shareHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  shareHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
   shareTitle: { fontSize: 20, fontWeight: '800', color: '#1e293b' },
-  shareDesc: { fontSize: 14, color: '#64748b', lineHeight: 22, marginBottom: 20 },
-  refCodeBox: { flexDirection: 'row', marginBottom: 16 },
-  refLabel: { fontSize: 14, color: '#64748b' },
-  refValue: { fontSize: 14, fontWeight: '800', color: '#1e293b' },
+  shareDesc: { fontSize: 15, color: '#0f172a', lineHeight: 24, fontWeight: '600', marginBottom: 20 },
+  refCodeLabel: { 
+    backgroundColor: 'rgba(0, 191, 165, 0.05)', 
+    paddingHorizontal: 16, 
+    paddingVertical: 10, 
+    borderRadius: 10, 
+    borderWidth: 1, 
+    borderColor: 'rgba(0, 191, 165, 0.3)', 
+    borderStyle: 'dashed',
+    marginBottom: 20,
+    alignSelf: 'flex-start'
+  },
+  refText: { fontSize: 14, color: '#4a5568' },
+  refHighlight: { color: '#00bfa5', fontWeight: '800' },
   linkBox: { 
     flexDirection: 'row', 
     alignItems: 'center', 
-    backgroundColor: '#f8fafc', 
-    borderRadius: 12, 
-    padding: 12, 
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    borderRadius: 30, 
+    padding: 6, 
     gap: 12,
     marginBottom: 20 
   },
-  linkText: { flex: 1, fontSize: 12, color: '#94a3b8' },
-  copyBtn: { backgroundColor: '#667eea', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
-  copyBtnText: { color: 'white', fontSize: 12, fontWeight: '700' },
+  linkText: { flex: 1, fontSize: 13, color: '#1e293b', fontWeight: '600', paddingLeft: 16 },
+  copyBtn: { backgroundColor: '#00bfa5', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 25 },
+  copyBtnText: { color: 'white', fontSize: 13, fontWeight: '800' },
+  
   socialRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  socialBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 12 },
-  socialBtnText: { color: 'white', fontSize: 14, fontWeight: '700' },
+  socialBtn: { 
+    flex: 1, 
+    flexDirection: 'column', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 4, 
+    paddingVertical: 12, 
+    borderRadius: 12,
+    elevation: 4,
+  },
+  socialBtnText: { color: 'white', fontSize: 12, fontWeight: '700' },
+
   profileActions: { borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 20 },
   actionHeading: { fontSize: 14, fontWeight: '800', color: '#475569', marginBottom: 12 },
   actionGrid: { flexDirection: 'row', gap: 12 },
-  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0' },
+  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#f8fafc' },
   actionBtnText: { fontSize: 14, fontWeight: '700', color: '#475569' },
 
   // Transactions
-  transactionsSection: { paddingVertical: 10 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  transactionsSection: { paddingVertical: 8 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottomWidth: 2, borderBottomColor: '#f1f5f9', paddingBottom: 12 },
   sectionTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b' },
-  viewAll: { color: '#00bfa5', fontWeight: '700' },
-  txnItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', padding: 16, borderRadius: 16, marginBottom: 12 },
+  viewAll: { color: '#00bfa5', fontWeight: '700', fontSize: 14 },
+  txnItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 16, borderRadius: 16, marginBottom: 12, borderWidth: 1, borderColor: '#f1f5f9' },
   txnIcon: { marginRight: 16 },
   txnInfo: { flex: 1 },
   txnDesc: { fontSize: 14, fontWeight: '700', color: '#1e293b' },
-  txnDate: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
+  txnDate: { fontSize: 12, color: '#94a3b8', marginTop: 4 },
   txnAmount: { fontSize: 16, fontWeight: '800' }
 });
