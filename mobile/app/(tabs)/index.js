@@ -110,13 +110,31 @@ export default function Dashboard() {
           </View>
         </View>
 
-        <TouchableOpacity 
-          style={styles.withdrawButton}
-          onPress={() => router.push('/volunteer-card')}
-        >
-          <Text style={styles.withdrawButtonText}>Volunteer Identity Card</Text>
-          <Ionicons name="card-outline" size={18} color="#00695c" />
-        </TouchableOpacity>
+        <View style={styles.actionRow}>
+          <TouchableOpacity 
+            style={styles.walletActionButton}
+            onPress={() => router.push('/volunteer-card')}
+          >
+            <Ionicons name="card-outline" size={18} color="#00695c" />
+            <Text style={styles.walletActionText}>ID Card</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.walletActionButton}
+            onPress={() => router.push('/withdraw')}
+          >
+            <Ionicons name="cash-outline" size={18} color="#00695c" />
+            <Text style={styles.walletActionText}>Withdraw</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.walletActionButton}
+            onPress={() => router.push('/bank-details')}
+          >
+            <Ionicons name="business-outline" size={18} color="#00695c" />
+            <Text style={styles.walletActionText}>Bank</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Stats Grid */}
@@ -165,6 +183,14 @@ export default function Dashboard() {
           </TouchableOpacity>
         </View>
       </View>
+
+      <TouchableOpacity 
+        style={styles.historyLink}
+        onPress={() => router.push('/transactions')}
+      >
+        <Text style={styles.historyLinkText}>View Full Transaction History</Text>
+        <Ionicons name="receipt-outline" size={16} color="#64748b" />
+      </TouchableOpacity>
 
       <View style={{ height: 40 }} />
     </ScrollView>
@@ -254,19 +280,24 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
     marginHorizontal: 16,
   },
-  withdrawButton: {
+  actionRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  walletActionButton: {
+    flex: 1,
     backgroundColor: 'white',
     borderRadius: 12,
-    padding: 14,
+    padding: 12,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
-  withdrawButtonText: {
+  walletActionText: {
     color: '#00695c',
     fontWeight: '800',
-    fontSize: 16,
+    fontSize: 13,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -369,5 +400,19 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '700',
     fontSize: 14,
+  },
+  historyLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 24,
+    padding: 12,
+  },
+  historyLinkText: {
+    color: '#64748b',
+    fontWeight: '700',
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
 });
