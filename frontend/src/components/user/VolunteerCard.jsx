@@ -32,7 +32,7 @@ const VolunteerCard = ({ userData, cardRef }) => {
     const cardStyles = {
         container: {
             width: '100%',
-            maxWidth: '650px',
+            maxWidth: '750px',
             height: cardHeight,
             background: 'white',
             borderRadius: '24px',
