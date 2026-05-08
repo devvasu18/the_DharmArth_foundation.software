@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -7,9 +7,11 @@ import {
   Image, 
   TouchableOpacity, 
   Dimensions,
-  Linking
+  Linking,
+  ActivityIndicator
 } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
+import api from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 
