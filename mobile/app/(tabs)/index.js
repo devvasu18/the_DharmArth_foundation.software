@@ -139,20 +139,27 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <View style={styles.statsGrid}>
-        <View style={styles.statBox}>
+        <TouchableOpacity 
+          style={styles.statBox}
+          onPress={() => router.push('/donors')}
+        >
           <View style={[styles.iconBg, { backgroundColor: '#e0f2f1' }]}>
             <Ionicons name="people" size={20} color="#00bfa5" />
           </View>
           <Text style={styles.boxValue}>{stats.l1Donors || 0}</Text>
           <Text style={styles.boxLabel}>Direct Donors</Text>
-        </View>
-        <View style={styles.statBox}>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.statBox}
+          onPress={() => router.push('/donors')}
+        >
           <View style={[styles.iconBg, { backgroundColor: '#fff3e0' }]}>
             <Ionicons name="git-network" size={20} color="#ff9800" />
           </View>
           <Text style={styles.boxValue}>{stats.l2Donors || 0}</Text>
           <Text style={styles.boxLabel}>Indirect Donors</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* Referral Section */}
