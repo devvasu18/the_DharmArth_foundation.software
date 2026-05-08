@@ -658,6 +658,13 @@ router.get('/commission-reports', async (req, res) => {
             { $group: { _id: null, total: { $sum: '$amount' } } }
         ]);
         const totalDonations = totalDonationsAgg[0]?.total || 0;
+        
+        // Total Wallet Donations
+        const walletDonationsAgg = await Donation.aggregate([
+            { $match: { status: 'success', paymentMethod: 'wallet', ...dateQuery } },
+            { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]);
+        const totalWalletDonations = walletDonationsAgg[0]?.total || 0;
 
         // Total Commissions Paid
         const commissionAgg = await Transaction.aggregate([
@@ -802,6 +809,7 @@ router.get('/commission-reports', async (req, res) => {
         res.json({
             summary: {
                 totalDonations,
+                totalWalletDonations,
                 totalCommissionPaid,
                 l1Commission,
                 l2Commission,

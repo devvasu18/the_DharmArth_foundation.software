@@ -116,6 +116,7 @@ const CommissionReports = () => {
         // Let's add specific summary sheet
         const summaryData = [
             { Metric: 'Total Donations', Value: data.summary.totalDonations },
+            { Metric: 'Wallet Donations', Value: data.summary.totalWalletDonations },
             { Metric: 'Total Commission Paid', Value: data.summary.totalCommissionPaid },
             { Metric: 'Platform Balance', Value: data.summary.platformBalance }
         ];
@@ -140,6 +141,7 @@ const CommissionReports = () => {
         doc.setFontSize(10);
         doc.text(`Period: ${filters.startDate} to ${filters.endDate}`, 14, 30);
         doc.text(`Total Donations: ₹${data.summary.totalDonations}`, 14, 38);
+        doc.text(`Wallet Donations: ₹${data.summary.totalWalletDonations}`, 80, 38);
         doc.text(`Platform Balance: ₹${data.summary.platformBalance}`, 14, 44);
 
         const tableColumn = ["Date", "Txn ID", "Amount", "L1 Comm", "L2 Comm", "Balance"];
@@ -340,6 +342,16 @@ const CommissionReports = () => {
                         <span className="card-label">Platform Balance</span>
                         <span className="card-value">{formatCurrency(summary.platformBalance)}</span>
                         <small style={{ opacity: 0.8 }}>Net Earnings</small>
+                    </div>
+                </div>
+
+                {/* 6. Wallet Donations */}
+                <div className="summary-card" style={{ borderLeft: '4px solid #8b5cf6' }}>
+                    <div className="card-icon" style={{ color: '#8b5cf6' }}><DollarSign size={24} /></div>
+                    <div className="card-content">
+                        <span className="card-label">Wallet Donations</span>
+                        <span className="card-value">{formatCurrency(summary.totalWalletDonations)}</span>
+                        <small className="text-neutral">From Internal Wallets</small>
                     </div>
                 </div>
             </div>

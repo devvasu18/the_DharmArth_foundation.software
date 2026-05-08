@@ -87,13 +87,13 @@ const AdminSettings = () => {
             // WhatsApp Config
             setWhatsappConfig({
                 donationTemplate: data.whatsapp_donation_template || "Dear {name}, thank you for your generous donation of ₹{amount} to The DharmArth Foundation. Your support helps us make a big difference! 🙏",
-                donationTemplate_hi: data.whatsapp_donation_template_hi || "नमस्ते {name}, The DharmArth Foundation को ₹{amount} का उदार दान देने के लिए धन्यवाद। आपका समर्थन हमें बड़ा बदलाव लाने में मदद करता है! 🙏",
+                donationTemplate_hi: data.whatsapp_donation_template_hi || "नमस्ते {name}, The DharmArth Foundation को ₹{amount} का  दान देने के लिए धन्यवाद। आपका समर्थन हमें बड़ा बदलाव लाने में मदद करता है! 🙏",
                 withdrawalTemplate: data.whatsapp_withdrawal_template || "Dear {name}, your payout request of ₹{amount} has been successfully processed and completed. The funds have been transferred as per your provided details. Thank you for your continued support! 🙏",
                 withdrawalTemplate_hi: data.whatsapp_withdrawal_template_hi || "नमस्ते {name}, आपके ₹{amount} के भुगतान के अनुरोध को सफलतापूर्वक संसाधित और पूरा कर लिया गया है। आपके द्वारा प्रदान किए गए विवरण के अनुसार धनराशि स्थानांतरित कर दी गई है। आपके निरंतर समर्थन के लिए धन्यवाद! 🙏",
-                l1MotivatorTemplate: data.whatsapp_motivator_l1_template || "Congratulations {motivator_name}! You received ₹{commission} commission for a donation of ₹{donation_amount} from {donor_name} ({donor_mobile}). Level: 1 🙏",
-                l1MotivatorTemplate_hi: data.whatsapp_motivator_l1_template_hi || "बधाई हो {motivator_name}! आपको {donor_name} ({donor_mobile}) से ₹{donation_amount} के दान के लिए ₹{commission} कमीशन प्राप्त हुआ। स्तर: 1 🙏",
-                l2MotivatorTemplate: data.whatsapp_motivator_l2_template || "Level 2 Bonus! {motivator_name}, you received ₹{commission} commission via {l1_motivator_name} ({l1_motivator_mobile}) for a donation from {donor_name} ({donor_mobile}). Level: 2 🙏",
-                l2MotivatorTemplate_hi: data.whatsapp_motivator_l2_template_hi || "स्तर 2 बोनस! {motivator_name}, आपको {donor_name} ({donor_mobile}) से दान के लिए {l1_motivator_name} ({l1_motivator_mobile}) के माध्यम से ₹{commission} कमीशन प्राप्त हुआ। स्तर: 2 🙏",
+                l1MotivatorTemplate: data.whatsapp_motivator_l1_template || "Congratulations {motivator_name}! You received ₹{commission} commission for a donation of ₹{donation_amount} from {donor_name} ({donor_mobile}). Level: Directly Inspired Donor 🙏",
+                l1MotivatorTemplate_hi: data.whatsapp_motivator_l1_template_hi || "बधाई हो {motivator_name}! आपको {donor_name} ({donor_mobile}) से ₹{donation_amount} के दान के लिए ₹{commission} कमीशन प्राप्त हुआ। स्तर: प्रेरित दानवीर 🙏",
+                l2MotivatorTemplate: data.whatsapp_motivator_l2_template || "Partner-Inspired Bonus! {motivator_name}, you received ₹{commission} commission via {l1_motivator_name} ({l1_motivator_mobile}) for a donation from {donor_name} ({donor_mobile}). Level:Partner-Inspired Donor 🙏",
+                l2MotivatorTemplate_hi: data.whatsapp_motivator_l2_template_hi || "स्तर 2 बोनस! {motivator_name}, आपको {donor_name} ({donor_mobile}) से दान के लिए {l1_motivator_name} ({l1_motivator_mobile}) के माध्यम से ₹{commission} कमीशन प्राप्त हुआ। स्तर: साथी द्वारा प्रेरित दानवीर 🙏",
                 walletOtpTemplate: data.whatsapp_wallet_otp_template || "Your OTP for The DharmArth Foundation *Wallet Donation* is: *{otp}*. Valid for 10 minutes. Please do not share this code with anyone.",
                 walletOtpTemplate_hi: data.whatsapp_wallet_otp_template_hi || "The DharmArth Foundation वॉलेट दान के लिए आपका OTP है: *{otp}*। यह 10 मिनट के लिए मान्य है।",
                 walletDonationTemplate: data.whatsapp_wallet_donation_template || "Dear {name}, thank you for your donation of ₹{amount} from your wallet.",
@@ -736,9 +736,9 @@ const AdminSettings = () => {
                                                 className="form-input"
                                                 style={{ width: '100%', minHeight: '120px', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.95rem', background: 'white', lineHeight: '1.5' }}
                                                 value={whatsappTab === 'en' ? whatsappConfig.donationTemplate : whatsappConfig.donationTemplate_hi}
-                                                onChange={(e) => setWhatsappConfig({ 
-                                                    ...whatsappConfig, 
-                                                    [whatsappTab === 'en' ? 'donationTemplate' : 'donationTemplate_hi']: e.target.value 
+                                                onChange={(e) => setWhatsappConfig({
+                                                    ...whatsappConfig,
+                                                    [whatsappTab === 'en' ? 'donationTemplate' : 'donationTemplate_hi']: e.target.value
                                                 })}
                                                 placeholder={`Enter ${whatsappTab === 'en' ? 'English' : 'Hindi'} thank you message...`}
                                             />
@@ -751,9 +751,9 @@ const AdminSettings = () => {
                                                 className="form-input"
                                                 style={{ width: '100%', minHeight: '120px', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.95rem', background: 'white', lineHeight: '1.5' }}
                                                 value={whatsappTab === 'en' ? whatsappConfig.withdrawalTemplate : whatsappConfig.withdrawalTemplate_hi}
-                                                onChange={(e) => setWhatsappConfig({ 
-                                                    ...whatsappConfig, 
-                                                    [whatsappTab === 'en' ? 'withdrawalTemplate' : 'withdrawalTemplate_hi']: e.target.value 
+                                                onChange={(e) => setWhatsappConfig({
+                                                    ...whatsappConfig,
+                                                    [whatsappTab === 'en' ? 'withdrawalTemplate' : 'withdrawalTemplate_hi']: e.target.value
                                                 })}
                                                 placeholder={`Enter ${whatsappTab === 'en' ? 'English' : 'Hindi'} payout confirmation message...`}
                                             />
@@ -769,9 +769,9 @@ const AdminSettings = () => {
                                             className="form-input"
                                             style={{ width: '100%', minHeight: '100px', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.95rem', background: 'white', lineHeight: '1.5' }}
                                             value={whatsappTab === 'en' ? whatsappConfig.walletOtpTemplate : whatsappConfig.walletOtpTemplate_hi}
-                                            onChange={(e) => setWhatsappConfig({ 
-                                                ...whatsappConfig, 
-                                                [whatsappTab === 'en' ? 'walletOtpTemplate' : 'walletOtpTemplate_hi']: e.target.value 
+                                            onChange={(e) => setWhatsappConfig({
+                                                ...whatsappConfig,
+                                                [whatsappTab === 'en' ? 'walletOtpTemplate' : 'walletOtpTemplate_hi']: e.target.value
                                             })}
                                             placeholder={`Enter ${whatsappTab === 'en' ? 'English' : 'Hindi'} wallet OTP message...`}
                                         />
@@ -789,9 +789,9 @@ const AdminSettings = () => {
                                             className="form-input"
                                             style={{ width: '100%', minHeight: '100px', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.95rem', background: 'white', lineHeight: '1.5' }}
                                             value={whatsappTab === 'en' ? whatsappConfig.walletDonationTemplate : whatsappConfig.walletDonationTemplate_hi}
-                                            onChange={(e) => setWhatsappConfig({ 
-                                                ...whatsappConfig, 
-                                                [whatsappTab === 'en' ? 'walletDonationTemplate' : 'walletDonationTemplate_hi']: e.target.value 
+                                            onChange={(e) => setWhatsappConfig({
+                                                ...whatsappConfig,
+                                                [whatsappTab === 'en' ? 'walletDonationTemplate' : 'walletDonationTemplate_hi']: e.target.value
                                             })}
                                             placeholder={`Enter ${whatsappTab === 'en' ? 'English' : 'Hindi'} wallet donation success message...`}
                                         />
@@ -812,9 +812,9 @@ const AdminSettings = () => {
                                                     className="form-input"
                                                     style={{ width: '100%', minHeight: '120px', padding: '12px', borderRadius: '12px', fontSize: '0.9rem', border: '1px solid #cbd5e1' }}
                                                     value={whatsappTab === 'en' ? whatsappConfig.l1MotivatorTemplate : whatsappConfig.l1MotivatorTemplate_hi}
-                                                    onChange={(e) => setWhatsappConfig({ 
-                                                        ...whatsappConfig, 
-                                                        [whatsappTab === 'en' ? 'l1MotivatorTemplate' : 'l1MotivatorTemplate_hi']: e.target.value 
+                                                    onChange={(e) => setWhatsappConfig({
+                                                        ...whatsappConfig,
+                                                        [whatsappTab === 'en' ? 'l1MotivatorTemplate' : 'l1MotivatorTemplate_hi']: e.target.value
                                                     })}
                                                 />
                                             </div>
@@ -824,9 +824,9 @@ const AdminSettings = () => {
                                                     className="form-input"
                                                     style={{ width: '100%', minHeight: '120px', padding: '12px', borderRadius: '12px', fontSize: '0.9rem', border: '1px solid #cbd5e1' }}
                                                     value={whatsappTab === 'en' ? whatsappConfig.l2MotivatorTemplate : whatsappConfig.l2MotivatorTemplate_hi}
-                                                    onChange={(e) => setWhatsappConfig({ 
-                                                        ...whatsappConfig, 
-                                                        [whatsappTab === 'en' ? 'l2MotivatorTemplate' : 'l2MotivatorTemplate_hi']: e.target.value 
+                                                    onChange={(e) => setWhatsappConfig({
+                                                        ...whatsappConfig,
+                                                        [whatsappTab === 'en' ? 'l2MotivatorTemplate' : 'l2MotivatorTemplate_hi']: e.target.value
                                                     })}
                                                 />
                                             </div>

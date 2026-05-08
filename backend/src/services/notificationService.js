@@ -49,9 +49,9 @@ class NotificationService {
      */
     async notifyMotivatorDonation(motivator, amount, donorName, donorMobile, level = 1, l1Motivator = null) {
         const commission = level === 1 ? amount * 0.1 : amount * 0.03;
-        const msg = level === 1 
+        const msg = level === 1
             ? `Congratulations! You earned ₹${commission.toFixed(2)} commission from ${donorName}'s donation.`
-            : `Level 2 Bonus! You earned ₹${commission.toFixed(2)} from ${donorName} (via your network).`;
+            : `Partner-Inspired Bonus! You earned ₹${commission.toFixed(2)} from ${donorName} (via your network).`;
 
         // 1. Send In-App, Email, SMS (via generic notify)
         await this.notify({
@@ -89,7 +89,7 @@ class NotificationService {
      */
     async notifySubscriptionStopped(motivator, donorName, donorMobile) {
         const msg = `⚠️ Important: ${donorName} (${donorMobile}) has stopped their monthly donation. You will no longer receive commission from this donor.`;
-        
+
         await this.notify({
             userId: motivator._id,
             type: 'SUBSCRIPTION_STOPPED',
@@ -104,7 +104,7 @@ class NotificationService {
      */
     async notifyPayoutRequested(payoutRequest, user) {
         const msg = `🔔 Payout Request: ₹${payoutRequest.amount} requested by ${user.name} (${user.mobile})`;
-        
+
         return await this.notify({
             userId: null, // For admins
             type: 'PAYOUT',
@@ -121,7 +121,7 @@ class NotificationService {
         const msg = status === 'completed'
             ? `✅ Your payout request of ₹${payoutRequest.amount} has been processed successfully.`
             : `❌ Your payout request of ₹${payoutRequest.amount} was rejected. Note: ${payoutRequest.adminNotes || 'Contact support'}`;
-        
+
         return await this.notify({
             userId: payoutRequest.user,
             type: 'PAYOUT',
@@ -136,7 +136,7 @@ class NotificationService {
      */
     async notifySubscriptionCancelledAdmin(subscription) {
         const msg = `🛑 Subscription Cancelled: ${subscription.donorName} (${subscription.donorMobile}) has cancelled their monthly donation of ₹${subscription.amount}.`;
-        
+
         return await this.notify({
             userId: null, // For admins
             type: 'SUBSCRIPTION_CANCELLED',
