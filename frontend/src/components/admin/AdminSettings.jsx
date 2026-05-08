@@ -94,6 +94,7 @@ const AdminSettings = () => {
                 l1MotivatorTemplate_hi: data.whatsapp_motivator_l1_template_hi || "बधाई हो {motivator_name}! आपको {donor_name} ({donor_mobile}) से ₹{donation_amount} के दान के लिए ₹{commission} कमीशन प्राप्त हुआ। स्तर: 1 🙏",
                 l2MotivatorTemplate: data.whatsapp_motivator_l2_template || "Level 2 Bonus! {motivator_name}, you received ₹{commission} commission via {l1_motivator_name} ({l1_motivator_mobile}) for a donation from {donor_name} ({donor_mobile}). Level: 2 🙏",
                 l2MotivatorTemplate_hi: data.whatsapp_motivator_l2_template_hi || "स्तर 2 बोनस! {motivator_name}, आपको {donor_name} ({donor_mobile}) से दान के लिए {l1_motivator_name} ({l1_motivator_mobile}) के माध्यम से ₹{commission} कमीशन प्राप्त हुआ। स्तर: 2 🙏",
+                walletOtpTemplate: data.whatsapp_wallet_otp_template || "Your OTP for The DharmArth Foundation *Wallet Donation* is: *{otp}*. Valid for 10 minutes. Please do not share this code with anyone.",
                 walletOtpTemplate_hi: data.whatsapp_wallet_otp_template_hi || "The DharmArth Foundation वॉलेट दान के लिए आपका OTP है: *{otp}*। यह 10 मिनट के लिए मान्य है।",
                 walletDonationTemplate: data.whatsapp_wallet_donation_template || "Dear {name}, thank you for your donation of ₹{amount} from your wallet.",
                 walletDonationTemplate_hi: data.whatsapp_wallet_donation_template_hi || "नमस्ते {name}, आपके वॉलेट से ₹{amount} के दान के लिए धन्यवाद।"
@@ -247,9 +248,11 @@ const AdminSettings = () => {
                 whatsapp_donation_template_hi: whatsappConfig.donationTemplate_hi,
                 whatsapp_withdrawal_template: whatsappConfig.withdrawalTemplate,
                 whatsapp_withdrawal_template_hi: whatsappConfig.withdrawalTemplate_hi,
+                whatsapp_motivator_l1_template: whatsappConfig.l1MotivatorTemplate,
                 whatsapp_motivator_l1_template_hi: whatsappConfig.l1MotivatorTemplate_hi,
                 whatsapp_motivator_l2_template: whatsappConfig.l2MotivatorTemplate,
                 whatsapp_motivator_l2_template_hi: whatsappConfig.l2MotivatorTemplate_hi,
+                whatsapp_wallet_otp_template: whatsappConfig.walletOtpTemplate,
                 whatsapp_wallet_otp_template_hi: whatsappConfig.walletOtpTemplate_hi,
                 whatsapp_wallet_donation_template: whatsappConfig.walletDonationTemplate,
                 whatsapp_wallet_donation_template_hi: whatsappConfig.walletDonationTemplate_hi
