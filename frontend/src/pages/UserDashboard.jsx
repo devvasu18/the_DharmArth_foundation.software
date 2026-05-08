@@ -696,8 +696,8 @@ const UserDashboard = () => {
                                             onChange={(e) => setCommissionLevelFilter(e.target.value)}
                                         >
                                             <option value="All">All Commissions</option>
-                                            <option value="Direct">Direct (L1)</option>
-                                            <option value="Indirect">Indirect (L2)</option>
+                                            <option value="Direct">Direct </option>
+                                            <option value="Indirect">Indirect </option>
                                         </select>
                                     )}
 
@@ -1209,7 +1209,7 @@ const UserDashboard = () => {
                                 ) : l1DonorsList.length === 0 ? (
                                     <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
                                         <User size={40} style={{ opacity: 0.2, marginBottom: '1rem' }} />
-                                        <p>No L1 donors found yet.</p>
+                                        <p>No direct donors found yet.</p>
                                     </div>
                                 ) : (
                                     <div className="l1-donors-list" style={{ maxHeight: '60vh', overflowY: 'auto', width: '100%' }}>
@@ -1339,7 +1339,7 @@ const UserDashboard = () => {
                                 ) : l2DonorsList.length === 0 ? (
                                     <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
                                         <Users size={40} style={{ opacity: 0.2, marginBottom: '1rem' }} />
-                                        <p>No L2 donors found yet.</p>
+                                        <p>No indirect donors found yet.</p>
                                     </div>
                                 ) : (
                                     <div className="l1-donors-list" style={{ maxHeight: '60vh', overflowY: 'auto', width: '100%' }}>
