@@ -23,24 +23,36 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="donate"
+        options={{
+          title: 'Donate',
+          tabBarIcon: ({ color }) => <Ionicons name="heart" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="events"
+        options={{
+          title: 'Events',
+          tabBarIcon: ({ color }) => <Ionicons name="calendar" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="dashboard"
         options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color }) => <Ionicons name="grid" size={24} color={color} />,
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <Ionicons name="person" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="referrals"
         options={{
-          title: 'Referrals',
-          tabBarIcon: ({ color }) => <Ionicons name="people" size={24} color={color} />,
+          href: null, // Hide from tab bar
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <Ionicons name="person" size={24} color={color} />,
+          href: null, // Hide from tab bar
         }}
       />
     </Tabs>

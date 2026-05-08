@@ -9,18 +9,26 @@ import {
   Dimensions,
   Linking
 } from 'react-native';
+import { useAuth } from '../../src/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
 const LandingScreen = () => {
+  const { user } = useAuth();
+  const router = useRouter();
+
   const handleDonate = () => {
     Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/donate');
   };
 
   const handleJoin = () => {
-    Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/signup');
+    if (user) {
+      router.push('/dashboard');
+    } else {
+      router.push('/signup');
+    }
   };
 
   return (
@@ -58,10 +66,19 @@ const LandingScreen = () => {
               Empowering change through your generous contributions.
             </Text>
 
-            <TouchableOpacity style={styles.donateBtn} onPress={handleDonate}>
-              <Text style={styles.donateBtnText}>Donate Now</Text>
-              <Ionicons name="arrow-forward" size={20} color="white" />
-            </TouchableOpacity>
+            <View style={styles.heroActions}>
+              <TouchableOpacity style={styles.donateBtn} onPress={handleDonate}>
+                <Text style={styles.donateBtnText}>Donate Now</Text>
+                <Ionicons name="arrow-forward" size={20} color="white" />
+              </TouchableOpacity>
+
+              {user && (
+                <TouchableOpacity style={styles.dashboardBtn} onPress={() => router.push('/dashboard')}>
+                  <Text style={styles.dashboardBtnText}>My Dashboard</Text>
+                  <Ionicons name="grid" size={20} color="#00bfa5" />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
 
@@ -188,6 +205,27 @@ const styles = StyleSheet.create({
   },
   donateBtnText: {
     color: 'white',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  heroActions: {
+    width: '100%',
+    gap: 12,
+  },
+  dashboardBtn: {
+    backgroundColor: 'white',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 30,
+    gap: 12,
+    borderWidth: 2,
+    borderColor: '#00bfa5',
+  },
+  dashboardBtnText: {
+    color: '#00bfa5',
     fontSize: 18,
     fontWeight: '800',
   },
