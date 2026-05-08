@@ -106,8 +106,8 @@ const UserProfile = () => {
                 useCORS: true,
                 scale: 3,
                 backgroundColor: null,
-                width: window.innerWidth >= 1024 ? 1000 : 850,
-                height: window.innerWidth >= 1024 ? 600 : (window.innerWidth < 650 ? 1100 : 1000),
+                width: 950,
+                height: 1200,
                 onclone: (clonedDoc) => {
                     // Ensure the cloned element is visible for capture
                     const el = clonedDoc.querySelector('.download-capture-area');
@@ -143,8 +143,8 @@ const UserProfile = () => {
         const updateScale = () => {
             if (previewContainerRef.current) {
                 const containerWidth = previewContainerRef.current.offsetWidth;
-                // The card is 1000px wide on desktop, 850px on mobile
-                const baselineWidth = window.innerWidth >= 1024 ? 1000 : 850;
+                // The card is 1000px wide on desktop, 950px on mobile
+                const baselineWidth = window.innerWidth >= 1024 ? 1000 : 950;
                 if (containerWidth < baselineWidth) {
                     setCardScale(containerWidth / baselineWidth);
                 } else {
@@ -317,7 +317,7 @@ const UserProfile = () => {
                         </div>
 
                         {/* ID Card Display */}
-                        <div className="card-outer-wrapper" style={{ height: `${(window.innerWidth >= 1024 ? 600 : (window.innerWidth < 650 ? 1100 : 1000)) * cardScale}px` }}>
+                        <div className="card-outer-wrapper" style={{ height: `${(window.innerWidth >= 1024 ? 600 : (window.innerWidth < 650 ? 1200 : 1100)) * cardScale}px` }}>
                             <div className="card-inner-scale" style={{ transform: `scale(${cardScale})` }}>
                                 <VolunteerCard userData={{ ...formData, mobile: user?.mobile, referralCode: user?.referralCode, createdAt: user?.createdAt }} cardRef={cardRef} />
                             </div>
@@ -339,13 +339,13 @@ const UserProfile = () => {
                 </div>
             </div>
 
-            {/* Hidden capture area for downloads - NOT scaled, absolute positioned off-screen */}
+            {/* Hidden capture area for downloads - FORCED VERTICAL 950x1200 */}
             <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-                <div ref={downloadRef} className="download-capture-area" style={{ 
-                    width: window.innerWidth >= 1024 ? '1000px' : '850px', 
-                    height: window.innerWidth >= 1024 ? '600px' : (window.innerWidth < 650 ? '1100px' : '1000px') 
-                }}>
-                    <VolunteerCard userData={{ ...formData, mobile: user?.mobile, referralCode: user?.referralCode, createdAt: user?.createdAt }} />
+                <div ref={downloadRef} className="download-capture-area" style={{ width: '950px', height: '1200px' }}>
+                    <VolunteerCard 
+                        userData={{ ...formData, mobile: user?.mobile, referralCode: user?.referralCode, createdAt: user?.createdAt }} 
+                        forceVertical={true}
+                    />
                 </div>
             </div>
 
@@ -594,7 +594,7 @@ const UserProfile = () => {
                     transform-origin: top center;
                     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
                     border-radius: 24px;
-                    width: 1000px;
+                    width: 950px;
                     flex-shrink: 0;
                     transform: scale(1);
                 }

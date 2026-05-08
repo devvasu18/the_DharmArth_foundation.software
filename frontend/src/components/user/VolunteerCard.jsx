@@ -4,20 +4,21 @@ import { useTranslation } from 'react-i18next';
 
 const DEFAULT_AVATAR_URL = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778152272/dharmarth_foundation/default_guest_avatar.jpg';
 
-const VolunteerCard = ({ userData, cardRef }) => {
+const VolunteerCard = ({ userData, cardRef, forceVertical = false }) => {
     const { t } = useTranslation();
-    const [isBigScreen, setIsBigScreen] = React.useState(window.innerWidth >= 1024);
-    const [cardHeight, setCardHeight] = React.useState(window.innerWidth < 650 ? '1100px' : '1000px');
+    const [isBigScreen, setIsBigScreen] = React.useState(forceVertical ? false : window.innerWidth >= 1024);
+    const [cardHeight, setCardHeight] = React.useState(forceVertical ? '1200px' : (window.innerWidth < 650 ? '1200px' : '1100px'));
 
     React.useEffect(() => {
+        if (forceVertical) return;
         const handleResize = () => {
             const width = window.innerWidth;
             setIsBigScreen(width >= 1024);
-            setCardHeight(width < 650 ? '1100px' : '1000px');
+            setCardHeight(width < 650 ? '1200px' : '1100px');
         };
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    }, [forceVertical]);
 
     // Fallback values
     const name = userData?.name || 'Your Name';
@@ -217,8 +218,8 @@ const VolunteerCard = ({ userData, cardRef }) => {
     // --- SMALL SCREEN DESIGN (Vertical - Current UI) ---
     const cardStyles = {
         container: {
-            width: '850px',
-            maxWidth: '850px',
+            width: '950px',
+            maxWidth: '950px',
             height: cardHeight,
             background: 'white',
             borderRadius: '24px',
