@@ -159,8 +159,8 @@ i18n
                         "rights": "All rights reserved."
                     },
                     "userDashboard": {
-                        "l1Donors": "Inspired Donor L1",
-                        "l2Donors": "Inspired Donor L2"
+                        "l1Donors": "Directly Inspired Donor",
+                        "l2Donors": "Partner-Inspired Donor"
                     }
                 }
 

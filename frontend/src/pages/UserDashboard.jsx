@@ -629,14 +629,14 @@ const UserDashboard = () => {
                                         <Award size={16} color="#00bfa5" /> Volunteer Identity Card
                                     </h4>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                        <button 
+                                        <button
                                             onClick={() => window.location.href = '/profile'}
                                             className="share-action-btn"
                                             style={{ background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' }}
                                         >
                                             <User size={14} /> Edit Profile
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => {
                                                 if (navigator.share) {
                                                     navigator.share({
@@ -798,9 +798,9 @@ const UserDashboard = () => {
                                                                 {txn.reason === 'payout' && txn.status === 'pending' ? 'IN PROCESS' :
                                                                     txn.status === 'failed' ? 'FAILED' :
                                                                         txn.isHelpResolved ? 'HELP RESOLVED' :
-                                                                            txn.type === 'credit' ? 'Commission' : 
-                                                                            (txn.isDonation || txn.reason === 'wallet_donation' ? 'Donation' : 
-                                                                            (txn.reason === 'payout' ? (txn.status === 'failed' ? 'FAILED' : 'COMPLETED') : txn.type.toUpperCase()))}
+                                                                            txn.type === 'credit' ? 'Commission' :
+                                                                                (txn.isDonation || txn.reason === 'wallet_donation' ? 'Donation' :
+                                                                                    (txn.reason === 'payout' ? (txn.status === 'failed' ? 'FAILED' : 'COMPLETED') : txn.type.toUpperCase()))}
                                                             </span>
 
                                                             {txn.reason === 'payout' && (
@@ -1138,7 +1138,7 @@ const UserDashboard = () => {
                             <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)', paddingBottom: '1.5rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
                                     <User size={28} color="white" />
-                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>L1 Network</h2>
+                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>Directly Inspired Donor</h2>
                                 </div>
                                 <p style={{ margin: '5px 0 0', opacity: 0.9 }}>Track your direct referrals and earnings</p>
                             </div>
@@ -1147,7 +1147,7 @@ const UserDashboard = () => {
                                 {/* Summary Stats */}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '1.25rem' }}>
                                     <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderLeft: '4px solid #00bfa5' }}>
-                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Lifetime L1</p>
+                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Lifetime </p>
                                         <p style={{ margin: '4px 0 0', fontSize: '1.2rem', fontWeight: 800, color: '#1e293b' }}>₹{l1Summary.lifetimeEarning.toFixed(2)}</p>
                                     </div>
                                     <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderLeft: '4px solid #f59e0b' }}>
@@ -1265,10 +1265,10 @@ const UserDashboard = () => {
                         >
                             <button className="payout-modal-close" onClick={() => setIsL2ModalOpen(false)}><X size={24} /></button>
 
-                            <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', paddingBottom: '1.5rem' }}>
+                            <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)', paddingBottom: '1.5rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
                                     <Users size={28} color="white" />
-                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>L2 Network</h2>
+                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>Partner-Inspired Donor</h2>
                                 </div>
                                 <p style={{ margin: '5px 0 0', opacity: 0.9 }}>Track your indirect referrals and earnings</p>
                             </div>
@@ -1277,7 +1277,7 @@ const UserDashboard = () => {
                                 {/* Summary Stats */}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '1.25rem' }}>
                                     <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderLeft: '4px solid #6366f1' }}>
-                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Lifetime L2</p>
+                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Lifetime </p>
                                         <p style={{ margin: '4px 0 0', fontSize: '1.2rem', fontWeight: 800, color: '#1e293b' }}>₹{l2Summary.lifetimeEarning.toFixed(2)}</p>
                                     </div>
                                     <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderLeft: '4px solid #f59e0b' }}>
