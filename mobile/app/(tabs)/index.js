@@ -151,6 +151,16 @@ export default function Dashboard() {
             <Text style={styles.walletActionText}>Bank</Text>
           </TouchableOpacity>
         </View>
+
+        {wallet?.balance > 0 && (
+          <TouchableOpacity 
+            style={styles.walletDonateBtn}
+            onPress={() => router.push('/donate-wallet')}
+          >
+            <Ionicons name="heart" size={18} color="white" />
+            <Text style={styles.walletDonateBtnText}>Donate from Wallet</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Stats Grid */}
@@ -340,6 +350,23 @@ const styles = StyleSheet.create({
     color: '#00695c',
     fontWeight: '800',
     fontSize: 13,
+  },
+  walletDonateBtn: {
+    marginTop: 16,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 12,
+    padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  walletDonateBtnText: {
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 14,
   },
   statsGrid: {
     flexDirection: 'row',

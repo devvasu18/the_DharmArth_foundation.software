@@ -18,18 +18,37 @@ export default function TransactionsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [txnType, setTxnType] = useState('All'); // All, Donation, Commission
 
   const fetchTransactions = async (pageNum = 1, shouldRefresh = false) => {
     try {
-      const { data } = await api.get(`/transactions/my?page=${pageNum}&limit=20`);
+      const { data } = await api.get(`/wallet/transactions`, {
+        params: {
+          month: selectedMonth,
+          year: selectedYear,
+          page: pageNum,
+          limit: 20
+        }
+      });
       
+      let newTxns = data.transactions || [];
+
+      // Frontend filter for Type (as backend might not support it yet or returns all)
+      if (txnType === 'Donation') {
+        newTxns = newTxns.filter(t => t.isDonation || t.reason === 'wallet_donation');
+      } else if (txnType === 'Commission') {
+        newTxns = newTxns.filter(t => t.type === 'credit' && !t.isDonation && t.reason !== 'wallet_donation');
+      }
+
       if (shouldRefresh) {
-        setTransactions(data.transactions);
+        setTransactions(newTxns);
       } else {
-        setTransactions(prev => [...prev, ...data.transactions]);
+        setTransactions(prev => [...prev, ...newTxns]);
       }
       
-      setHasMore(data.transactions.length === 20);
+      setHasMore(data.hasMore);
       setPage(pageNum);
     } catch (error) {
       console.error(error);
@@ -40,8 +59,8 @@ export default function TransactionsScreen() {
   };
 
   useEffect(() => {
-    fetchTransactions();
-  }, []);
+    fetchTransactions(1, true);
+  }, [selectedMonth, selectedYear, txnType]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -99,6 +118,53 @@ export default function TransactionsScreen() {
     <View style={styles.container}>
       <Stack.Screen options={{ title: 'History', headerTitleAlign: 'center' }} />
       
+      <View style={styles.filterSection}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+          <TouchableOpacity 
+            style={[styles.typeBtn, txnType === 'All' && styles.typeBtnActive]}
+            onPress={() => setTxnType('All')}
+          >
+            <Text style={[styles.typeBtnText, txnType === 'All' && styles.typeBtnTextActive]}>All</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.typeBtn, txnType === 'Donation' && styles.typeBtnActive]}
+            onPress={() => setTxnType('Donation')}
+          >
+            <Text style={[styles.typeBtnText, txnType === 'Donation' && styles.typeBtnTextActive]}>Donations</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.typeBtn, txnType === 'Commission' && styles.typeBtnActive]}
+            onPress={() => setTxnType('Commission')}
+          >
+            <Text style={[styles.typeBtnText, txnType === 'Commission' && styles.typeBtnTextActive]}>Commissions</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        <View style={styles.dateFilters}>
+          <View style={styles.datePicker}>
+            <Ionicons name="calendar-outline" size={14} color="#64748b" />
+            <TextInput
+              style={styles.dateInput}
+              value={selectedMonth.toString()}
+              onChangeText={(t) => setSelectedMonth(parseInt(t) || 0)}
+              keyboardType="number-pad"
+              maxLength={2}
+            />
+            <Text style={styles.dateLabel}>MM</Text>
+          </View>
+          <View style={styles.datePicker}>
+            <TextInput
+              style={styles.dateInput}
+              value={selectedYear.toString()}
+              onChangeText={(t) => setSelectedYear(parseInt(t) || 0)}
+              keyboardType="number-pad"
+              maxLength={4}
+            />
+            <Text style={styles.dateLabel}>YYYY</Text>
+          </View>
+        </View>
+      </View>
+      
       <FlatList
         data={transactions}
         renderItem={renderItem}
@@ -136,6 +202,66 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
     paddingBottom: 40,
+  },
+  filterSection: {
+    backgroundColor: 'white',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  filterScroll: {
+    paddingHorizontal: 16,
+    gap: 8,
+    marginBottom: 12,
+  },
+  typeBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  typeBtnActive: {
+    backgroundColor: '#00bfa5',
+    borderColor: '#00bfa5',
+  },
+  typeBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  typeBtnTextActive: {
+    color: 'white',
+  },
+  dateFilters: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  datePicker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  dateInput: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1e293b',
+    paddingHorizontal: 4,
+    minWidth: 30,
+    textAlign: 'center',
+  },
+  dateLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#94a3b8',
+    marginLeft: 2,
   },
   txnItem: {
     backgroundColor: 'white',
