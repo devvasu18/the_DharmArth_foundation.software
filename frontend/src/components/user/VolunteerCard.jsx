@@ -138,12 +138,12 @@ const VolunteerCard = ({ userData, cardRef }) => {
             textTransform: 'uppercase'
         },
         userBio: {
-            fontSize: '26px',
+            fontSize: '32px',
             color: '#000000',
-            lineHeight: 1.6,
-            marginBottom: '60px',
+            lineHeight: 1.5,
+            marginBottom: '70px',
             fontStyle: 'italic',
-            maxHeight: '250px',
+            maxHeight: '300px',
             overflow: 'hidden'
         },
         detailsGrid: {
@@ -215,26 +215,12 @@ const VolunteerCard = ({ userData, cardRef }) => {
                     <img src={profileImage} alt={name} style={cardStyles.photo} />
                 </div>
 
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    color: '#000',
-                    fontWeight: 800,
-                    fontSize: '16px',
-                    textTransform: 'uppercase',
-                    border: '1.5px solid #000',
-                    padding: '6px 16px',
-                    borderRadius: '99px'
-                }}>
-                    <Award size={18} color="#000" /> Official Volunteer
+                <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '56px', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-1px' }}>DharmArth</div>
+                    <div style={{ fontSize: '24px', fontWeight: 700, opacity: 0.9, textTransform: 'uppercase', letterSpacing: '4px', marginTop: '4px' }}>Foundation</div>
                 </div>
 
 
-                <div style={{ marginTop: '25px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '24px', fontWeight: 900 }}>DharmArth</div>
-                    <div style={{ fontSize: '10px', fontWeight: 700, opacity: 0.8, textTransform: 'uppercase' }}>Foundation</div>
-                </div>
 
                 {/* Decorative Elements */}
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 50%)', pointerEvents: 'none' }}></div>
