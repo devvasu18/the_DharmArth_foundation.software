@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Replace with your local machine IP if testing on a physical device
 // For emulator, 10.0.2.2 is usually the localhost of the host machine
-const API_BASE_URL = 'https://short-impalas-check.loca.lt'; 
+const API_BASE_URL = 'https://the-dharmarth-foundation-software-tidi.onrender.com'; 
 
 console.log(`[API] Connected to Backend: ${API_BASE_URL}`);
 
