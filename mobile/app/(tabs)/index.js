@@ -1,487 +1,277 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   ScrollView, 
-  RefreshControl, 
+  Image, 
   TouchableOpacity, 
-  ActivityIndicator,
-  Share,
-  Alert
+  Dimensions,
+  Linking
 } from 'react-native';
-import { useAuth } from '../../src/context/AuthContext';
-import api, { API_BASE_URL } from '../../src/services/api';
-import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import * as Clipboard from 'expo-clipboard';
-import { Image } from 'react-native';
+import { Stack } from 'expo-router';
 
-const DEFAULT_AVATAR = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778152272/dharmarth_foundation/default_guest_avatar.jpg';
+const { width } = Dimensions.get('window');
 
-export default function Dashboard() {
-  const { user } = useAuth();
-  const router = useRouter();
-  const [wallet, setWallet] = useState(null);
-  const [stats, setStats] = useState({ l1Donors: 0, l2Donors: 0 });
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const fetchData = async () => {
-    try {
-      const { data } = await api.get('/wallet/summary');
-      setWallet(data.wallet);
-      setStats(data.stats);
-    } catch (error) {
-      console.error("Error fetching dashboard data", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+const LandingScreen = () => {
+  const handleDonate = () => {
+    Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/donate');
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchData();
-  }, []);
-
-  const donationLink = user?.referralCode
-    ? `https://the-dharm-arth-foundation-software.vercel.app/donate?ref=${user.referralCode}`
-    : `https://the-dharm-arth-foundation-software.vercel.app/donate?ref=${user?.mobile}`;
-
-  const profileLink = user?.referralCode
-    ? `https://the-dharm-arth-foundation-software.vercel.app/v/${user.referralCode}`
-    : `https://the-dharm-arth-foundation-software.vercel.app/v/${user?.mobile}`;
-
-  const copyToClipboard = async () => {
-    await Clipboard.setStringAsync(donationLink);
-    Alert.alert('Copied', 'Donation link copied to clipboard!');
+  const handleJoin = () => {
+    Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/signup');
   };
-
-  const onShare = async () => {
-    try {
-      const message = `Namaste! 🙏 Join me in making a difference with The DharmArth Foundation. 🕉️\n\nYour small contribution can bring big changes to someone's life. 🤝\n\n✨ Donate here: ${donationLink}\n📜 View my Volunteer Profile: ${profileLink}\n\nThank you for your support! ❤️`;
-      await Share.share({
-        message: message,
-      });
-    } catch (error) {
-      console.error(error.message);
-    }
-  };
-
-  if (loading && !refreshing) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#00bfa5" />
-      </View>
-    );
-  }
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#00bfa5']} />
-      }
-    >
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.greeting}>Namaste, {user?.name}!</Text>
-            <Text style={styles.subtitle}>Here is your impact summary</Text>
-          </View>
-          <TouchableOpacity 
-            style={styles.profileIconBtn}
-            onPress={() => router.push('/profile')}
-          >
-            <Image 
-              source={{ uri: user?.profileImage || DEFAULT_AVATAR }} 
-              style={styles.headerAvatar} 
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
+    <View style={styles.container}>
+      <Stack.Screen options={{ 
+        title: 'DharmArth', 
+        headerTitleAlign: 'center',
+        headerLeft: () => (
+          <Image 
+            source={{ uri: 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778152272/dharmarth_foundation/logo.png' }} 
+            style={{ width: 30, height: 30, marginLeft: 16 }} 
+          />
+        )
+      }} />
+      
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Hero Section */}
+        <View style={styles.hero}>
+          <View style={styles.heroContent}>
+            <Text style={styles.heroTitle}>Welcome to the Dharmarth Medical Foundation</Text>
+            
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>0%</Text>
+                <Text style={styles.statLabel}>PLATFORM FEE</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>72 Lakh+</Text>
+                <Text style={styles.statLabel}>CONTRIBUTORS</Text>
+              </View>
+            </View>
 
-      {/* Wallet Card */}
-      <View style={styles.walletCard}>
-        <View style={styles.walletHeader}>
-          <Text style={styles.walletLabel}>Available Balance</Text>
-          <Ionicons name="wallet-outline" size={24} color="rgba(255,255,255,0.8)" />
-        </View>
-        <Text style={styles.balanceText}>₹ {wallet?.balance?.toLocaleString() || 0}</Text>
-        
-        <View style={styles.walletStats}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>₹ {wallet?.totalEarned?.toLocaleString() || 0}</Text>
-            <Text style={styles.statLabel}>Total Earned</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{stats.l1Donors + stats.l2Donors}</Text>
-            <Text style={styles.statLabel}>Total Referrals</Text>
+            <Text style={styles.heroSubtitle}>
+              Empowering change through your generous contributions.
+            </Text>
+
+            <TouchableOpacity style={styles.donateBtn} onPress={handleDonate}>
+              <Text style={styles.donateBtnText}>Donate Now</Text>
+              <Ionicons name="arrow-forward" size={20} color="white" />
+            </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.actionRow}>
-          <TouchableOpacity 
-            style={styles.walletActionButton}
-            onPress={() => router.push('/volunteer-card')}
-          >
-            <Ionicons name="card-outline" size={18} color="#00695c" />
-            <Text style={styles.walletActionText}>ID Card</Text>
-          </TouchableOpacity>
+        {/* Mission Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Our Mission</Text>
+          <View style={styles.underline} />
+          <Text style={styles.sectionText}>
+            The DharmArth Medical Foundation is dedicated to providing healthcare support to those in need. 
+            Through our transparency and 0% platform fee, we ensure that every rupee you donate goes directly 
+            to the cause.
+          </Text>
           
-          <TouchableOpacity 
-            style={styles.walletActionButton}
-            onPress={() => router.push('/withdraw')}
-          >
-            <Ionicons name="cash-outline" size={18} color="#00695c" />
-            <Text style={styles.walletActionText}>Withdraw</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.walletActionButton}
-            onPress={() => router.push('/bank-details')}
-          >
-            <Ionicons name="business-outline" size={18} color="#00695c" />
-            <Text style={styles.walletActionText}>Bank</Text>
-          </TouchableOpacity>
-        </View>
-
-        {wallet?.balance > 0 && (
-          <TouchableOpacity 
-            style={styles.walletDonateBtn}
-            onPress={() => router.push('/donate-wallet')}
-          >
-            <Ionicons name="heart" size={18} color="white" />
-            <Text style={styles.walletDonateBtnText}>Donate from Wallet</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Stats Grid */}
-      <View style={styles.statsGrid}>
-        <TouchableOpacity 
-          style={styles.statBox}
-          onPress={() => router.push('/donors')}
-        >
-          <View style={[styles.iconBg, { backgroundColor: '#e0f2f1' }]}>
-            <Ionicons name="people" size={20} color="#00bfa5" />
+          <View style={styles.featureGrid}>
+            <View style={styles.featureCard}>
+              <View style={[styles.featureIcon, { backgroundColor: '#e0f2f1' }]}>
+                <Ionicons name="shield-checkmark" size={24} color="#00bfa5" />
+              </View>
+              <Text style={styles.featureTitle}>Transparent</Text>
+              <Text style={styles.featureDesc}>Full visibility of funds</Text>
+            </View>
+            <View style={styles.featureCard}>
+              <View style={[styles.featureIcon, { backgroundColor: '#fff3e0' }]}>
+                <Ionicons name="flash" size={24} color="#ff9800" />
+              </View>
+              <Text style={styles.featureTitle}>Instant</Text>
+              <Text style={styles.featureDesc}>Quick aid delivery</Text>
+            </View>
           </View>
-          <Text style={styles.boxValue}>{stats.l1Donors || 0}</Text>
-          <Text style={styles.boxLabel}>Direct Donors</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.statBox}
-          onPress={() => router.push('/donors')}
-        >
-          <View style={[styles.iconBg, { backgroundColor: '#fff3e0' }]}>
-            <Ionicons name="git-network" size={20} color="#ff9800" />
-          </View>
-          <Text style={styles.boxValue}>{stats.l2Donors || 0}</Text>
-          <Text style={styles.boxLabel}>Indirect Donors</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Referral Section */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Ionicons name="share-social" size={20} color="#667eea" />
-          <Text style={styles.cardTitle}>Share & Earn</Text>
         </View>
-        <Text style={styles.cardDesc}>
-          Earn 10% commission instantly when someone donates using your link.
-        </Text>
-        
-        <View style={styles.linkContainer}>
-          <Text style={styles.linkText} numberOfLines={1}>{donationLink}</Text>
-          <TouchableOpacity onPress={copyToClipboard} style={styles.copyIcon}>
-            <Ionicons name="copy-outline" size={20} color="#00bfa5" />
+
+        {/* Impact Section */}
+        <View style={[styles.section, { backgroundColor: '#f1f5f9' }]}>
+          <Text style={styles.sectionTitle}>Join & Earn</Text>
+          <Text style={styles.sectionText}>
+            Become a motivator and help us spread the word. Earn rewards while doing good.
+          </Text>
+          <TouchableOpacity style={styles.secondaryBtn} onPress={handleJoin}>
+            <Text style={styles.secondaryBtnText}>Become a Motivator</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.shareButtons}>
-          <TouchableOpacity style={[styles.shareButton, { backgroundColor: '#25D366' }]} onPress={onShare}>
-            <Ionicons name="logo-whatsapp" size={20} color="white" />
-            <Text style={styles.shareButtonText}>WhatsApp</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.shareButton, { backgroundColor: '#00bfa5' }]} onPress={onShare}>
-            <Ionicons name="share-outline" size={20} color="white" />
-            <Text style={styles.shareButtonText}>Share</Text>
-          </TouchableOpacity>
+        {/* Footer Info */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>© 2026 The DharmArth Foundation</Text>
+          <Text style={styles.footerSubtext}>Dedicated to humanity</Text>
         </View>
-      </View>
-
-      <TouchableOpacity 
-        style={styles.historyLink}
-        onPress={() => router.push('/transactions')}
-      >
-        <Text style={styles.historyLinkText}>View Full Transaction History</Text>
-        <Ionicons name="receipt-outline" size={16} color="#64748b" />
-      </TouchableOpacity>
-
-      <View style={{ height: 40 }} />
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'white',
   },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8fafc',
-  },
-  header: {
+  hero: {
+    backgroundColor: '#e0f7f6',
     padding: 24,
-    paddingTop: 16,
+    paddingVertical: 40,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
   },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  heroContent: {
     alignItems: 'center',
   },
-  headerAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: 'white',
-  },
-  profileIconBtn: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  greeting: {
-    fontSize: 22,
-    fontWeight: '800',
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: '900',
     color: '#1e293b',
+    textAlign: 'center',
+    lineHeight: 36,
   },
-  subtitle: {
-    fontSize: 14,
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    padding: 16,
+    borderRadius: 20,
+    width: '100%',
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#00bfa5',
+  },
+  statLabel: {
+    fontSize: 10,
+    fontWeight: '700',
     color: '#64748b',
     marginTop: 4,
   },
-  walletCard: {
-    margin: 24,
-    marginTop: 0,
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: '#cbd5e1',
+  },
+  heroSubtitle: {
+    fontSize: 16,
+    color: '#475569',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
+  },
+  donateBtn: {
     backgroundColor: '#00bfa5',
-    borderRadius: 24,
-    padding: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 30,
+    gap: 12,
     shadowColor: '#00bfa5',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
-    elevation: 10,
+    elevation: 8,
   },
-  walletHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  walletLabel: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 14,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  balanceText: {
+  donateBtnText: {
     color: 'white',
-    fontSize: 36,
-    fontWeight: '800',
-    marginBottom: 24,
-  },
-  walletStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.2)',
-  },
-  statItem: {
-    flex: 1,
-  },
-  statValue: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  statLabel: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  divider: {
-    width: 1,
-    height: 30,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    marginHorizontal: 16,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  walletActionButton: {
-    flex: 1,
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 12,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6,
-  },
-  walletActionText: {
-    color: '#00695c',
-    fontWeight: '800',
-    fontSize: 13,
-  },
-  walletDonateBtn: {
-    marginTop: 16,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 12,
-    padding: 12,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  walletDonateBtnText: {
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    paddingHorizontal: 24,
-    gap: 16,
-    marginBottom: 24,
-  },
-  statBox: {
-    flex: 1,
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  iconBg: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  boxValue: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#1e293b',
-  },
-  boxLabel: {
-    fontSize: 12,
-    color: '#64748b',
-    marginTop: 4,
-  },
-  card: {
-    marginHorizontal: 24,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  cardTitle: {
     fontSize: 18,
     fontWeight: '800',
+  },
+  section: {
+    padding: 24,
+    paddingVertical: 40,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: '800',
     color: '#1e293b',
+    marginBottom: 12,
   },
-  cardDesc: {
-    fontSize: 14,
+  underline: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#00bfa5',
+    borderRadius: 2,
+    marginBottom: 20,
+  },
+  sectionText: {
+    fontSize: 16,
     color: '#64748b',
-    lineHeight: 20,
-    marginBottom: 20,
+    lineHeight: 26,
+    marginBottom: 24,
   },
-  linkContainer: {
+  featureGrid: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f1f5f9',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 20,
+    gap: 16,
+  },
+  featureCard: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    padding: 16,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderStyle: 'dashed',
+    borderColor: '#f1f5f9',
   },
-  linkText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#475569',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-  },
-  copyIcon: {
-    padding: 4,
-    marginLeft: 8,
-  },
-  shareButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  shareButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
+  featureIcon: {
+    width: 44,
+    height: 44,
     borderRadius: 12,
-    gap: 8,
-  },
-  shareButtonText: {
-    color: 'white',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  historyLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    marginTop: 24,
-    padding: 12,
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  historyLinkText: {
-    color: '#64748b',
+  featureTitle: {
+    fontSize: 16,
     fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  featureDesc: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+  secondaryBtn: {
+    backgroundColor: 'white',
+    borderWidth: 2,
+    borderColor: '#00bfa5',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  secondaryBtnText: {
+    color: '#00bfa5',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  footer: {
+    padding: 40,
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+  },
+  footerText: {
     fontSize: 14,
-    textDecorationLine: 'underline',
+    fontWeight: '700',
+    color: '#475569',
+  },
+  footerSubtext: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginTop: 4,
   },
 });
+
+export default LandingScreen;

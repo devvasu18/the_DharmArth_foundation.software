@@ -13,9 +13,11 @@ import {
 import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 export default function Referrals() {
   const { user } = useAuth();
+  const router = useRouter();
   const [referrals, setReferrals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -37,9 +39,13 @@ export default function Referrals() {
   };
 
   useEffect(() => {
-    setLoading(true);
-    fetchReferrals();
-  }, [statusFilter]);
+    if (!user) {
+      router.replace('/login');
+    } else {
+      setLoading(true);
+      fetchReferrals();
+    }
+  }, [statusFilter, user]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

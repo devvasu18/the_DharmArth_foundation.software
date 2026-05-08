@@ -13,13 +13,12 @@ function RootLayoutNav() {
     if (loading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const onLandingPage = segments.length <= 1 || (segments[0] === '(tabs)' && segments[1] === 'index');
 
-    if (!user && !inAuthGroup) {
-      // Redirect to login if not authenticated and not in auth group
+    if (!user && !inAuthGroup && !onLandingPage) {
       router.replace('/login');
     } else if (user && inAuthGroup) {
-      // Redirect to home if authenticated and in auth group
-      router.replace('/');
+      router.replace('/dashboard');
     }
   }, [user, loading, segments]);
 
