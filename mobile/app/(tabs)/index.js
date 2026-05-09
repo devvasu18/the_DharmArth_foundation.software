@@ -22,6 +22,7 @@ const LandingScreen = () => {
   const router = useRouter();
   const [visuals, setVisuals] = useState([]);
   const [textSlides, setTextSlides] = useState([]);
+  const [crowdfunding, setCrowdfunding] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentVisualIndex, setCurrentVisualIndex] = useState(0);
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
