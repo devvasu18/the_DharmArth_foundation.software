@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import {
     Search, Filter, Calendar, Download, ChevronDown, X,
-    ArrowRight, User, CheckCircle, Wallet, FileText, Save, Upload, Eye, Edit2, Lock
+    ArrowRight, User, CheckCircle, Wallet, FileText, Save, Upload, Eye, Edit2, Lock, MapPin
 } from 'lucide-react';
 import './TransactionManagement.css';
 import toast from 'react-hot-toast';
@@ -32,6 +32,7 @@ const TransactionManagement = () => {
             transactionType: 'ALL',
             is80G: false,
             pending80G: false,
+            locationQuery: '',
             sort: 'desc',
             limit: 20,
             dateRange: {
@@ -155,7 +156,8 @@ const TransactionManagement = () => {
                 startDate: filters.dateRange.start,
                 endDate: filters.dateRange.end,
                 sort: filters.sort === 'asc' ? 'oldest' : 'newest',
-                commissionFilter: filters.commissionFilter
+                commissionFilter: filters.commissionFilter,
+                locationQuery: filters.locationQuery
             };
 
             if (filters.searchUser) {
@@ -255,7 +257,7 @@ const TransactionManagement = () => {
     // Initial Load & Refetch on filter change
     useEffect(() => {
         fetchTransactions();
-    }, [page, filters.searchUser, filters.specificMotivatorIds, filters.is80G, filters.dateRange, filters.levelFilter, filters.commissionFilter, filters.transactionType, filters.sort, filters.limit, levelData]);
+    }, [page, filters.searchUser, filters.specificMotivatorIds, filters.is80G, filters.dateRange, filters.levelFilter, filters.commissionFilter, filters.transactionType, filters.sort, filters.limit, filters.locationQuery, levelData]);
 
     // Handle clicks outside dropdown
     useEffect(() => {
@@ -327,6 +329,7 @@ const TransactionManagement = () => {
         if (key === 'pending80g') setFilters(prev => ({ ...prev, pending80G: false }));
         if (key === 'date') setFilters(prev => ({ ...prev, dateRange: { start: '', end: '' } }));
         if (key === 'level') setFilters(prev => ({ ...prev, levelFilter: 'ALL', specificMotivatorIds: [] }));
+        if (key === 'location') setFilters(prev => ({ ...prev, locationQuery: '' }));
     };
 
     const formatCurrency = (amount) => {
@@ -708,6 +711,28 @@ const TransactionManagement = () => {
                     {filters.pending80G && <CheckCircle size={14} />}
                 </button>
 
+                {/* 3.5 Location Search Filter */}
+                <div className="filter-group">
+                    <div className="search-input-wrapper" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <MapPin size={16} style={{ position: 'absolute', left: '12px', color: '#64748b' }} />
+                        <input
+                            type="text"
+                            placeholder="Search city, state..."
+                            className="filter-btn"
+                            style={{ paddingLeft: '36px', width: '200px', cursor: 'text' }}
+                            value={filters.locationQuery}
+                            onChange={(e) => setFilters(prev => ({ ...prev, locationQuery: e.target.value }))}
+                        />
+                        {filters.locationQuery && (
+                            <X 
+                                size={14} 
+                                style={{ position: 'absolute', right: '12px', cursor: 'pointer', color: '#64748b' }} 
+                                onClick={() => setFilters(prev => ({ ...prev, locationQuery: '' }))}
+                            />
+                        )}
+                    </div>
+                </div>
+
                 {/* 4. Date Filter */}
                 <div className="filter-group">
                     <button className={`filter-btn ${filters.dateRange.start ? 'active' : ''}`} onClick={() => toggleFilter('DATE')}>
@@ -861,10 +886,13 @@ const TransactionManagement = () => {
             </div>
 
             {/* Filter Chips */}
-            {(filters.searchUser || filters.is80G || filters.pending80G || filters.dateRange.start || filters.levelFilter !== 'ALL' || filters.specificMotivatorIds.length > 0) && (
+            {(filters.searchUser || filters.is80G || filters.pending80G || filters.dateRange.start || filters.levelFilter !== 'ALL' || filters.specificMotivatorIds.length > 0 || filters.locationQuery) && (
                 <div className="filter-chips">
                     {filters.searchUser && (
                         <span className="chip">User: {filters.searchUser.name} <X size={12} className="chip-remove" onClick={() => removeFilter('user')} /></span>
+                    )}
+                    {filters.locationQuery && (
+                        <span className="chip">Location: {filters.locationQuery} <X size={12} className="chip-remove" onClick={() => removeFilter('location')} /></span>
                     )}
                     {filters.transactionType !== 'ALL' && (
                         <span className="chip">Type: {filters.transactionType} <X size={12} className="chip-remove" onClick={() => removeFilter('type')} /></span>

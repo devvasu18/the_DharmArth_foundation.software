@@ -16,13 +16,25 @@ router.get('/dashboard', protect, adminOnly, async (req, res) => {
         const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
 
-        const { searchUserId, specificMotivatorIds, is80G, pending80G, startDate, endDate, sort, _id } = req.query;
+        const { searchUserId, specificMotivatorIds, is80G, pending80G, startDate, endDate, sort, _id, locationQuery } = req.query;
 
         const query = { status: 'success' };
         if (_id) {
             query._id = _id;
         }
         const andConditions = [];
+
+        // Location Filter
+        if (locationQuery) {
+            const locRegex = new RegExp(escapeRegex(locationQuery), 'i');
+            andConditions.push({
+                $or: [
+                    { address: locRegex },
+                    { city: locRegex },
+                    { state: locRegex }
+                ]
+            });
+        }
 
         // Date Filter
         if (startDate && endDate) {
