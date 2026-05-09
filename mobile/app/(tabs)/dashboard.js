@@ -80,15 +80,6 @@ export default function DashboardScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ 
-        title: 'Motivator Dashboard',
-        headerRight: () => (
-          <TouchableOpacity onPress={logout} style={{ marginRight: 16 }}>
-            <Ionicons name="log-out-outline" size={24} color="#ef4444" />
-          </TouchableOpacity>
-        )
-      }} />
-      
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
         {/* Wallet Card - mirrored from web */}

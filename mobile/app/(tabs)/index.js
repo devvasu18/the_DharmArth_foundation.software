@@ -20,11 +20,11 @@ const { width } = Dimensions.get('window');
 const LandingScreen = () => {
   const { user } = useAuth();
   const router = useRouter();
-  const [sliders, setSliders] = useState([]);
-  const [crowdfunding, setCrowdfunding] = useState([]);
+  const [visuals, setVisuals] = useState([]);
+  const [textSlides, setTextSlides] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentSliderIndex, setCurrentSliderIndex] = useState(0);
-  const sliderRef = React.useRef(null);
+  const [currentVisualIndex, setCurrentVisualIndex] = useState(0);
+  const [currentTextIndex, setCurrentTextIndex] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,7 +33,12 @@ const LandingScreen = () => {
           api.get('/content/sliders'),
           api.get('/content/crowdfunding')
         ]);
-        setSliders(sliderRes.data.filter(s => s.isVisible !== false && (s.type === 'image' || !s.type)));
+        const allSliders = sliderRes.data.filter(s => s.isVisible !== false);
+        const images = allSliders.filter(s => s.type === 'image' || !s.type).sort((a, b) => a.order - b.order);
+        const texts = allSliders.filter(s => s.type === 'text').sort((a, b) => a.order - b.order);
+
+        setVisuals(images);
+        setTextSlides(texts.length > 0 ? texts : images);
         setCrowdfunding(crowdRes.data);
       } catch (error) {
         console.error("Failed to fetch home content", error);
@@ -44,17 +49,24 @@ const LandingScreen = () => {
     fetchData();
   }, []);
 
-  // Auto-scroll logic
+  // Auto-rotation logic
   useEffect(() => {
-    if (sliders.length > 1) {
+    if (visuals.length > 1) {
       const interval = setInterval(() => {
-        const nextIndex = (currentSliderIndex + 1) % sliders.length;
-        sliderRef.current?.scrollTo({ x: nextIndex * width, animated: true });
-        setCurrentSliderIndex(nextIndex);
+        setCurrentVisualIndex((prev) => (prev + 1) % visuals.length);
       }, 5000);
       return () => clearInterval(interval);
     }
-  }, [sliders, currentSliderIndex]);
+  }, [visuals.length]);
+
+  useEffect(() => {
+    if (textSlides.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentTextIndex((prev) => (prev + 1) % textSlides.length);
+      }, 6000);
+      return () => clearInterval(interval);
+    }
+  }, [textSlides.length]);
 
   const handleDonate = () => {
     Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/donate');
@@ -78,70 +90,72 @@ const LandingScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ 
-        title: 'DharmArth', 
-        headerTitleAlign: 'center',
-        headerLeft: () => (
-          <Image 
-            source={{ uri: 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778152272/dharmarth_foundation/logo.png' }} 
-            style={{ width: 30, height: 30, marginLeft: 16 }} 
-          />
-        )
-      }} />
-      
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Hero Slider Section */}
+        {/* Premium Hero Slider Section */}
         <View style={styles.heroSection}>
-          <ScrollView 
-            ref={sliderRef}
-            horizontal 
-            pagingEnabled 
-            showsHorizontalScrollIndicator={false}
-            onScroll={(e) => {
-              const offset = e.nativeEvent.contentOffset.x;
-              setCurrentSliderIndex(Math.round(offset / width));
-            }}
-            scrollEventThrottle={16}
-          >
-            {sliders.map((slide, index) => (
-              <View key={slide._id || index} style={{ width }}>
-                <Image source={{ uri: slide.imageUrl }} style={styles.heroImage} resizeMode="cover" />
-                <View style={styles.heroOverlay}>
-                  <Text style={styles.heroSlideTitle}>{slide.title}</Text>
-                  <Text style={styles.heroSlideSubtitle} numberOfLines={2}>{slide.subtitle}</Text>
-                  <TouchableOpacity style={styles.slideCta} onPress={() => Linking.openURL(slide.ctaLink || 'https://the-dharm-arth-foundation-software.vercel.app/donate')}>
-                    <Text style={styles.slideCtaText}>{slide.ctaText || 'Donate Now'}</Text>
-                    <Ionicons name="arrow-forward" size={16} color="white" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-          <View style={styles.pagination}>
-            {sliders.map((_, i) => (
-              <View key={i} style={[styles.dot, currentSliderIndex === i && styles.activeDot]} />
-            ))}
-          </View>
-        </View>
+          <View style={styles.heroDialContainer}>
+            {visuals.map((slide, index) => {
+              const len = visuals.length;
+              const isCenter = index === currentVisualIndex;
+              const isLeft = index === (currentVisualIndex - 1 + len) % len;
+              const isRight = index === (currentVisualIndex + 1) % len;
 
-        {/* Welcome Section */}
-        <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeTitle}>Welcome to the Dharmarth Medical Foundation</Text>
-          <View style={styles.welcomeSeparator} />
-          <Text style={styles.welcomeSubtitle}>
-            Empowering change through your generous contributions.
-          </Text>
-          
-          <View style={styles.impactStats}>
-            <View style={styles.impactItem}>
-              <Text style={styles.impactNumber}>0%</Text>
-              <Text style={styles.impactLabel}>PLATFORM FEE</Text>
-            </View>
-            <View style={styles.impactDivider} />
-            <View style={styles.impactItem}>
-              <Text style={styles.impactNumber}>72 Lakh+</Text>
-              <Text style={styles.impactLabel}>CONTRIBUTORS</Text>
-            </View>
+              let position = 'hidden';
+              if (isCenter) position = 'center';
+              else if (isLeft) position = 'left';
+              else if (isRight) position = 'right';
+
+              if (position === 'hidden') return null;
+
+              return (
+                <View 
+                  key={slide._id || index} 
+                  style={[
+                    styles.heroCard,
+                    position === 'center' && styles.heroCardCenter,
+                    position === 'left' && styles.heroCardLeft,
+                    position === 'right' && styles.heroCardRight,
+                  ]}
+                >
+                  <Image source={{ uri: slide.imageUrl }} style={styles.heroCardImage} resizeMode="cover" />
+                </View>
+              );
+            })}
+          </View>
+
+          {/* Hero Content */}
+          <View style={styles.heroContent}>
+            {textSlides[currentTextIndex] && (
+              <View>
+                <Text style={styles.heroTitle}>
+                  {textSlides[currentTextIndex].title}
+                </Text>
+
+                <View style={styles.impactStats}>
+                  <View style={styles.impactItem}>
+                    <Text style={styles.impactNumber}>0%</Text>
+                    <Text style={styles.impactLabel}>PLATFORM FEE</Text>
+                  </View>
+                  <View style={styles.impactDivider} />
+                  <View style={styles.impactItem}>
+                    <Text style={styles.impactNumber}>72 Lakh+</Text>
+                    <Text style={styles.impactLabel}>CONTRIBUTORS</Text>
+                  </View>
+                </View>
+
+                <Text style={styles.heroDescription}>
+                  {textSlides[currentTextIndex].subtitle || 'Empowering change through your generous contributions.'}
+                </Text>
+
+                <TouchableOpacity 
+                  style={styles.heroCta} 
+                  onPress={() => Linking.openURL(textSlides[currentTextIndex].ctaLink || 'https://the-dharm-arth-foundation-software.vercel.app/donate')}
+                >
+                  <Text style={styles.heroCtaText}>{textSlides[currentTextIndex].ctaText || 'Donate Now'}</Text>
+                  <Ionicons name="arrow-forward" size={20} color="white" />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
 
@@ -241,104 +255,109 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // Hero Slider
+  // Hero Section
   heroSection: {
-    height: 400,
-    position: 'relative',
+    paddingTop: 40,
+    backgroundColor: '#E0F7FA', // Light teal background
+    paddingBottom: 60,
   },
-  heroImage: {
-    width: width,
-    height: 400,
-  },
-  heroOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 24,
-    paddingBottom: 40,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  heroSlideTitle: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: 'white',
-    lineHeight: 40,
-  },
-  heroSlideSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.9)',
-    marginTop: 8,
-    marginBottom: 20,
-  },
-  slideCta: {
-    backgroundColor: '#00bfa5',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 25,
-    alignSelf: 'flex-start',
-    gap: 8,
-  },
-  slideCtaText: {
-    color: 'white',
-    fontWeight: '800',
-    fontSize: 14,
-  },
-  pagination: {
-    position: 'absolute',
-    bottom: 15,
+  heroDialContainer: {
+    height: 280,
     width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.5)',
-  },
-  activeDot: {
-    backgroundColor: '#00bfa5',
-    width: 20,
-  },
-
-  // Welcome Section
-  welcomeSection: {
-    padding: 32,
     alignItems: 'center',
-    backgroundColor: 'white',
+    justifyContent: 'center',
+    position: 'relative',
+    marginBottom: 40,
   },
-  welcomeTitle: {
+  heroCard: {
+    position: 'absolute',
+    width: width * 0.55,
+    height: 260,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: 'white',
+    borderWidth: 4,
+    borderColor: 'white',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+  },
+  heroCardImage: {
+    width: '100%',
+    height: '100%',
+  },
+  heroCardCenter: {
+    zIndex: 10,
+    transform: [{ scale: 1.1 }],
+  },
+  heroCardLeft: {
+    zIndex: 5,
+    transform: [
+      { translateX: -width * 0.35 },
+      { scale: 0.85 },
+      { rotate: '-8deg' }
+    ],
+    opacity: 0.8,
+  },
+  heroCardRight: {
+    zIndex: 5,
+    transform: [
+      { translateX: width * 0.35 },
+      { scale: 0.85 },
+      { rotate: '8deg' }
+    ],
+    opacity: 0.8,
+  },
+  heroContent: {
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  heroTitle: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#1e293b',
+    color: '#0f172a',
     textAlign: 'center',
     lineHeight: 36,
+    marginBottom: 24,
   },
-  welcomeSeparator: {
-    width: 60,
-    height: 4,
-    backgroundColor: '#00bfa5',
-    marginVertical: 20,
-    borderRadius: 2,
-    opacity: 0.3,
-  },
-  welcomeSubtitle: {
+  heroDescription: {
     fontSize: 16,
-    color: '#64748b',
+    color: '#475569',
     textAlign: 'center',
     lineHeight: 24,
+    marginTop: 24,
     marginBottom: 32,
+  },
+  heroCta: {
+    backgroundColor: '#00bfa5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+    paddingVertical: 18,
+    borderRadius: 35,
+    gap: 12,
+    elevation: 8,
+    shadowColor: '#00bfa5',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+  },
+  heroCtaText: {
+    color: 'white',
+    fontWeight: '900',
+    fontSize: 18,
   },
   impactStats: {
     flexDirection: 'row',
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'rgba(255,255,255,0.8)',
     borderRadius: 20,
-    padding: 24,
+    padding: 20,
     width: '100%',
+    borderWidth: 1,
+    borderColor: 'rgba(0,191,165,0.2)',
   },
   impactItem: {
     flex: 1,
@@ -352,12 +371,12 @@ const styles = StyleSheet.create({
   impactLabel: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#94a3b8',
+    color: '#00bfa5',
     marginTop: 4,
   },
   impactDivider: {
     width: 1,
-    backgroundColor: '#e2e8f0',
+    backgroundColor: 'rgba(0,191,165,0.1)',
   },
 
   // Crowdfunding Sections

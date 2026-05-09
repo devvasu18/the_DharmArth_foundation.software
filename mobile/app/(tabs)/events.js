@@ -76,7 +76,6 @@ export default function EventsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Impact & Events' }} />
       <ScrollView showsVerticalScrollIndicator={false}>
         
         {/* Header Slider */}

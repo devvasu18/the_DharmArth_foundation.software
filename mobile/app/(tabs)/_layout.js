@@ -49,26 +49,41 @@ export default function TabLayout() {
           backgroundColor: 'white',
           elevation: 0,
           shadowOpacity: 0,
-          borderBottomWidth: 1,
-          borderBottomColor: '#f1f5f9',
+          borderBottomWidth: 2,
+          borderBottomColor: '#00bfa5',
+          height: 70,
         },
+        headerTitleAlign: 'left',
         headerTitleStyle: {
-          fontWeight: '800',
-          color: '#1e293b',
+          fontWeight: '900',
+          color: '#00bfa5',
+          fontSize: 26,
+          marginLeft: 8,
         },
         headerRight: () => (
           <TouchableOpacity 
-            style={{ marginRight: 16 }} 
+            style={{ 
+              marginRight: 16,
+              backgroundColor: '#f1f5f9',
+              padding: 6,
+              borderRadius: 8,
+              borderWidth: 1.5,
+              borderColor: '#e2e8f0',
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: 44,
+              height: 44
+            }} 
             onPress={() => setMenuVisible(true)}
           >
-            <Ionicons name="menu" size={28} color="#1e293b" />
+            <Ionicons name="reorder-three" size={32} color="#0f172a" />
           </TouchableOpacity>
         ),
       }}>
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Home',
+            title: 'Dharmarth',
             tabBarLabel: 'Home',
             tabBarIcon: ({ color }) => <Ionicons name="home" size={24} color={color} />,
           }}

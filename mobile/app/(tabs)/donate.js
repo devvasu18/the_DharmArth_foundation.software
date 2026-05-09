@@ -156,7 +156,6 @@ export default function DonateScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <Stack.Screen options={{ title: 'Donate Now' }} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
         {/* Amount Selection */}
