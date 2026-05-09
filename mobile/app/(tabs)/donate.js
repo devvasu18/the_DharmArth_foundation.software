@@ -152,10 +152,7 @@ export default function DonateScreen() {
   }
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
         {/* Amount Selection */}
@@ -333,7 +330,7 @@ export default function DonateScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

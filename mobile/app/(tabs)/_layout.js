@@ -64,19 +64,11 @@ export default function TabLayout() {
           <TouchableOpacity 
             style={{ 
               marginRight: 16,
-              backgroundColor: '#f1f5f9',
-              padding: 6,
-              borderRadius: 8,
-              borderWidth: 1.5,
-              borderColor: '#e2e8f0',
-              justifyContent: 'center',
-              alignItems: 'center',
-              width: 44,
-              height: 44
+              padding: 4,
             }} 
             onPress={() => setMenuVisible(true)}
           >
-            <Ionicons name="reorder-three" size={32} color="#0f172a" />
+            <Ionicons name="reorder-three" size={38} color="#0f172a" />
           </TouchableOpacity>
         ),
       }}>
