@@ -12,7 +12,7 @@ import {
   Linking
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, Link } from 'expo-router';
+import { Stack, Link, useFocusEffect } from 'expo-router';
 import api from '../../src/services/api';
 
 const { width } = Dimensions.get('window');
@@ -28,10 +28,12 @@ export default function EventsScreen() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const sliderRef = React.useRef(null);
 
-  useEffect(() => {
-    fetchHeaders();
-    fetchEvents();
-  }, [filter, categoryFilter]);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchHeaders();
+      fetchEvents();
+    }, [filter, categoryFilter])
+  );
 
   // Header Slider Autoplay
   useEffect(() => {
@@ -96,7 +98,7 @@ export default function EventsScreen() {
                 scrollEventThrottle={16}
               >
                 {headerSlides.map((slide, index) => (
-                  <View key={slide._id} style={{ width }}>
+                  <View key={`event-head-${slide._id || ''}-${index}`} style={{ width }}>
                     <Image source={{ uri: slide.url }} style={styles.headerImage} resizeMode="cover" />
                     <View style={styles.headerOverlay} />
                     <View style={styles.headerContent}>
@@ -116,7 +118,7 @@ export default function EventsScreen() {
               </ScrollView>
               <View style={styles.pagination}>
                 {headerSlides.map((_, i) => (
-                  <View key={i} style={[styles.dot, currentSlide === i && styles.activeDot]} />
+                  <View key={`dot-${i}`} style={[styles.dot, currentSlide === i && styles.activeDot]} />
                 ))}
               </View>
             </View>
@@ -171,9 +173,9 @@ export default function EventsScreen() {
           ) : filteredEvents.length === 0 ? (
             <Text style={styles.noEvents}>No events found matching your criteria.</Text>
           ) : (
-            filteredEvents.map(event => (
+            filteredEvents.map((event, index) => (
               <TouchableOpacity 
-                key={event._id} 
+                key={`evt-card-${event._id || ''}-${index}`} 
                 style={styles.eventCard}
                 onPress={() => Linking.openURL(`https://the-dharm-arth-foundation-software.vercel.app/events/${event.slug}`)}
               >

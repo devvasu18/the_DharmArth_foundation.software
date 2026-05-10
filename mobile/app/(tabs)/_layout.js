@@ -10,7 +10,8 @@ import {
   SafeAreaView, 
   Pressable,
   Dimensions,
-  Image
+  Image,
+  Platform
 } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 
@@ -36,11 +37,15 @@ export default function TabLayout() {
 
   const navigateTo = (route) => {
     setMenuVisible(false);
-    router.push(route);
+    if (route === '/profile' || route === 'profile') {
+      router.push('/profile');
+    } else {
+      router.push(route);
+    }
   };
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       <Tabs screenOptions={{ 
         tabBarActiveTintColor: '#00bfa5',
         tabBarInactiveTintColor: '#64748b',
@@ -108,68 +113,65 @@ export default function TabLayout() {
         <Tabs.Screen name="profile" options={{ href: null }} />
       </Tabs>
 
-      {/* Web-style Mobile Menu Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={menuVisible}
-        onRequestClose={() => setMenuVisible(false)}
-      >
-        <Pressable 
-          style={styles.modalOverlay} 
-          onPress={() => setMenuVisible(false)}
-        >
-          <View style={styles.menuContainer}>
-            <SafeAreaView>
-              <View style={styles.menuHeader}>
-                <View style={styles.userInfo}>
-                  <Image 
-                    source={{ uri: `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=00bfa5&color=fff` }} 
-                    style={styles.avatar} 
-                  />
-                  <View>
-                    <Text style={styles.userName}>{user?.name || 'Guest'}</Text>
-                    <Text style={styles.userRole}>{user?.roles?.[0]?.name || 'Volunteer'}</Text>
+      {/* Web-style Mobile Menu - Replaced Modal with absolute View to fix Fabric crash */}
+      {menuVisible && (
+        <View style={[StyleSheet.absoluteFill, { zIndex: 9999, elevation: 9999 }]}>
+          <Pressable 
+            style={styles.modalOverlay} 
+            onPress={() => setMenuVisible(false)}
+          >
+            <View style={styles.menuContainer}>
+              <View style={{ paddingTop: Platform.OS === 'ios' ? 50 : 30 }}>
+                <View style={styles.menuHeader}>
+                  <View style={styles.userInfo}>
+                    <Image 
+                      source={{ uri: `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=00bfa5&color=fff` }} 
+                      style={styles.avatar} 
+                    />
+                    <View>
+                      <Text style={styles.userName}>{user?.name || 'Guest'}</Text>
+                      <Text style={styles.userRole}>{user?.roles?.[0]?.name || 'Volunteer'}</Text>
+                    </View>
                   </View>
-                </View>
-                <TouchableOpacity onPress={() => setMenuVisible(false)}>
-                  <Ionicons name="close" size={28} color="#64748b" />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.menuList}>
-                {menuItems.map((item, index) => (
-                  <TouchableOpacity 
-                    key={index} 
-                    style={styles.menuItem}
-                    onPress={() => navigateTo(item.route)}
-                  >
-                    <Ionicons name={item.icon} size={22} color="#475569" />
-                    <Text style={styles.menuItemText}>{item.label}</Text>
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  <TouchableOpacity onPress={() => setMenuVisible(false)}>
+                    <Ionicons name="close" size={28} color="#64748b" />
                   </TouchableOpacity>
-                ))}
+                </View>
 
-                <View style={styles.divider} />
+                <View style={styles.menuList}>
+                  {menuItems.map((item, index) => (
+                    <TouchableOpacity 
+                      key={`menu-item-${index}`} 
+                      style={styles.menuItem}
+                      onPress={() => navigateTo(item.route)}
+                    >
+                      <Ionicons name={item.icon} size={22} color="#475569" />
+                      <Text style={styles.menuItemText}>{item.label}</Text>
+                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                    </TouchableOpacity>
+                  ))}
 
-                <TouchableOpacity 
-                  style={styles.menuItem}
-                  onPress={handleLogout}
-                >
-                  <Ionicons name="log-out-outline" size={22} color="#ef4444" />
-                  <Text style={[styles.menuItemText, { color: '#ef4444' }]}>Logout</Text>
-                </TouchableOpacity>
+                  <View style={styles.divider} />
+
+                  <TouchableOpacity 
+                    style={styles.menuItem}
+                    onPress={handleLogout}
+                  >
+                    <Ionicons name="log-out-outline" size={22} color="#ef4444" />
+                    <Text style={[styles.menuItemText, { color: '#ef4444' }]}>Logout</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.menuFooter}>
+                  <Text style={styles.footerBrand}>The DharmArth Foundation</Text>
+                  <Text style={styles.footerVersion}>v1.0.0 Mirror Experience</Text>
+                </View>
               </View>
-
-              <View style={styles.menuFooter}>
-                <Text style={styles.footerBrand}>The DharmArth Foundation</Text>
-                <Text style={styles.footerVersion}>v1.0.0 Mirror Experience</Text>
-              </View>
-            </SafeAreaView>
-          </View>
-        </Pressable>
-      </Modal>
-    </>
+            </View>
+          </Pressable>
+        </View>
+      )}
+    </View>
   );
 }
 

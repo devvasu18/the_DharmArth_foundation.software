@@ -13,7 +13,7 @@ import {
   Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/services/api';
 
@@ -41,20 +41,22 @@ export default function DonateScreen() {
   const [isValidatingMotivator, setIsValidatingMotivator] = useState(false);
   const [isMotivatorLocked, setIsMotivatorLocked] = useState(false);
 
-  useEffect(() => {
-    fetchSettings();
-    if (authUser) {
-      setFullName(authUser.name || '');
-      setMobile(authUser.mobile || '');
-      setEmail(authUser.email || '');
-      
-      if (authUser.referredBy) {
-        setMotivatorMobile(authUser.referredBy.mobile || authUser.referredBy.referralCode || '');
-        setMotivatorName(authUser.referredBy.name || '');
-        setIsMotivatorLocked(true);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchSettings();
+      if (authUser) {
+        setFullName(authUser.name || '');
+        setMobile(authUser.mobile || '');
+        setEmail(authUser.email || '');
+        
+        if (authUser.referredBy) {
+          setMotivatorMobile(authUser.referredBy.mobile || authUser.referredBy.referralCode || '');
+          setMotivatorName(authUser.referredBy.name || '');
+          setIsMotivatorLocked(true);
+        }
       }
-    }
-  }, [authUser]);
+    }, [authUser])
+  );
 
   const fetchSettings = async () => {
     try {
@@ -158,9 +160,9 @@ export default function DonateScreen() {
         {/* Amount Selection */}
         <Text style={styles.sectionTitle}>Select Donation Amount</Text>
         <View style={styles.amountGrid}>
-          {config.plans.map((p) => (
+          {config.plans.map((p, index) => (
             <TouchableOpacity 
-              key={p} 
+              key={`amount-${p}-${index}`} 
               style={[styles.amountBtn, amount === p && styles.amountBtnActive]}
               onPress={() => { setAmount(p); setCustomAmount(p.toString()); }}
             >

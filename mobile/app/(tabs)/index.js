@@ -13,7 +13,7 @@ import {
 import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useFocusEffect } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
@@ -27,28 +27,31 @@ const LandingScreen = () => {
   const [currentVisualIndex, setCurrentVisualIndex] = useState(0);
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [sliderRes, crowdRes] = await Promise.all([
-          api.get('/content/sliders'),
-          api.get('/content/crowdfunding')
-        ]);
-        const allSliders = sliderRes.data.filter(s => s.isVisible !== false);
-        const images = allSliders.filter(s => s.type === 'image' || !s.type).sort((a, b) => a.order - b.order);
-        const texts = allSliders.filter(s => s.type === 'text').sort((a, b) => a.order - b.order);
+  const fetchData = async () => {
+    try {
+      const [sliderRes, crowdRes] = await Promise.all([
+        api.get('/content/sliders'),
+        api.get('/content/crowdfunding')
+      ]);
+      const allSliders = sliderRes.data.filter(s => s.isVisible !== false);
+      const images = allSliders.filter(s => s.type === 'image' || !s.type).sort((a, b) => a.order - b.order);
+      const texts = allSliders.filter(s => s.type === 'text').sort((a, b) => a.order - b.order);
 
-        setVisuals(images);
-        setTextSlides(texts.length > 0 ? texts : images);
-        setCrowdfunding(crowdRes.data);
-      } catch (error) {
-        console.error("Failed to fetch home content", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+      setVisuals(images);
+      setTextSlides(texts.length > 0 ? texts : images);
+      setCrowdfunding(crowdRes.data);
+    } catch (error) {
+      console.error("Failed to fetch home content", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData();
+    }, [])
+  );
 
   // Auto-rotation logic
   useEffect(() => {
@@ -110,7 +113,7 @@ const LandingScreen = () => {
 
               return (
                 <View 
-                  key={slide._id || index} 
+                  key={`hero-img-${slide._id || ''}-${index}`} 
                   style={[
                     styles.heroCard,
                     position === 'center' && styles.heroCardCenter,
@@ -127,7 +130,7 @@ const LandingScreen = () => {
           {/* Hero Content */}
           <View style={styles.heroContent}>
             {textSlides[currentTextIndex] && (
-              <View>
+              <View key={`hero-txt-${textSlides[currentTextIndex]._id || ''}-${currentTextIndex}`}>
                 <Text style={styles.heroTitle}>
                   {textSlides[currentTextIndex].title}
                 </Text>
@@ -162,7 +165,7 @@ const LandingScreen = () => {
 
         {/* Crowdfunding Sections */}
         {crowdfunding.map((section, index) => (
-          <View key={section._id} style={[styles.crowdSection, index % 2 !== 0 && styles.crowdSectionAlt]}>
+          <View key={`crowd-${section._id || ''}-${index}`} style={[styles.crowdSection, index % 2 !== 0 && styles.crowdSectionAlt]}>
             <Image source={{ uri: section.imageUrl }} style={styles.crowdImage} />
             <View style={styles.crowdContent}>
               <Text style={styles.crowdTitle}>{section.title}</Text>
@@ -181,7 +184,7 @@ const LandingScreen = () => {
               { icon: 'medical-outline', text: 'Life Saving Aid' },
               { icon: 'card-outline', text: 'Secure Payments' }
             ].map((item, i) => (
-              <View key={i} style={styles.whyUsItem}>
+              <View key={`why-${i}`} style={styles.whyUsItem}>
                 <View style={styles.whyUsIcon}>
                   <Ionicons name={item.icon} size={32} color="#00bfa5" />
                 </View>
