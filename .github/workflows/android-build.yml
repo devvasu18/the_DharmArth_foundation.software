@@ -31,6 +31,10 @@ jobs:
         working-directory: ./mobile
         run: npx expo prebuild --platform android
         
+      - name: Fix Maven Central 403 (Remove Foojay Plugin)
+        working-directory: ./mobile/android
+        run: sed -i '/foojay-resolver-convention/d' settings.gradle
+        
       - name: Create Assets Directory
         working-directory: ./mobile/android/app/src/main
         run: mkdir -p assets
