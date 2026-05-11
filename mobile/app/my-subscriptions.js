@@ -7,7 +7,9 @@ import {
   TouchableOpacity, 
   ActivityIndicator, 
   Alert,
-  Linking
+  Linking,
+  Modal,
+  TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../src/context/AuthContext';
@@ -19,45 +21,108 @@ export default function MySubscriptions() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [fetchingMore, setFetchingMore] = useState(false);
+  
+  // OTP States
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [otpValue, setOtpValue] = useState('');
+  const [selectedSub, setSelectedSub] = useState(null);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
 
-  const fetchSubscriptions = async () => {
+  const fetchSubscriptions = async (pageNum = 1, shouldRefresh = false) => {
+    if (pageNum > 1 && !hasMore) return;
+    
     try {
-      const { data } = await api.get('/subscriptions/my');
-      setSubscriptions(Array.isArray(data) ? data : data.subscriptions || []);
+      if (pageNum === 1 && !shouldRefresh) setLoading(true);
+      if (pageNum > 1) setFetchingMore(true);
+
+      const { data } = await api.get('/subscriptions/my', {
+        params: { page: pageNum, limit: 20 }
+      });
+      
+      const newSubs = Array.isArray(data) ? data : data.subscriptions || [];
+      const pagination = data.pagination || {};
+
+      if (pageNum === 1) {
+        setSubscriptions(newSubs);
+      } else {
+        setSubscriptions(prev => [...prev, ...newSubs]);
+      }
+
+      setHasMore(pageNum < (pagination.totalPages || 1));
+      setPage(pageNum);
     } catch (error) {
       console.error(error);
       Alert.alert("Error", "Failed to fetch subscriptions");
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setFetchingMore(false);
     }
   };
 
   useEffect(() => {
-    fetchSubscriptions();
+    fetchSubscriptions(1);
   }, []);
+
+  const loadMore = () => {
+    if (!fetchingMore && hasMore) {
+      fetchSubscriptions(page + 1);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchSubscriptions(1, true);
+  };
 
   const handleCancel = async (sub) => {
     Alert.alert(
       "Cancel Subscription?",
-      `Are you sure you want to cancel this monthly donation (ID: ${sub.subscriptionId})? You won't be charged from the next cycle.`,
+      `Are you sure you want to cancel this monthly donation (ID: ${sub.subscriptionId})? An OTP will be sent to your mobile for confirmation.`,
       [
         { text: "No", style: "cancel" },
         { 
-          text: "Yes, Cancel", 
-          style: "destructive",
+          text: "Yes, Send OTP", 
           onPress: async () => {
             try {
-              await api.post(`/subscriptions/cancel/${sub._id}`);
-              Alert.alert("Success", "Subscription cancelled successfully");
-              fetchSubscriptions();
+              setSendingOtp(true);
+              await api.post(`/subscriptions/request-cancel-otp/${sub._id}`);
+              setSelectedSub(sub);
+              setOtpModalOpen(true);
             } catch (error) {
-              Alert.alert("Error", error.response?.data?.message || "Failed to cancel");
+              Alert.alert("Error", error.response?.data?.message || "Failed to send OTP");
+            } finally {
+              setSendingOtp(false);
             }
           }
         }
       ]
     );
+  };
+
+  const confirmCancel = async () => {
+    if (otpValue.length !== 6) {
+      Alert.alert("Invalid OTP", "Please enter a valid 6-digit OTP");
+      return;
+    }
+
+    try {
+      setVerifyingOtp(true);
+      await api.post(`/subscriptions/cancel/${selectedSub._id}`, { otp: otpValue });
+      Alert.alert("Success", "Subscription cancelled successfully");
+      setOtpModalOpen(false);
+      setOtpValue('');
+      setSelectedSub(null);
+      fetchSubscriptions(1, true);
+    } catch (error) {
+      Alert.alert("Error", error.response?.data?.message || "Failed to cancel");
+    } finally {
+      setVerifyingOtp(false);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -134,7 +199,9 @@ export default function MySubscriptions() {
         keyExtractor={item => item._id}
         contentContainerStyle={styles.list}
         refreshing={refreshing}
-        onRefresh={() => { setRefreshing(true); fetchSubscriptions(); }}
+        onRefresh={onRefresh}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
         ListEmptyComponent={
           !loading && (
             <View style={styles.empty}>
@@ -149,7 +216,57 @@ export default function MySubscriptions() {
             <Text style={styles.headerDesc}>Manage your recurring donations and support.</Text>
           </View>
         }
+        ListFooterComponent={
+          fetchingMore ? <ActivityIndicator style={{ padding: 20 }} color="#00bfa5" /> : null
+        }
       />
+
+      <Modal
+        visible={otpModalOpen}
+        transparent
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Verify Cancellation</Text>
+            <Text style={styles.modalDesc}>
+              Enter the 6-digit code sent to your mobile.
+            </Text>
+            
+            <TextInput
+              style={styles.otpInput}
+              value={otpValue}
+              onChangeText={v => setOtpValue(v.replace(/\D/g, ''))}
+              placeholder="000000"
+              keyboardType="number-pad"
+              maxLength={6}
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                style={styles.modalBtnCancel} 
+                onPress={() => {
+                  setOtpModalOpen(false);
+                  setOtpValue('');
+                }}
+              >
+                <Text style={styles.modalBtnTextCancel}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.modalBtnConfirm} 
+                onPress={confirmCancel}
+                disabled={verifyingOtp}
+              >
+                {verifyingOtp ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <Text style={styles.modalBtnTextConfirm}>Confirm</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -207,5 +324,78 @@ const styles = StyleSheet.create({
   },
   retryBtnText: { color: 'white', fontWeight: '700', fontSize: 14 },
   empty: { alignItems: 'center', marginTop: 80 },
-  emptyText: { fontSize: 16, color: '#94a3b8', fontWeight: '600', marginTop: 16 }
+  emptyText: { fontSize: 16, color: '#94a3b8', fontWeight: '600', marginTop: 16 },
+  
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center'
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1e293b',
+    marginBottom: 8
+  },
+  modalDesc: {
+    fontSize: 14,
+    color: '#64748b',
+    textAlign: 'center',
+    marginBottom: 24
+  },
+  otpInput: {
+    width: '100%',
+    height: 56,
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    borderRadius: 16,
+    fontSize: 24,
+    fontWeight: '800',
+    textAlign: 'center',
+    color: '#1e293b',
+    marginBottom: 24,
+    letterSpacing: 8
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%'
+  },
+  modalBtnCancel: {
+    flex: 1,
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9'
+  },
+  modalBtnTextCancel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#64748b'
+  },
+  modalBtnConfirm: {
+    flex: 1,
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+    backgroundColor: '#00bfa5'
+  },
+  modalBtnTextConfirm: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: 'white'
+  }
 });

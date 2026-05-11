@@ -189,22 +189,22 @@ exports.cancelSubscription = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized to cancel' });
         }
 
-        // ADMIN REQUIRES OTP
-        if (isAdmin && !isOwner) {
-            if (!otp) return res.status(400).json({ message: 'OTP is required for admin cancellation' });
-            
-            const User = require('../models/User');
-            const donorUser = await User.findOne({ mobile: subscription.donorMobile });
-            
-            if (!donorUser || donorUser.otp !== otp || donorUser.otpExpires < new Date()) {
-                return res.status(400).json({ message: 'Invalid or expired OTP' });
-            }
+        // REQUIRE OTP FOR EVERYONE
+        if (!otp) return res.status(400).json({ message: 'OTP is required for subscription cancellation' });
+        
+        const User = require('../models/User');
+        const donorUser = await User.findOne({ mobile: subscription.donorMobile });
+        
+        if (!donorUser || donorUser.otp !== otp || donorUser.otpExpires < new Date()) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
 
-            // Clear OTP after verification
-            donorUser.otp = undefined;
-            donorUser.otpExpires = undefined;
-            await donorUser.save();
-            
+        // Clear OTP after verification
+        donorUser.otp = undefined;
+        donorUser.otpExpires = undefined;
+        await donorUser.save();
+        
+        if (isAdmin && !isOwner) {
             subscription.cancelledBy = 'admin';
         } else {
             subscription.cancelledBy = 'user';

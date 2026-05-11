@@ -183,11 +183,12 @@ const SubscriptionList = ({ isAdmin = false }) => {
 
 
     const handleCancel = async (sub, otp = null) => {
-        if (isAdmin && !otp) {
-            const confirmed = await showConfirm(
-                "Cancel Subscription?",
-                `Are you sure you want to cancel ${sub.donorName}'s monthly donation of ₹${sub.amount}? An OTP will be sent to the donor for confirmation.`
-            );
+        if (!otp) {
+            const message = isAdmin 
+                ? `Are you sure you want to cancel ${sub.donorName}'s monthly donation of ₹${sub.amount}? An OTP will be sent to the donor for confirmation.`
+                : `Are you sure you want to cancel this monthly donation (ID: ${sub.subscriptionId})? An OTP will be sent to your mobile for confirmation.`;
+            
+            const confirmed = await showConfirm("Cancel Subscription?", message);
             if (!confirmed) return;
 
             try {
@@ -195,7 +196,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                 await api.post(`/subscriptions/request-cancel-otp/${sub._id}`);
                 setSelectedSub(sub);
                 setOtpModalOpen(true);
-                toast.success('OTP sent to donor');
+                toast.success('OTP sent successfully');
             } catch (error) {
                 toast.error(error.response?.data?.message || 'Failed to send OTP');
             } finally {
@@ -204,16 +205,8 @@ const SubscriptionList = ({ isAdmin = false }) => {
             return;
         }
 
-        if (!isAdmin) {
-            const confirmed = await showConfirm(
-                "Cancel Subscription?",
-                `Are you sure you want to cancel this monthly donation (ID: ${sub.subscriptionId})? You won't be charged from the next cycle.`
-            );
-            if (!confirmed) return;
-        }
-
         try {
-            if (isAdmin) setVerifyingOtp(true);
+            setVerifyingOtp(true);
             const { data } = await api.post(`/subscriptions/cancel/${sub._id}`, { otp });
             toast.success('Subscription cancelled successfully');
 
@@ -423,7 +416,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                                     className="admin-input"
                                     style={{ width: '80px', padding: '6px 10px' }}
                                 />
-                                <button 
+                                <button
                                     onClick={() => fetchSubscriptions(1)}
                                     className="admin-btn-primary"
                                     style={{ padding: '6px 12px', fontSize: '0.8rem' }}
@@ -789,6 +782,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                     justify-content: space-between;
                     align-items: center;
                     padding: 1.25rem;
+                    margin-bottom: 4rem;
                     background: #f8fafc;
                     border: 1px solid #e2e8f0;
                     border-top: none;
