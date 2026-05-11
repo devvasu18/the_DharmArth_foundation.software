@@ -106,7 +106,7 @@ export default function TransactionsScreen() {
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <Text style={[styles.txnAmount, { color: isCredit ? "#10b981" : "#0e0d0dff" }]}>
-              {isCredit ? '+' : '-'}₹{txn.amount}
+              {isCredit ? '+' : ''}₹{txn.amount}
             </Text>
           </View>
         </View>

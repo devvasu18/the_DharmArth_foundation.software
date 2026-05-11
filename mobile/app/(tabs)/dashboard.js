@@ -156,7 +156,7 @@ export default function DashboardScreen() {
           <View style={styles.profileActions}>
             <Text style={styles.actionHeading}>Volunteer Identity Card</Text>
             <View style={styles.actionGrid}>
-              <TouchableOpacity style={styles.actionBtn} onPress={() => Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/profile')}>
+              <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/profile')}>
                 <Ionicons name="person-outline" size={16} color="#475569" />
                 <Text style={styles.actionBtnText}>Edit Profile</Text>
               </TouchableOpacity>
@@ -207,7 +207,7 @@ export default function DashboardScreen() {
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
                     <Text style={[styles.txnAmount, { color: isCredit ? "#10b981" : "#0e0d0dff" }]}>
-                      {isCredit ? '+' : '-'}₹{txn.amount}
+                      {isCredit ? '+' : ''}₹{txn.amount}
                     </Text>
                   </View>
                 </View>
