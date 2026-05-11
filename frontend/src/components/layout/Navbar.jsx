@@ -18,6 +18,44 @@ const Navbar = () => {
     const [isLangModalOpen, setIsLangModalOpen] = useState(false);
     const dropdownRef = React.useRef(null);
 
+    const renderNotificationDropdown = () => (
+        <AnimatePresence>
+            {isNotificationsOpen && (
+                <motion.div
+                    className="notif-dropdown"
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <div className="notif-header">
+                        <h3>Notifications</h3>
+                        {unreadCount > 0 && (
+                            <button onClick={handleMarkAllRead}>Mark all read</button>
+                        )}
+                    </div>
+                    <div className="notif-list">
+                        {notifications.length === 0 ? (
+                            <div className="notif-empty">No notifications yet</div>
+                        ) : (
+                            notifications.map((notif, idx) => (
+                                <div key={idx} className={`notif-item ${!notif.isRead ? 'unread' : ''}`}>
+                                    <div className="notif-icon">
+                                        {notif.onModel === 'PayoutRequest' ? '💸' : notif.type === 'COMMISSION_EARNED' ? '💰' : '📢'}
+                                    </div>
+                                    <div className="notif-body">
+                                        <p>{notif.message}</p>
+                                        <span className="notif-time">{new Date(notif.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+
     // Close dropdown on click outside
     React.useEffect(() => {
         const handleClickOutside = (event) => {
@@ -181,41 +219,7 @@ const Navbar = () => {
                                 {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
                             </button>
 
-                            <AnimatePresence>
-                                {isNotificationsOpen && (
-                                    <motion.div
-                                        className="notif-dropdown"
-                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        transition={{ duration: 0.2 }}
-                                    >
-                                        <div className="notif-header">
-                                            <h3>Notifications</h3>
-                                            {unreadCount > 0 && (
-                                                <button onClick={handleMarkAllRead}>Mark all read</button>
-                                            )}
-                                        </div>
-                                        <div className="notif-list">
-                                            {notifications.length === 0 ? (
-                                                <div className="notif-empty">No notifications yet</div>
-                                            ) : (
-                                                notifications.map((notif, idx) => (
-                                                    <div key={idx} className={`notif-item ${!notif.isRead ? 'unread' : ''}`}>
-                                                        <div className="notif-icon">
-                                                            {notif.onModel === 'PayoutRequest' ? '💸' : notif.type === 'COMMISSION_EARNED' ? '💰' : '📢'}
-                                                        </div>
-                                                        <div className="notif-body">
-                                                            <p>{notif.message}</p>
-                                                            <span className="notif-time">{new Date(notif.createdAt).toLocaleDateString()}</span>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                            {renderNotificationDropdown()}
                         </div>
                     )}
 
@@ -252,6 +256,20 @@ const Navbar = () => {
                         <Link to="/login" className="btn-link">{t('navbar.signIn')}</Link>
                     )}
                 </div>
+                
+                {/* Mobile Notification Bell */}
+                {user && !user.isSuperAdmin && (!user.roles || user.roles.length === 0) && (
+                    <div className="notif-bell-container show-mobile" ref={notificationRef}>
+                        <button
+                            className={`notif-bell-btn ${unreadCount > 0 ? 'has-unread' : ''}`}
+                            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                        >
+                            <Bell size={20} />
+                            {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
+                        </button>
+                        {renderNotificationDropdown()}
+                    </div>
+                )}
 
                 {/* Mobile Toggle */}
                 <button className="mobile-toggle" onClick={() => setIsOpen(!isOpen)}>

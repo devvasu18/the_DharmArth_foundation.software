@@ -214,16 +214,14 @@ const SubscriptionList = ({ isAdmin = false }) => {
                 s._id === sub._id ? { ...s, status: 'cancelled', cancelledBy: isAdmin ? 'admin' : 'user' } : s
             ));
 
-            if (isAdmin) {
-                setOtpModalOpen(false);
-                setOtpValue('');
-                setSelectedSub(null);
-            }
+            setOtpModalOpen(false);
+            setOtpValue('');
+            setSelectedSub(null);
         } catch (error) {
             console.error('Error cancelling subscription:', error);
             toast.error(error.response?.data?.message || 'Failed to cancel subscription');
         } finally {
-            if (isAdmin) setVerifyingOtp(false);
+            setVerifyingOtp(false);
         }
     };
 
@@ -314,19 +312,6 @@ const SubscriptionList = ({ isAdmin = false }) => {
                 return <span className="status-badge">{status}</span>;
         }
     };
-
-    if (loading) {
-        return <div className="loading-spinner-container"><div className="spinner"></div></div>;
-    }
-
-    if (subscriptions.length === 0) {
-        return (
-            <div className="empty-state">
-                <CreditCard size={48} className="empty-icon" />
-                <p>No monthly donations found.</p>
-            </div>
-        );
-    }
 
     const activePageTotal = subscriptions
         .filter(sub => sub.status === 'active')
@@ -429,7 +414,31 @@ const SubscriptionList = ({ isAdmin = false }) => {
                 </div>
             )}
 
-            {!isAdmin ? (
+            {loading ? (
+                <div className="loading-spinner-container">
+                    <div className="spinner"></div>
+                </div>
+            ) : subscriptions.length === 0 ? (
+                <div className="empty-state">
+                    <CreditCard size={48} className="empty-icon" />
+                    <p>{searchTerm || statusFilter || amountFilter ? "No subscriptions match your filters." : "No monthly donations found."}</p>
+                    {(searchTerm || statusFilter || amountFilter) && (
+                        <button 
+                            className="btn-link" 
+                            style={{ marginTop: '1rem', color: 'var(--primary)', cursor: 'pointer', border: 'none', background: 'none', fontWeight: 600 }}
+                            onClick={() => {
+                                setSearchTerm('');
+                                setStatusFilter('');
+                                setAmountFilter('');
+                            }}
+                        >
+                            Clear all filters
+                        </button>
+                    )}
+                </div>
+            ) : (
+                <>
+                    {!isAdmin ? (
                 // User Table View
                 <>
                     <div className="user-table-container hide-mobile">
@@ -619,6 +628,8 @@ const SubscriptionList = ({ isAdmin = false }) => {
                         </div>
                     )}
                 </div>
+                    )}
+                </>
             )}
 
             {/* Pagination Controls */}
@@ -1314,6 +1325,14 @@ const SubscriptionList = ({ isAdmin = false }) => {
                         gap: 10px;
                     }
                     .export-group { width: 100%; justify-content: space-between; }
+
+                    .subscription-card-grid {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 1rem;
+                        width: 100%;
+                        margin-top: 1rem;
+                    }
 
                     .sub-mobile-card {
                         background: white;
