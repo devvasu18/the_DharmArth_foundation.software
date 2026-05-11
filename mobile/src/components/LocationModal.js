@@ -10,16 +10,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const LocationModal = ({ isOpen, onClose }) => {
+const LocationModal = ({ isOpen, onClose, onDetect }) => {
   if (!isOpen) return null;
 
-  const handleOpenSettings = () => {
-    if (Platform.OS === 'ios') {
-      Linking.openURL('app-settings:');
-    } else {
-      Linking.openSettings();
-    }
+  const handleTurnOnAndDetect = async () => {
     onClose();
+    if (onDetect) {
+      onDetect();
+    }
   };
 
   return (
@@ -39,14 +37,14 @@ const LocationModal = ({ isOpen, onClose }) => {
             <Ionicons name="location" size={40} color="#00bfa5" />
           </View>
 
-          <Text style={styles.title}>Location Services Disabled</Text>
+          <Text style={styles.title}>Enable Location</Text>
           <Text style={styles.description}>
-            To detect your address automatically, please enable location services in your device settings.
+            To detect your address automatically, we need your location permission and services enabled.
           </Text>
 
-          <TouchableOpacity style={styles.btnPrimary} onPress={handleOpenSettings}>
-            <Text style={styles.btnPrimaryText}>Open Settings</Text>
-            <Ionicons name="settings-outline" size={18} color="white" />
+          <TouchableOpacity style={styles.btnPrimary} onPress={handleTurnOnAndDetect}>
+            <Text style={styles.btnPrimaryText}>Turn On & Detect</Text>
+            <Ionicons name="flash-outline" size={18} color="white" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.btnSecondary} onPress={onClose}>

@@ -105,13 +105,18 @@ export default function DonateScreen() {
     }
   };
 
-  const detectLocation = async () => {
+  const detectLocation = async (retryWithSettings = false) => {
     try {
       setIsDetecting(true);
       
       const enabled = await Location.hasServicesEnabledAsync();
       if (!enabled) {
-        setShowLocationModal(true);
+        if (retryWithSettings) {
+          if (Platform.OS === 'ios') Linking.openURL('app-settings:');
+          else Linking.openSettings();
+        } else {
+          setShowLocationModal(true);
+        }
         return;
       }
 
@@ -599,6 +604,7 @@ export default function DonateScreen() {
       <LocationModal 
         isOpen={showLocationModal}
         onClose={() => setShowLocationModal(false)}
+        onDetect={() => detectLocation(true)}
       />
     </View>
   );
