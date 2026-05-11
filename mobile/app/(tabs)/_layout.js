@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs, useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { 
   TouchableOpacity, 
@@ -14,13 +14,17 @@ import {
   Platform
 } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
+import DonationExitModal from '../../src/components/DonationExitModal';
 
 const { width } = Dimensions.get('window');
 
 export default function TabLayout() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [menuVisible, setMenuVisible] = useState(false);
+  const [exitModalVisible, setExitModalVisible] = useState(false);
+  const [exitTargetRoute, setExitTargetRoute] = useState(null);
 
   const menuItems = [
     { label: 'My Wallet', icon: 'wallet-outline', route: '/dashboard' },
@@ -37,10 +41,26 @@ export default function TabLayout() {
 
   const navigateTo = (route) => {
     setMenuVisible(false);
+    
+    // Intercept if on donate page
+    if (pathname === '/donate' || pathname === 'donate') {
+      setExitTargetRoute(route === 'profile' ? '/profile' : route);
+      setExitModalVisible(true);
+      return;
+    }
+
     if (route === '/profile' || route === 'profile') {
       router.push('/profile');
     } else {
       router.push(route);
+    }
+  };
+
+  const handleTabChange = (e, targetRoute) => {
+    if (pathname === '/donate' || pathname === 'donate') {
+      e.preventDefault();
+      setExitTargetRoute(targetRoute);
+      setExitModalVisible(true);
     }
   };
 
@@ -84,6 +104,7 @@ export default function TabLayout() {
             tabBarLabel: 'Home',
             tabBarIcon: ({ color }) => <Ionicons name="home" size={24} color={color} />,
           }}
+          listeners={{ tabPress: (e) => handleTabChange(e, '/index') }}
         />
         <Tabs.Screen
           name="donate"
@@ -100,6 +121,7 @@ export default function TabLayout() {
             tabBarLabel: 'Events',
             tabBarIcon: ({ color }) => <Ionicons name="calendar" size={24} color={color} />,
           }}
+          listeners={{ tabPress: (e) => handleTabChange(e, '/events') }}
         />
         <Tabs.Screen
           name="dashboard"
@@ -108,6 +130,7 @@ export default function TabLayout() {
             tabBarLabel: 'Profile',
             tabBarIcon: ({ color }) => <Ionicons name="person" size={24} color={color} />,
           }}
+          listeners={{ tabPress: (e) => handleTabChange(e, '/dashboard') }}
         />
         <Tabs.Screen name="referrals" options={{ href: null }} />
         <Tabs.Screen name="profile" options={{ href: null }} />
@@ -171,6 +194,21 @@ export default function TabLayout() {
           </Pressable>
         </View>
       )}
+
+      {/* Global Donation Exit Modal */}
+      <DonationExitModal 
+        isOpen={exitModalVisible}
+        onClose={() => setExitModalVisible(false)}
+        onConfirmNavigation={() => {
+          setExitModalVisible(false);
+          if (exitTargetRoute) {
+            setTimeout(() => {
+              if (exitTargetRoute === '/index') router.push('/');
+              else router.push(exitTargetRoute);
+            }, 100);
+          }
+        }}
+      />
     </View>
   );
 }

@@ -227,16 +227,7 @@ const EventEditor = () => {
                         <h2>{isEditMode ? 'Edit Event' : 'Create New Event'}</h2>
                     </div>
                     <div className="editor-actions">
-                        {isEditMode && (
-                            <button 
-                                type="button" 
-                                className="btn-secondary-modern" 
-                                style={{ marginRight: '10px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}
-                                onClick={() => setNotificationData({ ...notificationData, sendNotification: true })}
-                            >
-                                <Bell size={18} /> Resend Notification
-                            </button>
-                        )}
+
                         <button type="submit" className="btn-save-premium" disabled={saving}>
                             {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                             {saving ? ' Saving Changes...' : ' Save Event'}
@@ -248,10 +239,10 @@ const EventEditor = () => {
                     <div className="section-title-row">
                         <h3>Basic Information</h3>
                         <div className="lang-switch-modern">
-                            <button type="button" 
+                            <button type="button"
                                 className={`lang-btn ${globalLang === 'en' ? 'active' : ''}`}
                                 onClick={() => setGlobalLang('en')}>English</button>
-                            <button type="button" 
+                            <button type="button"
                                 className={`lang-btn ${globalLang === 'hi' ? 'active' : ''}`}
                                 onClick={() => setGlobalLang('hi')}>Hindi</button>
                         </div>
@@ -364,9 +355,9 @@ const EventEditor = () => {
                                 <small className="text-gray-400 text-xs mt-1 block">Maximum upload size: 4MB</small>
                                 {formData.coverImage && (
                                     <div className="preview-container">
-                                        <img 
-                                            src={formData.coverImage.startsWith('http') ? formData.coverImage : `${API_BASE_URL}${formData.coverImage.startsWith('/') ? '' : '/'}${formData.coverImage}`} 
-                                            className="premium-preview-img" alt="Cover" 
+                                        <img
+                                            src={formData.coverImage.startsWith('http') ? formData.coverImage : `${API_BASE_URL}${formData.coverImage.startsWith('/') ? '' : '/'}${formData.coverImage}`}
+                                            className="premium-preview-img" alt="Cover"
                                         />
                                     </div>
                                 )}
@@ -426,7 +417,7 @@ const EventEditor = () => {
                                 <input
                                     type="checkbox" name="isPublished"
                                     checked={formData.isPublished} onChange={handleInputChange}
-                                /> 
+                                />
                                 <span>Visible to Public</span>
                             </label>
                         </div>
@@ -437,7 +428,7 @@ const EventEditor = () => {
                     <div className="section-title-row">
                         <h3>Content Blocks</h3>
                     </div>
-                    
+
                     <div className="blocks-container">
                         {formData.blocks.map((block, index) => (
                             <div key={block.id || index} className="premium-block">
@@ -684,7 +675,7 @@ const EventEditor = () => {
                                                 type="checkbox"
                                                 checked={notificationData.channels.includes('whatsapp')}
                                                 onChange={(e) => {
-                                                    const channels = e.target.checked 
+                                                    const channels = e.target.checked
                                                         ? [...notificationData.channels, 'whatsapp']
                                                         : notificationData.channels.filter(c => c !== 'whatsapp');
                                                     setNotificationData({ ...notificationData, channels });
@@ -700,7 +691,7 @@ const EventEditor = () => {
                                                 type="checkbox"
                                                 checked={notificationData.channels.includes('app')}
                                                 onChange={(e) => {
-                                                    const channels = e.target.checked 
+                                                    const channels = e.target.checked
                                                         ? [...notificationData.channels, 'app']
                                                         : notificationData.channels.filter(c => c !== 'app');
                                                     setNotificationData({ ...notificationData, channels });

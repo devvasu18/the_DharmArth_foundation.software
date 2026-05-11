@@ -10,13 +10,15 @@ import {
   Linking, 
   Alert,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  BackHandler
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/services/api';
 import RazorpayCheckout from 'react-native-razorpay';
+import DonationExitModal from '../../src/components/DonationExitModal';
 
 export default function DonateScreen() {
   const { user: authUser } = useAuth();
@@ -46,6 +48,13 @@ export default function DonateScreen() {
   const [donationLabelLink, setDonationLabelLink] = useState('');
   const [donationLabelBtnText, setDonationLabelBtnText] = useState('');
 
+  // Success & Claim Account State
+  const [donationSuccess, setDonationSuccess] = useState(null);
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+
   useFocusEffect(
     React.useCallback(() => {
       fetchSettings();
@@ -60,6 +69,14 @@ export default function DonateScreen() {
           setIsMotivatorLocked(true);
         }
       }
+
+      const onBackPress = () => {
+        setShowExitModal(true);
+        return true;
+      };
+
+      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress);
     }, [authUser])
   );
 
@@ -168,10 +185,12 @@ export default function DonateScreen() {
           };
           
           await api.post(verifyEndpoint, verifyPayload);
-          Alert.alert('Success', 'Thank you for your generous donation!');
           
-          setAmount(config.popularAmount || config.plans[0]);
-          setCustomAmount((config.popularAmount || config.plans[0]).toString());
+          setDonationSuccess({
+            donationId: data.subscriptionId || data.order_id,
+            amount: finalAmount,
+            isAlreadyRegistered: data.isAlreadyRegistered
+          });
         } catch (verifyError) {
           Alert.alert('Payment Verified', 'Payment successful but verification failed. Please contact support.');
         }
@@ -187,10 +206,141 @@ export default function DonateScreen() {
     }
   };
 
+  const handleRegister = async () => {
+    if (!registerPassword || registerPassword.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+    if (registerPassword !== registerConfirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    try {
+      setIsRegistering(true);
+      const { data } = await api.post('/auth/register', {
+        name: fullName,
+        mobile: mobile,
+        email: email,
+        password: registerPassword,
+        referralCode: motivatorMobile
+      });
+
+      login(data);
+      Alert.alert('Success', 'Account Created Successfully!');
+      router.replace('/dashboard');
+    } catch (error) {
+      console.error("Registration failed:", error);
+      Alert.alert('Registration Failed', error.response?.data?.message || 'Something went wrong');
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#00bfa5" />
+      </View>
+    );
+  }
+
+  if (donationSuccess) {
+    const isLoggedIn = !!authUser;
+
+    return (
+      <View style={[styles.container, { padding: 20, justifyContent: 'center' }]}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ alignItems: 'center', paddingBottom: 40, paddingTop: 20 }}>
+          <View style={styles.successIconWrapper}>
+            <Ionicons name="checkmark-circle" size={60} color="#22c55e" />
+          </View>
+
+          <Text style={styles.successTitle}>
+            Thank You, {fullName.split(' ')[0]}!
+          </Text>
+          <Text style={styles.successMessage}>
+            Your donation of <Text style={{fontWeight: 'bold'}}>₹{donationSuccess.amount.toLocaleString('en-IN')}</Text> was successful.
+          </Text>
+
+          <View style={styles.transactionBox}>
+            <Text style={styles.transactionLabel}>Transaction ID</Text>
+            <Text style={styles.transactionId}>{donationSuccess.donationId}</Text>
+          </View>
+
+          {!isLoggedIn && (
+            <View style={styles.claimAccountBox}>
+              {donationSuccess.isAlreadyRegistered ? (
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={styles.claimTitle}>Welcome Back!</Text>
+                  <Text style={styles.claimDesc}>
+                    You already have an account with us. Login to track this donation and access your certificates.
+                  </Text>
+                  <TouchableOpacity 
+                    style={[styles.donateBtn, { marginTop: 10, width: '100%' }]}
+                    onPress={() => router.push('/login')}
+                  >
+                    <Text style={styles.donateBtnText}>Login to Your Account</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={{ width: '100%' }}>
+                  <Text style={styles.claimTitle}>Claim Your Account</Text>
+                  <Text style={styles.claimDesc}>
+                    Create a password to securely access your 80G certificates and track your donations.
+                  </Text>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Create Password</Text>
+                    <View style={styles.passwordInputWrapper}>
+                      <Ionicons name="lock-closed-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.passwordInput}
+                        placeholder="Min. 6 characters"
+                        secureTextEntry
+                        value={registerPassword}
+                        onChangeText={setRegisterPassword}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Confirm Password</Text>
+                    <View style={styles.passwordInputWrapper}>
+                      <Ionicons name="lock-closed-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.passwordInput}
+                        placeholder="Re-enter password"
+                        secureTextEntry
+                        value={registerConfirmPassword}
+                        onChangeText={setRegisterConfirmPassword}
+                      />
+                    </View>
+                  </View>
+
+                  <TouchableOpacity 
+                    style={[styles.donateBtn, { marginTop: 10, width: '100%' }]}
+                    onPress={handleRegister}
+                    disabled={isRegistering}
+                  >
+                    {isRegistering ? (
+                      <ActivityIndicator color="white" />
+                    ) : (
+                      <Text style={styles.donateBtnText}>Create Account</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+
+          <TouchableOpacity 
+            style={styles.goHomeBtn}
+            onPress={() => router.replace(isLoggedIn ? '/dashboard' : '/')}
+          >
+            <Text style={styles.goHomeText}>{isLoggedIn ? 'Go to Dashboard' : 'Skip & Go Home'}</Text>
+            <Ionicons name="arrow-forward" size={18} color="#00bfa5" />
+          </TouchableOpacity>
+        </ScrollView>
       </View>
     );
   }
@@ -552,5 +702,105 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.7 },
   donateBtnText: { color: 'white', fontSize: 18, fontWeight: '800' },
   secureNote: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 20 },
-  secureText: { fontSize: 12, color: '#64748b', fontWeight: '500' }
+  secureText: { fontSize: 12, color: '#64748b', fontWeight: '500' },
+  successIconWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 20
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#1e293b',
+    marginBottom: 8,
+    textAlign: 'center'
+  },
+  successMessage: {
+    fontSize: 16,
+    color: '#475569',
+    marginBottom: 24,
+    textAlign: 'center',
+    paddingHorizontal: 20
+  },
+  transactionBox: {
+    backgroundColor: '#f8fafc',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 30,
+    alignItems: 'center',
+    width: '100%'
+  },
+  transactionLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    marginBottom: 4
+  },
+  transactionId: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1e293b'
+  },
+  claimAccountBox: {
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 16,
+    padding: 24,
+    backgroundColor: 'white',
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 3,
+    marginBottom: 30
+  },
+  claimTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#00bfa5',
+    marginBottom: 8,
+    textAlign: 'center'
+  },
+  claimDesc: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 20
+  },
+  passwordInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 50
+  },
+  inputIcon: {
+    marginRight: 10
+  },
+  passwordInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1e293b'
+  },
+  goHomeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 10
+  },
+  goHomeText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#00bfa5'
+  }
 });
