@@ -163,6 +163,14 @@ const LandingScreen = () => {
           </View>
         </View>
 
+        {/* Welcome Section */}
+        <View style={styles.welcomeSection}>
+          <Text style={styles.welcomeTitle}>
+            Welcome to The DharmArth Foundation
+          </Text>
+          <View style={styles.welcomeUnderline} />
+        </View>
+
         {/* Crowdfunding Sections */}
         {crowdfunding.map((section, index) => (
           <View key={`crowd-${section._id || ''}-${index}`} style={[styles.crowdSection, index % 2 !== 0 && styles.crowdSectionAlt]}>
@@ -381,6 +389,29 @@ const styles = StyleSheet.create({
   impactDivider: {
     width: 1,
     backgroundColor: 'rgba(0,191,165,0.1)',
+  },
+
+  // Welcome Section
+  welcomeSection: {
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    paddingBottom: 20,
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  welcomeTitle: {
+    fontSize: 30,
+    fontWeight: '900',
+    color: '#0f172a',
+    textAlign: 'center',
+    lineHeight: 38,
+    marginBottom: 16,
+  },
+  welcomeUnderline: {
+    width: 60,
+    height: 5,
+    backgroundColor: '#00bfa5',
+    borderRadius: 5,
   },
 
   // Crowdfunding Sections

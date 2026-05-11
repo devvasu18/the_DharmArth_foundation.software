@@ -6,7 +6,9 @@ import {
   FlatList, 
   ActivityIndicator, 
   RefreshControl,
-  TouchableOpacity
+  TouchableOpacity,
+  ScrollView,
+  TextInput
 } from 'react-native';
 import api from '../src/services/api';
 import { Ionicons } from '@expo/vector-icons';

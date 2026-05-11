@@ -508,18 +508,18 @@ const UserDashboard = () => {
                                         </div>
                                     </div>
                                     <div className="stat-row" style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem' }}>
-                                        <Link to="/my-network" className="view-tree-link" style={{ 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            gap: '8px', 
-                                            color: 'white', 
-                                            fontSize: '0.9rem', 
+                                        <Link to="/my-network" className="view-tree-link" style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            color: 'white',
+                                            fontSize: '0.9rem',
                                             fontWeight: '600',
                                             textDecoration: 'none',
                                             opacity: 0.9
                                         }}>
                                             <Network size={16} />
-                                            View Network Tree Structure
+                                            View Network Tree
                                             <ArrowRight size={14} />
                                         </Link>
                                     </div>

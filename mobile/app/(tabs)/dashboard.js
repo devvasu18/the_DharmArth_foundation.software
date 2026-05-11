@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
-  ActivityIndicator, 
-  Dimensions, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Dimensions,
   Linking,
   Share,
   Clipboard,
@@ -62,7 +62,7 @@ export default function DashboardScreen() {
     const donationLink = `https://the-dharm-arth-foundation-software.vercel.app/donate?ref=${user.referralCode || user.mobile}`;
     const profileLink = `https://the-dharm-arth-foundation-software.vercel.app/v/${user.referralCode || user.mobile}`;
     const message = `Namaste! 🙏 Join me in making a difference with The DharmArth Foundation. 🕉️\n\n✨ Donate here: ${donationLink}\n📜 View my Volunteer Profile: ${profileLink}`;
-    
+
     try {
       await Share.share({ message });
     } catch (error) {
@@ -81,16 +81,16 @@ export default function DashboardScreen() {
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        
+
         {/* Wallet Card - mirrored from web */}
         <View style={styles.walletCard}>
           <View style={styles.walletPattern}>
             <Ionicons name="wallet" size={140} color="rgba(255,255,255,0.2)" />
           </View>
-          
+
           <Text style={styles.walletLabel}>My Wallet Balance</Text>
           <Text style={styles.walletBalance}>₹ {wallet?.balance?.toLocaleString() || 0}</Text>
-          
+
           <View style={styles.walletStats}>
             <Ionicons name="trending-up" size={16} color="white" />
             <Text style={styles.statText}>Total Earned: ₹ {wallet?.totalEarned?.toLocaleString() || 0}</Text>
@@ -118,11 +118,11 @@ export default function DashboardScreen() {
             <Ionicons name="share-social" size={24} color="#667eea" />
             <Text style={styles.shareTitle}>Share & Earn</Text>
           </View>
-          
+
           <Text style={styles.shareDesc}>
-            Share this personalized link with your network. When someone donates using your link, you receive a <Text style={{color:'#00bfa5'}}>10% commission</Text> instantly in your wallet!
+            Share this personalized link with your network. When someone donates using your link, you receive a <Text style={{ color: '#00bfa5' }}>10% commission</Text> instantly in your wallet!
           </Text>
-          
+
           <View style={styles.refCodeLabel}>
             <Text style={styles.refText}>
               Referral Code: <Text style={styles.refHighlight}>{user.referralCode || user.mobile}</Text>
@@ -139,15 +139,15 @@ export default function DashboardScreen() {
           </View>
 
           <View style={styles.socialRow}>
-            <TouchableOpacity style={[styles.socialBtn, {backgroundColor: '#25D366'}]} onPress={handleShare}>
+            <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#25D366' }]} onPress={handleShare}>
               <Ionicons name="logo-whatsapp" size={24} color="white" />
               <Text style={styles.socialBtnText}>WhatsApp</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.socialBtn, {backgroundColor: '#1877F2'}]} onPress={handleShare}>
+            <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#1877F2' }]} onPress={handleShare}>
               <Ionicons name="logo-facebook" size={24} color="white" />
               <Text style={styles.socialBtnText}>Facebook</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.socialBtn, {backgroundColor: '#dc2743'}]} onPress={handleShare}>
+            <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#dc2743' }]} onPress={handleShare}>
               <Ionicons name="logo-instagram" size={24} color="white" />
               <Text style={styles.socialBtnText}>Instagram</Text>
             </TouchableOpacity>
@@ -160,9 +160,9 @@ export default function DashboardScreen() {
                 <Ionicons name="person-outline" size={16} color="#475569" />
                 <Text style={styles.actionBtnText}>Edit Profile</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionBtn, {backgroundColor: '#00bfa5'}]} onPress={handleShare}>
+              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#00bfa5' }]} onPress={handleShare}>
                 <Ionicons name="share-outline" size={16} color="white" />
-                <Text style={[styles.actionBtnText, {color: 'white'}]}>Share Profile</Text>
+                <Text style={[styles.actionBtnText, { color: 'white' }]}>Share Profile</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -177,24 +177,76 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           </View>
 
-          {transactions.map(txn => (
-            <View key={txn._id} style={styles.txnItem}>
-              <View style={styles.txnIcon}>
-                <Ionicons 
-                  name={txn.type === 'credit' ? "arrow-down-circle" : "arrow-up-circle"} 
-                  size={24} 
-                  color={txn.type === 'credit' ? "#10b981" : "#ef4444"} 
-                />
+          {transactions.map(txn => {
+            const isCredit = txn.type === 'credit';
+            const statusColor = txn.status === 'failed' ? '#ef4444' : '#64748b';
+            
+            let statusText = '';
+            if (txn.reason === 'payout' && txn.status === 'pending') statusText = 'IN PROCESS';
+            else if (txn.status === 'failed') statusText = 'FAILED';
+            else if (txn.isHelpResolved) statusText = 'HELP RESOLVED';
+            else if (txn.type === 'credit') statusText = 'Commission';
+            else if (txn.isDonation || txn.reason === 'wallet_donation') statusText = 'Donation';
+            else if (txn.reason === 'payout') statusText = txn.status === 'success' || txn.status === 'completed' ? 'COMPLETED' : 'FAILED';
+            else statusText = (txn.type || '').toUpperCase();
+
+            return (
+              <View key={txn._id} style={styles.txnItemContainer}>
+                <View style={styles.txnItem}>
+                  <View style={styles.txnIcon}>
+                    <Ionicons
+                      name={isCredit ? "arrow-down-circle" : "arrow-up-circle"}
+                      size={24}
+                      color={isCredit ? "#10b981" : "#ef4444"}
+                    />
+                  </View>
+                  <View style={styles.txnInfo}>
+                    <Text style={styles.txnDesc} numberOfLines={1}>{txn.description}</Text>
+                    <Text style={styles.txnDate}>{new Date(txn.createdAt).toLocaleDateString()}</Text>
+                    <Text style={[styles.txnStatusBadge, { color: statusColor }]}>{statusText}</Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={[styles.txnAmount, { color: isCredit ? "#10b981" : "#ef4444" }]}>
+                      {isCredit ? '+' : '-'}₹{txn.amount}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Receipt and 80G Actions */}
+                {(txn.isDonation || txn.is80G || txn.is80GUploaded) && (
+                  <View style={styles.txnActions}>
+                    {/* Receipt */}
+                    {txn.isDonation && (txn.receiptUrl || txn.certificateUrl) && (
+                      <TouchableOpacity 
+                        style={styles.actionPill}
+                        onPress={() => Linking.openURL(`${api.defaults.baseURL.replace('/api', '')}${txn.receiptUrl || txn.certificateUrl}`)}
+                      >
+                        <Ionicons name="download-outline" size={12} color="#00bfa5" />
+                        <Text style={styles.actionPillText}>Receipt</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {/* 80G */}
+                    {txn.isDonation && (
+                      txn.is80GUploaded && txn.certificate80GUrl ? (
+                        <TouchableOpacity 
+                          style={[styles.actionPill, { backgroundColor: '#f0fdf4', borderColor: '#dcfce7' }]}
+                          onPress={() => Linking.openURL(`${api.defaults.baseURL.replace('/api', '')}${txn.certificate80GUrl}`)}
+                        >
+                          <Ionicons name="document-text-outline" size={12} color="#16a34a" />
+                          <Text style={[styles.actionPillText, { color: '#16a34a' }]}>80G</Text>
+                        </TouchableOpacity>
+                      ) : txn.is80G ? (
+                        <View style={[styles.actionPill, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}>
+                          <Text style={[styles.actionPillText, { color: '#c2410c' }]}>80G Pending</Text>
+                        </View>
+                      ) : null
+                    )}
+                  </View>
+                )}
               </View>
-              <View style={styles.txnInfo}>
-                <Text style={styles.txnDesc} numberOfLines={1}>{txn.description}</Text>
-                <Text style={styles.txnDate}>{new Date(txn.createdAt).toLocaleDateString()}</Text>
-              </View>
-              <Text style={[styles.txnAmount, {color: txn.type === 'credit' ? "#10b981" : "#ef4444"}]}>
-                {txn.type === 'credit' ? '+' : '-'}₹{txn.amount}
-              </Text>
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         <View style={{ height: 40 }} />
@@ -207,13 +259,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scrollContent: { padding: 16 },
-  
+
   // Wallet Card
-  walletCard: { 
+  walletCard: {
     backgroundGradient: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)', // Handled by background color for now
-    backgroundColor: '#00bfa5', 
-    borderRadius: 24, 
-    padding: 24, 
+    backgroundColor: '#00bfa5',
+    borderRadius: 24,
+    padding: 24,
     marginBottom: 24,
     elevation: 10,
     shadowColor: '#000',
@@ -224,24 +276,24 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   walletPattern: { position: 'absolute', top: -20, right: -20, opacity: 0.2 },
-  walletLabel: { 
-    color: 'rgba(255,255,255,0.95)', 
-    fontSize: 12, 
-    fontWeight: '700', 
-    letterSpacing: 1, 
+  walletLabel: {
+    color: 'rgba(255,255,255,0.95)',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1,
     textTransform: 'uppercase',
-    marginBottom: 8 
+    marginBottom: 8
   },
-  walletBalance: { 
-    color: 'white', 
-    fontSize: 48, 
-    fontWeight: '800', 
+  walletBalance: {
+    color: 'white',
+    fontSize: 48,
+    fontWeight: '800',
     marginVertical: 8,
     textShadowColor: 'rgba(0,0,0,0.1)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4
   },
-  walletStats: { 
+  walletStats: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.15)',
@@ -259,10 +311,10 @@ const styles = StyleSheet.create({
   statItem: { flex: 1 },
   statValue: { color: 'white', fontSize: 24, fontWeight: '800' },
   statLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
-  withdrawBtn: { 
-    backgroundColor: 'white', 
-    paddingVertical: 16, 
-    borderRadius: 12, 
+  withdrawBtn: {
+    backgroundColor: 'white',
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
     elevation: 4,
     shadowColor: '#000',
@@ -273,10 +325,10 @@ const styles = StyleSheet.create({
   withdrawBtnText: { color: '#00695c', fontWeight: '800', fontSize: 16, textTransform: 'uppercase', letterSpacing: 0.5 },
 
   // Share Card
-  shareCard: { 
-    backgroundColor: 'white', 
-    borderRadius: 24, 
-    padding: 24, 
+  shareCard: {
+    backgroundColor: 'white',
+    borderRadius: 24,
+    padding: 24,
     marginBottom: 24,
     borderWidth: 1,
     borderColor: '#e2e8f0',
@@ -290,41 +342,41 @@ const styles = StyleSheet.create({
   shareHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
   shareTitle: { fontSize: 20, fontWeight: '800', color: '#1e293b' },
   shareDesc: { fontSize: 15, color: '#0f172a', lineHeight: 24, fontWeight: '600', marginBottom: 20 },
-  refCodeLabel: { 
-    backgroundColor: 'rgba(0, 191, 165, 0.05)', 
-    paddingHorizontal: 16, 
-    paddingVertical: 10, 
-    borderRadius: 10, 
-    borderWidth: 1, 
-    borderColor: 'rgba(0, 191, 165, 0.3)', 
+  refCodeLabel: {
+    backgroundColor: 'rgba(0, 191, 165, 0.05)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 191, 165, 0.3)',
     borderStyle: 'dashed',
     marginBottom: 20,
     alignSelf: 'flex-start'
   },
   refText: { fontSize: 14, color: '#4a5568' },
   refHighlight: { color: '#00bfa5', fontWeight: '800' },
-  linkBox: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  linkBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 2,
     borderColor: '#e2e8f0',
-    borderRadius: 30, 
-    padding: 6, 
+    borderRadius: 30,
+    padding: 6,
     gap: 12,
-    marginBottom: 20 
+    marginBottom: 20
   },
   linkText: { flex: 1, fontSize: 13, color: '#1e293b', fontWeight: '600', paddingLeft: 16 },
   copyBtn: { backgroundColor: '#00bfa5', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 25 },
   copyBtnText: { color: 'white', fontSize: 13, fontWeight: '800' },
-  
+
   socialRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  socialBtn: { 
-    flex: 1, 
-    flexDirection: 'column', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    gap: 4, 
-    paddingVertical: 12, 
+  socialBtn: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 12,
     borderRadius: 12,
     elevation: 4,
   },
@@ -341,10 +393,45 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottomWidth: 2, borderBottomColor: '#f1f5f9', paddingBottom: 12 },
   sectionTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b' },
   viewAll: { color: '#00bfa5', fontWeight: '700', fontSize: 14 },
-  txnItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 16, borderRadius: 16, marginBottom: 12, borderWidth: 1, borderColor: '#f1f5f9' },
+  txnItemContainer: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  txnItem: { flexDirection: 'row', alignItems: 'center', padding: 16 },
   txnIcon: { marginRight: 16 },
   txnInfo: { flex: 1 },
   txnDesc: { fontSize: 14, fontWeight: '700', color: '#1e293b' },
   txnDate: { fontSize: 12, color: '#94a3b8', marginTop: 4 },
-  txnAmount: { fontSize: 16, fontWeight: '800' }
+  txnStatusBadge: { fontSize: 10, fontWeight: '800', marginTop: 4, letterSpacing: 0.5 },
+  txnAmount: { fontSize: 16, fontWeight: '800' },
+  txnActions: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    paddingTop: 4,
+    gap: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f8fafc'
+  },
+  actionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#f0fdfa',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccfbf1'
+  },
+  actionPillText: { fontSize: 11, fontWeight: '700', color: '#00bfa5' }
 });
