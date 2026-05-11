@@ -179,8 +179,8 @@ export default function DashboardScreen() {
 
           {transactions.map(txn => {
             const isCredit = txn.type === 'credit';
-            const statusColor = txn.status === 'failed' ? '#ef4444' : '#64748b';
-            
+            const statusColor = txn.status === 'failed' ? '#0f0f0fff' : '#64748b';
+
             let statusText = '';
             if (txn.reason === 'payout' && txn.status === 'pending') statusText = 'IN PROCESS';
             else if (txn.status === 'failed') statusText = 'FAILED';
@@ -197,7 +197,7 @@ export default function DashboardScreen() {
                     <Ionicons
                       name={isCredit ? "arrow-down-circle" : "arrow-up-circle"}
                       size={24}
-                      color={isCredit ? "#10b981" : "#ef4444"}
+                      color={isCredit ? "#10b981" : "#0c0c0cff"}
                     />
                   </View>
                   <View style={styles.txnInfo}>
@@ -206,7 +206,7 @@ export default function DashboardScreen() {
                     <Text style={[styles.txnStatusBadge, { color: statusColor }]}>{statusText}</Text>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={[styles.txnAmount, { color: isCredit ? "#10b981" : "#ef4444" }]}>
+                    <Text style={[styles.txnAmount, { color: isCredit ? "#10b981" : "#0e0d0dff" }]}>
                       {isCredit ? '+' : '-'}₹{txn.amount}
                     </Text>
                   </View>
@@ -217,7 +217,7 @@ export default function DashboardScreen() {
                   <View style={styles.txnActions}>
                     {/* Receipt */}
                     {txn.isDonation && (txn.receiptUrl || txn.certificateUrl) && (
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         style={styles.actionPill}
                         onPress={() => Linking.openURL(`${api.defaults.baseURL.replace('/api', '')}${txn.receiptUrl || txn.certificateUrl}`)}
                       >
@@ -229,7 +229,7 @@ export default function DashboardScreen() {
                     {/* 80G */}
                     {txn.isDonation && (
                       txn.is80GUploaded && txn.certificate80GUrl ? (
-                        <TouchableOpacity 
+                        <TouchableOpacity
                           style={[styles.actionPill, { backgroundColor: '#f0fdf4', borderColor: '#dcfce7' }]}
                           onPress={() => Linking.openURL(`${api.defaults.baseURL.replace('/api', '')}${txn.certificate80GUrl}`)}
                         >

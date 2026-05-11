@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  ActivityIndicator, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
   ScrollView,
-  TextInput
+  TextInput,
+  Linking
 } from 'react-native';
 import api from '../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,7 +35,7 @@ export default function TransactionsScreen() {
           limit: 20
         }
       });
-      
+
       let newTxns = data.transactions || [];
 
       // Frontend filter for Type (as backend might not support it yet or returns all)
@@ -49,7 +50,7 @@ export default function TransactionsScreen() {
       } else {
         setTransactions(prev => [...prev, ...newTxns]);
       }
-      
+
       setHasMore(data.hasMore);
       setPage(pageNum);
     } catch (error) {
@@ -75,35 +76,73 @@ export default function TransactionsScreen() {
     }
   };
 
-  const renderItem = ({ item }) => {
-    const isCredit = item.type === 'credit';
-    const isPayout = item.reason === 'payout';
-    
+  const renderItem = ({ item: txn }) => {
+    const isCredit = txn.type === 'credit';
+    const statusColor = txn.status === 'failed' ? '#0f0f0fff' : '#64748b';
+
+    let statusText = '';
+    if (txn.reason === 'payout' && txn.status === 'pending') statusText = 'IN PROCESS';
+    else if (txn.status === 'failed') statusText = 'FAILED';
+    else if (txn.isHelpResolved) statusText = 'HELP RESOLVED';
+    else if (txn.type === 'credit') statusText = 'Commission';
+    else if (txn.isDonation || txn.reason === 'wallet_donation') statusText = 'Donation';
+    else if (txn.reason === 'payout') statusText = txn.status === 'success' || txn.status === 'completed' ? 'COMPLETED' : 'FAILED';
+    else statusText = (txn.type || '').toUpperCase();
+
     return (
-      <View style={styles.txnItem}>
-        <View style={[styles.iconBox, { backgroundColor: isCredit ? '#e0f2f1' : '#fef2f2' }]}>
-          <Ionicons 
-            name={isCredit ? 'arrow-down-circle' : 'arrow-up-circle'} 
-            size={24} 
-            color={isCredit ? '#00bfa5' : '#ef4444'} 
-          />
-        </View>
-        
-        <View style={styles.txnDetails}>
-          <Text style={styles.txnTitle} numberOfLines={1}>{item.description}</Text>
-          <Text style={styles.txnDate}>
-            {new Date(item.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-          </Text>
+      <View style={styles.txnItemContainer}>
+        <View style={styles.txnItemInner}>
+          <View style={styles.txnIcon}>
+            <Ionicons
+              name={isCredit ? "arrow-down-circle" : "arrow-up-circle"}
+              size={24}
+              color={isCredit ? "#10b981" : "#0c0c0cff"}
+            />
+          </View>
+          <View style={styles.txnInfo}>
+            <Text style={styles.txnDesc} numberOfLines={1}>{txn.description}</Text>
+            <Text style={styles.txnDate}>{new Date(txn.createdAt).toLocaleDateString()}</Text>
+            <Text style={[styles.txnStatusBadge, { color: statusColor }]}>{statusText}</Text>
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={[styles.txnAmount, { color: isCredit ? "#10b981" : "#0e0d0dff" }]}>
+              {isCredit ? '+' : '-'}₹{txn.amount}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.txnAmountArea}>
-          <Text style={[styles.txnAmount, { color: isCredit ? '#059669' : '#ef4444' }]}>
-            {isCredit ? '+' : '-'} ₹{item.amount.toLocaleString()}
-          </Text>
-          <Text style={[styles.txnStatus, item.status === 'pending' && styles.statusPending]}>
-            {item.status?.toUpperCase()}
-          </Text>
-        </View>
+        {/* Receipt and 80G Actions */}
+        {(txn.isDonation || txn.is80G || txn.is80GUploaded) && (
+          <View style={styles.txnActions}>
+            {/* Receipt */}
+            {txn.isDonation && (txn.receiptUrl || txn.certificateUrl) && (
+              <TouchableOpacity
+                style={styles.actionPill}
+                onPress={() => Linking.openURL(`${api.defaults.baseURL.replace('/api', '')}${txn.receiptUrl || txn.certificateUrl}`)}
+              >
+                <Ionicons name="download-outline" size={12} color="#00bfa5" />
+                <Text style={styles.actionPillText}>Receipt</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* 80G */}
+            {txn.isDonation && (
+              txn.is80GUploaded && txn.certificate80GUrl ? (
+                <TouchableOpacity
+                  style={[styles.actionPill, { backgroundColor: '#f0fdf4', borderColor: '#dcfce7' }]}
+                  onPress={() => Linking.openURL(`${api.defaults.baseURL.replace('/api', '')}${txn.certificate80GUrl}`)}
+                >
+                  <Ionicons name="document-text-outline" size={12} color="#16a34a" />
+                  <Text style={[styles.actionPillText, { color: '#16a34a' }]}>80G</Text>
+                </TouchableOpacity>
+              ) : txn.is80G ? (
+                <View style={[styles.actionPill, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}>
+                  <Text style={[styles.actionPillText, { color: '#c2410c' }]}>80G Pending</Text>
+                </View>
+              ) : null
+            )}
+          </View>
+        )}
       </View>
     );
   };
@@ -119,22 +158,22 @@ export default function TransactionsScreen() {
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ title: 'History', headerTitleAlign: 'center' }} />
-      
+
       <View style={styles.filterSection}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.typeBtn, txnType === 'All' && styles.typeBtnActive]}
             onPress={() => setTxnType('All')}
           >
             <Text style={[styles.typeBtnText, txnType === 'All' && styles.typeBtnTextActive]}>All</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.typeBtn, txnType === 'Donation' && styles.typeBtnActive]}
             onPress={() => setTxnType('Donation')}
           >
             <Text style={[styles.typeBtnText, txnType === 'Donation' && styles.typeBtnTextActive]}>Donations</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.typeBtn, txnType === 'Commission' && styles.typeBtnActive]}
             onPress={() => setTxnType('Commission')}
           >
@@ -166,7 +205,7 @@ export default function TransactionsScreen() {
           </View>
         </View>
       </View>
-      
+
       <FlatList
         data={transactions}
         renderItem={renderItem}
@@ -265,57 +304,47 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     marginLeft: 2,
   },
-  txnItem: {
+  txnItemContainer: {
     backgroundColor: 'white',
     borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
   },
-  iconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
+  txnItemInner: { flexDirection: 'row', alignItems: 'center', padding: 16 },
+  txnIcon: { marginRight: 16 },
+  txnInfo: { flex: 1 },
+  txnDesc: { fontSize: 14, fontWeight: '700', color: '#1e293b' },
+  txnDate: { fontSize: 12, color: '#94a3b8', marginTop: 4 },
+  txnStatusBadge: { fontSize: 10, fontWeight: '800', marginTop: 4, letterSpacing: 0.5 },
+  txnAmount: { fontSize: 16, fontWeight: '800' },
+  txnActions: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    paddingTop: 4,
+    gap: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f8fafc'
+  },
+  actionPill: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 12,
+    gap: 4,
+    backgroundColor: '#f0fdfa',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccfbf1'
   },
-  txnDetails: {
-    flex: 1,
-  },
-  txnTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 4,
-  },
-  txnDate: {
-    fontSize: 12,
-    color: '#64748b',
-  },
-  txnAmountArea: {
-    alignItems: 'flex-end',
-  },
-  txnAmount: {
-    fontSize: 16,
-    fontWeight: '800',
-    marginBottom: 4,
-  },
-  txnStatus: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#94a3b8',
-    letterSpacing: 0.5,
-  },
-  statusPending: {
-    color: '#f59e0b',
-  },
+  actionPillText: { fontSize: 11, fontWeight: '700', color: '#00bfa5' },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
