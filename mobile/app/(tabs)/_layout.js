@@ -15,6 +15,9 @@ import {
 } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 import DonationExitModal from '../../src/components/DonationExitModal';
+import { io } from "socket.io-client";
+import { Audio } from 'expo-av';
+import api, { API_BASE_URL } from '../../src/services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -25,6 +28,48 @@ export default function TabLayout() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [exitModalVisible, setExitModalVisible] = useState(false);
   const [exitTargetRoute, setExitTargetRoute] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const socketRef = React.useRef(null);
+
+  const playNotificationSound = async () => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: 'https://res.cloudinary.com/dbe1ykvg8/video/upload/v1778523456/dharmarth_foundation/notification_ding.mp3' }
+      );
+      await sound.playAsync();
+    } catch (error) {
+      console.error("Error playing sound", error);
+    }
+  };
+
+  React.useEffect(() => {
+    if (!user) return;
+
+    const fetchUnread = async () => {
+      try {
+        const { data } = await api.get('/notifications');
+        setUnreadCount(data.unreadCount || 0);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchUnread();
+
+    socketRef.current = io(API_BASE_URL);
+    socketRef.current.emit('join_user_notifications', user._id);
+
+    const handleNewNotif = () => {
+      setUnreadCount(prev => prev + 1);
+      playNotificationSound();
+    };
+
+    socketRef.current.on('payout_processed', handleNewNotif);
+    socketRef.current.on('payout_rejected', handleNewNotif);
+
+    return () => {
+      if (socketRef.current) socketRef.current.disconnect();
+    };
+  }, [user?._id, pathname]); // Re-fetch on pathname change to catch mark-read updates
 
   const menuItems = [
     { label: 'My Wallet', icon: 'wallet-outline', route: '/dashboard' },
@@ -101,15 +146,28 @@ export default function TabLayout() {
           marginLeft: 8,
         },
         headerRight: () => (
-          <TouchableOpacity 
-            style={{ 
-              marginRight: 16,
-              padding: 4,
-            }} 
-            onPress={() => setMenuVisible(true)}
-          >
-            <Ionicons name="reorder-three" size={38} color="#0f172a" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity 
+              style={{ marginRight: 16, padding: 4, position: 'relative' }}
+              onPress={() => router.push('/notifications')}
+            >
+              <Ionicons name="notifications-outline" size={28} color="#0f172a" />
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={{ 
+                marginRight: 16,
+                padding: 4,
+              }} 
+              onPress={() => setMenuVisible(true)}
+            >
+              <Ionicons name="reorder-three" size={38} color="#0f172a" />
+            </TouchableOpacity>
+          </View>
         ),
       }}>
         <Tabs.Screen
@@ -326,5 +384,24 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#e2e8f0',
     marginTop: 4,
+  },
+  badge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#ef4444',
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: 'white'
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: '900',
   }
 });
