@@ -57,6 +57,21 @@ export default function TabLayout() {
   };
 
   const handleTabChange = (e, targetRoute) => {
+    // Prevent unauthenticated access to dashboard
+    if (targetRoute === '/dashboard' && !user) {
+      e.preventDefault();
+      
+      // If they are on the donate page, we still want to show the exit modal first,
+      // and THEN go to login.
+      if (pathname === '/donate' || pathname === 'donate') {
+        setExitTargetRoute('/login');
+        setExitModalVisible(true);
+      } else {
+        router.push('/login');
+      }
+      return;
+    }
+
     if (pathname === '/donate' || pathname === 'donate') {
       e.preventDefault();
       setExitTargetRoute(targetRoute);
@@ -176,13 +191,26 @@ export default function TabLayout() {
 
                   <View style={styles.divider} />
 
-                  <TouchableOpacity 
-                    style={styles.menuItem}
-                    onPress={handleLogout}
-                  >
-                    <Ionicons name="log-out-outline" size={22} color="#ef4444" />
-                    <Text style={[styles.menuItemText, { color: '#ef4444' }]}>Logout</Text>
-                  </TouchableOpacity>
+                  {user ? (
+                    <TouchableOpacity 
+                      style={styles.menuItem}
+                      onPress={handleLogout}
+                    >
+                      <Ionicons name="log-out-outline" size={22} color="#ef4444" />
+                      <Text style={[styles.menuItemText, { color: '#ef4444' }]}>Logout</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity 
+                      style={styles.menuItem}
+                      onPress={() => {
+                        setMenuVisible(false);
+                        router.push('/login');
+                      }}
+                    >
+                      <Ionicons name="log-in-outline" size={22} color="#00bfa5" />
+                      <Text style={[styles.menuItemText, { color: '#00bfa5' }]}>Login</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
 
                 <View style={styles.menuFooter}>
