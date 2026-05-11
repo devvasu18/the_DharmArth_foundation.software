@@ -12,11 +12,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import api from '../src/services/api';
 import { Stack, useRouter } from 'expo-router';
+import { useAuth } from '../src/context/AuthContext';
 
 export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { user } = useAuth();
   const router = useRouter();
 
   const fetchNotifications = async () => {
@@ -33,8 +35,12 @@ export default function NotificationsScreen() {
   };
 
   useEffect(() => {
-    fetchNotifications();
-  }, []);
+    if (user) {
+      fetchNotifications();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const handleMarkAllRead = async () => {
     try {
@@ -90,7 +96,9 @@ export default function NotificationsScreen() {
           !loading && (
             <View style={styles.empty}>
               <Ionicons name="notifications-off-outline" size={64} color="#e2e8f0" />
-              <Text style={styles.emptyText}>No notifications yet</Text>
+              <Text style={styles.emptyText}>
+                {user ? "No notifications yet" : "Please login to view notifications"}
+              </Text>
             </View>
           )
         }

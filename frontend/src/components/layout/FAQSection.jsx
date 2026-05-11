@@ -1,14 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import './FAQSection.css';
 import { ChevronDown } from 'lucide-react';
+import api from '../../services/api';
 
 
 const FAQSection = () => {
     const { t } = useTranslation();
-    const faqs = t('faq.list', { returnObjects: true });
-
+    const [faqs, setFaqs] = useState([]);
     const [activeIndex, setActiveIndex] = useState(null);
+
+    useEffect(() => {
+        const fetchFaqs = async () => {
+            try {
+                const { data } = await api.get('/content/faqs');
+                if (data && data.length > 0) {
+                    // Map API fields to UI expected fields
+                    const mappedFaqs = data.map(f => ({ q: f.question, a: f.answer }));
+                    setFaqs(mappedFaqs);
+                } else {
+                    // Fallback to translations if DB is empty
+                    const fallbackFaqs = t('faq.list', { returnObjects: true });
+                    if (Array.isArray(fallbackFaqs)) setFaqs(fallbackFaqs);
+                }
+            } catch (error) {
+                console.error("Failed to fetch FAQs", error);
+                const fallbackFaqs = t('faq.list', { returnObjects: true });
+                if (Array.isArray(fallbackFaqs)) setFaqs(fallbackFaqs);
+            }
+        };
+        fetchFaqs();
+    }, [t]);
 
     const toggleFAQ = (index) => {
         setActiveIndex(activeIndex === index ? null : index);

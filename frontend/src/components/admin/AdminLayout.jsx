@@ -230,6 +230,9 @@ const AdminLayout = () => {
                                 <NavLink to="/admin/crowdfunding" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
                                     Home crowdfunding
                                 </NavLink>
+                                <NavLink to="/admin/faqs" className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`} onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}>
+                                    Manage FAQs
+                                </NavLink>
                             </div>
                         )}
                     </div>

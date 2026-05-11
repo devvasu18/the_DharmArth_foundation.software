@@ -17,21 +17,48 @@ import { Stack, useRouter, useFocusEffect } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
+const FAQItem = ({ question, answer }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <View style={styles.faqItem}>
+      <TouchableOpacity 
+        style={styles.faqHeader} 
+        onPress={() => setIsOpen(!isOpen)}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.faqQuestion}>{question}</Text>
+        <Ionicons 
+          name={isOpen ? "chevron-up" : "chevron-down"} 
+          size={20} 
+          color="#1e293b" 
+        />
+      </TouchableOpacity>
+      {isOpen && (
+        <View style={styles.faqAnswerContainer}>
+          <Text style={styles.faqAnswer}>{answer}</Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
 const LandingScreen = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [visuals, setVisuals] = useState([]);
   const [textSlides, setTextSlides] = useState([]);
   const [crowdfunding, setCrowdfunding] = useState([]);
+  const [faqs, setFaqs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentVisualIndex, setCurrentVisualIndex] = useState(0);
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
 
   const fetchData = async () => {
     try {
-      const [sliderRes, crowdRes] = await Promise.all([
+      const [sliderRes, crowdRes, faqRes] = await Promise.all([
         api.get('/content/sliders'),
-        api.get('/content/crowdfunding')
+        api.get('/content/crowdfunding'),
+        api.get('/content/faqs')
       ]);
       const allSliders = sliderRes.data.filter(s => s.isVisible !== false);
       const images = allSliders.filter(s => s.type === 'image' || !s.type).sort((a, b) => a.order - b.order);
@@ -40,6 +67,7 @@ const LandingScreen = () => {
       setVisuals(images);
       setTextSlides(texts.length > 0 ? texts : images);
       setCrowdfunding(crowdRes.data);
+      setFaqs(faqRes.data.filter(f => f.isVisible !== false));
     } catch (error) {
       console.error("Failed to fetch home content", error);
     } finally {
@@ -202,14 +230,37 @@ const LandingScreen = () => {
           </View>
         </View>
 
-        {/* Monthly Giving CTA */}
-        <View style={styles.monthlySection}>
-          <Text style={styles.monthlyTitle}>Support Monthly</Text>
-          <Text style={styles.monthlyDesc}>Join our circle of constant support and help us plan for long-term medical aid.</Text>
-          <TouchableOpacity style={styles.primaryBtn} onPress={handleDonate}>
-            <Text style={styles.primaryBtnText}>Start Monthly Donation</Text>
-          </TouchableOpacity>
+        {/* Monthly Giving Section */}
+        <View style={styles.monthlyGivingSection}>
+          <Image 
+            source={{ uri: 'https://img.freepik.com/free-vector/happy-kids-world-design_24877-50563.jpg' }} 
+            style={styles.monthlyGivingImg} 
+            resizeMode="cover"
+          />
+          <View style={styles.monthlyGivingContent}>
+            <Text style={styles.monthlyGivingTitle}>Gift Smiles with Monthly Giving</Text>
+            <Text style={styles.monthlyGivingText}>
+              <Text style={styles.monthlyHighlight}>6,619 Lives</Text> Have Been Saved With Monthly Contributions From <Text style={styles.monthlyHighlight}>4,21,908 Contributors</Text>. Save Countless Lives By Giving Monthly.
+            </Text>
+            <TouchableOpacity 
+              style={styles.monthlyGivingBtn} 
+              onPress={() => router.push('/dashboard')}
+            >
+              <Text style={styles.monthlyGivingBtnText}>Join & Earn Monthly</Text>
+              <Ionicons name="arrow-forward" size={18} color="white" />
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {/* FAQ Section */}
+        {faqs.length > 0 && (
+          <View style={styles.faqSection}>
+            <Text style={styles.sectionHeading}>Frequently Asked Questions</Text>
+            {faqs.map((faq, index) => (
+              <FAQItem key={faq._id || index} question={faq.question} answer={faq.answer} />
+            ))}
+          </View>
+        )}
 
         {/* Detailed Footer */}
         <View style={styles.footerDetailed}>
@@ -452,8 +503,44 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '900',
     color: '#1e293b',
+    marginBottom: 24,
     textAlign: 'center',
-    marginBottom: 32,
+  },
+  // FAQ Section
+  faqSection: {
+    padding: 24,
+    backgroundColor: '#f8fafc',
+  },
+  faqItem: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    marginBottom: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  faqHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  faqQuestion: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1e293b',
+    flex: 1,
+    marginRight: 10,
+  },
+  faqAnswerContainer: {
+    padding: 16,
+    paddingTop: 0,
+    borderTopWidth: 0,
+  },
+  faqAnswer: {
+    fontSize: 14,
+    color: '#64748b',
+    lineHeight: 22,
   },
   whyUsGrid: {
     flexDirection: 'row',
@@ -490,35 +577,57 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Monthly
-  monthlySection: {
-    padding: 32,
-    backgroundColor: '#00bfa5',
-    margin: 24,
-    borderRadius: 30,
+  // Monthly Giving Section
+  monthlyGivingSection: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 24,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  monthlyGivingImg: {
+    width: '100%',
+    height: 180,
+  },
+  monthlyGivingContent: {
+    padding: 24,
     alignItems: 'center',
   },
-  monthlyTitle: {
-    fontSize: 24,
+  monthlyGivingTitle: {
+    fontSize: 22,
     fontWeight: '900',
-    color: 'white',
+    color: '#0f172a',
     marginBottom: 12,
+    textAlign: 'center',
   },
-  monthlyDesc: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.9)',
+  monthlyGivingText: {
+    fontSize: 15,
+    color: '#64748b',
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
   },
-  primaryBtn: {
-    backgroundColor: 'white',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 30,
-  },
-  primaryBtnText: {
+  monthlyHighlight: {
     color: '#00bfa5',
+    fontWeight: '800',
+  },
+  monthlyGivingBtn: {
+    backgroundColor: '#00bfa5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 30,
+    gap: 10,
+  },
+  monthlyGivingBtnText: {
+    color: 'white',
     fontSize: 16,
     fontWeight: '800',
   },

@@ -14,6 +14,8 @@ import {
   BackHandler
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import LocationModal from '../../src/components/LocationModal';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/services/api';
@@ -54,6 +56,8 @@ export default function DonateScreen() {
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [isDetecting, setIsDetecting] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -98,6 +102,48 @@ export default function DonateScreen() {
       console.error("Failed to load settings", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const detectLocation = async () => {
+    try {
+      setIsDetecting(true);
+      
+      const enabled = await Location.hasServicesEnabledAsync();
+      if (!enabled) {
+        setShowLocationModal(true);
+        return;
+      }
+
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Permission to access location was denied. Please enable it in settings.');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      let addressResult = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude
+      });
+
+      if (addressResult.length > 0) {
+        const item = addressResult[0];
+        const parts = [
+          item.name,
+          item.street,
+          item.district,
+          item.city || item.subregion,
+          item.region,
+          item.postalCode
+        ].filter(Boolean);
+        setAddress(parts.join(', '));
+      }
+    } catch (error) {
+      console.error("Location error", error);
+      Alert.alert('Error', 'Failed to detect location. Please try again.');
+    } finally {
+      setIsDetecting(false);
     }
   };
 
@@ -440,7 +486,17 @@ export default function DonateScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Address (Optional)</Text>
+            <View style={styles.labelRow}>
+              <Text style={styles.label}>Address (Optional)</Text>
+              <TouchableOpacity 
+                style={styles.detectBtn} 
+                onPress={detectLocation}
+                disabled={isDetecting}
+              >
+                <Ionicons name="location" size={14} color="#00bfa5" />
+                <Text style={styles.detectBtnText}>{isDetecting ? 'Detecting...' : 'Detect'}</Text>
+              </TouchableOpacity>
+            </View>
             <TextInput 
               style={[styles.input, styles.textArea]}
               placeholder="Ex. H.No 123, Sector 4, New Delhi"
@@ -540,6 +596,10 @@ export default function DonateScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      <LocationModal 
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+      />
     </View>
   );
 }
@@ -803,4 +863,27 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#00bfa5'
   }
+  },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  detectBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 191, 165, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 191, 165, 0.2)',
+  },
+  detectBtnText: {
+    color: '#00bfa5',
+    fontSize: 12,
+    fontWeight: '700',
+  },
 });

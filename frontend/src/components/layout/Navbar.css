@@ -237,6 +237,10 @@
     display: none;
 }
 
+.show-mobile {
+    display: none;
+}
+
 @media (max-width: 768px) {
     .hidden-mobile {
         display: none !important;
@@ -245,11 +249,6 @@
     .show-mobile {
         display: flex !important;
     }
-}
-
-.show-mobile {
-    display: none;
-}
 
     .mobile-toggle {
         display: block;

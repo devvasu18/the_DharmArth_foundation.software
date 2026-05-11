@@ -60,6 +60,7 @@ const AdminDelivery = lazy(() => import('./components/admin/AdminDelivery'));
 const AdminDispatch = lazy(() => import('./components/admin/AdminDispatch'));
 const AdminPharmacyOrders = lazy(() => import('./components/admin/AdminPharmacyOrders'));
 const AdminWhatsApp = lazy(() => import('./components/admin/AdminWhatsApp'));
+const AdminFAQs = lazy(() => import('./components/admin/AdminFAQs'));
 const CMSDashboard = lazy(() => import('./pages/admin/cms/CMSDashboard'));
 const DeliveryBoyDashboard = lazy(() => import('./pages/DeliveryBoyDashboard'));
 const SharedCheckout = lazy(() => import('./pages/SharedCheckout'));
@@ -114,6 +115,7 @@ const router = createBrowserRouter(
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="sliders" element={<AdminSliders />} />
+        <Route path="faqs" element={<AdminFAQs />} />
         <Route path="crowdfunding" element={<AdminCrowdfunding />} />
         <Route path="settings" element={<AdminSettings />} />
         <Route path="roles" element={<AdminRoles />} />
