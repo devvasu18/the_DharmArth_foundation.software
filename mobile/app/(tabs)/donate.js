@@ -19,6 +19,7 @@ import LocationModal from '../../src/components/LocationModal';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/services/api';
+import { useLocationFlow } from '../../src/hooks/useLocationFlow';
 import RazorpayCheckout from 'react-native-razorpay';
 import DonationExitModal from '../../src/components/DonationExitModal';
 
@@ -56,8 +57,9 @@ export default function DonateScreen() {
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
-  const [isDetecting, setIsDetecting] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  
+  const { requestLocation, loading: isDetecting } = useLocationFlow();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -105,50 +107,10 @@ export default function DonateScreen() {
     }
   };
 
-  const detectLocation = async (retryWithSettings = false) => {
-    try {
-      setIsDetecting(true);
-      
-      const enabled = await Location.hasServicesEnabledAsync();
-      if (!enabled) {
-        if (retryWithSettings) {
-          if (Platform.OS === 'ios') Linking.openURL('app-settings:');
-          else Linking.openSettings();
-        } else {
-          setShowLocationModal(true);
-        }
-        return;
-      }
-
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Permission to access location was denied. Please enable it in settings.');
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      let addressResult = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude
-      });
-
-      if (addressResult.length > 0) {
-        const item = addressResult[0];
-        const parts = [
-          item.name,
-          item.street,
-          item.district,
-          item.city || item.subregion,
-          item.region,
-          item.postalCode
-        ].filter(Boolean);
-        setAddress(parts.join(', '));
-      }
-    } catch (error) {
-      console.error("Location error", error);
-      Alert.alert('Error', 'Failed to detect location. Please try again.');
-    } finally {
-      setIsDetecting(false);
+  const handleDetectLocation = async () => {
+    const result = await requestLocation();
+    if (result && result.address) {
+      setAddress(result.address);
     }
   };
 
@@ -495,7 +457,7 @@ export default function DonateScreen() {
               <Text style={styles.label}>Address (Optional)</Text>
               <TouchableOpacity 
                 style={styles.detectBtn} 
-                onPress={detectLocation}
+                onPress={handleDetectLocation}
                 disabled={isDetecting}
               >
                 <Ionicons name="location" size={14} color="#00bfa5" />
@@ -604,7 +566,7 @@ export default function DonateScreen() {
       <LocationModal 
         isOpen={showLocationModal}
         onClose={() => setShowLocationModal(false)}
-        onDetect={() => detectLocation(true)}
+        onDetect={handleDetectLocation}
       />
     </View>
   );
