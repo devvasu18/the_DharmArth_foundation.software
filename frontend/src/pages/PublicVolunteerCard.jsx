@@ -137,7 +137,7 @@ const PublicVolunteerCard = () => {
                                     }}
                                 >
                                     <Share2 size={18} />
-                                    <span>Share Profile</span>
+                                    <span>Share Profile Page</span>
                                 </button>
                                 <button className="secondary-action-btn" onClick={() => navigate('/')}>
                                     <ExternalLink size={18} />

@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TextInput, 
-  TouchableOpacity, 
-  ActivityIndicator, 
-  Linking, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  Linking,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -39,14 +39,14 @@ export default function DonateScreen() {
   const [need80G, setNeed80G] = useState(false);
   const [pan, setPan] = useState('');
   const [aadhaar, setAadhaar] = useState('');
-  
+
   // Config & Loading State
   const [config, setConfig] = useState({ plans: [600, 1000, 5000], popularAmount: 1000 });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [isValidatingMotivator, setIsValidatingMotivator] = useState(false);
   const [isMotivatorLocked, setIsMotivatorLocked] = useState(false);
-  
+
   const [donationLabel, setDonationLabel] = useState('');
   const [donationLabelLink, setDonationLabelLink] = useState('');
   const [donationLabelBtnText, setDonationLabelBtnText] = useState('');
@@ -58,7 +58,7 @@ export default function DonateScreen() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
-  
+
   const { requestLocation, loading: isDetecting } = useLocationFlow();
 
   useFocusEffect(
@@ -68,7 +68,7 @@ export default function DonateScreen() {
         setFullName(authUser.name || '');
         setMobile(authUser.mobile || '');
         setEmail(authUser.email || '');
-        
+
         if (authUser.referredBy) {
           setMotivatorMobile(authUser.referredBy.mobile || authUser.referredBy.referralCode || '');
           setMotivatorName(authUser.referredBy.name || '');
@@ -90,8 +90,8 @@ export default function DonateScreen() {
     try {
       const { data } = await api.get('/content/settings');
       if (data.donation_config) {
-        const dConfig = typeof data.donation_config === 'string' 
-          ? JSON.parse(data.donation_config) 
+        const dConfig = typeof data.donation_config === 'string'
+          ? JSON.parse(data.donation_config)
           : data.donation_config;
         setConfig(dConfig);
         setAmount(dConfig.popularAmount || dConfig.plans[0]);
@@ -139,7 +139,7 @@ export default function DonateScreen() {
 
   const handleDonate = async () => {
     const finalAmount = parseInt(customAmount) || amount;
-    
+
     if (!fullName || mobile.length !== 10 || !finalAmount) {
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
@@ -166,7 +166,7 @@ export default function DonateScreen() {
       };
 
       const { data } = await api.post('/donate', payload);
-      
+
       const options = {
         description: 'Monthly Donation',
         image: 'https://the-dharm-arth-foundation-software.vercel.app/logo.png',
@@ -178,7 +178,7 @@ export default function DonateScreen() {
           contact: mobile,
           name: fullName
         },
-        theme: {color: '#00bfa5'}
+        theme: { color: '#00bfa5' }
       };
 
       if (data.subscriptionId) {
@@ -196,9 +196,9 @@ export default function DonateScreen() {
             razorpay_signature: razorpayResponse.razorpay_signature,
             ...(data.subscriptionId ? { razorpay_subscription_id: razorpayResponse.razorpay_subscription_id || data.subscriptionId } : { razorpay_order_id: razorpayResponse.razorpay_order_id || data.order_id })
           };
-          
+
           await api.post(verifyEndpoint, verifyPayload);
-          
+
           setDonationSuccess({
             donationId: data.subscriptionId || data.order_id,
             amount: finalAmount,
@@ -272,7 +272,7 @@ export default function DonateScreen() {
             Thank You, {fullName.split(' ')[0]}!
           </Text>
           <Text style={styles.successMessage}>
-            Your donation of <Text style={{fontWeight: 'bold'}}>₹{donationSuccess.amount.toLocaleString('en-IN')}</Text> was successful.
+            Your donation of <Text style={{ fontWeight: 'bold' }}>₹{donationSuccess.amount.toLocaleString('en-IN')}</Text> was successful.
           </Text>
 
           <View style={styles.transactionBox}>
@@ -288,7 +288,7 @@ export default function DonateScreen() {
                   <Text style={styles.claimDesc}>
                     You already have an account with us. Login to track this donation and access your certificates.
                   </Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={[styles.donateBtn, { marginTop: 10, width: '100%' }]}
                     onPress={() => router.push('/login')}
                   >
@@ -330,7 +330,7 @@ export default function DonateScreen() {
                     </View>
                   </View>
 
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={[styles.donateBtn, { marginTop: 10, width: '100%' }]}
                     onPress={handleRegister}
                     disabled={isRegistering}
@@ -346,7 +346,7 @@ export default function DonateScreen() {
             </View>
           )}
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.goHomeBtn}
             onPress={() => router.replace(isLoggedIn ? '/dashboard' : '/')}
           >
@@ -361,15 +361,15 @@ export default function DonateScreen() {
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        
+
         {/* Amount Selection */}
         <Text style={styles.sectionTitle}>Select Donation Amount</Text>
-        
+
         {!!donationLabel && (
           <View style={styles.subtitleContainer}>
             <Text style={styles.donationSubtitle}>{donationLabel}</Text>
             {!!donationLabelLink && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.subtitleLinkBtn}
                 onPress={() => Linking.openURL(donationLabelLink)}
               >
@@ -382,8 +382,8 @@ export default function DonateScreen() {
 
         <View style={styles.amountGrid}>
           {config.plans.map((p, index) => (
-            <TouchableOpacity 
-              key={`amount-${p}-${index}`} 
+            <TouchableOpacity
+              key={`amount-${p}-${index}`}
               style={[styles.amountBtn, amount === p && styles.amountBtnActive]}
               onPress={() => { setAmount(p); setCustomAmount(p.toString()); }}
             >
@@ -395,7 +395,7 @@ export default function DonateScreen() {
 
         <View style={styles.customAmountContainer}>
           <Text style={styles.currencySymbol}>₹</Text>
-          <TextInput 
+          <TextInput
             style={styles.customInput}
             placeholder="Custom Amount"
             keyboardType="number-pad"
@@ -418,7 +418,7 @@ export default function DonateScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Full Name *</Text>
-            <TextInput 
+            <TextInput
               style={styles.input}
               placeholder="Ex. Raghu Kumar"
               value={fullName}
@@ -430,7 +430,7 @@ export default function DonateScreen() {
             <Text style={styles.label}>Mobile Number *</Text>
             <View style={styles.phoneInputRow}>
               <View style={styles.flagAddon}><Text style={styles.flagText}>+91</Text></View>
-              <TextInput 
+              <TextInput
                 style={styles.phoneInput}
                 placeholder="9876543210"
                 keyboardType="phone-pad"
@@ -443,7 +443,7 @@ export default function DonateScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email Address</Text>
-            <TextInput 
+            <TextInput
               style={styles.input}
               placeholder="mail@example.com"
               keyboardType="email-address"
@@ -455,16 +455,16 @@ export default function DonateScreen() {
           <View style={styles.inputGroup}>
             <View style={styles.labelRow}>
               <Text style={styles.label}>Address (Optional)</Text>
-              <TouchableOpacity 
-                style={styles.detectBtn} 
+              <TouchableOpacity
+                style={styles.detectBtn}
                 onPress={handleDetectLocation}
                 disabled={isDetecting}
               >
                 <Ionicons name="location" size={14} color="#00bfa5" />
-                <Text style={styles.detectBtnText}>{isDetecting ? 'Detecting...' : 'Detect'}</Text>
+                <Text style={styles.detectBtnText}>{isDetecting ? 'Detecting...' : 'Auto Detect'}</Text>
               </TouchableOpacity>
             </View>
-            <TextInput 
+            <TextInput
               style={[styles.input, styles.textArea]}
               placeholder="Ex. H.No 123, Sector 4, New Delhi"
               multiline
@@ -481,11 +481,11 @@ export default function DonateScreen() {
             <Ionicons name="phone-portrait" size={20} color="#00bfa5" />
             <Text style={styles.sectionHeaderText}>Motivator Details</Text>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Motivated By (Mobile/ID)</Text>
             <View style={styles.motivatorInputWrapper}>
-              <TextInput 
+              <TextInput
                 style={[styles.input, isMotivatorLocked && styles.inputLocked]}
                 placeholder="Mobile Number"
                 keyboardType="phone-pad"
@@ -505,7 +505,7 @@ export default function DonateScreen() {
 
         {/* 80G Section */}
         <View style={styles.taxSection}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.checkboxRow}
             onPress={() => setNeed80G(!need80G)}
           >
@@ -517,7 +517,7 @@ export default function DonateScreen() {
             <View style={styles.taxInputs}>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>PAN Number *</Text>
-                <TextInput 
+                <TextInput
                   style={styles.input}
                   placeholder="ABCDE1234F"
                   autoCapitalize="characters"
@@ -528,7 +528,7 @@ export default function DonateScreen() {
               </View>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Aadhaar Number *</Text>
-                <TextInput 
+                <TextInput
                   style={styles.input}
                   placeholder="12-digit Aadhaar"
                   keyboardType="number-pad"
@@ -541,7 +541,7 @@ export default function DonateScreen() {
           )}
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.donateBtn, submitting && styles.btnDisabled]}
           onPress={handleDonate}
           disabled={submitting}
@@ -563,7 +563,7 @@ export default function DonateScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
-      <LocationModal 
+      <LocationModal
         isOpen={showLocationModal}
         onClose={() => setShowLocationModal(false)}
         onDetect={handleDetectLocation}
@@ -605,20 +605,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
-  amountGrid: { 
-    flexDirection: 'row', 
-    flexWrap: 'wrap', 
-    gap: 12, 
+  amountGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
     marginBottom: 20,
     justifyContent: 'center'
   },
-  amountBtn: { 
-    width: '30%', 
-    height: 60, 
-    borderRadius: 16, 
-    borderWidth: 1, 
-    borderColor: '#e2e8f0', 
-    justifyContent: 'center', 
+  amountBtn: {
+    width: '30%',
+    height: 60,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
     backgroundColor: '#ffffff',
@@ -628,8 +628,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  amountBtnActive: { 
-    borderColor: '#00bfa5', 
+  amountBtnActive: {
+    borderColor: '#00bfa5',
     backgroundColor: '#00bfa5',
     shadowColor: '#00bfa5',
     shadowOffset: { width: 0, height: 6 },
@@ -685,25 +685,25 @@ const styles = StyleSheet.create({
   inputLocked: { backgroundColor: '#f1f5f9', color: '#94a3b8' },
   textArea: { minHeight: 80, textAlignVertical: 'top' },
   phoneInputRow: { flexDirection: 'row', gap: 10 },
-  flagAddon: { 
-    backgroundColor: '#f1f5f9', 
-    borderWidth: 1, 
-    borderColor: '#e2e8f0', 
-    borderRadius: 12, 
-    width: 60, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
+  flagAddon: {
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    width: 60,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   flagText: { fontWeight: '700', color: '#475569' },
-  phoneInput: { 
-    flex: 1, 
-    backgroundColor: '#f8fafc', 
-    borderWidth: 1, 
-    borderColor: '#e2e8f0', 
-    borderRadius: 12, 
-    padding: 14, 
-    fontSize: 16, 
-    letterSpacing: 2 
+  phoneInput: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    letterSpacing: 2
   },
   motivatorInputWrapper: { position: 'relative' },
   innerLoader: { position: 'absolute', right: 14, top: 14 },

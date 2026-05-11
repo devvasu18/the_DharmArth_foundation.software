@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  Image, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  TouchableOpacity,
   Dimensions,
   Linking,
   ActivityIndicator
@@ -21,16 +21,16 @@ const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <View style={styles.faqItem}>
-      <TouchableOpacity 
-        style={styles.faqHeader} 
+      <TouchableOpacity
+        style={styles.faqHeader}
         onPress={() => setIsOpen(!isOpen)}
         activeOpacity={0.7}
       >
         <Text style={styles.faqQuestion}>{question}</Text>
-        <Ionicons 
-          name={isOpen ? "chevron-up" : "chevron-down"} 
-          size={20} 
-          color="#1e293b" 
+        <Ionicons
+          name={isOpen ? "chevron-up" : "chevron-down"}
+          size={20}
+          color="#1e293b"
         />
       </TouchableOpacity>
       {isOpen && (
@@ -140,8 +140,8 @@ const LandingScreen = () => {
               if (position === 'hidden') return null;
 
               return (
-                <View 
-                  key={`hero-img-${slide._id || ''}-${index}`} 
+                <View
+                  key={`hero-img-${slide._id || ''}-${index}`}
                   style={[
                     styles.heroCard,
                     position === 'center' && styles.heroCardCenter,
@@ -179,8 +179,8 @@ const LandingScreen = () => {
                   {textSlides[currentTextIndex].subtitle || 'Empowering change through your generous contributions.'}
                 </Text>
 
-                <TouchableOpacity 
-                  style={styles.heroCta} 
+                <TouchableOpacity
+                  style={styles.heroCta}
                   onPress={() => Linking.openURL(textSlides[currentTextIndex].ctaLink || 'https://the-dharm-arth-foundation-software.vercel.app/donate')}
                 >
                   <Text style={styles.heroCtaText}>{textSlides[currentTextIndex].ctaText || 'Donate Now'}</Text>
@@ -232,9 +232,9 @@ const LandingScreen = () => {
 
         {/* Monthly Giving Section */}
         <View style={styles.monthlyGivingSection}>
-          <Image 
-            source={{ uri: 'https://img.freepik.com/free-vector/happy-kids-world-design_24877-50563.jpg' }} 
-            style={styles.monthlyGivingImg} 
+          <Image
+            source={{ uri: 'https://the-dharm-arth-foundation-software.vercel.app/assets/happy_kids_illustration-sgLu09hg.png' }}
+            style={styles.monthlyGivingImg}
             resizeMode="cover"
           />
           <View style={styles.monthlyGivingContent}>
@@ -242,8 +242,8 @@ const LandingScreen = () => {
             <Text style={styles.monthlyGivingText}>
               <Text style={styles.monthlyHighlight}>6,619 Lives</Text> Have Been Saved With Monthly Contributions From <Text style={styles.monthlyHighlight}>4,21,908 Contributors</Text>. Save Countless Lives By Giving Monthly.
             </Text>
-            <TouchableOpacity 
-              style={styles.monthlyGivingBtn} 
+            <TouchableOpacity
+              style={styles.monthlyGivingBtn}
               onPress={() => router.push('/dashboard')}
             >
               <Text style={styles.monthlyGivingBtnText}>Join & Earn Monthly</Text>

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Tabs, useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { 
-  TouchableOpacity, 
-  View, 
-  Modal, 
-  Text, 
-  StyleSheet, 
-  SafeAreaView, 
+import {
+  TouchableOpacity,
+  View,
+  Modal,
+  Text,
+  StyleSheet,
+  SafeAreaView,
   Pressable,
   Dimensions,
   Image,
@@ -72,10 +72,12 @@ export default function TabLayout() {
   }, [user?._id, pathname]); // Re-fetch on pathname change to catch mark-read updates
 
   const menuItems = [
-    { label: 'My Wallet', icon: 'wallet-outline', route: '/dashboard' },
+    { label: 'My Earnings', icon: 'wallet-outline', route: '/dashboard' },
     { label: 'My Profile', icon: 'person-outline', route: '/profile' },
     { label: 'My Subscriptions', icon: 'card-outline', route: '/my-subscriptions' },
+    { label: 'My Network', icon: 'git-network-outline', route: '/my-network' },
     { label: 'My Referrals', icon: 'people-outline', route: '/my-referrals' },
+    { label: 'Share & Earn', icon: 'share-social-outline', route: '/share-earn' }
   ];
 
   const handleLogout = () => {
@@ -86,7 +88,7 @@ export default function TabLayout() {
 
   const navigateTo = (route) => {
     setMenuVisible(false);
-    
+
     // Intercept if on donate page
     if (pathname === '/donate' || pathname === 'donate') {
       setExitTargetRoute(route === 'profile' ? '/profile' : route);
@@ -105,7 +107,7 @@ export default function TabLayout() {
     // Prevent unauthenticated access to dashboard
     if (targetRoute === '/dashboard' && !user) {
       e.preventDefault();
-      
+
       // If they are on the donate page, we still want to show the exit modal first,
       // and THEN go to login.
       if (pathname === '/donate' || pathname === 'donate') {
@@ -126,7 +128,7 @@ export default function TabLayout() {
 
   return (
     <View style={{ flex: 1 }}>
-      <Tabs screenOptions={{ 
+      <Tabs screenOptions={{
         tabBarActiveTintColor: '#00bfa5',
         tabBarInactiveTintColor: '#64748b',
         headerShown: true,
@@ -147,7 +149,7 @@ export default function TabLayout() {
         },
         headerRight: () => (
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={{ marginRight: 16, padding: 4, position: 'relative' }}
               onPress={() => router.push('/notifications')}
             >
@@ -158,11 +160,11 @@ export default function TabLayout() {
                 </View>
               )}
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={{ 
+            <TouchableOpacity
+              style={{
                 marginRight: 16,
                 padding: 4,
-              }} 
+              }}
               onPress={() => setMenuVisible(true)}
             >
               <Ionicons name="reorder-three" size={38} color="#0f172a" />
@@ -212,17 +214,17 @@ export default function TabLayout() {
       {/* Web-style Mobile Menu - Replaced Modal with absolute View to fix Fabric crash */}
       {menuVisible && (
         <View style={[StyleSheet.absoluteFill, { zIndex: 9999, elevation: 9999 }]}>
-          <Pressable 
-            style={styles.modalOverlay} 
+          <Pressable
+            style={styles.modalOverlay}
             onPress={() => setMenuVisible(false)}
           >
             <View style={styles.menuContainer}>
               <View style={{ paddingTop: Platform.OS === 'ios' ? 50 : 30 }}>
                 <View style={styles.menuHeader}>
                   <View style={styles.userInfo}>
-                    <Image 
-                      source={{ uri: `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=00bfa5&color=fff` }} 
-                      style={styles.avatar} 
+                    <Image
+                      source={{ uri: `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=00bfa5&color=fff` }}
+                      style={styles.avatar}
                     />
                     <View>
                       <Text style={styles.userName}>{user?.name || 'Guest'}</Text>
@@ -236,8 +238,8 @@ export default function TabLayout() {
 
                 <View style={styles.menuList}>
                   {menuItems.map((item, index) => (
-                    <TouchableOpacity 
-                      key={`menu-item-${index}`} 
+                    <TouchableOpacity
+                      key={`menu-item-${index}`}
                       style={styles.menuItem}
                       onPress={() => navigateTo(item.route)}
                     >
@@ -250,7 +252,7 @@ export default function TabLayout() {
                   <View style={styles.divider} />
 
                   {user ? (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.menuItem}
                       onPress={handleLogout}
                     >
@@ -258,7 +260,7 @@ export default function TabLayout() {
                       <Text style={[styles.menuItemText, { color: '#ef4444' }]}>Logout</Text>
                     </TouchableOpacity>
                   ) : (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.menuItem}
                       onPress={() => {
                         setMenuVisible(false);
@@ -282,7 +284,7 @@ export default function TabLayout() {
       )}
 
       {/* Global Donation Exit Modal */}
-      <DonationExitModal 
+      <DonationExitModal
         isOpen={exitModalVisible}
         onClose={() => setExitModalVisible(false)}
         onConfirmNavigation={() => {
