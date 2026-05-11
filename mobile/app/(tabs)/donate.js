@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/services/api';
+import RazorpayCheckout from 'react-native-razorpay';
 
 export default function DonateScreen() {
   const { user: authUser } = useAuth();
@@ -40,6 +41,10 @@ export default function DonateScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [isValidatingMotivator, setIsValidatingMotivator] = useState(false);
   const [isMotivatorLocked, setIsMotivatorLocked] = useState(false);
+  
+  const [donationLabel, setDonationLabel] = useState('');
+  const [donationLabelLink, setDonationLabelLink] = useState('');
+  const [donationLabelBtnText, setDonationLabelBtnText] = useState('');
 
   useFocusEffect(
     React.useCallback(() => {
@@ -69,6 +74,9 @@ export default function DonateScreen() {
         setAmount(dConfig.popularAmount || dConfig.plans[0]);
         setCustomAmount((dConfig.popularAmount || dConfig.plans[0]).toString());
       }
+      if (data.donation_label) setDonationLabel(data.donation_label);
+      if (data.donation_label_link) setDonationLabelLink(data.donation_label_link);
+      if (data.donation_label_btn_text) setDonationLabelBtnText(data.donation_label_btn_text);
     } catch (error) {
       console.error("Failed to load settings", error);
     } finally {
@@ -127,17 +135,51 @@ export default function DonateScreen() {
         donationType: 'monthly'
       };
 
-      // Since we don't have native Razorpay SDK yet, we use the web checkout
-      // We'll pass all parameters to the web checkout page which is already built
-      const checkoutUrl = `https://the-dharm-arth-foundation-software.vercel.app/donate?name=${encodeURIComponent(fullName)}&mobile=${mobile}&email=${encodeURIComponent(email)}&amount=${finalAmount}&motivator=${motivatorMobile}&pan=${pan}&aadhaar=${aadhaar}&is80G=${need80G}`;
+      const { data } = await api.post('/donate', payload);
       
-      Linking.openURL(checkoutUrl);
-      
-      Alert.alert(
-        "Redirecting to Secure Payment",
-        "We are opening our secure payment gateway in your browser to complete the donation.",
-        [{ text: "OK" }]
-      );
+      const options = {
+        description: 'Monthly Donation',
+        image: 'https://the-dharm-arth-foundation-software.vercel.app/logo.png',
+        currency: data.currency || 'INR',
+        key: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_ShbaOPk9of1kgh',
+        name: 'DharmArth Foundation',
+        prefill: {
+          email: email,
+          contact: mobile,
+          name: fullName
+        },
+        theme: {color: '#00bfa5'}
+      };
+
+      if (data.subscriptionId) {
+        options.subscription_id = data.subscriptionId;
+      } else if (data.order_id) {
+        options.order_id = data.order_id;
+        options.amount = data.amount;
+      }
+
+      RazorpayCheckout.open(options).then(async (razorpayResponse) => {
+        try {
+          const verifyEndpoint = data.subscriptionId ? '/payment/verify-subscription' : '/payment/verify-payment';
+          const verifyPayload = {
+            razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+            razorpay_signature: razorpayResponse.razorpay_signature,
+            ...(data.subscriptionId ? { razorpay_subscription_id: razorpayResponse.razorpay_subscription_id || data.subscriptionId } : { razorpay_order_id: razorpayResponse.razorpay_order_id || data.order_id })
+          };
+          
+          await api.post(verifyEndpoint, verifyPayload);
+          Alert.alert('Success', 'Thank you for your generous donation!');
+          
+          setAmount(config.popularAmount || config.plans[0]);
+          setCustomAmount((config.popularAmount || config.plans[0]).toString());
+        } catch (verifyError) {
+          Alert.alert('Payment Verified', 'Payment successful but verification failed. Please contact support.');
+        }
+      }).catch((error) => {
+        // Handle cancel or failure
+        Alert.alert('Payment Cancelled', error.description || 'Payment was not completed.');
+      });
+
     } catch (error) {
       Alert.alert('Error', 'Something went wrong. Please try again.');
     } finally {
@@ -159,6 +201,22 @@ export default function DonateScreen() {
         
         {/* Amount Selection */}
         <Text style={styles.sectionTitle}>Select Donation Amount</Text>
+        
+        {!!donationLabel && (
+          <View style={styles.subtitleContainer}>
+            <Text style={styles.donationSubtitle}>{donationLabel}</Text>
+            {!!donationLabelLink && (
+              <TouchableOpacity 
+                style={styles.subtitleLinkBtn}
+                onPress={() => Linking.openURL(donationLabelLink)}
+              >
+                <Text style={styles.subtitleLinkText}>{donationLabelBtnText || 'Learn More'}</Text>
+                <Ionicons name="open-outline" size={14} color="#00bfa5" />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
         <View style={styles.amountGrid}>
           {config.plans.map((p, index) => (
             <TouchableOpacity 
@@ -166,7 +224,7 @@ export default function DonateScreen() {
               style={[styles.amountBtn, amount === p && styles.amountBtnActive]}
               onPress={() => { setAmount(p); setCustomAmount(p.toString()); }}
             >
-              <Text style={[styles.amountBtnText, amount === p && styles.amountBtnTextActive]}>₹{p}</Text>
+              <Text style={[styles.amountBtnText, amount === p && styles.amountBtnTextActive]}>₹{p.toLocaleString('en-IN')}</Text>
               {config.popularAmount === p && <View style={styles.popularBadge}><Text style={styles.popularText}>POPULAR</Text></View>}
             </TouchableOpacity>
           ))}
@@ -340,34 +398,83 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scrollContent: { padding: 20 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b', marginBottom: 16 },
-  amountGrid: { flexDirection: 'row', gap: 12, marginBottom: 16 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b', marginBottom: 12 },
+  subtitleContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  donationSubtitle: {
+    textAlign: 'center',
+    color: '#64748b',
+    fontSize: 15,
+    fontWeight: '500',
+    marginBottom: 10,
+  },
+  subtitleLinkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    backgroundColor: '#f0fdfa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 191, 165, 0.2)',
+  },
+  subtitleLinkText: {
+    color: '#00bfa5',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  amountGrid: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    gap: 12, 
+    marginBottom: 20,
+    justifyContent: 'center'
+  },
   amountBtn: { 
-    flex: 1, 
+    width: '30%', 
     height: 60, 
-    borderRadius: 12, 
+    borderRadius: 16, 
     borderWidth: 1, 
     borderColor: '#e2e8f0', 
     justifyContent: 'center', 
     alignItems: 'center',
     position: 'relative',
-    backgroundColor: '#f8fafc'
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   amountBtnActive: { 
     borderColor: '#00bfa5', 
-    backgroundColor: '#f0fdfa' 
+    backgroundColor: '#00bfa5',
+    shadowColor: '#00bfa5',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 8,
   },
-  amountBtnText: { fontSize: 18, fontWeight: '700', color: '#475569' },
-  amountBtnTextActive: { color: '#00bfa5' },
+  amountBtnText: { fontSize: 16, fontWeight: '600', color: '#475569' },
+  amountBtnTextActive: { color: 'white', fontWeight: '800' },
   popularBadge: {
     position: 'absolute',
-    top: -8,
-    backgroundColor: '#00bfa5',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    top: -12,
+    backgroundColor: '#f59e0b',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  popularText: { color: 'white', fontSize: 8, fontWeight: '900' },
+  popularText: { color: 'white', fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
   customAmountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
