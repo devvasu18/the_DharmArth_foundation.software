@@ -13,9 +13,10 @@ function RootLayoutNav() {
     if (loading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const onLandingPage = segments.length <= 1 || (segments[0] === '(tabs)' && segments[1] === 'index');
+    const publicRoutes = ['index', 'donate', 'events'];
+    const isPublicRoute = segments.length <= 1 || (segments[0] === '(tabs)' && publicRoutes.includes(segments[1]));
 
-    if (!user && !inAuthGroup && !onLandingPage) {
+    if (!user && !inAuthGroup && !isPublicRoute) {
       router.replace('/login');
     } else if (user && inAuthGroup) {
       router.replace('/dashboard');

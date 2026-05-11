@@ -101,6 +101,14 @@ export default function Login() {
             )}
           </TouchableOpacity>
 
+          <TouchableOpacity 
+            style={styles.skipButton}
+            onPress={() => router.replace('/')}
+            disabled={loading}
+          >
+            <Text style={styles.skipButtonText}>Skip for now</Text>
+          </TouchableOpacity>
+
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
             <Link href="/signup" asChild>
@@ -212,6 +220,17 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: '700',
+  },
+  skipButton: {
+    backgroundColor: 'transparent',
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  skipButtonText: {
+    color: '#64748b',
+    fontSize: 16,
+    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
