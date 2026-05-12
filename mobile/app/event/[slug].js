@@ -14,7 +14,6 @@ import {
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/services/api';
-import HTML from 'react-native-render-html';
 
 const { width } = Dimensions.get('window');
 
@@ -135,14 +134,9 @@ const EventDetails = () => {
           <View style={styles.descriptionContainer}>
             <Text style={styles.sectionTitle}>About Event</Text>
             {event.description ? (
-               <HTML 
-                 source={{ html: event.description }} 
-                 contentWidth={width - 40}
-                 tagsStyles={{
-                   p: { fontSize: 16, color: '#475569', lineHeight: 26, marginBottom: 10 },
-                   li: { fontSize: 16, color: '#475569', lineHeight: 26 },
-                 }}
-               />
+              <Text style={styles.description}>
+                {event.description.replace(/<[^>]*>?/gm, '')}
+              </Text>
             ) : (
               <Text style={styles.description}>{event.shortDescription}</Text>
             )}
