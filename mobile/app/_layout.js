@@ -14,7 +14,7 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === '(auth)';
     const publicRoutes = ['index', 'donate', 'events'];
-    const isPublicRoute = segments.length <= 1 || (segments[0] === '(tabs)' && publicRoutes.includes(segments[1]));
+    const isPublicRoute = segments.length <= 1 || (segments[0] === '(tabs)' && publicRoutes.includes(segments[1])) || segments[0] === 'event';
 
     if (!user && !inAuthGroup && !isPublicRoute) {
       router.replace('/login');

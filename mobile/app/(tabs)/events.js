@@ -12,12 +12,13 @@ import {
   Linking
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, Link, useFocusEffect } from 'expo-router';
+import { Stack, Link, useFocusEffect, useRouter } from 'expo-router';
 import api from '../../src/services/api';
 
 const { width } = Dimensions.get('window');
 
 export default function EventsScreen() {
+  const router = useRouter();
   const [events, setEvents] = useState([]);
   const [headerSlides, setHeaderSlides] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -177,7 +178,7 @@ export default function EventsScreen() {
               <TouchableOpacity 
                 key={`evt-card-${event._id || ''}-${index}`} 
                 style={styles.eventCard}
-                onPress={() => Linking.openURL(`https://the-dharm-arth-foundation-software.vercel.app/events/${event.slug}`)}
+                onPress={() => router.push(`/event/${event.slug}`)}
               >
                 <Image source={{ uri: event.coverImage }} style={styles.eventCardImage} />
                 <View style={styles.cardBadges}>
