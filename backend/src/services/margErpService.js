@@ -20,7 +20,10 @@ class MargErpService {
                 verifiedItems.push({
                     medicineName: item.medicineName || item.name,
                     price: Number(item.price),
-                    isAvailable: true, // Manual entry implies intentional availability
+                    mrp: Number(item.price) * 1.1, // Mock MRP
+                    batchNumber: `BAT${Math.floor(Math.random() * 90000) + 10000}`,
+                    expiryDate: '12/2027',
+                    isAvailable: true, 
                     stock: item.quantity || 999,
                     dosage: item.dosage,
                     frequency: item.frequency,
@@ -43,6 +46,9 @@ class MargErpService {
                 verifiedItems.push({
                     medicineName: medicine.name,
                     price: medicine.price,
+                    mrp: medicine.price * 1.1, // Mock MRP
+                    batchNumber: `MDB${Math.floor(Math.random() * 90000) + 10000}`,
+                    expiryDate: '10/2026',
                     isAvailable: hasStock,
                     stock: medicine.stock,
                     dosage: item.dosage,

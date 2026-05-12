@@ -217,6 +217,32 @@ const SharedTracker = () => {
                                                 <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '700', textTransform: 'uppercase', marginTop: '4px' }}>✓ Transaction Success</div>
                                             </div>
                                         </div>
+
+                                        <button 
+                                            onClick={() => window.open(`${API_BASE_URL}/api/orders/public/${order._id}/invoice`, '_blank')}
+                                            style={{ 
+                                                width: '100%', 
+                                                marginTop: '20px', 
+                                                padding: '12px', 
+                                                borderRadius: '12px', 
+                                                background: '#fff', 
+                                                border: '1px solid #e2e8f0', 
+                                                color: '#475569', 
+                                                fontWeight: '700', 
+                                                fontSize: '12px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '8px',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onMouseOver={(e) => e.target.style.background = '#f1f5f9'}
+                                            onMouseOut={(e) => e.target.style.background = '#fff'}
+                                        >
+                                            <FileText size={16} />
+                                            Download Digital Invoice
+                                        </button>
                                     </div>
                                 </div>
                             </div>

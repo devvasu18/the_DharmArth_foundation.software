@@ -15,6 +15,7 @@ const prescriptionSchema = new mongoose.Schema({
         enum: ['Pending', 'Under Review', 'Verified', 'Rejected', 'Ordered'],
         default: 'Pending'
     },
+    notes: String,
     verifiedItems: [{
         medicineName: String,
         dosage: String,
@@ -26,8 +27,16 @@ const prescriptionSchema = new mongoose.Schema({
         quantity: Number,
         price: Number,
         isAvailable: { type: Boolean, default: true },
+        fulfillmentStatus: { 
+            type: String, 
+            enum: ['In Stock', 'Shortlisted'], 
+            default: 'In Stock' 
+        },
+        estimatedArrivalDays: Number,
         alternativeSuggested: String
     }],
+    userApproved: { type: Boolean, default: false },
+    approvalRequired: { type: Boolean, default: false },
     rejectionReason: String,
     adminNote: String,
     verificationLog: [{

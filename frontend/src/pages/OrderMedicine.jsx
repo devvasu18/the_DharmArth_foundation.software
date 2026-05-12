@@ -66,6 +66,7 @@ const OrderMedicine = () => {
     const [isSyncing, setIsSyncing] = useState(false);
     const [historyTab, setHistoryTab] = useState('prescriptions'); // 'prescriptions' or 'orders'
     const [showPostUploadModal, setShowPostUploadModal] = useState(false);
+    const [showRecentModal, setShowRecentModal] = useState(false);
 
     // Checkout Modal State
     const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
@@ -93,6 +94,25 @@ const OrderMedicine = () => {
     const [savedAddresses, setSavedAddresses] = useState([]);
     const [isAddingNewAddress, setIsAddingNewAddress] = useState(false);
     const [isOrderingForSomeoneElse, setIsOrderingForSomeoneElse] = useState(false);
+
+    const [notes, setNotes] = useState('');
+
+    const getContactTiming = () => {
+        const hour = new Date().getHours();
+        if (hour >= 21 || hour < 8) {
+            return {
+                text: "Foundation will contact you at 8:30 AM",
+                icon: <Clock size={14} />,
+                type: 'night'
+            };
+        } else {
+            return {
+                text: "Pharmacist will contact you in 10-20 minutes",
+                icon: <Zap size={14} />,
+                type: 'day'
+            };
+        }
+    };
 
     const fetchOrders = async () => {
         try {
@@ -124,6 +144,45 @@ const OrderMedicine = () => {
         }
     }
 
+    const handleDetectLocation = () => {
+        if (!navigator.geolocation) {
+            toast.error("Geolocation is not supported by your browser");
+            return;
+        }
+
+        toast.loading("Detecting location...");
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                try {
+                    // Using a free reverse geocoding API (BigDataCloud or similar)
+                    const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+                    const data = await res.json();
+                    
+                    setShippingDetails(prev => ({
+                        ...prev,
+                        city: data.city || data.locality || '',
+                        state: data.principalSubdivision || '',
+                        zip: data.postcode || ''
+                    }));
+                    
+                    toast.dismiss();
+                    toast.success("Location detected!");
+                    if (!data.postcode) {
+                        toast("Please verify your PIN code manually", { icon: '📍' });
+                    }
+                } catch (err) {
+                    toast.dismiss();
+                    toast.error("Failed to resolve address. Please enter manually.");
+                }
+            },
+            () => {
+                toast.dismiss();
+                toast.error("Location access denied.");
+            }
+        );
+    };
+
     useEffect(() => {
         fetchHistory();
         fetchOrders();
@@ -152,6 +211,7 @@ const OrderMedicine = () => {
 
         const formData = new FormData();
         formData.append('prescription', file);
+        if (notes) formData.append('notes', notes);
 
         setLoading(true);
         try {
@@ -338,10 +398,29 @@ const OrderMedicine = () => {
                                         />
                                     </div>
 
+                                    <div style={{ marginTop: '20px' }}>
+                                        <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '8px', display: 'block' }}>Optional Notes (Medicines/Quantity)</label>
+                                        <textarea 
+                                            value={notes}
+                                            onChange={(e) => setNotes(e.target.value)}
+                                            placeholder="Mention specific brand or additional instructions..."
+                                            style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '13px', minHeight: '80px', resize: 'none' }}
+                                        />
+                                    </div>
+
+                                    <div style={{ marginTop: '15px', padding: '10px 15px', borderRadius: '10px', background: getContactTiming().type === 'day' ? '#f0fdf4' : '#fffbeb', border: `1px solid ${getContactTiming().type === 'day' ? '#bbf7d0' : '#fef3c7'}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <div style={{ color: getContactTiming().type === 'day' ? '#16a34a' : '#d97706' }}>
+                                            {getContactTiming().icon}
+                                        </div>
+                                        <span style={{ fontSize: '12px', fontWeight: '600', color: getContactTiming().type === 'day' ? '#15803d' : '#92400e' }}>
+                                            {getContactTiming().text}
+                                        </span>
+                                    </div>
+
                                     {error && <div className="alert alert-error">{error}</div>}
                                     {success && <div className="alert alert-success">Successfully uploaded! Review in progress.</div>}
 
-                                    <button className="btn-submit-premium" disabled={loading}>
+                                    <button className="btn-submit-premium" disabled={loading} style={{ marginTop: '20px' }}>
                                         {loading ? (
                                             <div className="loader"></div>
                                         ) : (
@@ -352,6 +431,22 @@ const OrderMedicine = () => {
                                         )}
                                     </button>
                                 </form>
+
+                                <div className="or-divider" style={{ margin: '20px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+                                    <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '700' }}>OR</span>
+                                    <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+                                </div>
+
+                                <button 
+                                   className="btn-action-secondary" 
+                                   style={{ width: '100%', padding: '15px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#f8fafc', border: '2px dashed #cbd5e1', color: '#475569', fontWeight: '700' }}
+                                   onClick={() => setShowRecentModal(true)}
+                                >
+                                    <Clock size={18} />
+                                    Select from Previous (90 Days)
+                                </button>
+
                                 <div className="security-tag">
                                     <ShieldCheck size={14} />
                                     <span>Encrypted & Private</span>
@@ -532,20 +627,30 @@ const OrderMedicine = () => {
                                 <div className="shipping-address-section" style={{ marginBottom: '20px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                                         <h4 style={{ margin: 0, color: '#4a5568' }}>Shipping Address</h4>
-                                        {savedAddresses.length > 0 && (
+                                        <div style={{ display: 'flex', gap: '8px' }}>
                                             <button
                                                 type="button"
                                                 className="btn-add-new-addr"
-                                                onClick={() => {
-                                                    setIsAddingNewAddress(true);
-                                                    setIsOrderingForSomeoneElse(false);
-                                                    setShippingDetails({ _id: null, street: '', city: '', state: '', zip: '', phone: '', altPhone: '' });
-                                                }}
-                                                style={{ fontSize: '12px', background: '#f7fafc', border: '1px solid #e2e8f0', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                                onClick={handleDetectLocation}
+                                                style={{ fontSize: '12px', background: '#ebf8ff', border: '1px solid #90cdf4', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: '#2b6cb0' }}
                                             >
-                                                <Plus size={14} /> Add New
+                                                <MapPin size={14} /> Detect Location
                                             </button>
-                                        )}
+                                            {savedAddresses.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    className="btn-add-new-addr"
+                                                    onClick={() => {
+                                                        setIsAddingNewAddress(true);
+                                                        setIsOrderingForSomeoneElse(false);
+                                                        setShippingDetails({ _id: null, street: '', city: '', state: '', zip: '', phone: '', altPhone: '' });
+                                                    }}
+                                                    style={{ fontSize: '12px', background: '#f7fafc', border: '1px solid #e2e8f0', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                                >
+                                                    <Plus size={14} /> Add New
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {!isAddingNewAddress && savedAddresses.length > 0 ? (
@@ -664,6 +769,87 @@ const OrderMedicine = () => {
                 </div>
             )}
 
+            {/* Recent Prescriptions Modal (90 Days) */}
+            {showRecentModal && (
+                <div className="checkout-modal-overlay">
+                    <div className="checkout-modal-card" style={{ maxWidth: '600px' }}>
+                        <div className="checkout-header">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <Clock size={24} color="#3182ce" />
+                                <h2 style={{ margin: 0 }}>Recent Prescriptions</h2>
+                            </div>
+                            <button className="btn-close" onClick={() => setShowRecentModal(false)}>
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div className="modal-body-p" style={{ padding: '20px', maxHeight: '70vh', overflowY: 'auto' }}>
+                            <p style={{ color: '#718096', fontSize: '14px', marginBottom: '20px' }}>
+                                You can select and re-order from any prescription uploaded in the last 90 days that has been verified.
+                            </p>
+
+                            {(() => {
+                                const ninetyDaysAgo = new Date();
+                                ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+                                
+                                const recentOnes = myPrescriptions.filter(p => 
+                                    new Date(p.createdAt) >= ninetyDaysAgo && 
+                                    (p.status === 'Verified' || p.status === 'Ordered')
+                                );
+
+                                if (recentOnes.length === 0) {
+                                    return (
+                                        <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                                            <FileText size={48} color="#cbd5e0" style={{ margin: '0 auto 15px' }} />
+                                            <p style={{ color: '#a0aec0' }}>No verified prescriptions found in the last 90 days.</p>
+                                        </div>
+                                    );
+                                }
+
+                                return recentOnes.map(p => (
+                                    <div 
+                                        key={p._id} 
+                                        className="order-card-premium" 
+                                        style={{ marginBottom: '15px', padding: '15px', border: '1px solid #e2e8f0' }}
+                                    >
+                                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                            <div style={{ width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
+                                                <img 
+                                                    src={p.image.startsWith('http') ? p.image : `${API_BASE_URL}${p.image.startsWith('/') ? '' : '/'}${p.image}`} 
+                                                    alt="Presc" 
+                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                />
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                                                    <span style={{ fontWeight: '700', color: '#2d3748' }}>
+                                                        {new Date(p.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                    </span>
+                                                    {getStatusBadge(p.status)}
+                                                </div>
+                                                <div style={{ fontSize: '13px', color: '#718096' }}>
+                                                    {p.verifiedItems?.length || 0} Verified Medicines
+                                                </div>
+                                            </div>
+                                            <button 
+                                                className="btn-action-primary" 
+                                                style={{ padding: '8px 16px', fontSize: '13px' }}
+                                                onClick={() => {
+                                                    setShowRecentModal(false);
+                                                    openCheckoutModal(p);
+                                                }}
+                                            >
+                                                Select
+                                            </button>
+                                        </div>
+                                    </div>
+                                ));
+                            })()}
+                        </div>
+                    </div>
+                </div>
+            )}
+            
             {/* Track Order Detail Modal */}
             {trackModalOpen && selectedTrackOrder && (
                 <div className="order-modal-overlay">

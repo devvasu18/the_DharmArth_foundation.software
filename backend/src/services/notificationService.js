@@ -191,6 +191,22 @@ class NotificationService {
             io
         });
     }
+
+    /**
+     * Specialized: Prescription Order Paid Alert for Admin
+     */
+    async notifyOrderPaidAdmin(order, user, io) {
+        const msg = `💰 Order Paid: ₹${order.totalAmount} received from ${user?.name || 'Customer'} (${user?.mobile || 'N/A'}) for Order #${order._id}`;
+
+        return await this.notify({
+            userId: null, // For admins
+            type: 'ORDER_PAID',
+            message: msg,
+            referenceId: order._id,
+            onModel: 'Order',
+            io
+        });
+    }
 }
 
 module.exports = new NotificationService();

@@ -170,8 +170,21 @@ const SharedCheckout = () => {
         });
     };
 
+    const handleApproveProvision = async () => {
+        setCheckoutLoading(true);
+        try {
+            await api.post(`/prescriptions/${id}/approve-provision`);
+            toast.success("Provision bill approved!");
+            fetchPrescription(); // Refresh state
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to approve provision bill");
+        } finally {
+            setCheckoutLoading(false);
+        }
+    };
+
     const handleSubmitOrder = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         setCheckoutLoading(true);
 
         try {
@@ -252,7 +265,6 @@ const SharedCheckout = () => {
     const calculateTotal = () => {
         if (!prescription) return 0;
         return prescription.verifiedItems
-            .filter(item => item.isAvailable)
             .reduce((acc, item) => acc + (item.price || 0), 0);
     };
 
@@ -465,79 +477,104 @@ const SharedCheckout = () => {
                                         <Package size={20} />
                                         <h3>Medicine List</h3>
                                     </div>
-                                    <div className="verified-items-list-shared">
-                                        {prescription.verifiedItems.map((item, index) => (
-                                            <div key={index} className={`v-item-card ${!item.isAvailable ? 'unavailable' : ''}`}>
-                                                <div className="v-item-header">
-                                                    <span className="med-name">{item.medicineName}</span>
-                                                    <span className="med-price">₹{item.price?.toFixed(2)}</span>
-                                                </div>
-                                                <div className="med-details-shared">
-                                                    <button
-                                                        type="button"
-                                                        className="btn-link-dosage"
-                                                        onClick={() => {
-                                                            const newShow = { ...showDosageMap };
-                                                            newShow[index] = !newShow[index];
-                                                            setShowDosageMap(newShow);
-                                                        }}
-                                                    >
-                                                        {showDosageMap[index] ? 'Hide Timing' : 'View Timing'}
-                                                    </button>
+                                     <div className="verified-items-list-shared">
+                                         {prescription.verifiedItems.map((item, index) => (
+                                             <div key={index} className={`v-item-card ${item.fulfillmentStatus === 'Shortlisted' ? 'shortlisted' : ''}`}>
+                                                 <div className="v-item-header">
+                                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                         <span className="med-name">{item.medicineName}</span>
+                                                         {item.fulfillmentStatus === 'Shortlisted' && (
+                                                             <span style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '700', textTransform: 'uppercase', marginTop: '2px' }}>
+                                                                 ⌛ Shortlisted (Arrival in {item.estimatedArrivalDays || 3} days)
+                                                             </span>
+                                                         )}
+                                                     </div>
+                                                     <span className="med-price">₹{item.price?.toFixed(2)}</span>
+                                                 </div>
+                                                 <div className="med-details-shared">
+                                                     <button
+                                                         type="button"
+                                                         className="btn-link-dosage"
+                                                         onClick={() => {
+                                                             const newShow = { ...showDosageMap };
+                                                             newShow[index] = !newShow[index];
+                                                             setShowDosageMap(newShow);
+                                                         }}
+                                                     >
+                                                         {showDosageMap[index] ? 'Hide Timing' : 'View Timing'}
+                                                     </button>
 
-                                                    {showDosageMap[index] && (
-                                                        <div className="dosage-popover-shared">
-                                                            <SimplifyDosage
-                                                                frequency={item.frequency}
-                                                                time={item.time}
-                                                                foodRelation={item.foodRelation}
-                                                                intakeMethod={item.intakeMethod}
-                                                                dosage={item.dosage}
-                                                            />
-                                                        </div>
-                                                    )}
+                                                     {showDosageMap[index] && (
+                                                         <div className="dosage-popover-shared">
+                                                             <SimplifyDosage
+                                                                 frequency={item.frequency}
+                                                                 time={item.time}
+                                                                 foodRelation={item.foodRelation}
+                                                                 intakeMethod={item.intakeMethod}
+                                                                 dosage={item.dosage}
+                                                             />
+                                                         </div>
+                                                     )}
+                                                 </div>
+                                             </div>
+                                         ))}
+                                     </div>
+                                     <div className="order-summary-footer">
+                                         <div className="summary-row">
+                                             <span>Subtotal</span>
+                                             <span>₹{calculateTotal().toFixed(2)}</span>
+                                         </div>
+                                         <div className="summary-row">
+                                             <span>Delivery Fee</span>
+                                             <span className="free">FREE</span>
+                                         </div>
+                                         <div className="total-row-shared">
+                                             <span>Total</span>
+                                             <span>₹{calculateTotal().toFixed(2)}</span>
+                                         </div>
+                                     </div>
+                                 </section>
+
+                                 {/* 3. Payment or Approval Selection */}
+                                 <section className="pane-card payment-card">
+                                     <div className="card-header-p">
+                                         {prescription.approvalRequired && !prescription.userApproved ? <AlertCircle size={20} color="#f59e0b" /> : <CreditCard size={20} />}
+                                         <h3>{prescription.approvalRequired && !prescription.userApproved ? 'Action Required' : 'Payment Method'}</h3>
+                                     </div>
+                                     
+                                     {prescription.approvalRequired && !prescription.userApproved ? (
+                                         <div className="approval-warning-box">
+                                             <p style={{ fontSize: '13px', color: '#92400e', marginBottom: '15px', lineHeight: '1.5' }}>
+                                                 Some medicines in your order are currently out of stock. By approving this <strong>Provision Bill</strong>, we will pack and reserve your in-stock items while we wait for the remaining medicines to arrive.
+                                             </p>
+                                             <button 
+                                                type="button" 
+                                                className="btn-finalize-order" 
+                                                style={{ background: '#f59e0b' }} 
+                                                onClick={handleApproveProvision}
+                                                disabled={checkoutLoading}
+                                             >
+                                                 {checkoutLoading ? 'Processing...' : 'Approve Provision Bill'}
+                                             </button>
+                                         </div>
+                                     ) : (
+                                         <>
+                                            <div className="payment-options-shared">
+                                                <div className={`pay-opt ${paymentMethod === 'Online' ? 'active' : ''}`} onClick={() => setPaymentMethod('Online')}>
+                                                    <div className="check-dot"></div>
+                                                    <span>Online (Cards/UPI)</span>
                                                 </div>
-                                                {!item.isAvailable && <div className="out-of-stock">Currently Out of Stock</div>}
                                             </div>
-                                        ))}
-                                    </div>
-                                    <div className="order-summary-footer">
-                                        <div className="summary-row">
-                                            <span>Subtotal</span>
-                                            <span>₹{calculateTotal().toFixed(2)}</span>
-                                        </div>
-                                        <div className="summary-row">
-                                            <span>Delivery Fee</span>
-                                            <span className="free">FREE</span>
-                                        </div>
-                                        <div className="total-row-shared">
-                                            <span>Total</span>
-                                            <span>₹{calculateTotal().toFixed(2)}</span>
-                                        </div>
-                                    </div>
-                                </section>
 
-                                {/* 3. Payment Selection */}
-                                <section className="pane-card payment-card">
-                                    <div className="card-header-p">
-                                        <CreditCard size={20} />
-                                        <h3>Payment Method</h3>
-                                    </div>
-                                    <div className="payment-options-shared">
-                                        <div className={`pay-opt ${paymentMethod === 'Online' ? 'active' : ''}`} onClick={() => setPaymentMethod('Online')}>
-                                            <div className="check-dot"></div>
-                                            <span>Online (Cards/UPI)</span>
-                                        </div>
-
-                                    </div>
-
-                                    <button type="submit" className="btn-finalize-order" disabled={checkoutLoading}>
-                                        {checkoutLoading ? 'Processing...' : `Pay ₹${calculateTotal().toFixed(2)} &  Order`}
-                                    </button>
-                                    <p className="secure-p"><CheckCircle size={12} /> SSL Secure Transaction</p>
-                                </section>
-                            </div>
-                        </aside>
+                                            <button type="submit" className="btn-finalize-order" disabled={checkoutLoading}>
+                                                {checkoutLoading ? 'Processing...' : `Pay ₹${calculateTotal().toFixed(2)} &  Order`}
+                                            </button>
+                                            <p className="secure-p"><CheckCircle size={12} /> SSL Secure Transaction</p>
+                                         </>
+                                     )}
+                                 </section>
+                             </div>
+                         </aside>  </aside>
                     </div>
                 </form>
             </main>

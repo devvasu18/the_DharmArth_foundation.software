@@ -28,9 +28,16 @@ const AdminLayout = () => {
     const [isReportsDropdownOpen, setReportsDropdownOpen] = useState(false);
     const [isDoctorsDropdownOpen, setDoctorsDropdownOpen] = useState(false);
     const [isPharmacyDropdownOpen, setPharmacyDropdownOpen] = useState(false);
+    const [isRinging, setIsRinging] = useState(false);
     const socketRef = useRef(null);
     const notificationRef = useRef(null);
-    const audioRef = useRef(new Audio(NOTIFICATION_SOUND));
+    const audioRef = useRef(null);
+
+    // Initialize audio on mount
+    useEffect(() => {
+        audioRef.current = new Audio(NOTIFICATION_SOUND);
+        audioRef.current.loop = true;
+    }, []);
 
     const fetchNotifications = async () => {
         try {
@@ -42,6 +49,14 @@ const AdminLayout = () => {
         }
     };
 
+    const stopRingtone = () => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+        setIsRinging(false);
+    };
+
     useEffect(() => {
         // Initialize Socket
         socketRef.current = io(API_BASE_URL, {
@@ -50,56 +65,54 @@ const AdminLayout = () => {
 
         socketRef.current.emit('join_admin_notifications');
 
-        socketRef.current.on('new_donation', (newNotification) => {
-            // Play Sound
+        const playAlert = () => {
+            setIsRinging(true);
             audioRef.current.play().catch(e => console.log('Audio play failed', e));
+        };
 
-            // Show Toast
+        socketRef.current.on('new_donation', (newNotification) => {
+            playAlert();
             toast.success(
-                <div onClick={() => setIsNotificationsOpen(true)} style={{ cursor: 'pointer' }}>
+                <div onClick={() => { setIsNotificationsOpen(true); stopRingtone(); }} style={{ cursor: 'pointer' }}>
                     <b>New Donation!</b>
                     <p style={{ margin: 0, fontSize: '0.9rem' }}>{newNotification.message}</p>
                 </div>,
                 { duration: 5000 }
             );
-
-            // Update State
             setNotifications(prev => [newNotification, ...prev]);
             setUnreadCount(prev => prev + 1);
         });
 
         socketRef.current.on('new_payout_request', (newNotification) => {
-            // Play Sound
-            audioRef.current.play().catch(e => console.log('Audio play failed', e));
-
-            // Show Toast
+            playAlert();
             toast.success(
-                <div onClick={() => setIsNotificationsOpen(true)} style={{ cursor: 'pointer' }}>
+                <div onClick={() => { setIsNotificationsOpen(true); stopRingtone(); }} style={{ cursor: 'pointer' }}>
                     <b>Payout Requested</b>
                     <p style={{ margin: 0, fontSize: '0.9rem' }}>{newNotification.message}</p>
                 </div>,
                 { duration: 6000, icon: '💸' }
             );
-
-            // Update State
             setNotifications(prev => [newNotification, ...prev]);
             setUnreadCount(prev => prev + 1);
         });
         
         socketRef.current.on('new_prescription_request', (newNotification) => {
-            // Play Sound
-            audioRef.current.play().catch(e => console.log('Audio play failed', e));
-
-            // Show Toast
+            playAlert();
+            const isPayment = newNotification.type === 'ORDER_PAID';
+            
             toast.success(
-                <div onClick={() => { setIsNotificationsOpen(true); navigate('/admin/prescriptions'); }} style={{ cursor: 'pointer' }}>
-                    <b>New Prescription!</b>
+                <div onClick={() => { 
+                    setIsNotificationsOpen(true); 
+                    stopRingtone();
+                    if (isPayment) navigate('/admin/pharmacy-orders');
+                    else navigate('/admin/prescriptions');
+                }} style={{ cursor: 'pointer' }}>
+                    <b>{isPayment ? '💰 Order Paid!' : '📄 New Prescription!'}</b>
                     <p style={{ margin: 0, fontSize: '0.9rem' }}>{newNotification.message}</p>
                 </div>,
-                { duration: 6000, icon: '📄' }
+                { duration: 8000, icon: isPayment ? '💰' : '📄' }
             );
 
-            // Update State
             setNotifications(prev => [newNotification, ...prev]);
             setUnreadCount(prev => prev + 1);
         });
@@ -108,6 +121,10 @@ const AdminLayout = () => {
 
         return () => {
             if (socketRef.current) socketRef.current.disconnect();
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
         };
     }, [navigate]); // Only run on mount (and if navigate changes, which is stable)
 
@@ -414,6 +431,13 @@ const AdminLayout = () => {
                                 >
                                     Route Management
                                 </NavLink>
+                                <NavLink
+                                    to="/admin/pharmacy-settings"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
+                                    Pharmacy Settings
+                                </NavLink>
                             </div>
                         )}
                     </div>
@@ -500,8 +524,30 @@ const AdminLayout = () => {
                             <Maximize size={20} />
                         </div>
 
+                        {/* Looping Alert Stopper */}
+                        {isRinging && (
+                            <button 
+                                className="ring-stop-btn" 
+                                onClick={stopRingtone}
+                                style={{ 
+                                    background: '#ef4444', 
+                                    color: 'white', 
+                                    border: 'none', 
+                                    padding: '6px 12px', 
+                                    borderRadius: '8px', 
+                                    marginRight: '10px',
+                                    fontSize: '12px',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                    animation: 'pulse 1s infinite'
+                                }}
+                            >
+                                🔔 STOP ALERT
+                            </button>
+                        )}
+
                         {/* Notification Bell */}
-                        <div className="icon-btn" ref={notificationRef} onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}>
+                        <div className="icon-btn" ref={notificationRef} onClick={() => { setIsNotificationsOpen(!isNotificationsOpen); stopRingtone(); }}>
                             <Bell size={20} />
                             {unreadCount > 0 && <span className="badge-dot" title={`${unreadCount} unread`}></span>}
 

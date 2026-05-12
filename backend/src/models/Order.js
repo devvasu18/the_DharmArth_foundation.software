@@ -19,11 +19,22 @@ const orderSchema = new mongoose.Schema({
         frequency: String,
         time: String,
         foodRelation: String,
-        intakeMethod: String
+        intakeMethod: String,
+        fulfillmentStatus: { 
+            type: String, 
+            enum: ['Packed', 'Shortlisted', 'Received'], 
+            default: 'Packed' 
+        }
     }],
     totalAmount: {
         type: Number,
         required: true
+    },
+    financials: {
+        subtotal: Number,
+        gst: Number,
+        platformFee: Number,
+        deliveryCharge: Number
     },
     status: {
         type: String,

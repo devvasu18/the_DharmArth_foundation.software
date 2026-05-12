@@ -60,14 +60,17 @@ exports.completeOrder = async (orderId, paymentId, io) => {
 
         // 3. Notify user and admin
         if (prescription.user) {
-            await NotificationService.createNotification({
-                recipient: prescription.user._id,
+            await NotificationService.notify({
+                userId: prescription.user._id,
                 type: 'ORDER_CONFIRMED',
-                title: 'Order Confirmed',
                 message: `Your payment of ₹${payment.amount} was successful. Order #${newOrder._id} is being processed.`,
                 referenceId: prescription._id,
-                referenceType: 'Prescription'
-            }, io);
+                onModel: 'Prescription',
+                io
+            });
+
+            // Notify Admin
+            await NotificationService.notifyOrderPaidAdmin(newOrder, prescription.user, io);
         }
 
         console.log(`Prescription Order completed. Formal Order ID: ${newOrder._id}`);

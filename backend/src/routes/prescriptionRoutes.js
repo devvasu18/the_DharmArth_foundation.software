@@ -6,6 +6,7 @@ const {
     getAllPrescriptions, 
     verifyPrescription, 
     approveAndCreateOrder,
+    approveProvisionBill,
     getPublicPrescription 
 } = require('../controllers/prescriptionController');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
@@ -40,5 +41,6 @@ router.post('/:id/approve', (req, res, next) => {
     // Optional protection: if session exists, great. If not, we still allow for shareable links.
     next();
 }, approveAndCreateOrder);
+router.post('/:id/approve-provision', approveProvisionBill);
 
 module.exports = router;

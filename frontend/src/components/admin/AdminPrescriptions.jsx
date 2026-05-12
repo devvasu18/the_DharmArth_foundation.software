@@ -236,7 +236,7 @@ const AdminPrescriptions = () => {
                                                                 style={{ borderColor: errors.includes(index) && !item.medicineName ? '#ef4444' : undefined }}
                                                             />
                                                         </div>
-                                                        <div className="input-group-p qty" style={{width: '80px'}}>
+                                                        <div className="input-group-p qty" style={{width: '60px'}}>
                                                             <label>Qty</label>
                                                             <input 
                                                                 type="number" 
@@ -247,7 +247,32 @@ const AdminPrescriptions = () => {
                                                                 style={{ borderColor: errors.includes(index) && (!item.quantity) ? '#ef4444' : undefined }}
                                                             />
                                                         </div>
-                                                        <div className="input-group-p price" style={{width: '100px'}}>
+                                                        <div className="input-group-p status" style={{width: '120px'}}>
+                                                            <label>Fulfillment</label>
+                                                            <select 
+                                                                value={item.fulfillmentStatus || 'In Stock'} 
+                                                                onChange={(e) => handleItemChange(index, 'fulfillmentStatus', e.target.value)}
+                                                                disabled={isReadOnly}
+                                                                style={{padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', width: '100%'}}
+                                                            >
+                                                                <option value="In Stock">In Stock (Pack)</option>
+                                                                <option value="Shortlisted">Shortlist (Wait)</option>
+                                                            </select>
+                                                        </div>
+                                                        {item.fulfillmentStatus === 'Shortlisted' && (
+                                                            <div className="input-group-p eta" style={{width: '80px'}}>
+                                                                <label>Days</label>
+                                                                <input 
+                                                                    type="number" 
+                                                                    value={item.estimatedArrivalDays || ''}
+                                                                    onChange={(e) => handleItemChange(index, 'estimatedArrivalDays', e.target.value)}
+                                                                    placeholder="ETA"
+                                                                    min="1"
+                                                                    disabled={isReadOnly}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                        <div className="input-group-p price" style={{width: '90px'}}>
                                                             <label>Price (₹)</label>
                                                             <input 
                                                                 type="number" 

@@ -240,11 +240,21 @@ exports.updateAssignmentStatus = async (req, res) => {
 
         assignment.status = status;
         if (notes) assignment.notes = notes;
+        
         if (status === 'Delivered') {
             assignment.deliveredAt = Date.now();
+            assignment.handoverImage = req.body.handoverImage;
+            assignment.driverNumber = req.body.driverNumber;
+            assignment.actualDepartureTime = req.body.actualDepartureTime || Date.now();
+
             await Order.findByIdAndUpdate(assignment.orderId, { 
                 status: 'Delivered',
-                $push: { statusHistory: { status: 'Delivered', note: 'Delivered by: ' + req.user.name } }
+                $push: { statusHistory: { status: 'Delivered', note: 'Delivered by: ' + req.user.name } },
+                $set: {
+                    'dispatchDetails.actualDepartureTime': assignment.actualDepartureTime,
+                    'dispatchDetails.conductorNumber': assignment.driverNumber || undefined,
+                    'dispatchDetails.busImage': assignment.handoverImage || undefined
+                }
             });
         } else if (status === 'In Transit') {
             await Order.findByIdAndUpdate(assignment.orderId, { 

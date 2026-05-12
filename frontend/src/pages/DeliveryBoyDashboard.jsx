@@ -19,6 +19,16 @@ const DeliveryBoyDashboard = () => {
     const [userData, setUserData] = useState(null);
     const [imageModalSrc, setImageModalSrc] = useState(null);
 
+    // Handover Modal State
+    const [showHandoverModal, setShowHandoverModal] = useState(false);
+    const [selectedAssignment, setSelectedAssignment] = useState(null);
+    const [handoverDetails, setHandoverDetails] = useState({
+        driverNumber: '',
+        actualDepartureTime: new Date().toISOString().slice(0, 16),
+        handoverImage: ''
+    });
+    const [uploading, setUploading] = useState(false);
+
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem('user'));
         setUserData(storedUser);
@@ -51,6 +61,54 @@ const DeliveryBoyDashboard = () => {
             fetchAssignments();
         } catch (err) {
             toast.error('Could not sync status with server.');
+        }
+    };
+
+    const handleOpenHandover = (assignment) => {
+        setSelectedAssignment(assignment);
+        setHandoverDetails({
+            driverNumber: assignment.busId?.mobileNumber || '',
+            actualDepartureTime: new Date().toISOString().slice(0, 16),
+            handoverImage: ''
+        });
+        setShowHandoverModal(true);
+    };
+
+    const handleHandoverImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        setUploading(true);
+        try {
+            const res = await api.post('/upload', formData);
+            setHandoverDetails(prev => ({ ...prev, handoverImage: res.data.url }));
+            toast.success("Bus photo uploaded!");
+        } catch (err) {
+            toast.error("Photo upload failed");
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleCompleteHandover = async () => {
+        if (!handoverDetails.handoverImage) {
+            toast.error("Please upload a photo of the bus/vehicle");
+            return;
+        }
+
+        try {
+            await api.patch(`/delivery/assignments/${selectedAssignment._id}/status`, { 
+                status: 'Delivered',
+                ...handoverDetails
+            });
+            toast.success('Handover complete! Patient notified.');
+            setShowHandoverModal(false);
+            fetchAssignments();
+        } catch (err) {
+            toast.error('Failed to complete handover.');
         }
     };
 
@@ -217,7 +275,7 @@ const DeliveryBoyDashboard = () => {
                                         )}
 
                                         {a.status === 'In Transit' && (
-                                            <button className="btn-main finish" onClick={() => updateStatus(a._id, 'Delivered')}>
+                                            <button className="btn-main finish" onClick={() => handleOpenHandover(a)}>
                                                 Hand over to Bus <CheckCircle size={20} />
                                             </button>
                                         )}
@@ -254,6 +312,85 @@ const DeliveryBoyDashboard = () => {
             )}
 
             <Footer />
+
+            {/* Handover Data Modal */}
+            {showHandoverModal && selectedAssignment && (
+                <div className="handover-modal-overlay">
+                    <div className="handover-modal-card">
+                        <div className="handover-modal-header">
+                            <h3>Bus Handover Details</h3>
+                            <button onClick={() => setShowHandoverModal(false)}><X /></button>
+                        </div>
+                        <div className="handover-modal-body">
+                            {/* Fleet Reference Section */}
+                            <div className="fleet-reference-box">
+                                <label>Target Vehicle Reference</label>
+                                <div className="reference-content">
+                                    {selectedAssignment.busId?.image ? (
+                                        <img 
+                                            src={selectedAssignment.busId.image.startsWith('http') ? selectedAssignment.busId.image : `${API_BASE_URL}${selectedAssignment.busId.image}`} 
+                                            alt="Reference" 
+                                        />
+                                    ) : (
+                                        <div className="v-ph">🚌</div>
+                                    )}
+                                    <div className="ref-info">
+                                        <p className="v-name">{selectedAssignment.busId?.busName || 'Express Vehicle'}</p>
+                                        <p className="v-no">{selectedAssignment.busId?.busNumber}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="h-input-group">
+                                <label>Driver/Conductor Number</label>
+                                <input 
+                                    type="tel" 
+                                    placeholder="Enter contact number"
+                                    value={handoverDetails.driverNumber}
+                                    onChange={(e) => setHandoverDetails({...handoverDetails, driverNumber: e.target.value})}
+                                />
+                            </div>
+                            <div className="h-input-group">
+                                <label>Actual Departure Time</label>
+                                <input 
+                                    type="datetime-local" 
+                                    value={handoverDetails.actualDepartureTime}
+                                    onChange={(e) => setHandoverDetails({...handoverDetails, actualDepartureTime: e.target.value})}
+                                />
+                            </div>
+                            <div className="h-input-group">
+                                <label>Upload Bus Photo (Identity)</label>
+                                <div className="photo-upload-area" onClick={() => document.getElementById('handover-photo').click()}>
+                                    {handoverDetails.handoverImage ? (
+                                        <img 
+                                            src={handoverDetails.handoverImage.startsWith('http') ? handoverDetails.handoverImage : `${API_BASE_URL}${handoverDetails.handoverImage}`} 
+                                            alt="Bus" 
+                                        />
+                                    ) : (
+                                        <div className="photo-placeholder">
+                                            {uploading ? <div className="spinner"></div> : <><Truck size={30} /><p>Click to Capture/Upload Bus Photo</p></>}
+                                        </div>
+                                    )}
+                                    <input 
+                                        type="file" 
+                                        id="handover-photo" 
+                                        hidden 
+                                        onChange={handleHandoverImageUpload} 
+                                        accept="image/*"
+                                        capture="environment"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="handover-modal-footer">
+                            <button className="btn-cancel" onClick={() => setShowHandoverModal(false)}>Cancel</button>
+                            <button className="btn-confirm" onClick={handleCompleteHandover} disabled={uploading}>
+                                Confirm Handover
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

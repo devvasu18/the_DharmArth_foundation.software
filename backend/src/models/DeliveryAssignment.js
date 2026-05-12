@@ -30,7 +30,10 @@ const deliveryAssignmentSchema = new mongoose.Schema({
     },
     pickupStoppage: String,
     estimatedArrivalTime: String,
+    actualDepartureTime: Date,
     vehicleName: String,
+    driverNumber: String,
+    handoverImage: String, // Photo taken by delivery boy at bus stand
     deliveredAt: Date,
     notes: String
 }, {

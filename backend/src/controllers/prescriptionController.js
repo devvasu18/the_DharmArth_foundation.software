@@ -17,7 +17,8 @@ exports.uploadPrescription = async (req, res) => {
         const prescription = await Prescription.create({
             user: req.user._id,
             image: req.file.path, // Cloudinary URL
-            status: 'Pending'
+            status: 'Pending',
+            notes: req.body.notes
         });
 
         // Notify admin
@@ -35,7 +36,16 @@ exports.uploadPrescription = async (req, res) => {
 // @access  Private
 exports.getMyPrescriptions = async (req, res) => {
     try {
-        const prescriptions = await Prescription.find({ user: req.user._id }).sort({ createdAt: -1 });
+        const query = { user: req.user._id };
+        
+        // If recent=true, filter by last 90 days
+        if (req.query.recent === 'true') {
+            const ninetyDaysAgo = new Date();
+            ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+            query.createdAt = { $gte: ninetyDaysAgo };
+        }
+
+        const prescriptions = await Prescription.find(query).sort({ createdAt: -1 });
         res.json(prescriptions);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -96,13 +106,26 @@ exports.verifyPrescription = async (req, res) => {
         // Check stock via MARG ERP Simulation for each item
         const itemsWithStock = await MargErpService.checkStockAndPrice(verifiedItems);
 
-        prescription.verifiedItems = itemsWithStock;
+        // Provisioning Logic: If any item is shortlisted, require user approval
+        const hasShortlisted = verifiedItems.some(item => item.fulfillmentStatus === 'Shortlisted');
+        
+        prescription.verifiedItems = verifiedItems.map(item => {
+            const stockInfo = itemsWithStock.find(si => si.medicineName === item.medicineName);
+            return {
+                ...item,
+                isAvailable: stockInfo ? stockInfo.isAvailable : true,
+                fulfillmentStatus: item.fulfillmentStatus || 'In Stock'
+            };
+        });
+
         prescription.status = 'Verified';
+        prescription.approvalRequired = hasShortlisted;
+        prescription.userApproved = !hasShortlisted; // Auto-approved if everything is in stock
         prescription.adminNote = adminNote;
         prescription.verificationLog.push({
             status: 'Verified',
             updatedBy: req.user._id,
-            note: 'Verified items and checked stock'
+            note: hasShortlisted ? 'Provision bill generated with shortlisted items. Waiting for user approval.' : 'Verified items and checked stock. All items in stock.'
         });
 
         await prescription.save();
@@ -111,7 +134,18 @@ exports.verifyPrescription = async (req, res) => {
         const populatedPrescription = await Prescription.findById(prescription._id).populate('user');
         if (populatedPrescription && populatedPrescription.user) {
             const io = req.app.get('io');
-            await notificationService.notifyPrescriptionVerifiedUser(populatedPrescription, populatedPrescription.user, io);
+            if (hasShortlisted) {
+                await notificationService.notify({
+                    userId: populatedPrescription.user._id,
+                    type: 'APPROVAL_REQUIRED',
+                    message: 'Your medicine order has some items currently out of stock. Please approve the provision bill to proceed with packing in-stock items.',
+                    referenceId: prescription._id,
+                    onModel: 'Prescription',
+                    io
+                });
+            } else {
+                await notificationService.notifyPrescriptionVerifiedUser(populatedPrescription, populatedPrescription.user, io);
+            }
         }
 
         res.json(prescription);
@@ -140,9 +174,9 @@ exports.approveAndCreateOrder = async (req, res) => {
             return res.status(400).json({ message: 'No items are currently available' });
         }
 
-        let totalAmount = 0;
+        let subtotal = 0;
         const orderItems = availableItems.map(item => {
-            totalAmount += (item.price || 0);
+            subtotal += (item.price || 0);
             return {
                 name: item.medicineName,
                 quantity: item.quantity || 1,
@@ -155,6 +189,27 @@ exports.approveAndCreateOrder = async (req, res) => {
             };
         });
 
+        // Financial Calculations
+        const { getPharmacyConfig } = require('./settingsController');
+        const config = await getPharmacyConfig();
+
+        const gst = subtotal * (config.gstPercent / 100); 
+        const platformFee = subtotal * (config.platformFeePercent / 100);
+        
+        let deliveryCharge = 0;
+        if (config.deliveryChargeType === 'flat') {
+            deliveryCharge = config.flatDeliveryCharge;
+        } else {
+            // Percent based
+            if (subtotal < config.percentDeliveryThreshold) {
+                deliveryCharge = subtotal * (config.percentDeliveryBelowThreshold / 100);
+            } else {
+                deliveryCharge = subtotal * (config.percentDeliveryAboveThreshold / 100);
+            }
+        }
+
+        const totalAmount = subtotal + gst + platformFee + deliveryCharge;
+
         // The order should always be associated with the prescription owner, 
         // even if someone else pays for it.
         const order = await Order.create({
@@ -162,6 +217,12 @@ exports.approveAndCreateOrder = async (req, res) => {
             prescription: prescription._id,
             items: orderItems,
             totalAmount,
+            financials: {
+                subtotal,
+                gst,
+                platformFee,
+                deliveryCharge
+            },
             shippingAddress,
             paymentDetails: {
                 method: paymentMethod || 'Online',
@@ -221,6 +282,28 @@ exports.approveAndCreateOrder = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+// @desc    User Approves Provision Bill
+// @route   POST /api/prescriptions/:id/approve-provision
+// @access  Private
+exports.approveProvisionBill = async (req, res) => {
+    try {
+        const prescription = await Prescription.findById(req.params.id);
+        if (!prescription) return res.status(404).json({ message: 'Prescription not found' });
+        
+        prescription.userApproved = true;
+        prescription.verificationLog.push({
+            status: 'Verified',
+            updatedBy: req.user?._id || prescription.user,
+            note: 'User approved the provision bill (including shortlisted items).'
+        });
+        
+        await prescription.save();
+        res.json({ success: true, message: 'Provision bill approved successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc    Get public prescription for checkout
 // @route   GET /api/prescriptions/:id/public
 // @access  Public

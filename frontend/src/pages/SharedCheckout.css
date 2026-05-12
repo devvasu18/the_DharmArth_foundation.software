@@ -561,7 +561,27 @@
         top: 0;
     }
 }
+/* Provisioning Styles */
+.v-item-card.shortlisted {
+    border-left: 4px solid #f59e0b;
+    background-color: #fffbeb;
+}
 
+.approval-warning-box {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 10px;
+}
+
+.shortlisted-tag {
+    font-size: 10px;
+    color: #f59e0b;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
 @media (max-width: 768px) {
     .checkout-banner {
         padding: 40px 0 60px 0;

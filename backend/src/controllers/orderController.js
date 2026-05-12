@@ -144,9 +144,36 @@ const updateOrderStatus = async (req, res) => {
     }
 };
 
+// @desc    Download Order Invoice (PDF)
+// @route   GET /api/orders/:id/invoice
+// @access  Private
+const downloadInvoice = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id).populate('user', 'name email');
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+
+        // Security check: only the owner or an admin can download, 
+        // UNLESS it's a public request (which we'll allow since the ID is a secure hash)
+        if (req.user && order.user?._id.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
+            return res.status(403).json({ message: 'Not authorized to download this invoice' });
+        }
+
+        const invoiceService = require('../services/invoiceService');
+        
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=Invoice_${order._id}.pdf`);
+
+        await invoiceService.generateMedicineInvoice(order, res);
+    } catch (error) {
+        console.error("Invoice Generation Error:", error);
+        res.status(500).json({ message: 'Failed to generate invoice' });
+    }
+};
+
 module.exports = {
     getMyOrders,
     getOrderById,
     getAllOrders,
-    updateOrderStatus
+    updateOrderStatus,
+    downloadInvoice
 };

@@ -65,6 +65,7 @@ const CMSDashboard = lazy(() => import('./pages/admin/cms/CMSDashboard'));
 const DeliveryBoyDashboard = lazy(() => import('./pages/DeliveryBoyDashboard'));
 const SharedCheckout = lazy(() => import('./pages/SharedCheckout'));
 const SharedTracker = lazy(() => import('./pages/SharedTracker'));
+const PharmacySettings = lazy(() => import('./components/admin/PharmacySettings'));
 
 import { AuthProvider } from './context/AuthContext';
 import AdminRoute from './components/auth/AdminRoute';
@@ -138,6 +139,7 @@ const router = createBrowserRouter(
         <Route path="subscriptions" element={<AdminSubscriptions />} />
         <Route path="reports/commission" element={<CommissionReports />} />
         <Route path="cms" element={<CMSDashboard />} />
+        <Route path="pharmacy-settings" element={<PharmacySettings />} />
       </Route>
 
       <Route path="/admin-user-explorer" element={<AdminRoute><AdminLayout /></AdminRoute>} errorElement={<AppErrorBoundary />}>
