@@ -38,6 +38,61 @@ const EventDetails = () => {
     }
   };
 
+  const renderDetailBlock = (block, index) => {
+    switch (block.type) {
+      case 'text':
+        return (
+          <View key={`detail-${index}`} style={styles.detailBlock}>
+            <Text style={styles.detailText}>
+              {block.content?.text ? block.content.text.replace(/<[^>]*>?/gm, '') : ''}
+            </Text>
+          </View>
+        );
+      case 'image':
+        const imgUrl = block.content?.url?.startsWith('http') 
+          ? block.content.url 
+          : `https://the-dharmarth-foundation-software-tidi.onrender.com${block.content?.url?.startsWith('/') ? '' : '/'}${block.content?.url}`;
+        return (
+          <View key={`detail-${index}`} style={styles.detailBlock}>
+             <Image source={{ uri: imgUrl }} style={styles.detailImage} resizeMode="cover" />
+             {block.content?.caption ? <Text style={styles.mediaCaption}>{block.content.caption}</Text> : null}
+          </View>
+        );
+      case 'youtube':
+      case 'video':
+        let videoId = '';
+        try {
+            const url = block.content?.url || '';
+            if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
+            else if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1];
+            else if (url.includes('embed/')) videoId = url.split('embed/')[1];
+        } catch (e) { }
+
+        if (!videoId) return null;
+
+        return (
+          <View key={`detail-${index}`} style={styles.detailBlock}>
+            <Text style={styles.blockLabel}>Watch Highlight</Text>
+            <TouchableOpacity 
+              style={styles.youtubeCard}
+              onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${videoId}`)}
+              activeOpacity={0.8}
+            >
+              <Image 
+                source={{ uri: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` }} 
+                style={styles.youtubeThumbnail} 
+              />
+              <View style={styles.playIconOverlay}>
+                <Ionicons name="play-circle" size={60} color="rgba(255, 255, 255, 0.9)" />
+              </View>
+            </TouchableOpacity>
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
+
   const onShare = async () => {
     if (!event) return;
     try {
@@ -141,6 +196,13 @@ const EventDetails = () => {
               <Text style={styles.description}>{event.shortDescription}</Text>
             )}
           </View>
+
+          {event.details && event.details.length > 0 && (
+            <View style={styles.detailsContainer}>
+              <Text style={styles.sectionTitle}>Event Highlights</Text>
+              {event.details.map((block, index) => renderDetailBlock(block, index))}
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -148,7 +210,7 @@ const EventDetails = () => {
       <View style={styles.bottomBar}>
         <TouchableOpacity 
           style={styles.actionButton}
-          onPress={() => Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/donate')}
+          onPress={() => router.push('/donate')}
         >
           <Text style={styles.actionButtonText}>Support the Foundation</Text>
           <Ionicons name="heart" size={20} color="white" />
@@ -267,6 +329,69 @@ const styles = StyleSheet.create({
     color: '#475569',
     lineHeight: 26,
   },
+  detailsContainer: {
+    marginTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+    paddingTop: 24,
+  },
+  detailBlock: {
+    marginBottom: 24,
+  },
+  detailText: {
+    fontSize: 16,
+    color: '#475569',
+    lineHeight: 26,
+  },
+  detailImage: {
+    width: '100%',
+    height: 220,
+    borderRadius: 16,
+    backgroundColor: '#f1f5f9',
+  },
+  mediaCaption: {
+    fontSize: 13,
+    color: '#94a3b8',
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  blockLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#00bfa5',
+    marginBottom: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  youtubeCard: {
+    width: '100%',
+    height: 220,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#000',
+    position: 'relative',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  youtubeThumbnail: {
+    width: '100%',
+    height: '100%',
+    opacity: 0.75,
+  },
+  playIconOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+  },
   bottomBar: {
     position: 'absolute',
     bottom: 0,
@@ -275,7 +400,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 24,
+    paddingBottom: 40,
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
     elevation: 20,
