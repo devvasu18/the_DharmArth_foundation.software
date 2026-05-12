@@ -262,47 +262,6 @@ const LandingScreen = () => {
           </View>
         )}
 
-        {/* Detailed Footer */}
-        <View style={styles.footerDetailed}>
-          <View style={styles.footerBrand}>
-            <Text style={styles.footerBrandName}>Dharmarth</Text>
-            <View style={styles.socialRow}>
-              <Ionicons name="logo-facebook" size={20} color="#475569" />
-              <Ionicons name="logo-twitter" size={20} color="#475569" />
-              <Ionicons name="logo-linkedin" size={20} color="#475569" />
-              <Ionicons name="logo-youtube" size={20} color="#475569" />
-              <Ionicons name="logo-instagram" size={20} color="#475569" />
-            </View>
-            <View style={styles.contactInfo}>
-              <Text style={styles.contactText}>Email: info@Dharmarth.org</Text>
-              <Text style={styles.contactText}>Contact: +91 9900000000</Text>
-            </View>
-          </View>
-
-          <View style={styles.footerLinksGrid}>
-            <View style={styles.footerCol}>
-              <Text style={styles.footerColTitle}>Causes</Text>
-              <Text style={styles.footerLink}>Medical Crowdfunding</Text>
-              <Text style={styles.footerLink}>Cancer Crowdfunding</Text>
-              <Text style={styles.footerLink}>Education Crowdfunding</Text>
-            </View>
-            <View style={styles.footerCol}>
-              <Text style={styles.footerColTitle}>About Us</Text>
-              <Text style={styles.footerLink}>Team Dharmarth</Text>
-              <Text style={styles.footerLink}>Success Stories</Text>
-              <Text style={styles.footerLink}>Our Blog</Text>
-            </View>
-          </View>
-
-          <View style={styles.footerBottom}>
-            <View style={styles.paymentIcons}>
-              <Text style={styles.paymentTag}>VISA</Text>
-              <Text style={styles.paymentTag}>UPI</Text>
-              <Text style={styles.paymentTag}>SECURE</Text>
-            </View>
-            <Text style={styles.copyrightText}>© 2026 The DharmArth Foundation. All Rights Reserved.</Text>
-          </View>
-        </View>
       </ScrollView>
     </View>
   );
