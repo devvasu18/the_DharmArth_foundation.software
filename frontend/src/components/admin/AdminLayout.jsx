@@ -85,6 +85,24 @@ const AdminLayout = () => {
             setNotifications(prev => [newNotification, ...prev]);
             setUnreadCount(prev => prev + 1);
         });
+        
+        socketRef.current.on('new_prescription_request', (newNotification) => {
+            // Play Sound
+            audioRef.current.play().catch(e => console.log('Audio play failed', e));
+
+            // Show Toast
+            toast.success(
+                <div onClick={() => { setIsNotificationsOpen(true); navigate('/admin/prescriptions'); }} style={{ cursor: 'pointer' }}>
+                    <b>New Prescription!</b>
+                    <p style={{ margin: 0, fontSize: '0.9rem' }}>{newNotification.message}</p>
+                </div>,
+                { duration: 6000, icon: '📄' }
+            );
+
+            // Update State
+            setNotifications(prev => [newNotification, ...prev]);
+            setUnreadCount(prev => prev + 1);
+        });
 
         fetchNotifications();
 
@@ -343,7 +361,7 @@ const AdminLayout = () => {
                     </div> */}
 
                     {/* Medical & Delivery Dropdown commented for now */}
-                    {/* <div className="admin-link-dropdown-container">
+                    <div className="admin-link-dropdown-container">
                         <div
                             className={`admin-link ${location.pathname.includes('/admin/prescriptions') ||
                                 location.pathname.includes('/admin/delivery') ||
@@ -398,7 +416,7 @@ const AdminLayout = () => {
                                 </NavLink>
                             </div>
                         )}
-                    </div> */}
+                    </div>
 
                     {/* Reports Dropdown */}
                     <div className="admin-link-dropdown-container">
@@ -508,9 +526,10 @@ const AdminLayout = () => {
                                                     onClick={() => handleNotificationClick(notif)}
                                                 >
                                                     <div className="notif-icon">
-                                                        {notif.onModel === 'PayoutRequest' ? '💸' :
-                                                            notif.type === 'DONATION' ? '💰' :
-                                                                notif.type === 'SUBSCRIPTION_CANCELLED' ? '🛑' : '📢'}
+                                                        {notif.type === 'PRESCRIPTION_UPLOADED' ? '📄' :
+                                                            notif.onModel === 'PayoutRequest' ? '💸' :
+                                                                notif.type === 'DONATION' ? '💰' :
+                                                                    notif.type === 'SUBSCRIPTION_CANCELLED' ? '🛑' : '📢'}
                                                     </div>
                                                     <div className="notif-content">
                                                         <p className="notif-msg">{notif.message}</p>

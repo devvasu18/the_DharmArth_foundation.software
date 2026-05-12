@@ -10,7 +10,7 @@ class NotificationService {
     /**
      * Send notification to a specific user or admin
      */
-    async notify({ userId, type, message, referenceId, onModel, email, sms, whatsapp }) {
+    async notify({ userId, type, message, referenceId, onModel, email, sms, whatsapp, io }) {
         try {
             // 1. Create In-App Notification (Database)
             const notification = await Notification.create({
@@ -21,6 +21,19 @@ class NotificationService {
                 onModel,
                 isRead: false
             });
+
+            // Emit Socket.io event for real-time updates
+            if (io) {
+                if (!userId) {
+                    // To admins
+                    console.log(`[SOCKET] Emitting new_prescription_request to admin_notifications`);
+                    io.to('admin_notifications').emit('new_prescription_request', notification);
+                } else {
+                    // To specific user
+                    console.log(`[SOCKET] Emitting new_notification to user_${userId}`);
+                    io.to(`user_${userId}`).emit('new_notification', notification);
+                }
+            }
 
             // 2. Send Email (Mocked for now, ready for Nodemailer)
             if (email) {
@@ -143,7 +156,39 @@ class NotificationService {
             message: msg,
             referenceId: subscription._id,
             onModel: 'Subscription',
-            whatsapp: process.env.ADMIN_MOBILE || '9999999999'
+        });
+    }
+
+    /**
+     * Specialized: New Prescription Uploaded Alert for Admin
+     */
+    async notifyPrescriptionUploadedAdmin(prescription, user, io) {
+        const msg = `📄 New Prescription: Verification requested by ${user.name} (${user.mobile})`;
+
+        return await this.notify({
+            userId: null, // For admins
+            type: 'PRESCRIPTION_UPLOADED',
+            message: msg,
+            referenceId: prescription._id,
+            onModel: 'Prescription',
+        });
+    }
+
+    /**
+     * Specialized: Prescription Verified Alert for User
+     */
+    async notifyPrescriptionVerifiedUser(prescription, user, io) {
+        const checkoutUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/checkout/${prescription._id}`;
+        const msg = `✅ Your prescription has been verified! You can now proceed to checkout and order your medicines here: ${checkoutUrl}`;
+
+        return await this.notify({
+            userId: user._id,
+            type: 'PRESCRIPTION_VERIFIED',
+            message: msg,
+            referenceId: prescription._id,
+            onModel: 'Prescription',
+            whatsapp: user.mobile,
+            io
         });
     }
 }

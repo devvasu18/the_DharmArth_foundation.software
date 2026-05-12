@@ -14,7 +14,7 @@ const VerifiedItemRow = ({ item }) => {
     const hasDosage = item.time || item.frequency || item.foodRelation || item.intakeMethod || item.dosage;
 
     return (
-        <div style={{ marginBottom: '15px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+        <div style={{ marginBottom: '15px', borderBottom: '2px solid #cbd5e0', paddingBottom: '10px' }}>
             <div className="item-row" style={{ borderBottom: 'none', padding: 0, marginBottom: '8px' }}>
                 <div className="item-name" style={{ fontWeight: '600', color: '#2d3748', fontSize: '1.1rem' }}>{item.medicineName} (Qty: {item.quantity || 1})</div>
                 <div className="item-price" style={{ fontWeight: 'bold' }}>₹{Number(item.price || 0).toFixed(2)}</div>
@@ -62,7 +62,10 @@ const OrderMedicine = () => {
     const [error, setError] = useState(null);
     const [myPrescriptions, setMyPrescriptions] = useState([]);
     const [myOrders, setMyOrders] = useState([]);
+    const [paymentMethod, setPaymentMethod] = useState('Online');
+    const [isSyncing, setIsSyncing] = useState(false);
     const [historyTab, setHistoryTab] = useState('prescriptions'); // 'prescriptions' or 'orders'
+    const [showPostUploadModal, setShowPostUploadModal] = useState(false);
 
     // Checkout Modal State
     const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
@@ -90,12 +93,6 @@ const OrderMedicine = () => {
     const [savedAddresses, setSavedAddresses] = useState([]);
     const [isAddingNewAddress, setIsAddingNewAddress] = useState(false);
     const [isOrderingForSomeoneElse, setIsOrderingForSomeoneElse] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState('Online');
-
-    useEffect(() => {
-        fetchHistory();
-        fetchOrders();
-    }, []);
 
     const fetchOrders = async () => {
         try {
@@ -114,6 +111,23 @@ const OrderMedicine = () => {
             console.error(err);
         }
     };
+
+    async function handleSync() {
+        setIsSyncing(true);
+        try {
+            await Promise.all([fetchHistory(), fetchOrders()]);
+            toast.success('Activity Log updated');
+        } catch (err) {
+            toast.error('Sync failed');
+        } finally {
+            setTimeout(() => setIsSyncing(false), 800);
+        }
+    }
+
+    useEffect(() => {
+        fetchHistory();
+        fetchOrders();
+    }, []);
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
@@ -144,10 +158,9 @@ const OrderMedicine = () => {
             await api.post('/prescriptions', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            setSuccess(true);
+            setShowPostUploadModal(true);
             setFile(null);
             setPreview(null);
-            setTimeout(() => setSuccess(false), 5000);
             fetchHistory();
         } catch (err) {
             setError(err.response?.data?.message || 'Upload failed');
@@ -351,9 +364,14 @@ const OrderMedicine = () => {
                             <div className="history-box glass-card">
                                 <div className="card-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '15px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                                        <h3>Activity Log</h3>
-                                        <button className="refresh-btn" onClick={() => { fetchHistory(); fetchOrders(); }}>
-                                            <Clock size={16} /> Sync
+                                        <h3>History/Recent</h3>
+                                        <button
+                                            className={`refresh-btn ${isSyncing ? 'syncing' : ''}`}
+                                            onClick={handleSync}
+                                            disabled={isSyncing}
+                                        >
+                                            <Clock size={16} style={{ transform: isSyncing ? 'rotate(360deg)' : 'none', transition: 'transform 0.8s ease' }} />
+                                            {isSyncing ? 'Syncing...' : 'Refresh'}
                                         </button>
                                     </div>
                                     <div className="tab-switcher" style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '8px', width: '100%' }}>
@@ -565,7 +583,7 @@ const OrderMedicine = () => {
                                             ))}
                                         </div>
                                     ) : (
-                                        <div className="new-address-form" style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                        <div className="new-address-form" style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '3px solid #cbd5e1' }}>
                                             <div className="form-group" style={{ marginBottom: '15px' }}>
                                                 <label>Street Address</label>
                                                 <input type="text" required value={shippingDetails.street} onChange={e => setShippingDetails({ ...shippingDetails, street: e.target.value })} placeholder="House No, Building, Street" />
@@ -775,7 +793,7 @@ const OrderMedicine = () => {
                                                             cursor: 'pointer',
                                                             border: '2px solid white',
                                                             boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
-                                                            background: '#f1f5f9'
+                                                            background: '#cbd5e1'
                                                         }}
                                                         onClick={() => {
                                                             const finalImg = selectedTrackOrder.dispatchDetails.busId?.image || selectedTrackOrder.dispatchDetails.busImage;
@@ -879,6 +897,29 @@ const OrderMedicine = () => {
                             }
                             alt="Full View"
                         />
+                    </div>
+                </div>
+            )}
+            {/* Post-Upload Success Modal */}
+            {showPostUploadModal && (
+                <div className="checkout-modal-overlay" style={{ zIndex: 2000 }}>
+                    <div className="checkout-modal-card" style={{ maxWidth: '450px', textAlign: 'center', padding: '40px' }}>
+                        <div style={{ width: '80px', height: '80px', background: '#f0fff4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', color: '#38a169' }}>
+                            <CheckCircle size={40} />
+                        </div>
+                        <h2 style={{ fontSize: '1.8rem', color: '#2d3748', marginBottom: '16px' }}>Prescription Submitted!</h2>
+                        <div style={{ color: '#718096', lineHeight: '1.6', fontSize: '1.05rem', marginBottom: '30px' }}>
+                            <p style={{ marginBottom: '15px' }}>Your prescription has been securely uploaded and sent for verification.</p>
+                            <p style={{ marginBottom: '15px', fontWeight: '600', color: '#4a5568' }}>This will be verified within 24-48 hours.</p>
+                            <p>Once verified, you will need to provide your delivery address and confirm the final amount to complete the order. You can track this process from the <strong>Activity Log</strong> on this page.</p>
+                        </div>
+                        <button 
+                            className="btn-submit-premium" 
+                            style={{ marginTop: '0' }}
+                            onClick={() => setShowPostUploadModal(false)}
+                        >
+                            Got it, thanks!
+                        </button>
                     </div>
                 </div>
             )}

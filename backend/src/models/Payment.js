@@ -44,6 +44,16 @@ const paymentSchema = new mongoose.Schema({
     },
     raw_webhook_data: {
         type: Object // For auditing purposes
+    },
+    prescriptionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Prescription',
+        required: false
+    },
+    type: {
+        type: String,
+        enum: ['donation', 'prescription'],
+        default: 'donation'
     }
 }, {
     timestamps: true

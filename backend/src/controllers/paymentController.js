@@ -17,10 +17,35 @@ const generateTransactionId = () => {
  */
 exports.createOrder = async (req, res) => {
     try {
-        const { amount, currency = 'INR', userId, email, contact } = req.body;
+        const { amount: frontendAmount, currency = 'INR', userId, email, contact, prescriptionId, type = 'donation', shippingAddress } = req.body;
 
-        if (!amount || !userId) {
+        if (!frontendAmount || (!userId && type === 'donation')) {
             return res.status(400).json({ success: false, message: 'Amount and userId are required' });
+        }
+
+        let amount = frontendAmount;
+
+        // Security: Recalculate amount if it's a prescription order
+        if (type === 'prescription' && prescriptionId) {
+            const Prescription = require('../models/Prescription');
+            const prescription = await Prescription.findById(prescriptionId);
+            if (!prescription) {
+                return res.status(404).json({ success: false, message: 'Prescription not found' });
+            }
+            
+            const calculatedAmount = prescription.verifiedItems
+                .filter(item => item.isAvailable)
+                .reduce((acc, item) => acc + (item.price || 0), 0);
+            
+            // If frontend amount is significantly different, we might want to log it, 
+            // but we'll use the calculated one for security.
+            amount = calculatedAmount;
+
+            // Store shipping address in prescription for later completion
+            if (shippingAddress) {
+                prescription.pendingShippingAddress = shippingAddress;
+                await prescription.save();
+            }
         }
 
         const transaction_id = generateTransactionId();
@@ -42,7 +67,9 @@ exports.createOrder = async (req, res) => {
             order_id: order.id,
             status: 'created',
             email,
-            contact
+            contact,
+            prescriptionId,
+            type
         });
 
         await payment.save();
@@ -96,10 +123,15 @@ exports.verifyPayment = async (req, res) => {
 
             res.status(200).json({ success: true, message: 'Payment verified successfully', payment });
 
-            // Trigger post-payment donation logic
+            // Trigger post-payment logic based on type
             try {
                 const io = req.app.get('io');
-                await donationService.completeDonation(razorpay_order_id, razorpay_payment_id, io);
+                if (payment.type === 'prescription') {
+                    const prescriptionService = require('../services/prescriptionService');
+                    await prescriptionService.completeOrder(razorpay_order_id, razorpay_payment_id, io);
+                } else {
+                    await donationService.completeDonation(razorpay_order_id, razorpay_payment_id, io);
+                }
             } catch (err) {
                 console.error("Post-payment completion failed (verify):", err);
             }
@@ -232,10 +264,15 @@ exports.handleWebhook = async (req, res) => {
                     payment.raw_webhook_data = req.body;
                     await payment.save();
                     
-                    // Trigger post-payment donation logic (Idempotency is handled inside the service)
+                    // Trigger post-payment logic based on type
                     try {
                         const io = req.app.get('io');
-                        await donationService.completeDonation(order_id, payment_id, io);
+                        if (payment.type === 'prescription') {
+                            const prescriptionService = require('../services/prescriptionService');
+                            await prescriptionService.completeOrder(order_id, payment_id, io);
+                        } else {
+                            await donationService.completeDonation(order_id, payment_id, io);
+                        }
                     } catch (err) {
                         console.error("Post-payment completion failed (webhook):", err);
                     }

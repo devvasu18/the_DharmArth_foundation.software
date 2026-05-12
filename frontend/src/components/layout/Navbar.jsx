@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Bell, Search, ChevronDown, Menu, X, Heart, Calendar, Stethoscope, User as UserIcon, Home, Languages } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { io } from "socket.io-client";
 import { API_BASE_URL } from '../../services/api';
@@ -39,9 +39,16 @@ const Navbar = () => {
                             <div className="notif-empty">No notifications yet</div>
                         ) : (
                             notifications.map((notif, idx) => (
-                                <div key={idx} className={`notif-item ${!notif.isRead ? 'unread' : ''}`}>
+                                <div 
+                                    key={idx} 
+                                    className={`notif-item ${!notif.isRead ? 'unread' : ''}`}
+                                    onClick={() => handleNotificationClick(notif)}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <div className="notif-icon">
-                                        {notif.onModel === 'PayoutRequest' ? '💸' : notif.type === 'COMMISSION_EARNED' ? '💰' : '📢'}
+                                        {notif.type === 'PRESCRIPTION_VERIFIED' ? '✅' :
+                                            notif.onModel === 'PayoutRequest' ? '💸' :
+                                                notif.type === 'COMMISSION_EARNED' ? '💰' : '📢'}
                                     </div>
                                     <div className="notif-body">
                                         <p>{notif.message}</p>
@@ -114,6 +121,12 @@ const Navbar = () => {
             toast.error(notif.message, { duration: 8000 });
         });
 
+        socketRef.current.on('new_notification', (notif) => {
+            setNotifications(prev => [notif, ...prev]);
+            setUnreadCount(prev => prev + 1);
+            toast.success(notif.message, { duration: 10000, icon: '🔔' });
+        });
+
         return () => {
             if (socketRef.current) socketRef.current.disconnect();
         };
@@ -126,6 +139,27 @@ const Navbar = () => {
             setUnreadCount(0);
         } catch (err) {
             console.error(err);
+        }
+    };
+
+    const navigate = useNavigate();
+
+    const handleNotificationClick = async (notif) => {
+        setIsNotificationsOpen(false);
+        
+        // Mark as read
+        if (!notif.isRead) {
+            try {
+                await api.put(`/notifications/${notif._id}/read`);
+                setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, isRead: true } : n));
+                setUnreadCount(prev => Math.max(0, prev - 1));
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        if (notif.type === 'PRESCRIPTION_VERIFIED') {
+            navigate(`/checkout/${notif.referenceId}`);
         }
     };
 
@@ -188,8 +222,8 @@ const Navbar = () => {
                             )}
                             <NavLink to="/leaderboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Leaderboard</NavLink>
                             <NavLink to="/p/about-us" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>About Us</NavLink>
-                            {/* <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.doctorAvailability')}</NavLink>
-                            <NavLink to="/order-medicine" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Order Medicine</NavLink> */}
+                            {/* <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.doctorAvailability')}</NavLink>*/}
+                            <NavLink to="/order-medicine" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Order Medicine</NavLink>
                         </>
                     )}
 
@@ -256,7 +290,7 @@ const Navbar = () => {
                         <Link to="/login" className="btn-link">{t('navbar.signIn')}</Link>
                     )}
                 </div>
-                
+
                 {/* Mobile Notification Bell */}
                 {user && !user.isSuperAdmin && (!user.roles || user.roles.length === 0) && (
                     <div className="notif-bell-container show-mobile" ref={notificationRef}>

@@ -35,7 +35,15 @@ const prescriptionSchema = new mongoose.Schema({
         updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         updatedAt: { type: Date, default: Date.now },
         note: String
-    }]
+    }],
+    pendingShippingAddress: {
+        street: String,
+        city: String,
+        state: String,
+        zip: String,
+        phone: String,
+        altPhone: String
+    }
 }, {
     timestamps: true
 });

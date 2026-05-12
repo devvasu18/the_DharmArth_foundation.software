@@ -148,7 +148,7 @@ const AdminPrescriptions = () => {
                                     </div>
                                     <div className="meta">
                                         <h4>{p.user?.name || 'Guest User'}</h4>
-                                        <span>{new Date(p.createdAt).toLocaleDateString()}</span>
+                                        <span>{new Date(p.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span>
                                         <div style={{fontSize: '0.75rem', marginTop:'4px', color: p.status==='Pending'?'#eab308' : '#10b981'}}>
                                             {p.status}
                                         </div>
@@ -171,7 +171,7 @@ const AdminPrescriptions = () => {
                         )}
                     </div>
                 </aside>
-
+                <div className="admin-v-divider"></div>
                 {/* Verification Desktop */}
                 <main className="verification-master">
                     {selected ? (
@@ -194,19 +194,20 @@ const AdminPrescriptions = () => {
                             </div>
 
                             <div className="master-grid">
-                                {/* Left: Prescription Image */}
-                                <div className="image-view-pane">
-                                    <div className="img-wrapper" onClick={() => setImageModalSrc(selected.image)}>
-                                        <img src={selected.image} alt="Full Prescription" />
-                                        <div className="zoom-overlay">
-                                            <Search size={24} />
-                                            <span>Click to Zoom</span>
-                                        </div>
-                                    </div>
-                                </div>
+
 
                                 {/* Right: Verification Form */}
                                 <div className="form-view-pane">
+                                    {/* Prescription Image at Top */}
+                                    <div className="image-view-pane" style={{ padding: '0 0 30px 0', background: 'none' }}>
+                                        <div className="img-wrapper" onClick={() => setImageModalSrc(selected.image)} style={{ maxWidth: '400px', margin: '0 auto' }}>
+                                            <img src={selected.image} alt="Full Prescription" />
+                                            <div className="zoom-overlay">
+                                                <Search size={24} />
+                                                <span>Click to Zoom</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <section className="form-section">
                                         <div className="sec-title" style={{justifyContent: 'space-between'}}>
                                             <div style={{display:'flex', alignItems:'center', gap:'10px'}}>

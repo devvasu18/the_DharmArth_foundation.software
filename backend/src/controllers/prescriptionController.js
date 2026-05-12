@@ -3,6 +3,7 @@ const Order = require('../models/Order');
 const Medicine = require('../models/Medicine');
 const User = require('../models/User');
 const MargErpService = require('../services/margErpService');
+const notificationService = require('../services/notificationService');
 
 // @desc    Upload Prescription
 // @route   POST /api/prescriptions
@@ -18,6 +19,10 @@ exports.uploadPrescription = async (req, res) => {
             image: req.file.path, // Cloudinary URL
             status: 'Pending'
         });
+
+        // Notify admin
+        const io = req.app.get('io');
+        await notificationService.notifyPrescriptionUploadedAdmin(prescription, req.user, io);
 
         res.status(201).json(prescription);
     } catch (error) {
@@ -101,6 +106,14 @@ exports.verifyPrescription = async (req, res) => {
         });
 
         await prescription.save();
+
+        // Notify User
+        const populatedPrescription = await Prescription.findById(prescription._id).populate('user');
+        if (populatedPrescription && populatedPrescription.user) {
+            const io = req.app.get('io');
+            await notificationService.notifyPrescriptionVerifiedUser(populatedPrescription, populatedPrescription.user, io);
+        }
+
         res.json(prescription);
     } catch (error) {
         res.status(500).json({ message: error.message });
