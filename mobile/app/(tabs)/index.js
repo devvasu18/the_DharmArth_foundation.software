@@ -125,34 +125,50 @@ const LandingScreen = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Premium Hero Slider Section */}
         <View style={styles.heroSection}>
-          <View style={styles.heroDialContainer}>
-            {visuals.map((slide, index) => {
-              const len = visuals.length;
-              const isCenter = index === currentVisualIndex;
-              const isLeft = index === (currentVisualIndex - 1 + len) % len;
-              const isRight = index === (currentVisualIndex + 1) % len;
+          {/* App-like Hero Slider */}
+          <View style={styles.heroSliderWrapper}>
+            <View style={styles.heroDialContainer}>
+              {visuals.map((slide, index) => {
+                const len = visuals.length;
+                const isCenter = index === currentVisualIndex;
+                const isLeft = index === (currentVisualIndex - 1 + len) % len;
+                const isRight = index === (currentVisualIndex + 1) % len;
 
-              let position = 'hidden';
-              if (isCenter) position = 'center';
-              else if (isLeft) position = 'left';
-              else if (isRight) position = 'right';
+                let position = 'hidden';
+                if (isCenter) position = 'center';
+                else if (isLeft) position = 'left';
+                else if (isRight) position = 'right';
 
-              if (position === 'hidden') return null;
+                if (position === 'hidden') return null;
 
-              return (
+                return (
+                  <View
+                    key={`hero-img-${slide._id || ''}-${index}`}
+                    style={[
+                      styles.heroCard,
+                      position === 'center' && styles.heroCardCenter,
+                      position === 'left' && styles.heroCardLeft,
+                      position === 'right' && styles.heroCardRight,
+                    ]}
+                  >
+                    <Image source={{ uri: slide.imageUrl }} style={styles.heroCardImage} resizeMode="cover" />
+                  </View>
+                );
+              })}
+            </View>
+            
+            {/* Pagination Indicators */}
+            <View style={styles.paginationContainer}>
+              {visuals.map((_, index) => (
                 <View
-                  key={`hero-img-${slide._id || ''}-${index}`}
+                  key={`dot-${index}`}
                   style={[
-                    styles.heroCard,
-                    position === 'center' && styles.heroCardCenter,
-                    position === 'left' && styles.heroCardLeft,
-                    position === 'right' && styles.heroCardRight,
+                    styles.paginationDot,
+                    index === currentVisualIndex && styles.paginationDotActive
                   ]}
-                >
-                  <Image source={{ uri: slide.imageUrl }} style={styles.heroCardImage} resizeMode="cover" />
-                </View>
-              );
-            })}
+                />
+              ))}
+            </View>
           </View>
 
           {/* Hero Content */}
@@ -283,28 +299,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#E0F7FA', // Light teal background
     paddingBottom: 60,
   },
+  heroSliderWrapper: {
+    marginBottom: 32,
+    marginTop: 10,
+  },
   heroDialContainer: {
-    height: 280,
+    height: 220,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    marginBottom: 40,
+    marginBottom: 20,
   },
   heroCard: {
     position: 'absolute',
-    width: width * 0.55,
-    height: 260,
+    width: width * 0.88,
+    height: 220,
     borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: 'white',
-    borderWidth: 4,
-    borderColor: 'white',
-    elevation: 10,
+    backgroundColor: '#fff',
+    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
   },
   heroCardImage: {
     width: '100%',
@@ -312,25 +330,40 @@ const styles = StyleSheet.create({
   },
   heroCardCenter: {
     zIndex: 10,
-    transform: [{ scale: 1.1 }],
+    transform: [{ scale: 1 }],
+    opacity: 1,
   },
   heroCardLeft: {
     zIndex: 5,
     transform: [
-      { translateX: -width * 0.35 },
-      { scale: 0.85 },
-      { rotate: '-8deg' }
+      { translateX: -width * 0.78 },
+      { scale: 0.9 }
     ],
-    opacity: 0.8,
+    opacity: 0.6,
   },
   heroCardRight: {
     zIndex: 5,
     transform: [
-      { translateX: width * 0.35 },
-      { scale: 0.85 },
-      { rotate: '8deg' }
+      { translateX: width * 0.78 },
+      { scale: 0.9 }
     ],
-    opacity: 0.8,
+    opacity: 0.6,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(0, 191, 165, 0.3)',
+  },
+  paginationDotActive: {
+    width: 24,
+    backgroundColor: '#00bfa5',
   },
   heroContent: {
     paddingHorizontal: 24,
