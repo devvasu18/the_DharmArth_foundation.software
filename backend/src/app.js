@@ -64,6 +64,8 @@ const roleRoutes = require('./routes/roleRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
+const margRoutes = require('./routes/margRoutes');
 
 const eventRoutes = require('./routes/eventRoutes');
 const eventHeaderRoutes = require('./routes/eventHeaderRoutes');
@@ -102,6 +104,7 @@ app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/payouts', require('./routes/payoutRoutes'));
 app.use('/api/cms', require('./routes/cmsRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
+app.use('/api/marg', margRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

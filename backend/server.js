@@ -44,6 +44,10 @@ connectDB().then(() => {
     const whatsappService = require('./src/services/whatsappService');
     whatsappService.startWorker(30000); // Check queue every 30 seconds
 
+    // Initialize MARG ERP Sync Job
+    const { initMargSyncJob } = require('./src/jobs/margSyncJob');
+    initMargSyncJob();
+
     server.listen(PORT, '0.0.0.0', () => {
         console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
     });
