@@ -33,7 +33,8 @@ const prescriptionSchema = new mongoose.Schema({
             default: 'In Stock' 
         },
         estimatedArrivalDays: Number,
-        alternativeSuggested: String
+        alternativeSuggested: String,
+        margPID: Number
     }],
     userApproved: { type: Boolean, default: false },
     approvalRequired: { type: Boolean, default: false },

@@ -97,7 +97,10 @@ const Login = () => {
             toast.success('Welcome back!');
             // Redirect based on role or default
             const roles = data.roles || [];
-            const isDeliveryPartner = roles.some(r => typeof r === 'string' ? r === 'Delivery boy' : r.name === 'Delivery boy');
+            const isDeliveryPartner = roles.some(r => {
+                const name = typeof r === 'string' ? r : r.name;
+                return name && name.toLowerCase().includes('delivery');
+            });
 
             if (data.isSuperAdmin) {
                 navigate('/admin');
@@ -128,7 +131,10 @@ const Login = () => {
 
             // Redirect based on role or default
             const roles = data.roles || [];
-            const isDeliveryPartner = roles.some(r => typeof r === 'string' ? r === 'Delivery boy' : r.name === 'Delivery boy');
+            const isDeliveryPartner = roles.some(r => {
+                const name = typeof r === 'string' ? r : r.name;
+                return name && name.toLowerCase().includes('delivery');
+            });
 
             if (data.isSuperAdmin) {
                 toast.success('Welcome back, Super Admin!');
@@ -170,7 +176,10 @@ const Login = () => {
             
             // Redirect based on role
             const roles = data.roles || [];
-            const isDeliveryPartner = roles.some(r => typeof r === 'string' ? r === 'Delivery boy' : r.name === 'Delivery boy');
+            const isDeliveryPartner = roles.some(r => {
+                const name = typeof r === 'string' ? r : r.name;
+                return name && name.toLowerCase().includes('delivery');
+            });
 
             if (data.isSuperAdmin) navigate('/admin');
             else if (isDeliveryPartner) navigate('/delivery-boy');

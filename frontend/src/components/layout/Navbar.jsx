@@ -184,7 +184,10 @@ const Navbar = () => {
         logout();
     };
 
-    const isDeliveryPartner = user?.roles?.some(r => (typeof r === 'string' ? r === 'Delivery boy' : r.name === 'Delivery boy'));
+    const isDeliveryPartner = user?.roles?.some(r => {
+        const name = typeof r === 'string' ? r : r.name;
+        return name && name.toLowerCase().includes('delivery');
+    });
 
     const renderLanguageToggle = (isMobile = false) => (
         <div
@@ -348,24 +351,26 @@ const Navbar = () => {
                 </div>
             )}
             {/* Mobile Bottom Navigation */}
-            <div className="bottom-navbar show-mobile">
-                <NavLink to="/" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`} end>
-                    <Home size={20} className="nav-icon" />
-                    <span>{t('navbar.home')}</span>
-                </NavLink>
-                <NavLink to="/donate" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
-                    <Heart size={20} className="nav-icon" />
-                    <span>{t('navbar.browseDonations')}</span>
-                </NavLink>
-                <NavLink to="/events" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
-                    <Calendar size={20} className="nav-icon" />
-                    <span>{t('navbar.fundraiseFor')}</span>
-                </NavLink>
-                <NavLink to={user ? "/dashboard" : "/login"} className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
-                    <UserIcon size={20} className="nav-icon" />
-                    <span>{user ? 'My Profile' : t('navbar.signIn')}</span>
-                </NavLink>
-            </div>
+            {!isDeliveryPartner && (
+                <div className="bottom-navbar show-mobile">
+                    <NavLink to="/" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`} end>
+                        <Home size={20} className="nav-icon" />
+                        <span>{t('navbar.home')}</span>
+                    </NavLink>
+                    <NavLink to="/donate" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                        <Heart size={20} className="nav-icon" />
+                        <span>{t('navbar.browseDonations')}</span>
+                    </NavLink>
+                    <NavLink to="/events" className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                        <Calendar size={20} className="nav-icon" />
+                        <span>{t('navbar.fundraiseFor')}</span>
+                    </NavLink>
+                    <NavLink to={user ? "/dashboard" : "/login"} className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
+                        <UserIcon size={20} className="nav-icon" />
+                        <span>{user ? 'My Profile' : t('navbar.signIn')}</span>
+                    </NavLink>
+                </div>
+            )}
 
             {/* Language Selection Modal */}
             <AnimatePresence>

@@ -56,13 +56,12 @@ const AdminDispatch = () => {
             // Use the staff endpoint since delivery boys are staff members
             const res = await api.get('/users/staff');
 
-            // Filter locally for delivery-related roles
-            const filtered = res.data.filter(u => u.roles && u.roles.some(r =>
-                r.name === 'DeliveryBoy' ||
-                r.name === 'Delivery boy' ||
-                r.name === 'Delivery Person' ||
-                u.isSuperAdmin
-            ));
+            const filtered = res.data.filter(u => 
+                u.roles && u.roles.some(r => 
+                    r.name.toLowerCase().includes('delivery') || 
+                    r.name.toLowerCase().includes('dispatch')
+                )
+            );
 
             setDeliveryBoys(filtered);
         } catch (err) {
@@ -257,24 +256,7 @@ const AdminDispatch = () => {
                             </div>
 
                             <div className="assign-form-group">
-                                <label>4. Vehicle Deployment Name</label>
-                                <input 
-                                    type="text"
-                                    placeholder="Enter Vehicle Name (e.g. Sujangarh Express)"
-                                    value={assignPayload.vehicleName}
-                                    onChange={(e) => setAssignPayload({...assignPayload, vehicleName: e.target.value})}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        borderRadius: '10px',
-                                        border: '1.5px solid #e2e8f0',
-                                        fontSize: '0.95rem'
-                                    }}
-                                />
-                            </div>
-
-                            <div className="assign-form-group">
-                                <label>5. Assign Delivery Courier</label>
+                                <label>4. Assign Delivery Courier</label>
                                 <select
                                     required
                                     value={assignPayload.deliveryBoyId}

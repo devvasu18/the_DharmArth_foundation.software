@@ -7,7 +7,8 @@ const {
     verifyPrescription, 
     approveAndCreateOrder,
     approveProvisionBill,
-    getPublicPrescription 
+    getPublicPrescription,
+    reSubmitPrescription
 } = require('../controllers/prescriptionController');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 const { upload } = require('../config/cloudinary');
@@ -23,6 +24,7 @@ const validate = (req, res, next) => {
 };
 
 router.post('/', protect, upload.single('prescription'), uploadPrescription);
+router.post('/:id/re-submit', protect, reSubmitPrescription);
 router.get('/my', protect, getMyPrescriptions);
 router.get('/', protect, checkPermission('Prescription Management', 'view'), getAllPrescriptions);
 router.patch('/:id/verify', 

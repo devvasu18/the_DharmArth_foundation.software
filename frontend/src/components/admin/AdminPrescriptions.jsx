@@ -15,6 +15,9 @@ const AdminPrescriptions = () => {
     const [imageModalSrc, setImageModalSrc] = useState(null);
     const [verifiedItems, setVerifiedItems] = useState([{ medicineName: '', frequency: '', time: '', foodRelation: '', intakeMethod: '', quantity: 1, price: '' }]);
     const [errors, setErrors] = useState([]);
+    const [searchingIndex, setSearchingIndex] = useState(null);
+    const [suggestions, setSuggestions] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
 
     const handleCopyLink = (prescriptionId) => {
         const url = `${window.location.origin}/checkout/${prescriptionId}`;
@@ -76,6 +79,49 @@ const AdminPrescriptions = () => {
         if (errors.includes(index)) {
             setErrors(errors.filter(e => e !== index));
         }
+
+        // Handle Medicine Name Search
+        if (field === 'medicineName') {
+            if (value.length > 2) {
+                searchMargProducts(index, value);
+            } else {
+                setSuggestions([]);
+                setSearchingIndex(null);
+            }
+        }
+    };
+
+    let searchTimeout;
+    const searchMargProducts = (index, query) => {
+        setSearchingIndex(index);
+        setIsSearching(true);
+        if (searchTimeout) clearTimeout(searchTimeout);
+        
+        searchTimeout = setTimeout(async () => {
+            try {
+                const res = await api.get(`/marg/search-products?search=${query}`);
+                setSuggestions(res.data.products || []);
+            } catch (err) {
+                console.error("MARG Search failed", err);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 300);
+    };
+
+    const handleSelectProduct = (index, product) => {
+        const newItems = [...verifiedItems];
+        newItems[index] = {
+            ...newItems[index],
+            medicineName: product.Name,
+            price: product.mrp || product.rateA || 0,
+            fulfillmentStatus: product.totalStock > 0 ? 'In Stock' : 'Shortlisted',
+            margPID: product.PID // Store for reference
+        };
+        setVerifiedItems(newItems);
+        setSuggestions([]);
+        setSearchingIndex(null);
+        toast.success(`Selected: ${product.Name}`);
     };
 
     const handleVerify = async (status) => {
@@ -225,16 +271,40 @@ const AdminPrescriptions = () => {
                                             {verifiedItems.map((item, index) => (
                                                 <div key={index} className="medicine-row-premium" style={{flexDirection: 'column', gap: '15px'}}>
                                                     <div style={{display: 'flex', gap: '10px', width: '100%', alignItems: 'flex-end'}}>
-                                                        <div className="input-group-p name" style={{flex: 1}}>
+                                                        <div className="input-group-p name" style={{flex: 1, position: 'relative'}}>
                                                             <label>Medicine Name</label>
                                                             <input 
                                                                 type="text" 
                                                                 value={item.medicineName}
                                                                 onChange={(e) => handleItemChange(index, 'medicineName', e.target.value)}
-                                                                placeholder="e.g. Paracetamol 500mg"
+                                                                placeholder="Search MARG ERP..."
                                                                 disabled={isReadOnly}
+                                                                autoComplete="off"
                                                                 style={{ borderColor: errors.includes(index) && !item.medicineName ? '#ef4444' : undefined }}
                                                             />
+                                                            {searchingIndex === index && (suggestions.length > 0 || isSearching) && (
+                                                                <div className="marg-suggestions-dropdown">
+                                                                    {isSearching && <div className="suggestion-loading">Searching MARG...</div>}
+                                                                    {suggestions.map((p) => (
+                                                                        <div 
+                                                                            key={p.PID} 
+                                                                            className="suggestion-item"
+                                                                            onClick={() => handleSelectProduct(index, p)}
+                                                                        >
+                                                                            <div className="s-info">
+                                                                                <span className="s-name">{p.Name}</span>
+                                                                                <span className="s-meta">{p.Unit} | {p.Pack} Pack</span>
+                                                                            </div>
+                                                                            <div className="s-pricing">
+                                                                                <span className="s-price">₹{p.mrp || p.rateA || 0}</span>
+                                                                                <span className={`s-stock ${p.totalStock > 0 ? 'in' : 'out'}`}>
+                                                                                    {p.totalStock > 0 ? `${p.totalStock} in stock` : 'Out of Stock'}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <div className="input-group-p qty" style={{width: '60px'}}>
                                                             <label>Qty</label>

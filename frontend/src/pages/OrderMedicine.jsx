@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, FileText, CheckCircle, Clock, AlertCircle, Camera, ShieldCheck, Zap, Truck, ArrowRight, X, Info, MapPin, Plus, Edit2, Phone, User, Share2 } from 'lucide-react';
+import { Upload, FileText, CheckCircle, Clock, AlertCircle, Camera, ShieldCheck, Zap, Truck, ArrowRight, X, Info, MapPin, Plus, Edit2, Phone, User, Share2, ShoppingBag } from 'lucide-react';
 import api, { API_BASE_URL } from '../services/api';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
@@ -81,6 +81,7 @@ const OrderMedicine = () => {
     // Track Order Modal State
     const [trackModalOpen, setTrackModalOpen] = useState(false);
     const [selectedTrackOrder, setSelectedTrackOrder] = useState(null);
+    const [isReorderFlow, setIsReorderFlow] = useState(false);
 
     const [shippingDetails, setShippingDetails] = useState({
         _id: null,
@@ -158,14 +159,14 @@ const OrderMedicine = () => {
                     // Using a free reverse geocoding API (BigDataCloud or similar)
                     const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
                     const data = await res.json();
-                    
+
                     setShippingDetails(prev => ({
                         ...prev,
                         city: data.city || data.locality || '',
                         state: data.principalSubdivision || '',
                         zip: data.postcode || ''
                     }));
-                    
+
                     toast.dismiss();
                     toast.success("Location detected!");
                     if (!data.postcode) {
@@ -279,12 +280,62 @@ const OrderMedicine = () => {
         }
     };
 
-    const openCheckoutModal = (prescription) => {
+    const handleReorder = async (prescription) => {
+        setShowRecentModal(false);
+        try {
+            // 1. Get PIDs from verified items
+            const pids = prescription.verifiedItems
+                ?.map(i => i.margPID)
+                .filter(pid => pid !== undefined);
+
+            if (!pids || pids.length === 0) {
+                // If no MARG mapping exists yet (old data), just proceed to checkout for verification
+                openCheckoutModal(prescription, true);
+                return;
+            }
+
+            // 2. Check stock in bulk
+            toast.loading('Checking current stock...', { id: 'stock-check' });
+            const res = await api.post('/marg/check-stock-bulk', { pids });
+            const availability = res.data.availability || {};
+
+            // 3. Determine if everything is in stock
+            const allInStock = pids.every(pid => availability[pid] === true);
+
+            if (allInStock) {
+                toast.success('All items in stock!', { id: 'stock-check' });
+                setShowRecentModal(false);
+                openCheckoutModal(prescription, true);
+            } else {
+                // 4. If any item is out of stock, re-submit as prescription request
+                toast('Some items out of stock. Re-submitting as request...', { id: 'stock-check', icon: '⏳' });
+
+                await api.post(`/prescriptions/${prescription._id}/re-submit`);
+
+                setShowRecentModal(false);
+                showAlert({
+                    title: 'Stock Update',
+                    message: 'Some medicines from your previous order are currently out of stock. We have automatically re-submitted your prescription as a new request. Our pharmacists will verify and notify you once they are available.',
+                    confirmText: 'Got it',
+                    showCancel: false
+                });
+
+                // Refresh data to show the new pending prescription
+                fetchTrackingInfo();
+            }
+        } catch (err) {
+            console.error('Reorder failed', err);
+            toast.error('Could not verify stock. Please try again.', { id: 'stock-check' });
+        }
+    };
+
+    const openCheckoutModal = (prescription, isReorder = false) => {
         const availableItems = prescription.verifiedItems?.filter(i => i.isAvailable) || [];
         if (availableItems.length === 0) {
             toast.error('No verified items are available for checkout.');
             return;
         }
+        setIsReorderFlow(isReorder);
         setSelectedPrescription(prescription);
         setCheckoutSuccess(false);
         setCheckoutError(null);
@@ -327,13 +378,20 @@ const OrderMedicine = () => {
 
             <main className="order-medicine-main">
                 {/* Hero Header */}
-                <section className="hero-head">
-                    <div className="container">
-
-                        <h1>Order Medicines with Ease</h1>
-                        <p>Our pharmacists bridge the gap between your prescription and doorstep. Fast, secure, and reliable delivery via our dedicated transport network.</p>
+                <div className="hero-head">
+                    <div className="badge-pill">Premium Pharmacy Service</div>
+                    <h1>Order Medicine</h1>
+                    <p>Upload your doctor's receipt and let our certified pharmacists handle the rest. We deliver directly to your doorstep via our trusted network.</p>
+                    <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'center', gap: '15px' }}>
+                        <button 
+                            className="refresh-btn" 
+                            onClick={() => navigate('/order-history')}
+                            style={{ background: '#3182ce', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '15px' }}
+                        >
+                            <Clock size={18} /> View Order History
+                        </button>
                     </div>
-                </section>
+                </div>
 
                 {/* Info Steps */}
                 <section className="steps-sec">
@@ -342,7 +400,7 @@ const OrderMedicine = () => {
                             <div className="step-card">
                                 <div className="step-icon"><Camera size={24} /></div>
                                 <h4>1. Upload Photo</h4>
-                                <p>Take a clear photo of your doctor's prescription.</p>
+                                <p>Take a clear photo of your doctor's receipt.</p>
                             </div>
                             <div className="step-arrow"><ArrowRight /></div>
                             <div className="step-card">
@@ -400,11 +458,11 @@ const OrderMedicine = () => {
 
                                     <div style={{ marginTop: '20px' }}>
                                         <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '8px', display: 'block' }}>Optional Notes (Medicines/Quantity)</label>
-                                        <textarea 
+                                        <textarea
                                             value={notes}
                                             onChange={(e) => setNotes(e.target.value)}
                                             placeholder="Mention specific brand or additional instructions..."
-                                            style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '13px', minHeight: '80px', resize: 'none' }}
+                                            style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', background: '#f8fafc', fontSize: '13px', minHeight: '80px', resize: 'none' }}
                                         />
                                     </div>
 
@@ -438,10 +496,10 @@ const OrderMedicine = () => {
                                     <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
                                 </div>
 
-                                <button 
-                                   className="btn-action-secondary" 
-                                   style={{ width: '100%', padding: '15px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#f8fafc', border: '2px dashed #cbd5e1', color: '#475569', fontWeight: '700' }}
-                                   onClick={() => setShowRecentModal(true)}
+                                <button
+                                    className="btn-action-secondary"
+                                    style={{ width: '100%', padding: '15px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#f8fafc', border: '2px dashed #cbd5e1', color: '#475569', fontWeight: '700' }}
+                                    onClick={() => setShowRecentModal(true)}
                                 >
                                     <Clock size={18} />
                                     Select from Previous (90 Days)
@@ -530,6 +588,7 @@ const OrderMedicine = () => {
                                                                     style={{ background: '#ebf8ff', color: '#2b6cb0', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '5px', border: '1px solid #90cdf4', cursor: 'pointer', outline: 'none' }}
                                                                     onClick={() => {
                                                                         setSelectedPrescription(p);
+                                                                        setIsReorderFlow(false);
                                                                         setCheckoutModalOpen(true);
                                                                     }}
                                                                 >
@@ -596,7 +655,7 @@ const OrderMedicine = () => {
                 <div className="checkout-modal-overlay">
                     <div className="checkout-modal-card">
                         <div className="checkout-header">
-                            <h2>{selectedPrescription.status === 'Ordered' ? 'Order Details & Dosage' : 'Review & Checkout'}</h2>
+                            <h2>{selectedPrescription.status === 'Ordered' ? 'Order Details & Dosage' : 'Confirm Your Reorder'}</h2>
                             <button className="btn-close" onClick={() => setCheckoutModalOpen(false)}>
                                 <X size={24} />
                             </button>
@@ -617,7 +676,7 @@ const OrderMedicine = () => {
                                 <CheckCircle size={20} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
                                 Order placed successfully! Check your dashboard.
                             </div>
-                        ) : selectedPrescription.status === 'Ordered' ? (
+                        ) : (selectedPrescription.status === 'Ordered' && !isReorderFlow) ? (
                             <div className="checkout-alert alert-success" style={{ marginTop: '20px' }}>
                                 <CheckCircle size={20} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
                                 This order has already been placed. Follow the dosage instructions above.
@@ -760,8 +819,13 @@ const OrderMedicine = () => {
 
                                 {checkoutError && <div className="alert alert-error" style={{ padding: '10px', marginTop: 0 }}>{checkoutError}</div>}
 
-                                <button type="submit" className="btn-pay-now" disabled={checkoutLoading}>
-                                    {checkoutLoading ? 'Processing...' : `Confirm & Pay ₹${calculateTotal(selectedPrescription.verifiedItems).toFixed(2)}`}
+                                <button type="submit" className="btn-pay-now" disabled={checkoutLoading} style={{ background: '#1e293b' }}>
+                                    {checkoutLoading ? <div className="loader" style={{ margin: '0 auto' }}></div> : (
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                                            <Zap size={18} fill="currentColor" />
+                                            <span>Confirm & Place Reorder (₹{calculateTotal(selectedPrescription.verifiedItems).toFixed(2)})</span>
+                                        </div>
+                                    )}
                                 </button>
                             </form>
                         )}
@@ -773,13 +837,13 @@ const OrderMedicine = () => {
             {showRecentModal && (
                 <div className="checkout-modal-overlay">
                     <div className="checkout-modal-card" style={{ maxWidth: '600px' }}>
-                        <div className="checkout-header">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <Clock size={24} color="#3182ce" />
-                                <h2 style={{ margin: 0 }}>Recent Prescriptions</h2>
+                        <div className="modal-header-gradient" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '20px 24px' }}>
+                            <div>
+                                <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'white' }}>Recent Verified Prescriptions</h2>
+                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.7, color: 'white' }}>Select an item below to quickly reorder</p>
                             </div>
-                            <button className="btn-close" onClick={() => setShowRecentModal(false)}>
-                                <X size={24} />
+                            <button className="close-btn-light" onClick={() => setShowRecentModal(false)}>
+                                <X size={20} />
                             </button>
                         </div>
 
@@ -791,11 +855,11 @@ const OrderMedicine = () => {
                             {(() => {
                                 const ninetyDaysAgo = new Date();
                                 ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-                                
-                                const recentOnes = myPrescriptions.filter(p => 
-                                    new Date(p.createdAt) >= ninetyDaysAgo && 
+
+                                const recentOnes = myPrescriptions.filter(p =>
+                                    new Date(p.createdAt) >= ninetyDaysAgo &&
                                     (p.status === 'Verified' || p.status === 'Ordered')
-                                );
+                                ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
                                 if (recentOnes.length === 0) {
                                     return (
@@ -807,16 +871,16 @@ const OrderMedicine = () => {
                                 }
 
                                 return recentOnes.map(p => (
-                                    <div 
-                                        key={p._id} 
-                                        className="order-card-premium" 
+                                    <div
+                                        key={p._id}
+                                        className="order-card-premium"
                                         style={{ marginBottom: '15px', padding: '15px', border: '1px solid #e2e8f0' }}
                                     >
                                         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                             <div style={{ width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
-                                                <img 
-                                                    src={p.image.startsWith('http') ? p.image : `${API_BASE_URL}${p.image.startsWith('/') ? '' : '/'}${p.image}`} 
-                                                    alt="Presc" 
+                                                <img
+                                                    src={p.image.startsWith('http') ? p.image : `${API_BASE_URL}${p.image.startsWith('/') ? '' : '/'}${p.image}`}
+                                                    alt="Presc"
                                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                 />
                                             </div>
@@ -831,15 +895,12 @@ const OrderMedicine = () => {
                                                     {p.verifiedItems?.length || 0} Verified Medicines
                                                 </div>
                                             </div>
-                                            <button 
-                                                className="btn-action-primary" 
-                                                style={{ padding: '8px 16px', fontSize: '13px' }}
-                                                onClick={() => {
-                                                    setShowRecentModal(false);
-                                                    openCheckoutModal(p);
-                                                }}
+                                            <button
+                                                className="btn-action-primary"
+                                                style={{ padding: '8px 24px', fontSize: '13px', borderRadius: '10px' }}
+                                                onClick={() => handleReorder(p)}
                                             >
-                                                Select
+                                                Reorder Now
                                             </button>
                                         </div>
                                     </div>
@@ -849,7 +910,7 @@ const OrderMedicine = () => {
                     </div>
                 </div>
             )}
-            
+
             {/* Track Order Detail Modal */}
             {trackModalOpen && selectedTrackOrder && (
                 <div className="order-modal-overlay">
@@ -878,189 +939,183 @@ const OrderMedicine = () => {
 
                         <div className="modal-body-premium">
                             {/* Progress Bar */}
-                            <div className="status-progress-bar">
-                                {['Pending', 'Processing', 'Shipping', 'Delivered'].map((step, idx) => {
-                                    const statuses = {
-                                        'Pending': ['Payment Pending', 'Awaiting Approval'],
-                                        'Processing': ['Processing'],
-                                        'Shipping': ['Out for Delivery'],
-                                        'Delivered': ['Delivered']
-                                    };
+                            <div className="status-progress-bar" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px', position: 'relative' }}>
+                                {/* Progress Line Fill */}
+                                <div className="progress-line-fill" style={{
+                                    position: 'absolute',
+                                    top: '8px',
+                                    left: '10px',
+                                    width: `${(['Pending', 'Processing', 'Out for Delivery', 'Delivered'].indexOf(selectedTrackOrder.status) / 3) * 100}%`,
+                                    height: '2px',
+                                    background: '#38a169',
+                                    zIndex: 1,
+                                    transition: 'width 0.4s ease'
+                                }}></div>
 
-                                    const currentStatus = selectedTrackOrder.status;
-                                    const stepIndex = ['Pending', 'Processing', 'Shipping', 'Delivered'].indexOf(step);
-
-                                    let isActive = false;
-                                    // Logic to determine if step is reached
-                                    if (currentStatus === 'Delivered') isActive = true;
-                                    else if (currentStatus === 'Out for Delivery' && step !== 'Delivered') isActive = true;
-                                    else if (currentStatus === 'Processing' && (step === 'Pending' || step === 'Processing')) isActive = true;
-                                    else if (statuses[step].includes(currentStatus)) isActive = true;
-
-                                    return (
-                                        <div key={step} className={`progress-step ${isActive ? 'active' : ''}`}>
-                                            <div className="step-point"></div>
-                                            <span>{step}</span>
-                                        </div>
-                                    );
-                                })}
+                                <div className={`progress-step ${['Pending', 'Processing', 'Out for Delivery', 'Delivered'].indexOf(selectedTrackOrder.status) >= 0 ? 'active' : ''}`}>
+                                    <div className="step-point"></div>
+                                    <span>Pending</span>
+                                </div>
+                                <div className={`progress-step ${['Processing', 'Out for Delivery', 'Delivered'].indexOf(selectedTrackOrder.status) >= 0 ? 'active' : ''}`}>
+                                    <div className="step-point"></div>
+                                    <span>Processing</span>
+                                </div>
+                                <div className={`progress-step ${['Out for Delivery', 'Delivered'].indexOf(selectedTrackOrder.status) >= 0 ? 'active' : ''}`}>
+                                    <div className="step-point"></div>
+                                    <span>Shipping</span>
+                                </div>
+                                <div className={`progress-step ${selectedTrackOrder.status === 'Delivered' ? 'active' : ''}`}>
+                                    <div className="step-point"></div>
+                                    <span>Delivered</span>
+                                </div>
                             </div>
 
-                            <div className="premium-grid">
-                                {/* Left: Info Panes */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                    <div className="customer-info-pane">
-                                        <div className="pane-header">
-                                            <div className="icon-circle"><MapPin size={18} /></div>
-                                            <h3>Your Pickup Station</h3>
+                            <div className="premium-grid" style={{
+                                display: 'grid',
+                                gridTemplateColumns: (selectedTrackOrder.status === 'Out for Delivery' || selectedTrackOrder.status === 'Delivered') ? '1.1fr 0.9fr' : '1fr',
+                                gap: '30px',
+                                maxWidth: (selectedTrackOrder.status === 'Out for Delivery' || selectedTrackOrder.status === 'Delivered') ? '100%' : '600px',
+                                margin: '0 auto'
+                            }}>
+                                {/* Box 1: Dispatch & Logistics (Conditionally Shown) */}
+                                {(selectedTrackOrder.status === 'Out for Delivery' || selectedTrackOrder.status === 'Delivered') && (
+                                    <section className="customer-info-pane" style={{ display: 'flex', flexDirection: 'column', minHeight: '550px', background: 'white', borderRadius: '20px', border: '2px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' }}>
+                                        <div className="pane-header" style={{ background: '#f8fafc', padding: '12px 20px', borderBottom: '2px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div className="icon-circle" style={{ width: '32px', height: '32px', background: 'white', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }}><Truck size={18} /></div>
+                                            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', margin: 0 }}>Dispatch & Logistics</h3>
                                         </div>
-                                        <div className="pane-content">
-                                            <div className="pill-info">
-                                                <span className="label">Vehicle</span>
-                                                <span className="value">{selectedTrackOrder.dispatchDetails?.vehicleName || selectedTrackOrder.dispatchDetails?.busId?.busName || 'Express'} ({selectedTrackOrder.dispatchDetails?.busId?.busNumber || 'N/A'})</span>
-                                            </div>
-
-                                            <div className="data-row">
-                                                <span className="data-label">Contact Number</span>
-                                                <span className="data-value">{selectedTrackOrder.shippingAddress?.phone}</span>
-                                            </div>
-                                            <div className="data-row">
-                                                <span className="data-label">Shipping Address</span>
-                                                <span className="data-value address">
-                                                    {selectedTrackOrder.shippingAddress?.street},<br />
-                                                    {selectedTrackOrder.shippingAddress?.city}, {selectedTrackOrder.shippingAddress?.zip}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {selectedTrackOrder.dispatchDetails && (
-                                        <div className="customer-info-pane" style={{ borderColor: '#3b82f6', background: '#eff6ff' }}>
-                                            <div className="pane-header" style={{ background: '#dbeafe', borderBottomColor: '#bfdbfe' }}>
-                                                <div className="icon-circle" style={{ background: '#3b82f6', color: 'white' }}><Truck size={18} /></div>
-                                                <h3>Dispatch & Logistics</h3>
-                                            </div>
-                                            <div className="pane-content">
+                                        <div className="pane-content" style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                            <div className="pill-info" style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px' }}>
                                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                                                     <div className="data-row">
-                                                        <span className="data-label" style={{ color: '#3b82f6' }}>Vehicle Name</span>
-                                                        <span className="data-value" style={{ color: '#1d4ed8' }}>{selectedTrackOrder.dispatchDetails.vehicleName || selectedTrackOrder.dispatchDetails.busName || 'Express Bus'}</span>
+                                                        <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Vehicle Name</span>
+                                                        <span className="data-value" style={{ display: 'block', fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>{selectedTrackOrder.dispatchDetails?.vehicleName || 'N/A'}</span>
                                                     </div>
                                                     <div className="data-row">
-                                                        <span className="data-label" style={{ color: '#3b82f6' }}>Bus Number</span>
-                                                        <span className="data-value" style={{ color: '#1d4ed8' }}>{selectedTrackOrder.dispatchDetails.busNumber}</span>
+                                                        <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Bus Number</span>
+                                                        <span className="data-value" style={{ display: 'block', fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>{selectedTrackOrder.dispatchDetails?.busNumber || 'N/A'}</span>
                                                     </div>
                                                 </div>
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                                    <div className="data-row">
-                                                        <span className="data-label" style={{ color: '#3b82f6' }}>Meet Bus At</span>
-                                                        <span className="data-value" style={{ color: '#1d4ed8', fontWeight: 'bold' }}>{selectedTrackOrder.dispatchDetails?.pickupStoppage || 'Fetching...'}</span>
-                                                    </div>
-                                                    <div className="data-row">
-                                                        <span className="data-label" style={{ color: '#3b82f6' }}>Be Ready At</span>
-                                                        <span className="data-value" style={{ color: '#059669', fontWeight: 'bold' }}>{selectedTrackOrder.dispatchDetails?.estimatedArrivalTime || 'TBD'}</span>
-                                                    </div>
+                                            </div>
+
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                                <div className="data-row">
+                                                    <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Meet Bus At</span>
+                                                    <span className="data-value" style={{ display: 'block', fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>{selectedTrackOrder.dispatchDetails?.pickupStoppage || 'Finalizing Station...'}</span>
                                                 </div>
                                                 <div className="data-row">
-                                                    <span className="data-label" style={{ color: '#3b82f6' }}>Conductor Contact</span>
-                                                    <a href={`tel:${selectedTrackOrder.dispatchDetails.conductorNumber}`} className="data-value" style={{ color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-                                                        <Phone size={16} /> {selectedTrackOrder.dispatchDetails.conductorNumber}
-                                                    </a>
+                                                    <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Driver Number</span>
+                                                    <span className="data-value" style={{ display: 'block', fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>{selectedTrackOrder.dispatchDetails?.conductorNumber || selectedTrackOrder.shippingAddress?.phone}</span>
                                                 </div>
-                                                {/* Fetch live image from the Bus document via populated busId */}
-                                                <div className="data-row" style={{ marginTop: '10px' }}>
-                                                    <span className="data-label" style={{ color: '#3b82f6' }}>Vehicle Photo</span>
-                                                    <div
-                                                        className="bus-image-preview"
-                                                        style={{
-                                                            marginTop: '8px',
-                                                            borderRadius: '12px',
-                                                            overflow: 'hidden',
-                                                            cursor: 'pointer',
-                                                            border: '2px solid white',
-                                                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
-                                                            background: '#cbd5e1'
-                                                        }}
-                                                        onClick={() => {
-                                                            const finalImg = selectedTrackOrder.dispatchDetails.busId?.image || selectedTrackOrder.dispatchDetails.busImage;
-                                                            if (finalImg) setImageModalSrc(finalImg);
-                                                        }}
-                                                    >
-                                                        {(() => {
-                                                            const liveImage = selectedTrackOrder.dispatchDetails.busId?.image;
-                                                            const snapshotImage = selectedTrackOrder.dispatchDetails.busImage;
-                                                            const finalImage = liveImage || snapshotImage;
+                                            </div>
 
-                                                            if (!finalImage) return <div style={{ padding: '20px', textAlign: 'center', fontSize: '11px', color: '#94a3b8' }}>No Photo Available</div>;
+                                            <div className="data-row" style={{ marginTop: '5px' }}>
+                                                <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Estimated Arrival</span>
+                                                <span className="data-value" style={{ display: 'block', fontSize: '24px', fontWeight: '900', color: '#3b82f6' }}>{selectedTrackOrder.dispatchDetails?.estimatedArrivalTime || 'Awaiting Schedule'}</span>
+                                            </div>
 
-                                                            const resolvedUrl = finalImage.startsWith('http')
-                                                                ? finalImage
-                                                                : `${API_BASE_URL}${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
+                                            <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', background: '#f8fafc', cursor: 'pointer', height: '140px', marginTop: 'auto' }} onClick={() => {
+                                                const img = selectedTrackOrder.dispatchDetails?.busId?.image || selectedTrackOrder.dispatchDetails?.busImage;
+                                                if (img) setImageModalSrc(img);
+                                            }}>
+                                                {(() => {
+                                                    const finalImage = selectedTrackOrder.dispatchDetails?.busId?.image || selectedTrackOrder.dispatchDetails?.busImage;
+                                                    if (!finalImage) return <div style={{ padding: '50px', textAlign: 'center', fontSize: '11px', color: '#94a3b8' }}>Identity Photo Pending</div>;
+                                                    const resolvedUrl = finalImage.startsWith('http')
+                                                        ? finalImage
+                                                        : `${API_BASE_URL}${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
+                                                    return <img src={resolvedUrl} alt="Bus" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />;
+                                                })()}
+                                            </div>
+                                        </div>
+                                    </section>
+                                )}
 
-                                                            return (
-                                                                <img
-                                                                    src={resolvedUrl}
-                                                                    alt="Bus"
-                                                                    style={{ width: '100%', height: '120px', objectFit: 'cover' }}
-                                                                />
-                                                            );
-                                                        })()}
-                                                        <div style={{ background: 'rgba(0,0,0,0.5)', color: 'white', padding: '4px', textAlign: 'center', fontSize: '10px', fontWeight: 'bold' }}>
-                                                            CLICK TO ZOOM
+                                {/* Box 2: Order Summary */}
+                                <section className="items-info-pane" style={{ display: 'flex', flexDirection: 'column', minHeight: '550px', background: 'white', borderRadius: '24px', border: '2px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
+                                    <div className="pane-header" style={{ background: '#f8fafc', padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div className="icon-circle" style={{ width: '36px', height: '36px', background: '#38a169', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}><ShoppingBag size={20} /></div>
+                                            <h3 style={{ fontSize: '14px', fontWeight: '800', textTransform: 'uppercase', margin: 0, color: '#1e293b' }}>Order Summary</h3>
+                                        </div>
+                                        <div style={{ fontSize: '10px', background: '#dcfce7', color: '#166534', padding: '4px 10px', borderRadius: '20px', fontWeight: '800', textTransform: 'uppercase' }}>Verified Packet</div>
+                                    </div>
+
+                                    <div className="pane-content" style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                        <div className="medicine-items-scroll" style={{ flex: 1, marginBottom: '20px' }}>
+                                            {selectedTrackOrder.items.map((item, idx) => (
+                                                <div key={idx} style={{ display: 'flex', gap: '15px', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
+                                                    <div style={{ width: '40px', height: '40px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                        <span style={{ fontSize: '16px' }}>💊</span>
+                                                    </div>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                            <span style={{ fontWeight: '700', color: '#1e293b', fontSize: '14px', lineHeight: '1.2' }}>{item.name || item.medicineName}</span>
+                                                            <span style={{ fontWeight: '800', color: '#1e293b', fontSize: '14px' }}>₹{item.price?.toFixed(2)}</span>
+                                                        </div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+                                                            <span style={{ fontSize: '12px', color: '#94a3b8' }}>{item.quantity} Unit{item.quantity > 1 ? 's' : ''}</span>
+                                                            {item.frequency && (
+                                                                <span style={{ width: '3px', height: '3px', background: '#cbd5e1', borderRadius: '50%' }}></span>
+                                                            )}
+                                                            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>{item.frequency}</span>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div style={{ marginTop: '15px', padding: '12px', background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '8px', fontSize: '11px', color: '#92400e', lineHeight: '1.4' }}>
-                                                    <strong>Station Pickup Note:</strong> Please reach the station 5 minutes before the "Be Ready" time. Keep your phone handy to coordinate with the bus conductor in case of minor delay.
+                                            ))}
+                                        </div>
+
+                                        <div className="receipt-footer" style={{ background: '#f8fafc', padding: '20px', borderRadius: '20px', border: '1px solid #f1f5f9' }}>
+                                            <div style={{ marginBottom: '15px' }}>
+                                                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.5px' }}>Deliver To</div>
+                                                <div style={{ fontSize: '13px', color: '#475569', fontWeight: '600', lineHeight: '1.4' }}>
+                                                    {selectedTrackOrder.shippingAddress?.street},<br />
+                                                    {selectedTrackOrder.shippingAddress?.city} - {selectedTrackOrder.shippingAddress?.zip}
                                                 </div>
+                                            </div>
+
+                                            <div style={{ borderTop: '1px dashed #e2e8f0', margin: '15px 0', paddingTop: '15px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                    <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '600' }}>Items Total</span>
+                                                    <span style={{ fontSize: '13px', color: '#475569', fontWeight: '700' }}>₹{selectedTrackOrder.totalAmount.toFixed(2)}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #e2e8f0' }}>
+                                                    <span style={{ fontSize: '15px', color: '#1e293b', fontWeight: '800' }}>Amount Paid</span>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <div style={{ fontSize: '22px', color: '#16a34a', fontWeight: '900', lineHeight: '1' }}>₹{selectedTrackOrder.totalAmount.toFixed(2)}</div>
+                                                        <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '700', textTransform: 'uppercase', marginTop: '4px' }}>✓ Transaction Success</div>
+                                                    </div>
+                                                </div>
+
+                                                <button
+                                                    onClick={() => window.open(`${API_BASE_URL}/api/orders/public/${selectedTrackOrder._id}/invoice`, '_blank')}
+                                                    style={{
+                                                        width: '100%',
+                                                        marginTop: '20px',
+                                                        padding: '12px',
+                                                        borderRadius: '12px',
+                                                        background: '#fff',
+                                                        border: '1px solid #e2e8f0',
+                                                        color: '#475569',
+                                                        fontWeight: '700',
+                                                        fontSize: '12px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '8px',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    onMouseOver={(e) => e.target.style.background = '#f1f5f9'}
+                                                    onMouseOut={(e) => e.target.style.background = '#fff'}
+                                                >
+                                                    <FileText size={16} />
+                                                    Download Digital Invoice
+                                                </button>
                                             </div>
                                         </div>
-                                    )}
-                                </div>
-
-                                {/* Right: Items Pane */}
-                                <div className="items-info-pane">
-                                    <div className="pane-header">
-                                        <div className="icon-circle"><CheckCircle size={18} /></div>
-                                        <h3>Medicines Packet</h3>
                                     </div>
-                                    <div className="premium-medicine-list">
-                                        {selectedTrackOrder.items.map((item, idx) => (
-                                            <div key={idx} className="premium-med-card">
-                                                <div className="med-main">
-                                                    <div className="med-info">
-                                                        <span className="name">{item.name}</span>
-                                                        <span className="meta">Qty: {item.quantity} units</span>
-                                                    </div>
-                                                    <div className="med-price-total">₹{item.price?.toFixed(2)}</div>
-                                                </div>
-                                                {(item.frequency || item.time || item.foodRelation) && (
-                                                    <div className="dosage-strip">
-                                                        <Clock size={12} />
-                                                        <span>{item.frequency}</span>
-                                                        <span className="dot">•</span>
-                                                        <span>{item.time}</span>
-                                                        <span className="dot">•</span>
-                                                        <span>{item.foodRelation}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-
-                                        <div className="modal-summary-footer" style={{ marginTop: '10px' }}>
-                                            <div className="summary-details">
-                                                <div className="summary-row">
-                                                    <span>Order Total</span>
-                                                    <span>₹{selectedTrackOrder.totalAmount.toFixed(2)}</span>
-                                                </div>
-                                                <div className="summary-row grand-total">
-                                                    <span>Total Paid</span>
-                                                    <span>₹{selectedTrackOrder.totalAmount.toFixed(2)}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                </section>
                             </div>
                         </div>
 
@@ -1099,8 +1154,8 @@ const OrderMedicine = () => {
                             <p style={{ marginBottom: '15px', fontWeight: '600', color: '#4a5568' }}>This will be verified within 24-48 hours.</p>
                             <p>Once verified, you will need to provide your delivery address and confirm the final amount to complete the order. You can track this process from the <strong>Activity Log</strong> on this page.</p>
                         </div>
-                        <button 
-                            className="btn-submit-premium" 
+                        <button
+                            className="btn-submit-premium"
                             style={{ marginTop: '0' }}
                             onClick={() => setShowPostUploadModal(false)}
                         >

@@ -6,6 +6,7 @@ const Order = require('../models/Order');
 const getMyOrders = async (req, res) => {
     try {
         const orders = await Order.find({ user: req.user._id })
+            .populate('prescription', 'image')
             .populate('dispatchDetails.busId')
             .sort({ createdAt: -1 });
 

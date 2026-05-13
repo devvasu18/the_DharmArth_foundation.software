@@ -161,6 +161,7 @@ const AdminLayout = () => {
 
         if (location.pathname.includes('/admin/prescriptions') ||
             location.pathname.includes('/admin/delivery') ||
+            location.pathname.includes('/admin/create-delivery-boy') ||
             location.pathname.includes('/admin/dispatch') ||
             location.pathname.includes('/admin/pharmacy-orders')) {
             setPharmacyDropdownOpen(true);
@@ -296,7 +297,7 @@ const AdminLayout = () => {
                                 <Calendar size={20} title={isSidebarCollapsed ? "Event Management" : ""} />
                                 <span className="admin-link-text">Events</span>
                             </div>
-                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isEventsDropdownOpen || location.pathname === '/admin/events' || location.pathname.includes('/admin/events-header') || location.pathname.includes('/admin/event-videos') || location.pathname.includes('/admin/galleries') ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
+                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isEventsDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
                         </div>
 
                         {isEventsDropdownOpen && (
@@ -352,10 +353,10 @@ const AdminLayout = () => {
                                 <Stethoscope size={20} title={isSidebarCollapsed ? "Doctors" : ""} />
                                 <span className="admin-link-text">Doctors</span>
                             </div>
-                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isDoctorsDropdownOpen || location.pathname.includes('/admin/doctors') || location.pathname.includes('/admin/availability') ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
+                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isDoctorsDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
                         </div>
 
-                        {(isDoctorsDropdownOpen || location.pathname.includes('/admin/doctors') || location.pathname.includes('/admin/availability')) && (
+                        {isDoctorsDropdownOpen && (
                             <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
                                 <NavLink
                                     to="/admin/doctors"
@@ -382,6 +383,7 @@ const AdminLayout = () => {
                         <div
                             className={`admin-link ${location.pathname.includes('/admin/prescriptions') ||
                                 location.pathname.includes('/admin/delivery') ||
+                                location.pathname.includes('/admin/create-delivery-boy') ||
                                 location.pathname.includes('/admin/dispatch') ||
                                 location.pathname.includes('/admin/pharmacy-orders')
                                 ? 'active' : ''
@@ -398,10 +400,10 @@ const AdminLayout = () => {
                                 <FileText size={20} title={isSidebarCollapsed ? "Pharmacy" : ""} />
                                 <span className="admin-link-text">Pharmacy & Delivery</span>
                             </div>
-                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isPharmacyDropdownOpen || location.pathname.includes('/admin/prescriptions') || location.pathname.includes('/admin/delivery') || location.pathname.includes('/admin/dispatch') || location.pathname.includes('/admin/pharmacy-orders') ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
+                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isPharmacyDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
                         </div>
 
-                        {(isPharmacyDropdownOpen || location.pathname.includes('/admin/prescriptions') || location.pathname.includes('/admin/delivery') || location.pathname.includes('/admin/dispatch') || location.pathname.includes('/admin/pharmacy-orders')) && (
+                        {isPharmacyDropdownOpen && (
                             <div className="admin-dropdown-links" style={{ paddingLeft: 35, display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
                                 <NavLink
                                     to="/admin/prescriptions"
@@ -438,6 +440,13 @@ const AdminLayout = () => {
                                 >
                                     Pharmacy Settings
                                 </NavLink>
+                                <NavLink
+                                    to="/admin/create-delivery-boy"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
+                                    Create Delivery Boy
+                                </NavLink>
                             </div>
                         )}
                     </div>
@@ -458,7 +467,7 @@ const AdminLayout = () => {
                                 <FileText size={20} title={isSidebarCollapsed ? "Reports" : ""} />
                                 <span className="admin-link-text">Reports</span>
                             </div>
-                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isReportsDropdownOpen || location.pathname.includes('/admin/reports') ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
+                            {!isSidebarCollapsed && <ChevronDown size={14} style={{ transform: isReportsDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />}
                         </div>
 
                         {isReportsDropdownOpen && (

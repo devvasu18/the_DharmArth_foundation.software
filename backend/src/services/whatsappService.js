@@ -440,6 +440,20 @@ class WhatsappService {
     }
 
     /**
+     * Specialized: Send Delivery Assignment WhatsApp Notification
+     */
+    async sendDeliveryAssignmentNotification(mobile, name, vehicleName, pickupStoppage) {
+        const lang = await this._getRecipientLanguage(mobile);
+        const template = await this._getTemplate('whatsapp_delivery_assignment_template', lang)
+            || (lang === 'hi' 
+                ? "नमस्ते {name}, आपको एक नया कूरियर सौंपा गया है। कृपया इसे {pickupStoppage} पर {vehicleName} बस को सौंपें। सुरक्षित यात्रा! 🚚" 
+                : "Hello {name}, a new courier has been assigned to you. Please deliver it to the bus {vehicleName} at {pickupStoppage}. Safe travels! 🚚");
+            
+        const message = this._replacePlaceholders(template, { name, vehicleName, pickupStoppage });
+        return this.sendMessage(mobile, message, { type: 'delivery_assignment' });
+    }
+
+    /**
      * Specialized: Send OTP via Email
      */
     async sendOTPByEmail(email, otp, name = "User") {

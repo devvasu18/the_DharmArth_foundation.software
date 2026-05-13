@@ -94,6 +94,90 @@ exports.getInvoices = async (req, res) => {
     }
 };
 
+exports.searchProductsWithStock = async (req, res) => {
+    try {
+        const { search = '' } = req.query;
+        if (!search || search.length < 2) {
+            return res.json({ products: [] });
+        }
+
+        const products = await MargProduct.aggregate([
+            {
+                $match: {
+                    Name: new RegExp(search, 'i')
+                }
+            },
+            {
+                $lookup: {
+                    from: 'margstocks', // collection name for MargStock
+                    let: { pid: '$PID', cid: '$CompanyID' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ['$PID', '$$pid'] },
+                                        { $eq: ['$CompanyID', '$$cid'] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    as: 'stocks'
+                }
+            },
+            {
+                $project: {
+                    Name: 1,
+                    PID: 1,
+                    Code: 1,
+                    Unit: 1,
+                    Pack: 1,
+                    totalStock: { $sum: '$stocks.Stock' },
+                    mrp: { $max: '$stocks.MRP' },
+                    rateA: { $max: '$stocks.RateA' }
+                }
+            },
+            { $limit: 10 },
+            { $sort: { Name: 1 } }
+        ]);
+
+        res.json({ products });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.checkStockBulk = async (req, res) => {
+    try {
+        const { pids = [] } = req.body;
+        if (!pids.length) return res.json({ available: {} });
+
+        const stocks = await MargStock.aggregate([
+            {
+                $match: {
+                    PID: { $in: pids.map(Number) }
+                }
+            },
+            {
+                $group: {
+                    _id: '$PID',
+                    totalStock: { $sum: '$Stock' }
+                }
+            }
+        ]);
+
+        const availabilityMap = {};
+        stocks.forEach(s => {
+            availabilityMap[s._id] = s.totalStock > 0;
+        });
+
+        res.json({ availability: availabilityMap });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 exports.triggerSync = async (req, res) => {
     try {
         // Run sync in background

@@ -11,7 +11,8 @@ import {
     ShoppingBag,
     Phone,
     User,
-    Shield
+    Shield,
+    FileText
 } from 'lucide-react';
 import './OrderMedicine.css'; // Reuse styles
 

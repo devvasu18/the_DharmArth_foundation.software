@@ -4,10 +4,10 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { useConfirm } from '../context/ConfirmContext';
 import toast from 'react-hot-toast';
-import { 
-    Truck, MapPin, Phone, CheckCircle, Package, 
-    Navigation, CreditCard, ClipboardList, Clock, 
-    ChevronRight, LogOut 
+import {
+    Truck, MapPin, Phone, CheckCircle, Package,
+    Navigation, CreditCard, ClipboardList, Clock,
+    ChevronRight, LogOut, X
 } from 'lucide-react';
 import './DeliveryBoyDashboard.css';
 
@@ -15,7 +15,7 @@ const DeliveryBoyDashboard = () => {
     const { showAlert, showConfirm } = useConfirm();
     const [assignments, setAssignments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('Assigned'); 
+    const [filter, setFilter] = useState('Assigned');
     const [userData, setUserData] = useState(null);
     const [imageModalSrc, setImageModalSrc] = useState(null);
 
@@ -74,33 +74,9 @@ const DeliveryBoyDashboard = () => {
         setShowHandoverModal(true);
     };
 
-    const handleHandoverImageUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const formData = new FormData();
-        formData.append('image', file);
-        
-        setUploading(true);
-        try {
-            const res = await api.post('/upload', formData);
-            setHandoverDetails(prev => ({ ...prev, handoverImage: res.data.url }));
-            toast.success("Bus photo uploaded!");
-        } catch (err) {
-            toast.error("Photo upload failed");
-        } finally {
-            setUploading(false);
-        }
-    };
-
     const handleCompleteHandover = async () => {
-        if (!handoverDetails.handoverImage) {
-            toast.error("Please upload a photo of the bus/vehicle");
-            return;
-        }
-
         try {
-            await api.patch(`/delivery/assignments/${selectedAssignment._id}/status`, { 
+            await api.patch(`/delivery/assignments/${selectedAssignment._id}/status`, {
                 status: 'Delivered',
                 ...handoverDetails
             });
@@ -136,10 +112,10 @@ const DeliveryBoyDashboard = () => {
     return (
         <div className="delivery-dashboard-page">
             <Navbar />
-            
+
             <div className="delivery-dashboard">
                 <main className="delivery-container">
-                    
+
                     {/* Hero Profile Header */}
                     <div className="delivery-header">
                         <div className="rider-profile">
@@ -158,13 +134,19 @@ const DeliveryBoyDashboard = () => {
 
                     {/* Quick Stats Grid */}
                     <div className="stats-row" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                        <div className="stat-card">
-                            <span className="label">Today Orders</span>
-                            <span className="value">{stats.today}</span>
+                        <div className="stat-card" style={{ background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', border: '1px solid #bbf7d0', textAlign: 'left', padding: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                <span className="label" style={{ margin: 0, color: '#166534' }}>Today Orders</span>
+                                <Package size={20} color="#166534" style={{ opacity: 0.8 }} />
+                            </div>
+                            <span className="value" style={{ color: '#14532d', fontSize: '1.8rem' }}>{stats.today}</span>
                         </div>
-                        <div className="stat-card">
-                            <span className="label">Completed</span>
-                            <span className="value">{stats.completed}</span>
+                        <div className="stat-card" style={{ background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', border: '1px solid #bfdbfe', textAlign: 'left', padding: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                <span className="label" style={{ margin: 0, color: '#1e40af' }}>Completed</span>
+                                <CheckCircle size={20} color="#1e40af" style={{ opacity: 0.8 }} />
+                            </div>
+                            <span className="value" style={{ color: '#1e3a8a', fontSize: '1.8rem' }}>{stats.completed}</span>
                         </div>
                     </div>
 
@@ -200,62 +182,62 @@ const DeliveryBoyDashboard = () => {
                                     <div className="card-header">
                                         <div className="order-badge">#{a.orderId?._id?.slice(-8).toUpperCase()}</div>
                                         <div className={`status-indicator ${a.status.toLowerCase().replace(' ', '-')}`}>
-                                            <div className="dot" style={{width:8, height:8, borderRadius:'50%', background:'currentColor'}}></div>
+                                            <div className="dot" style={{ width: 8, height: 8, borderRadius: '50%', background: 'currentColor' }}></div>
                                             {a.status}
                                         </div>
                                     </div>
 
                                     <div className="customer-section">
                                         <h2 className="customer-name">{a.orderId?.user?.name || 'Valued Customer'}</h2>
-                                        
+
                                         <a href={`tel:${a.orderId?.user?.mobile}`} className="phone-strip">
-                                            <Phone size={16} /> 
+                                            <Phone size={16} />
                                             {a.orderId?.user?.mobile}
                                         </a>
 
                                         <div className="address-box">
                                             <MapPin size={22} className="text-gray-400" />
                                             <div>
-                                                <p style={{margin:0, fontWeight:700}}>Dispatch Point (Bus Stand)</p>
-                                                <p style={{margin:0, fontSize:'0.95rem'}}>{a.orderId?.shippingAddress?.street}, {a.orderId?.shippingAddress?.city}</p>
+                                                <p style={{ margin: 0, fontWeight: 700 }}>Dispatch Point (Bus Stand)</p>
+                                                <p style={{ margin: 0, fontSize: '0.95rem' }}>{a.orderId?.shippingAddress?.street}, {a.orderId?.shippingAddress?.city}</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                        <div className="logistic-details">
-                                            <div className="pill-info">
-                                                <span className="label">Route</span>
-                                                <span className="value">{a.routeId?.routeName || 'Direct'}</span>
-                                            </div>
-                                            <div className="pill-info">
-                                                <span className="label">Vehicle</span>
-                                                <span className="value">{a.vehicleName || a.busId?.busName || 'Express'} ({a.busId?.busNumber || 'N/A'})</span>
-                                            </div>
+                                    <div className="logistic-details">
+                                        <div className="pill-info">
+                                            <span className="label">Route</span>
+                                            <span className="value">{a.routeId?.routeName || 'Direct'}</span>
                                         </div>
+                                        <div className="pill-info">
+                                            <span className="label">Vehicle</span>
+                                            <span className="value">{a.vehicleName || a.busId?.busName || 'Express'} ({a.busId?.busNumber || 'N/A'})</span>
+                                        </div>
+                                    </div>
 
-                                        <div className="logistic-details" style={{ marginTop: '10px', background: '#f0fdf4', borderColor: '#dcfce7' }}>
-                                            <div className="pill-info">
-                                                <span className="label" style={{ color: '#166534' }}>Receive At</span>
-                                                <span className="value" style={{ color: '#166534', fontWeight: '700' }}>{a.pickupStoppage || a.orderId?.dispatchDetails?.pickupStoppage || 'Scheduled Station'}</span>
-                                            </div>
-                                            <div className="pill-info">
-                                                <span className="label" style={{ color: '#166534' }}>Arrival Time</span>
-                                                <span className="value" style={{ color: '#166534', fontWeight: '700' }}>{a.estimatedArrivalTime || a.orderId?.dispatchDetails?.estimatedArrivalTime || 'Awaiting Sync'}</span>
-                                            </div>
+                                    <div className="logistic-details" style={{ marginTop: '10px', background: '#f0fdf4', borderColor: '#dcfce7' }}>
+                                        <div className="pill-info">
+                                            <span className="label" style={{ color: '#166534' }}>Receive At</span>
+                                            <span className="value" style={{ color: '#166534', fontWeight: '700' }}>{a.pickupStoppage || a.orderId?.dispatchDetails?.pickupStoppage || 'Scheduled Station'}</span>
                                         </div>
+                                        <div className="pill-info">
+                                            <span className="label" style={{ color: '#166534' }}>Arrival Time</span>
+                                            <span className="value" style={{ color: '#166534', fontWeight: '700' }}>{a.estimatedArrivalTime || a.orderId?.dispatchDetails?.estimatedArrivalTime || 'Awaiting Sync'}</span>
+                                        </div>
+                                    </div>
 
                                     {/* Vehicle Photo Preview */}
                                     {(a.busId?.image || a.orderId?.dispatchDetails?.busImage) && (
-                                        <div 
+                                        <div
                                             className="rider-bus-preview"
                                             onClick={() => setImageModalSrc(a.busId?.image || a.orderId?.dispatchDetails?.busImage)}
                                         >
-                                            <img 
+                                            <img
                                                 src={(a.busId?.image || a.orderId?.dispatchDetails?.busImage).startsWith('http')
                                                     ? (a.busId?.image || a.orderId?.dispatchDetails?.busImage)
                                                     : `${API_BASE_URL}${(a.busId?.image || a.orderId?.dispatchDetails?.busImage).startsWith('/') ? '' : '/'}${(a.busId?.image || a.orderId?.dispatchDetails?.busImage)}`
-                                                } 
-                                                alt="Vehicle" 
+                                                }
+                                                alt="Vehicle"
                                             />
                                             <div className="preview-overlay">
                                                 <span>IDENTITY PHOTO • CLICK TO ZOOM</span>
@@ -264,10 +246,6 @@ const DeliveryBoyDashboard = () => {
                                     )}
 
                                     <div className="action-row">
-                                        <button className="btn-nav" onClick={() => openMaps(a.orderId?.shippingAddress)} title="Navigate">
-                                            <Navigation size={22} />
-                                        </button>
-
                                         {a.status === 'Assigned' && (
                                             <button className="btn-main start" onClick={() => updateStatus(a._id, 'In Transit')}>
                                                 Pick up from Pharmacy <ChevronRight size={20} />
@@ -279,9 +257,9 @@ const DeliveryBoyDashboard = () => {
                                                 Hand over to Bus <CheckCircle size={20} />
                                             </button>
                                         )}
-                                        
+
                                         {a.status === 'Delivered' && (
-                                            <button className="btn-main" disabled style={{background:'#f1f5f9', color:'#94a3b8'}}>
+                                            <button className="btn-main" disabled style={{ background: '#f1f5f9', color: '#94a3b8' }}>
                                                 Delivered Successfully
                                             </button>
                                         )}
@@ -292,26 +270,24 @@ const DeliveryBoyDashboard = () => {
                     </div>
                 </main>
             </div>
-            
+
             {/* Image Viewer Modal */}
             {imageModalSrc && (
                 <div className="image-viewer-modal-overlay" onClick={() => setImageModalSrc(null)}>
                     <div className="image-viewer-modal-card" onClick={(e) => e.stopPropagation()}>
                         <button className="btn-close-viewer" onClick={() => setImageModalSrc(null)}>
-                            <LogOut size={24} color="white" style={{transform: 'rotate(180deg)'}} />
+                            <LogOut size={24} color="white" style={{ transform: 'rotate(180deg)' }} />
                         </button>
-                        <img 
-                            src={imageModalSrc.startsWith('http') 
-                                ? imageModalSrc 
+                        <img
+                            src={imageModalSrc.startsWith('http')
+                                ? imageModalSrc
                                 : `${API_BASE_URL}${imageModalSrc.startsWith('/') ? '' : '/'}${imageModalSrc}`
-                            } 
-                            alt="Full View" 
+                            }
+                            alt="Full View"
                         />
                     </div>
                 </div>
             )}
-
-            <Footer />
 
             {/* Handover Data Modal */}
             {showHandoverModal && selectedAssignment && (
@@ -327,9 +303,9 @@ const DeliveryBoyDashboard = () => {
                                 <label>Target Vehicle Reference</label>
                                 <div className="reference-content">
                                     {selectedAssignment.busId?.image ? (
-                                        <img 
-                                            src={selectedAssignment.busId.image.startsWith('http') ? selectedAssignment.busId.image : `${API_BASE_URL}${selectedAssignment.busId.image}`} 
-                                            alt="Reference" 
+                                        <img
+                                            src={selectedAssignment.busId.image.startsWith('http') ? selectedAssignment.busId.image : `${API_BASE_URL}${selectedAssignment.busId.image}`}
+                                            alt="Reference"
                                         />
                                     ) : (
                                         <div className="v-ph">🚌</div>
@@ -343,44 +319,15 @@ const DeliveryBoyDashboard = () => {
 
                             <div className="h-input-group">
                                 <label>Driver/Conductor Number</label>
-                                <input 
-                                    type="tel" 
+                                <input
+                                    type="tel"
                                     placeholder="Enter contact number"
                                     value={handoverDetails.driverNumber}
-                                    onChange={(e) => setHandoverDetails({...handoverDetails, driverNumber: e.target.value})}
+                                    onChange={(e) => setHandoverDetails({ ...handoverDetails, driverNumber: e.target.value })}
                                 />
                             </div>
-                            <div className="h-input-group">
-                                <label>Actual Departure Time</label>
-                                <input 
-                                    type="datetime-local" 
-                                    value={handoverDetails.actualDepartureTime}
-                                    onChange={(e) => setHandoverDetails({...handoverDetails, actualDepartureTime: e.target.value})}
-                                />
-                            </div>
-                            <div className="h-input-group">
-                                <label>Upload Bus Photo (Identity)</label>
-                                <div className="photo-upload-area" onClick={() => document.getElementById('handover-photo').click()}>
-                                    {handoverDetails.handoverImage ? (
-                                        <img 
-                                            src={handoverDetails.handoverImage.startsWith('http') ? handoverDetails.handoverImage : `${API_BASE_URL}${handoverDetails.handoverImage}`} 
-                                            alt="Bus" 
-                                        />
-                                    ) : (
-                                        <div className="photo-placeholder">
-                                            {uploading ? <div className="spinner"></div> : <><Truck size={30} /><p>Click to Capture/Upload Bus Photo</p></>}
-                                        </div>
-                                    )}
-                                    <input 
-                                        type="file" 
-                                        id="handover-photo" 
-                                        hidden 
-                                        onChange={handleHandoverImageUpload} 
-                                        accept="image/*"
-                                        capture="environment"
-                                    />
-                                </div>
-                            </div>
+
+
                         </div>
                         <div className="handover-modal-footer">
                             <button className="btn-cancel" onClick={() => setShowHandoverModal(false)}>Cancel</button>

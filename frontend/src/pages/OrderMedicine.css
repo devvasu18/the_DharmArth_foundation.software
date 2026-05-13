@@ -9,6 +9,9 @@
 .order-medicine-container {
     background: var(--order-bg);
     min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+    position: relative;
 }
 
 .order-medicine-main {
@@ -494,6 +497,28 @@
     .step-arrow {
         transform: rotate(90deg);
         margin: 10px 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-head h1 {
+        font-size: 2rem;
+        padding: 0 15px;
+    }
+    .hero-head p {
+        font-size: 1rem;
+        padding: 0 20px;
+    }
+    .steps-sec {
+        margin-top: -40px;
+        padding: 0 15px;
+    }
+    .glass-card {
+        padding: 20px;
+        border-radius: 20px;
+    }
+    .card-header h3 {
+        font-size: 1.2rem;
     }
 }
 
@@ -1012,14 +1037,246 @@
 
 @media (max-width: 768px) {
     .premium-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
+        max-width: 100% !important;
+        gap: 20px !important;
     }
 
     .status-progress-bar {
-        margin: 0 10px 40px;
+        margin: 0 10px 30px !important;
+    }
+
+    .progress-step {
+        width: 60px !important;
     }
 
     .progress-step span {
-        font-size: 9px;
+        font-size: 9px !important;
+        text-align: center;
+    }
+
+    .order-modal-overlay {
+        align-items: flex-start !important;
+        padding-top: 20px !important;
+        padding-bottom: 20px !important;
+    }
+
+    .premium-modal {
+        width: 98% !important;
+        max-height: 95vh !important;
+        border-radius: 16px !important;
+    }
+
+    .modal-body-premium {
+        padding: 15px !important;
+        max-height: 80vh !important;
+    }
+
+    .modal-header-gradient {
+        padding: 20px !important;
+    }
+
+    .modal-header-gradient h2 {
+        font-size: 18px !important;
+    }
+
+    .customer-info-pane, 
+    .items-info-pane {
+        min-height: auto !important;
+    }
+
+    .pane-content {
+        padding: 16px !important;
+    }
+
+    /* Stack detail rows if they are inside a grid */
+    .pill-info > div,
+    .pane-content > div[style*="display: grid"] {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+}
+
+/* Order History Page Styles */
+.order-history-main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.history-header {
+    margin-bottom: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.back-to-shop {
+    background: none;
+    border: none;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    font-weight: 600;
+    padding: 0;
+}
+
+.history-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #1e293b;
+    letter-spacing: -1px;
+    margin: 0;
+}
+
+.history-header p {
+    color: #64748b;
+    font-size: 1.1rem;
+    margin: 5px 0 0 0;
+}
+
+.history-page-card {
+    min-height: 600px;
+}
+
+.history-tabs {
+    display: flex;
+    background: #f1f5f9;
+    padding: 6px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+}
+
+.history-tabs .tab-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background: transparent;
+    font-weight: 700;
+    transition: all 0.2s;
+    outline: none;
+    font-size: 15px;
+    color: #64748b;
+}
+
+.history-tabs .tab-btn.active {
+    background: #fff;
+    color: var(--order-primary);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+.history-list {
+    max-height: none !important;
+}
+
+.history-item-card {
+    padding: 20px;
+    margin-bottom: 15px;
+    align-items: flex-start;
+}
+
+.history-item-card .presc-thumb {
+    width: 120px;
+    height: 120px;
+    border-radius: 20px;
+}
+
+.order-package-icon {
+    background: #f0fdf4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #16a34a;
+}
+
+.meta-info .order-date {
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.meta-info .order-id {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+.history-action-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.share-link-btn, .external-link-btn {
+    padding: 12px 20px !important;
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 15px !important;
+    color: #64748b !important;
+    background: white !important;
+    width: auto !important;
+}
+
+.track-btn-full {
+    width: auto !important;
+    padding: 10px 24px !important;
+    background: #3182ce !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-size: 14px !important;
+}
+
+.status-msg-box {
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+    margin-top: 10px;
+}
+
+.status-msg-box p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* History Responsive Overrides */
+@media (max-width: 768px) {
+    .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .history-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .history-item-card {
+        flex-direction: column;
+    }
+
+    .history-item-card .presc-thumb {
+        width: 100%;
+        height: 200px;
+        margin-bottom: 15px;
+    }
+
+    .history-tabs .tab-btn {
+        font-size: 13px;
+        padding: 10px 5px;
+    }
+
+    .history-action-row {
+        flex-direction: column;
+    }
+    
+    .share-link-btn, .external-link-btn {
+        width: 100% !important;
     }
 }

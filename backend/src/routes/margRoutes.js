@@ -11,6 +11,8 @@ router.get('/products', margController.getProducts);
 router.get('/parties', margController.getParties);
 router.get('/stocks', margController.getStocks);
 router.get('/invoices', margController.getInvoices);
+router.get('/search-products', margController.searchProductsWithStock);
+router.post('/check-stock-bulk', margController.checkStockBulk);
 router.post('/sync', margController.triggerSync);
 
 module.exports = router;

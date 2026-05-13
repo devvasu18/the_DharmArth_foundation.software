@@ -66,6 +66,9 @@ const DeliveryBoyDashboard = lazy(() => import('./pages/DeliveryBoyDashboard'));
 const SharedCheckout = lazy(() => import('./pages/SharedCheckout'));
 const SharedTracker = lazy(() => import('./pages/SharedTracker'));
 const PharmacySettings = lazy(() => import('./components/admin/PharmacySettings'));
+const AdminCreateDeliveryBoy = lazy(() => import('./components/admin/AdminCreateDeliveryBoy'));
+
+const OrderHistory = lazy(() => import('./pages/OrderHistory'));
 
 import { AuthProvider } from './context/AuthContext';
 import AdminRoute from './components/auth/AdminRoute';
@@ -103,6 +106,7 @@ const router = createBrowserRouter(
       <Route path="/gallery/:id" element={<GalleryDetail />} />
       <Route path="/doctors" element={<DoctorAvailability />} />
       <Route path="/order-medicine" element={<OrderMedicine />} />
+      <Route path="/order-history" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
       
       {/* Protected Rider Route */}
       <Route path="/delivery-boy" element={<ProtectedRoute><DeliveryBoyDashboard /></ProtectedRoute>} />
@@ -140,6 +144,7 @@ const router = createBrowserRouter(
         <Route path="reports/commission" element={<CommissionReports />} />
         <Route path="cms" element={<CMSDashboard />} />
         <Route path="pharmacy-settings" element={<PharmacySettings />} />
+        <Route path="create-delivery-boy" element={<AdminCreateDeliveryBoy />} />
       </Route>
 
       <Route path="/admin-user-explorer" element={<AdminRoute><AdminLayout /></AdminRoute>} errorElement={<AppErrorBoundary />}>

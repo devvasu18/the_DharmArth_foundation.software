@@ -171,6 +171,19 @@ exports.assignDelivery = async (req, res) => {
             }
         });
 
+        // 4. Send WhatsApp Notification to the Delivery Boy
+        const User = require('../models/User');
+        const deliveryBoy = await User.findById(deliveryBoyId);
+        if (deliveryBoy && deliveryBoy.mobile) {
+            const whatsappService = require('../services/whatsappService');
+            await whatsappService.sendDeliveryAssignmentNotification(
+                deliveryBoy.mobile,
+                deliveryBoy.name,
+                vehicleName || bus?.busName || 'Vehicle',
+                pickupStoppage
+            );
+        }
+
         res.status(201).json(assignment);
     } catch (error) {
         res.status(500).json({ message: error.message });

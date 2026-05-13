@@ -355,6 +355,34 @@ router.post('/staff', protect, async (req, res) => {
     }
 });
 
+// @desc    Toggle Staff Status
+// @route   PUT /api/users/staff/:id/status
+// @access  Private/SuperAdmin or Admin with permission
+router.put('/staff/:id/status', protect, async (req, res) => {
+    // Check permission
+    if (!req.user.isSuperAdmin) {
+        const hasPerm = req.user.roles && req.user.roles.some(r =>
+            r.permissions && r.permissions.some(p => p.module === 'Role Management' && p.actions.includes('edit'))
+        );
+        if (!hasPerm) {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+    }
+
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ message: 'Staff member not found' });
+        if (user.isSuperAdmin) return res.status(400).json({ message: 'Cannot suspend Super Admin' });
+
+        user.isSuspended = !user.isSuspended;
+        await user.save();
+
+        res.json({ message: `Staff status updated`, isSuspended: user.isSuspended });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @desc    Assign Role to User
 // @route   POST /api/users/assign-role
 // @access  Private/Admin

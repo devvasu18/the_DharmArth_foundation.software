@@ -336,3 +336,33 @@ exports.getPublicPrescription = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+// @desc    Re-submit an existing prescription as a new request
+// @route   POST /api/prescriptions/:id/re-submit
+// @access  Private
+exports.reSubmitPrescription = async (req, res) => {
+    try {
+        const oldPrescription = await Prescription.findById(req.params.id);
+        if (!oldPrescription) {
+            return res.status(404).json({ message: 'Original prescription not found' });
+        }
+
+        // Create a new record using the same image and user
+        const newPrescription = await Prescription.create({
+            user: req.user._id,
+            image: oldPrescription.image,
+            status: 'Pending',
+            notes: `Re-order request from previous prescription #${oldPrescription._id.toString().slice(-6)}.`,
+            // Carry over verified items to help the pharmacist, but they will need to re-verify stock
+            verifiedItems: oldPrescription.verifiedItems
+        });
+
+        // Notify admin
+        const io = req.app.get('io');
+        const user = await User.findById(req.user._id);
+        await notificationService.notifyPrescriptionUploadedAdmin(newPrescription, user, io);
+
+        res.status(201).json(newPrescription);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
