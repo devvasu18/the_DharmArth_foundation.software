@@ -269,6 +269,25 @@ exports.updateAssignmentStatus = async (req, res) => {
                     'dispatchDetails.busImage': assignment.handoverImage || undefined
                 }
             });
+
+            // Send WhatsApp Notification to Customer
+            try {
+                const updatedOrder = await Order.findById(assignment.orderId).populate('user', 'name mobile');
+                const bus = await Bus.findById(assignment.busId);
+                
+                if (updatedOrder && updatedOrder.user && updatedOrder.user.mobile) {
+                    const whatsappService = require('../services/whatsappService');
+                    await whatsappService.sendOrderShippedToBusNotification(
+                        updatedOrder.user.mobile,
+                        updatedOrder.user.name,
+                        updatedOrder._id,
+                        bus?.busName || 'Express Vehicle',
+                        bus?.busNumber || 'N/A'
+                    );
+                }
+            } catch (notifyErr) {
+                console.error("Handover WhatsApp Notification Error:", notifyErr);
+            }
         } else if (status === 'In Transit') {
             await Order.findByIdAndUpdate(assignment.orderId, { 
                 status: 'Out for Delivery',

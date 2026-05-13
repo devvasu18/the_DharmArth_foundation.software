@@ -203,6 +203,16 @@ const AdminLayout = () => {
             return;
         }
 
+        if (notif.onModel === 'Order' || notif.type === 'ORDER_PAID') {
+            navigate('/admin/pharmacy-orders');
+            return;
+        }
+
+        if (notif.onModel === 'Prescription') {
+            navigate('/admin/prescriptions');
+            return;
+        }
+
         if (notif.referenceId) {
             navigate('/admin/transaction-management', {
                 state: { openTransactionId: notif.referenceId }
@@ -582,9 +592,10 @@ const AdminLayout = () => {
                                                 >
                                                     <div className="notif-icon">
                                                         {notif.type === 'PRESCRIPTION_UPLOADED' ? '📄' :
-                                                            notif.onModel === 'PayoutRequest' ? '💸' :
-                                                                notif.type === 'DONATION' ? '💰' :
-                                                                    notif.type === 'SUBSCRIPTION_CANCELLED' ? '🛑' : '📢'}
+                                                            notif.type === 'ORDER_PAID' ? '💰' :
+                                                                notif.onModel === 'PayoutRequest' ? '💸' :
+                                                                    notif.type === 'DONATION' ? '💰' :
+                                                                        notif.type === 'SUBSCRIPTION_CANCELLED' ? '🛑' : '📢'}
                                                     </div>
                                                     <div className="notif-content">
                                                         <p className="notif-msg">{notif.message}</p>

@@ -31,6 +31,7 @@ const SharedCheckout = () => {
     const [success, setSuccess] = useState(false);
     const [imageModalSrc, setImageModalSrc] = useState(null);
     const [isDetecting, setIsDetecting] = useState(false);
+    const [showLocationHelp, setShowLocationHelp] = useState(false);
 
     const [shippingDetails, setShippingDetails] = useState({
         street: '',
@@ -89,7 +90,8 @@ const SharedCheckout = () => {
             },
             (error) => {
                 setIsDetecting(false);
-                toast.error("Location access failed. Please enter address manually.");
+                console.error("Location error:", error);
+                setShowLocationHelp(true);
             }
         );
     };
@@ -574,7 +576,7 @@ const SharedCheckout = () => {
                                      )}
                                  </section>
                              </div>
-                         </aside>  </aside>
+                        </aside>
                     </div>
                 </form>
             </main>
@@ -588,6 +590,53 @@ const SharedCheckout = () => {
                             alt="Full View"
                         />
                         <button className="btn-close-modal-p" onClick={() => setImageModalSrc(null)}>✕</button>
+                    </div>
+                </div>
+            )}
+
+            {/* Location Help Modal */}
+            {showLocationHelp && (
+                <div className="location-help-overlay" onClick={() => setShowLocationHelp(false)}>
+                    <div className="location-help-card" onClick={e => e.stopPropagation()}>
+                        <div className="help-header">
+                            <div className="help-icon-circle">
+                                <MapPin size={28} color="#3182ce" />
+                            </div>
+                            <h3>How to Enable Location</h3>
+                            <button className="close-help" onClick={() => setShowLocationHelp(false)}>✕</button>
+                        </div>
+                        
+                        <div className="help-body">
+                            <p className="help-intro">For a faster checkout, please allow location access in your browser settings:</p>
+                            
+                            <div className="instruction-image">
+                                <img src="/assets/images/location_guide.png" alt="Location Guide" />
+                            </div>
+
+                            <div className="steps-list">
+                                <div className="step-item">
+                                    <span className="step-num">1</span>
+                                    <p>Click the <strong>Lock</strong> or <strong>Info</strong> icon in the address bar.</p>
+                                </div>
+                                <div className="step-item">
+                                    <span className="step-num">2</span>
+                                    <p>Find <strong>Location</strong> and toggle it to <strong>Allow</strong>.</p>
+                                </div>
+                                <div className="step-item">
+                                    <span className="step-num">3</span>
+                                    <p>Refresh the page and try again.</p>
+                                </div>
+                            </div>
+
+                            <div className="help-note">
+                                <Info size={16} />
+                                <span>Alternatively, you can enter your address manually in the form.</span>
+                            </div>
+                        </div>
+
+                        <div className="help-footer">
+                            <button className="btn-got-it" onClick={() => setShowLocationHelp(false)}>Got It</button>
+                        </div>
                     </div>
                 </div>
             )}

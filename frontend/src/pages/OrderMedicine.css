@@ -1230,6 +1230,14 @@
     font-size: 14px !important;
 }
 
+.history-action-row .btn-submit-premium {
+    width: auto !important;
+    padding: 10px 24px !important;
+    margin-top: 0 !important;
+    border-radius: 12px !important;
+    font-size: 14px !important;
+}
+
 .status-msg-box {
     background: #f8fafc;
     padding: 12px;

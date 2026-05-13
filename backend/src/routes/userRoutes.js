@@ -315,20 +315,7 @@ router.post('/staff', protect, async (req, res) => {
         let user = await User.findOne(checkQuery);
 
         if (user) {
-            // Case 1: User exists and already has roles (or is super admin)
-            if (user.roles.length > 0 || user.isSuperAdmin) {
-                console.log("Promotion attempt: User is already staff", user.mobile);
-                return res.status(400).json({ message: 'This user is already registered as a staff member.' });
-            }
-
-            // Case 2: User exists as a normal customer, promote them
-            console.log("Promoting existing user to staff:", user.mobile);
-            user.roles.push(roleId);
-            if (name) user.name = name; // Update name if provided
-            if (email && email.trim() !== '') user.email = email;
-            
-            await user.save();
-            return res.status(200).json({ message: 'Existing user has been promoted to Staff successfully!', user });
+            return res.status(400).json({ message: 'A user with this mobile number already exists in the system. Delivery Boy accounts must use a unique, unregistered number.' });
         }
 
         // Case 3: User does not exist, create new

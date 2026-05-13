@@ -481,6 +481,23 @@ class WhatsappService {
     }
 
     /**
+     * Specialized: Send Order Shipped to Bus Notification
+     */
+    async sendOrderShippedToBusNotification(mobile, name, orderId, busName, busNumber) {
+        const lang = await this._getRecipientLanguage(mobile);
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const trackUrl = `${frontendUrl}/track/${orderId}`;
+        
+        const template = await this._getTemplate('whatsapp_order_shipped_bus_template', lang)
+            || (lang === 'hi' 
+                ? "नमस्ते {name}, आपकी दवाएं {busName} ({busNumber}) बस में भेज दी गई हैं। 🚌\n\nआप अपने ऑर्डर को यहाँ ट्रैक कर सकते हैं: {url}\n\nधन्यवाद, The DharmArth Foundation" 
+                : "Hello {name}, your medicine order has been shipped to the bus {busName} ({busNumber}). 🚌\n\nTrack your order here: {url}\n\nThank you, The DharmArth Foundation");
+            
+        const message = this._replacePlaceholders(template, { name, busName, busNumber, url: trackUrl });
+        return this.sendMessage(mobile, message, { type: 'order_shipped_bus', orderId });
+    }
+
+    /**
      * Helper: Replace placeholders like {name} in templates
      */
     _replacePlaceholders(template, data) {
