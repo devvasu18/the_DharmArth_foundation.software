@@ -18,6 +18,7 @@ const DeliveryBoyDashboard = () => {
     const [filter, setFilter] = useState('Assigned');
     const [imageModalSrc, setImageModalSrc] = useState(null);
     const [selectedIds, setSelectedIds] = useState([]);
+    const [userData, setUserData] = useState(null);
 
     // Handover Modal State
     const [showHandoverModal, setShowHandoverModal] = useState(false);
