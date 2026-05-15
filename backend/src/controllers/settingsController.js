@@ -49,14 +49,36 @@ const getPharmacyConfig = async () => {
             percentDeliveryThreshold: 500,
             percentDeliveryBelowThreshold: 10,
             percentDeliveryAboveThreshold: 5,
-            gstPercent: 12
+            gstPercent: 12,
+            dayTimeContactText: "Pharmacist will contact you in 10-20 minutes",
+            nightTimeContactText: "Foundation will contact you at 8:30 AM"
         };
     }
-    return config.value;
+    // Ensure new fields have defaults if they don't exist in saved config
+    const mergedConfig = {
+        dayTimeContactText: "Pharmacist will contact you in 10-20 minutes",
+        nightTimeContactText: "Foundation will contact you at 8:30 AM",
+        ...config.value
+    };
+    return mergedConfig;
+};
+
+// @desc    Get public pharmacy settings
+// @route   GET /api/settings/pharmacy/public
+// @access  Public
+const getPublicPharmacySettings = async (req, res) => {
+    try {
+        const config = await getPharmacyConfig();
+        // Only return necessary public info if needed, but for now return all config
+        res.json(config);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
 
 module.exports = {
     getSettings,
     updateSettings,
-    getPharmacyConfig
+    getPharmacyConfig,
+    getPublicPharmacySettings
 };

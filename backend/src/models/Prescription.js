@@ -4,8 +4,10 @@ const prescriptionSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: false
     },
+    guestName: String,
+    guestMobile: String,
     image: {
         type: String,
         required: true // Cloudinary URL

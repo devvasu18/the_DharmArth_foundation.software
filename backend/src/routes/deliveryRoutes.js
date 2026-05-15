@@ -8,9 +8,11 @@ const {
     createBus, 
     getBusesByRoute, 
     assignDelivery,
+    bulkAssignDelivery,
     getUnassignedOrders,
     getAssignedOrders, 
     updateAssignmentStatus,
+    bulkUpdateAssignmentStatus,
     suggestRoutes,
     updateBus,
     deleteBus
@@ -67,10 +69,21 @@ router.post('/assign',
     validate, 
     assignDelivery
 );
+router.post('/bulk-assign', 
+    protect, 
+    checkPermission('Delivery Management', 'edit'), 
+    [
+        body('orderIds').isArray({ min: 1 }),
+        body('deliveryBoyId').isMongoId()
+    ], 
+    validate, 
+    bulkAssignDelivery
+);
 router.get('/suggest-routes', protect, suggestRoutes);
 
 // Delivery Boy Dashboard
 router.get('/my-assignments', protect, getAssignedOrders);
+router.patch('/assignments/bulk-status', protect, bulkUpdateAssignmentStatus);
 router.patch('/assignments/:id/status', protect, updateAssignmentStatus);
 
 module.exports = router;

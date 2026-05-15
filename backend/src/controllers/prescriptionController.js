@@ -14,16 +14,43 @@ exports.uploadPrescription = async (req, res) => {
             return res.status(400).json({ message: 'Please upload a prescription image' });
         }
 
+        let userId = req.user ? req.user._id : null;
+        let guestInfo = {};
+
+        // If guest upload, handle user creation/lookup
+        if (!userId && req.body.guestMobile) {
+            let user = await User.findOne({ mobile: req.body.guestMobile });
+            if (!user) {
+                user = await User.create({
+                    name: req.body.guestName || 'Guest User',
+                    mobile: req.body.guestMobile,
+                    roles: [] // Default guest roles if any
+                });
+            }
+            userId = user._id;
+            guestInfo = {
+                name: req.body.guestName,
+                mobile: req.body.guestMobile
+            };
+        }
+
+        if (!userId) {
+            return res.status(400).json({ message: 'User identification required' });
+        }
+
         const prescription = await Prescription.create({
-            user: req.user._id,
+            user: userId,
             image: req.file.path, // Cloudinary URL
             status: 'Pending',
-            notes: req.body.notes
+            notes: req.body.notes,
+            guestName: guestInfo.name,
+            guestMobile: guestInfo.mobile
         });
 
         // Notify admin
         const io = req.app.get('io');
-        await notificationService.notifyPrescriptionUploadedAdmin(prescription, req.user, io);
+        const userData = req.user || await User.findById(userId);
+        await notificationService.notifyPrescriptionUploadedAdmin(prescription, userData, io);
 
         res.status(201).json(prescription);
     } catch (error) {
@@ -57,21 +84,25 @@ exports.getMyPrescriptions = async (req, res) => {
 // @access  Private/Admin
 exports.getAllPrescriptions = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const skip = (page - 1) * limit;
+        const { page = 1, limit = 20, status } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
 
-        const total = await Prescription.countDocuments();
-        const prescriptions = await Prescription.find()
+        const query = {};
+        if (status && status !== 'All') {
+            query.status = status;
+        }
+
+        const total = await Prescription.countDocuments(query);
+        const prescriptions = await Prescription.find(query)
             .populate('user', 'name mobile email')
             .sort({ createdAt: -1 })
             .skip(skip)
-            .limit(limit);
+            .limit(parseInt(limit));
 
         res.json({
             prescriptions,
-            page,
-            totalPages: Math.ceil(total / limit),
+            page: parseInt(page),
+            totalPages: Math.ceil(total / parseInt(limit)),
             total
         });
     } catch (error) {
@@ -362,6 +393,34 @@ exports.reSubmitPrescription = async (req, res) => {
         await notificationService.notifyPrescriptionUploadedAdmin(newPrescription, user, io);
 
         res.status(201).json(newPrescription);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+// @desc    Get guest prescriptions history
+// @route   GET /api/prescriptions/guest-history/:mobile
+// @access  Public
+exports.getGuestHistory = async (req, res) => {
+    try {
+        const { mobile } = req.params;
+        const user = await User.findOne({ mobile });
+
+        if (!user) {
+            return res.json([]);
+        }
+
+        // Security Check: If user has a password, they must login
+        if (user.password) {
+            return res.status(401).json({ 
+                message: 'This account is registered. Please login to view history.',
+                loginRequired: true 
+            });
+        }
+
+        const prescriptions = await Prescription.find({ user: user._id })
+            .sort({ createdAt: -1 });
+        
+        res.json(prescriptions);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

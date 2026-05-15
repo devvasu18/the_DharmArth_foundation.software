@@ -169,6 +169,38 @@ const PharmacySettings = () => {
                         </p>
                     </div>
                 </div>
+
+                {/* Contact Timing Messages */}
+                <div className="settings-card glass-card full-width" style={{ marginTop: '20px' }}>
+                    <div className="card-header">
+                        <Info size={20} color="#3182ce" />
+                        <h3>Contact Timing Messages</h3>
+                    </div>
+                    <div className="card-body">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <div className="input-group">
+                                <label>Day-time Message (8 AM - 9 PM)</label>
+                                <input 
+                                    type="text" 
+                                    value={config.dayTimeContactText || ''} 
+                                    onChange={(e) => setConfig({...config, dayTimeContactText: e.target.value})}
+                                    placeholder="e.g. Pharmacist will contact you in 10-20 minutes"
+                                />
+                                <small>Shown during foundation working hours.</small>
+                            </div>
+                            <div className="input-group">
+                                <label>Night-time Message (9 PM - 8 AM)</label>
+                                <input 
+                                    type="text" 
+                                    value={config.nightTimeContactText || ''} 
+                                    onChange={(e) => setConfig({...config, nightTimeContactText: e.target.value})}
+                                    placeholder="e.g. Foundation will contact you at 8:30 AM"
+                                />
+                                <small>Shown after hours to set expectations.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

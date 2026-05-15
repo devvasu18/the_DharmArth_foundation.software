@@ -104,12 +104,16 @@ const DonationForm = ({ onSuccess }) => {
         };
         fetchSettings();
 
-        // Auto-fill user details if logged in AND not provided in URL
+        // Auto-fill details (Priority: URL > Auth User > LocalStorage Guest)
+        const params = new URLSearchParams(location.search);
+        const urlMobile = params.get('mobile');
+        const urlName = params.get('name');
+        const urlEmail = params.get('email');
+
         if (authUser) {
-            const params = new URLSearchParams(location.search);
-            if (!params.get('name')) setFullName(authUser.name || '');
-            if (!params.get('mobile')) setMobile(authUser.mobile || '');
-            if (!params.get('email')) setEmail(authUser.email || '');
+            if (!urlName) setFullName(authUser.name || '');
+            if (!urlMobile) setMobile(authUser.mobile || '');
+            if (!urlEmail) setEmail(authUser.email || '');
 
             if (authUser.referredBy) {
                 setMotivatorMobile(authUser.referredBy.mobile || authUser.referredBy.referralCode || '');
@@ -120,6 +124,16 @@ const DonationForm = ({ onSuccess }) => {
                 setIsMotivatorLocked(true);
                 // Also fetch name if possible or use a placeholder
                 if (authUser.lastMotivatorName) setMotivatorName(authUser.lastMotivatorName);
+            }
+        } else {
+            // Guest auto-fill from localStorage if not in URL
+            const storedGuestMobile = localStorage.getItem('guestMobile');
+            const storedGuestName = localStorage.getItem('guestName');
+            if (storedGuestMobile && !urlMobile) {
+                setMobile(storedGuestMobile);
+            }
+            if (storedGuestName && !urlName) {
+                setFullName(storedGuestName);
             }
         }
     }, [authUser, location.search]);

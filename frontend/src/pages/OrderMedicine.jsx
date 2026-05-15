@@ -75,6 +75,11 @@ const OrderMedicine = () => {
     const [checkoutError, setCheckoutError] = useState(null);
     const [checkoutSuccess, setCheckoutSuccess] = useState(false);
 
+    // Guest Info Modal State
+    const [showGuestModal, setShowGuestModal] = useState(false);
+    const [guestName, setGuestName] = useState('');
+    const [guestMobile, setGuestMobile] = useState('');
+
     // Image Viewer Modal State
     const [imageModalSrc, setImageModalSrc] = useState(null);
 
@@ -82,6 +87,7 @@ const OrderMedicine = () => {
     const [trackModalOpen, setTrackModalOpen] = useState(false);
     const [selectedTrackOrder, setSelectedTrackOrder] = useState(null);
     const [isReorderFlow, setIsReorderFlow] = useState(false);
+    const [pharmacyConfig, setPharmacyConfig] = useState(null);
 
     const [shippingDetails, setShippingDetails] = useState({
         _id: null,
@@ -102,22 +108,42 @@ const OrderMedicine = () => {
         const hour = new Date().getHours();
         if (hour >= 21 || hour < 8) {
             return {
-                text: "Foundation will contact you at 8:30 AM",
+                text: pharmacyConfig?.nightTimeContactText || "Foundation will contact you at 8:30 AM",
                 icon: <Clock size={14} />,
                 type: 'night'
             };
         } else {
             return {
-                text: "Pharmacist will contact you in 10-20 minutes",
+                text: pharmacyConfig?.dayTimeContactText || "Pharmacist will contact you in 10-20 minutes",
                 icon: <Zap size={14} />,
                 type: 'day'
             };
         }
     };
 
+    const fetchPharmacyConfig = async () => {
+        try {
+            const res = await api.get('/settings/pharmacy/public');
+            setPharmacyConfig(res.data);
+        } catch (err) {
+            console.error("Failed to fetch pharmacy config", err);
+        }
+    };
+
     const fetchOrders = async () => {
         try {
-            const res = await api.get('/orders/my');
+            const isUserLoggedIn = !!localStorage.getItem('user');
+            const gMobile = localStorage.getItem('guestMobile');
+            
+            let res;
+            if (isUserLoggedIn) {
+                res = await api.get('/orders/my');
+            } else if (gMobile) {
+                res = await api.get(`/orders/guest-history/${gMobile}`);
+                if (res.status === 401) return; // Login required for this mobile
+            } else {
+                return;
+            }
             setMyOrders(res.data);
         } catch (err) {
             console.error('Failed to fetch orders', err);
@@ -126,7 +152,18 @@ const OrderMedicine = () => {
 
     const fetchHistory = async () => {
         try {
-            const res = await api.get('/prescriptions/my');
+            const isUserLoggedIn = !!localStorage.getItem('user');
+            const gMobile = localStorage.getItem('guestMobile');
+
+            let res;
+            if (isUserLoggedIn) {
+                res = await api.get('/prescriptions/my');
+            } else if (gMobile) {
+                res = await api.get(`/prescriptions/guest-history/${gMobile}`);
+                if (res.status === 401) return; // Login required for this mobile
+            } else {
+                return;
+            }
             setMyPrescriptions(res.data);
         } catch (err) {
             console.error(err);
@@ -185,9 +222,31 @@ const OrderMedicine = () => {
     };
 
     useEffect(() => {
+        const storedName = localStorage.getItem('guestName');
+        const storedMobile = localStorage.getItem('guestMobile');
+        if (storedName) setGuestName(storedName);
+        if (storedMobile) setGuestMobile(storedMobile);
         fetchHistory();
         fetchOrders();
+        fetchPharmacyConfig();
     }, []);
+
+    useEffect(() => {
+        const lookupGuestName = async () => {
+            if (guestMobile.length === 10 && !guestName) {
+                try {
+                    const { data } = await api.get(`/users/guest-lookup/${guestMobile}`);
+                    if (data.name) {
+                        setGuestName(data.name);
+                        localStorage.setItem('guestName', data.name);
+                    }
+                } catch (err) {
+                    // Ignore lookup failures
+                }
+            }
+        };
+        lookupGuestName();
+    }, [guestMobile]);
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
@@ -203,8 +262,19 @@ const OrderMedicine = () => {
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (e, isGuest = false) => {
+        if (e) e.preventDefault();
+        
+        const isUserLoggedIn = !!localStorage.getItem('user');
+        
+        if (!isUserLoggedIn && !isGuest) {
+            if (guestName && guestMobile) {
+                return handleSubmit(null, true);
+            }
+            setShowGuestModal(true);
+            return;
+        }
+
         if (!file) {
             setError('Please select a file to upload');
             return;
@@ -213,6 +283,11 @@ const OrderMedicine = () => {
         const formData = new FormData();
         formData.append('prescription', file);
         if (notes) formData.append('notes', notes);
+        
+        if (isGuest) {
+            formData.append('guestName', guestName);
+            formData.append('guestMobile', guestMobile);
+        }
 
         setLoading(true);
         try {
@@ -220,14 +295,37 @@ const OrderMedicine = () => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setShowPostUploadModal(true);
+            setShowGuestModal(false);
             setFile(null);
             setPreview(null);
-            fetchHistory();
+            if (isUserLoggedIn) {
+                fetchHistory();
+                fetchOrders();
+            } else if (isGuest) {
+                localStorage.setItem('guestMobile', guestMobile);
+                localStorage.setItem('guestName', guestName);
+                fetchHistory();
+                fetchOrders();
+            }
         } catch (err) {
             setError(err.response?.data?.message || 'Upload failed');
+            toast.error(err.response?.data?.message || 'Upload failed');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleGuestSubmit = (e) => {
+        e.preventDefault();
+        if (!guestName || !guestMobile) {
+            toast.error("Please fill all guest details");
+            return;
+        }
+        if (guestMobile.length < 10) {
+            toast.error("Please enter a valid mobile number");
+            return;
+        }
+        handleSubmit(null, true);
     };
 
     const handleCopyLink = (prescriptionId) => {
@@ -516,8 +614,15 @@ const OrderMedicine = () => {
                         <div className="history-column">
                             <div className="history-box glass-card">
                                 <div className="card-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '15px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                                        <h3>History/Recent</h3>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <h3 style={{ margin: 0 }}>History/Recent</h3>
+                                            {!localStorage.getItem('user') && localStorage.getItem('guestMobile') && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#64748b', fontWeight: '600', background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px' }}>
+                                                    <User size={10} /> Viewing as Guest ({localStorage.getItem('guestMobile')})
+                                                </div>
+                                            )}
+                                        </div>
                                         <button
                                             className={`refresh-btn ${isSyncing ? 'syncing' : ''}`}
                                             onClick={handleSync}
@@ -551,6 +656,14 @@ const OrderMedicine = () => {
                                             <div className="empty-state-cool">
                                                 <FileText size={48} strokeWidth={1} />
                                                 <p>No prescriptions</p>
+                                                {!localStorage.getItem('user') && !localStorage.getItem('guestMobile') && (
+                                                    <button 
+                                                        onClick={() => navigate('/login')}
+                                                        style={{ marginTop: '10px', fontSize: '12px', color: '#3182ce', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600', textDecoration: 'underline' }}
+                                                    >
+                                                        Login to see your previous history
+                                                    </button>
+                                                )}
                                             </div>
                                         ) : (
                                             filteredPrescriptions.map(p => (
@@ -642,6 +755,20 @@ const OrderMedicine = () => {
                                         )
                                     )}
                                 </div>
+                                {!localStorage.getItem('user') && localStorage.getItem('guestMobile') && (
+                                    <div style={{ marginTop: '15px', padding: '12px', background: '#eff6ff', borderRadius: '10px', border: '1px solid #bfdbfe', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <div style={{ fontSize: '12px', color: '#1e40af', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <Info size={14} /> Synced via Guest History
+                                        </div>
+                                        <p style={{ fontSize: '11px', color: '#3b82f6', margin: 0 }}>Create an account to sync your history across all devices permanently.</p>
+                                        <button 
+                                            onClick={() => navigate('/login')}
+                                            style={{ width: '100%', padding: '8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', transition: 'background 0.2s' }}
+                                        >
+                                            Login / Register Now
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -1152,7 +1279,7 @@ const OrderMedicine = () => {
                         <div style={{ color: '#718096', lineHeight: '1.6', fontSize: '1.05rem', marginBottom: '30px' }}>
                             <p style={{ marginBottom: '15px' }}>Your prescription has been securely uploaded and sent for verification.</p>
                             <p style={{ marginBottom: '15px', fontWeight: '600', color: '#4a5568' }}>This will be verified within 24-48 hours.</p>
-                            <p>Once verified, you will need to provide your delivery address and confirm the final amount to complete the order. You can track this process from the <strong>Activity Log</strong> on this page.</p>
+                            <p>Once verified, you will need to provide your delivery address and confirm the final amount to complete the order. {localStorage.getItem('user') ? 'You can track this process from the Activity Log on this page.' : 'Our pharmacist will contact you on the provided mobile number for further details.'}</p>
                         </div>
                         <button
                             className="btn-submit-premium"
@@ -1161,6 +1288,56 @@ const OrderMedicine = () => {
                         >
                             Got it, thanks!
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Guest Info Modal */}
+            {showGuestModal && (
+                <div className="checkout-modal-overlay" style={{ zIndex: 2000 }}>
+                    <div className="checkout-modal-card" style={{ maxWidth: '450px', padding: '30px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#2d3748' }}>Guest Information</h2>
+                            <button onClick={() => setShowGuestModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#718096' }}>
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <p style={{ color: '#718096', marginBottom: '24px', fontSize: '0.95rem' }}>
+                            Please provide your name and mobile number so our pharmacist can contact you regarding your prescription.
+                        </p>
+                        <form onSubmit={handleGuestSubmit}>
+                            <div className="form-group" style={{ marginBottom: '20px' }}>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#4a5568' }}>Full Name</label>
+                                <input 
+                                    type="text" 
+                                    required 
+                                    value={guestName} 
+                                    onChange={e => setGuestName(e.target.value)} 
+                                    placeholder="Enter your full name" 
+                                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid #e2e8f0', outline: 'none' }}
+                                />
+                            </div>
+                            <div className="form-group" style={{ marginBottom: '24px' }}>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#4a5568' }}>Mobile Number</label>
+                                <input 
+                                    type="tel" 
+                                    required 
+                                    maxLength="10"
+                                    value={guestMobile} 
+                                    onChange={e => setGuestMobile(e.target.value.replace(/\D/g, ''))} 
+                                    placeholder="Enter 10-digit mobile number" 
+                                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid #e2e8f0', outline: 'none' }}
+                                />
+                            </div>
+                            <button 
+                                type="submit" 
+                                className="btn-submit-premium" 
+                                disabled={loading}
+                                style={{ width: '100%', margin: 0 }}
+                            >
+                                {loading ? <div className="loader"></div> : 'Confirm and Submit'}
+                            </button>
+                        </form>
                     </div>
                 </div>
             )}

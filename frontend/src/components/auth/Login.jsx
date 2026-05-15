@@ -205,7 +205,8 @@ const Login = () => {
     };
 
     const handleInputChange = (e) => {
-        let val = e.target.value;
+        // Remove all whitespace
+        let val = e.target.value.replace(/\s/g, '');
 
         // If the input is purely numeric and longer than 10 digits, cap it at 10 (standard Indian mobile)
         // Otherwise, allow everything so they can type email addresses freely.
@@ -293,6 +294,9 @@ const Login = () => {
                                     disabled={otpSent}
                                     style={{ paddingRight: otpSent ? '80px' : '10px' }}
                                     onKeyDown={(e) => {
+                                        if (e.key === ' ') {
+                                            e.preventDefault();
+                                        }
                                         if (e.key === 'Enter' && loginMethod === 'password') {
                                             handlePasswordLogin();
                                         }

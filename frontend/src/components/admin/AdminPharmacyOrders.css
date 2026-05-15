@@ -162,6 +162,20 @@
 .order-id-cell .date-txt {
     font-size: 12px;
     color: #94a3b8;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.payment-id-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    color: #0369a1;
+    background: #e0f2fe;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #bae6fd;
+    font-family: monospace;
 }
 
 .customer-cell {

@@ -7,18 +7,42 @@
 
 .dispatch-header {
     margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .dispatch-header h2 {
     font-size: 1.8rem;
     color: #1e293b;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     font-weight: 700;
 }
 
 .dispatch-header p {
     color: #64748b;
     font-size: 0.95rem;
+}
+
+.btn-bulk-dispatch {
+    background: #1e293b;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(30, 41, 59, 0.2);
+}
+
+.btn-bulk-dispatch:hover {
+    background: #0f172a;
+    transform: translateY(-2px);
 }
 
 .order-grid {
@@ -31,9 +55,22 @@
     background: white;
     border-radius: 16px;
     padding: 20px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     border: 1px solid #e2e8f0;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.order-card-d.selected {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    box-shadow: 0 0 0 2px #3b82f6, 0 10px 15px -3px rgba(59, 130, 246, 0.1);
+}
+
+.order-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #3b82f6;
 }
 
 .order-card-d:hover {

@@ -5,11 +5,13 @@ const {
     getOrderById, 
     getAllOrders, 
     updateOrderStatus,
-    downloadInvoice
+    downloadInvoice,
+    getGuestOrders
 } = require('../controllers/orderController');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 
 router.get('/my', protect, getMyOrders);
+router.get('/guest-history/:mobile', getGuestOrders);
 router.get('/public/:id/invoice', downloadInvoice); // Publicly accessible via tracking link
 router.get('/public/:id', getOrderById); // Added for shareable tracking links
 router.get('/:id/invoice', protect, downloadInvoice);

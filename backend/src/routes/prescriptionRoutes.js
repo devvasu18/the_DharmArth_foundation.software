@@ -8,9 +8,10 @@ const {
     approveAndCreateOrder,
     approveProvisionBill,
     getPublicPrescription,
-    reSubmitPrescription
+    reSubmitPrescription,
+    getGuestHistory
 } = require('../controllers/prescriptionController');
-const { protect, checkPermission } = require('../middlewares/authMiddleware');
+const { protect, optionalProtect, checkPermission } = require('../middlewares/authMiddleware');
 const { upload } = require('../config/cloudinary');
 
 const { body, validationResult } = require('express-validator');
@@ -23,7 +24,7 @@ const validate = (req, res, next) => {
     next();
 };
 
-router.post('/', protect, upload.single('prescription'), uploadPrescription);
+router.post('/', optionalProtect, upload.single('prescription'), uploadPrescription);
 router.post('/:id/re-submit', protect, reSubmitPrescription);
 router.get('/my', protect, getMyPrescriptions);
 router.get('/', protect, checkPermission('Prescription Management', 'view'), getAllPrescriptions);
@@ -39,6 +40,7 @@ router.patch('/:id/verify',
     verifyPrescription
 );
 router.get('/:id/public', getPublicPrescription);
+router.get('/guest-history/:mobile', getGuestHistory);
 router.post('/:id/approve', (req, res, next) => {
     // Optional protection: if session exists, great. If not, we still allow for shareable links.
     next();

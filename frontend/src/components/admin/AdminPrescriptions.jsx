@@ -18,6 +18,7 @@ const AdminPrescriptions = () => {
     const [searchingIndex, setSearchingIndex] = useState(null);
     const [suggestions, setSuggestions] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [statusFilter, setStatusFilter] = useState('Pending'); // 'Pending', 'Verified', 'All'
 
     const handleCopyLink = (prescriptionId) => {
         const url = `${window.location.origin}/checkout/${prescriptionId}`;
@@ -27,7 +28,7 @@ const AdminPrescriptions = () => {
 
     useEffect(() => {
         fetchPrescriptions();
-    }, []);
+    }, [statusFilter]);
 
     useEffect(() => {
         if (selected) {
@@ -49,8 +50,9 @@ const AdminPrescriptions = () => {
     }, [selected]);
 
     const fetchPrescriptions = async () => {
+        setLoading(true);
         try {
-            const res = await api.get('/prescriptions?limit=100');
+            const res = await api.get(`/prescriptions?limit=100&status=${statusFilter}`);
             const allPrescriptions = res.data.prescriptions || res.data;
             // Filter out 'Ordered' as they have moved to the Order Management system
             const activeQueue = allPrescriptions.filter(p => p.status !== 'Ordered');
@@ -163,7 +165,7 @@ const AdminPrescriptions = () => {
                 <div className="stats-pills">
                     <div className="stat-pill">
                         <span className="count">{prescriptions.length}</span>
-                        <span className="lbl">Active Queue</span>
+                        <span className="lbl">{statusFilter} Queue</span>
                     </div>
                 </div>
             </header>
@@ -174,6 +176,19 @@ const AdminPrescriptions = () => {
                     <div className="sidebar-header">
                         <Search size={16} />
                         <input type="text" placeholder="Search customer..." />
+                    </div>
+
+                    {/* Status Tabs */}
+                    <div className="status-tabs-container">
+                        {['Pending', 'Verified', 'All'].map(tab => (
+                            <button
+                                key={tab}
+                                className={`status-tab ${statusFilter === tab ? 'active' : ''}`}
+                                onClick={() => setStatusFilter(tab)}
+                            >
+                                {tab}
+                            </button>
+                        ))}
                     </div>
                     
                     <div className="queue-list">
@@ -312,6 +327,7 @@ const AdminPrescriptions = () => {
                                                                 type="number" 
                                                                 value={item.quantity}
                                                                 onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                                                                onWheel={(e) => e.target.blur()}
                                                                 min="1"
                                                                 disabled={isReadOnly}
                                                                 style={{ borderColor: errors.includes(index) && (!item.quantity) ? '#ef4444' : undefined }}
@@ -336,6 +352,7 @@ const AdminPrescriptions = () => {
                                                                     type="number" 
                                                                     value={item.estimatedArrivalDays || ''}
                                                                     onChange={(e) => handleItemChange(index, 'estimatedArrivalDays', e.target.value)}
+                                                                    onWheel={(e) => e.target.blur()}
                                                                     placeholder="ETA"
                                                                     min="1"
                                                                     disabled={isReadOnly}
@@ -348,6 +365,7 @@ const AdminPrescriptions = () => {
                                                                 type="number" 
                                                                 value={item.price}
                                                                 onChange={(e) => handleItemChange(index, 'price', e.target.value)}
+                                                                onWheel={(e) => e.target.blur()}
                                                                 placeholder="Auto"
                                                                 min="0"
                                                                 disabled={isReadOnly}

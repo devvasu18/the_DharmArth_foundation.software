@@ -16,8 +16,8 @@ const DeliveryBoyDashboard = () => {
     const [assignments, setAssignments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('Assigned');
-    const [userData, setUserData] = useState(null);
     const [imageModalSrc, setImageModalSrc] = useState(null);
+    const [selectedIds, setSelectedIds] = useState([]);
 
     // Handover Modal State
     const [showHandoverModal, setShowHandoverModal] = useState(false);
@@ -28,6 +28,47 @@ const DeliveryBoyDashboard = () => {
         handoverImage: ''
     });
     const [uploading, setUploading] = useState(false);
+
+    const toggleSelection = (id) => {
+        setSelectedIds(prev => 
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const handleBulkStatusUpdate = async (status) => {
+        if (selectedIds.length === 0) return;
+
+        if (status === 'Delivered') {
+            // Use the first selected assignment as reference for the bus details
+            const refAssignment = assignments.find(a => a._id === selectedIds[0]);
+            setSelectedAssignment({ _id: 'BULK', busId: refAssignment?.busId });
+            setHandoverDetails({
+                driverNumber: refAssignment?.busId?.mobileNumber || '',
+                actualDepartureTime: new Date().toISOString().slice(0, 16),
+                handoverImage: ''
+            });
+            setShowHandoverModal(true);
+            return;
+        }
+
+        const isConfirmed = await showConfirm(
+            "Bulk Action",
+            `Update ${selectedIds.length} orders to ${status}?`
+        );
+        if (!isConfirmed) return;
+
+        try {
+            await api.patch('/delivery/assignments/bulk-status', { 
+                assignmentIds: selectedIds,
+                status 
+            });
+            toast.success('Batch updated successfully');
+            setSelectedIds([]);
+            fetchAssignments();
+        } catch (err) {
+            toast.error('Bulk update failed');
+        }
+    };
 
     useEffect(() => {
         const storedUser = JSON.parse(localStorage.getItem('user'));
@@ -75,12 +116,23 @@ const DeliveryBoyDashboard = () => {
     };
 
     const handleCompleteHandover = async () => {
+        const isBulk = selectedAssignment._id === 'BULK';
         try {
-            await api.patch(`/delivery/assignments/${selectedAssignment._id}/status`, {
-                status: 'Delivered',
-                ...handoverDetails
-            });
-            toast.success('Handover complete! Patient notified.');
+            if (isBulk) {
+                await api.patch('/delivery/assignments/bulk-status', {
+                    assignmentIds: selectedIds,
+                    status: 'Delivered',
+                    ...handoverDetails
+                });
+                toast.success('Batch handover complete!');
+                setSelectedIds([]);
+            } else {
+                await api.patch(`/delivery/assignments/${selectedAssignment._id}/status`, {
+                    status: 'Delivered',
+                    ...handoverDetails
+                });
+                toast.success('Handover complete!');
+            }
             setShowHandoverModal(false);
             fetchAssignments();
         } catch (err) {
@@ -128,9 +180,33 @@ const DeliveryBoyDashboard = () => {
                             </div>
                         </div>
                         <div className="rider-status">
-                            ON DUTY
+                            {selectedIds.length > 0 ? (
+                                <div className="bulk-action-pill">
+                                    {selectedIds.length} SELECTED
+                                </div>
+                            ) : (
+                                "ON DUTY"
+                            )}
                         </div>
                     </div>
+
+                    {selectedIds.length > 0 && (
+                        <div className="bulk-control-bar">
+                            {filter === 'Assigned' && (
+                                <button className="btn-bulk start" onClick={() => handleBulkStatusUpdate('In Transit')}>
+                                    Start Batch ({selectedIds.length})
+                                </button>
+                            )}
+                            {filter === 'In Transit' && (
+                                <button className="btn-bulk finish" onClick={() => handleBulkStatusUpdate('Delivered')}>
+                                    Bulk Handover ({selectedIds.length})
+                                </button>
+                            )}
+                            <button className="btn-bulk-cancel" onClick={() => setSelectedIds([])}>
+                                Clear Selection
+                            </button>
+                        </div>
+                    )}
 
                     {/* Quick Stats Grid */}
                     <div className="stats-row" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
@@ -178,9 +254,17 @@ const DeliveryBoyDashboard = () => {
                             </div>
                         ) : (
                             filtered.map(a => (
-                                <div key={a._id} className="assignment-card">
+                                <div key={a._id} className={`assignment-card ${selectedIds.includes(a._id) ? 'selected' : ''}`}>
                                     <div className="card-header">
-                                        <div className="order-badge">#{a.orderId?._id?.slice(-8).toUpperCase()}</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <input 
+                                                type="checkbox" 
+                                                className="order-checkbox" 
+                                                checked={selectedIds.includes(a._id)}
+                                                onChange={() => toggleSelection(a._id)}
+                                            />
+                                            <div className="order-badge">#{a.orderId?._id?.slice(-8).toUpperCase()}</div>
+                                        </div>
                                         <div className={`status-indicator ${a.status.toLowerCase().replace(' ', '-')}`}>
                                             <div className="dot" style={{ width: 8, height: 8, borderRadius: '50%', background: 'currentColor' }}></div>
                                             {a.status}

@@ -32,6 +32,7 @@ const AdminPharmacyOrders = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,16 +42,23 @@ const AdminPharmacyOrders = () => {
     const loaderRef = useRef(null);
 
     useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
+
+    useEffect(() => {
         setPage(1);
         fetchOrders(1, true);
-    }, [statusFilter, searchTerm]);
+    }, [statusFilter, debouncedSearchTerm]);
 
     const fetchOrders = async (pageNum, isInitial = false) => {
         if (isInitial) setLoading(true);
         else setIsFetchingMore(true);
 
         try {
-            const res = await api.get(`/orders?page=${pageNum}&limit=20&status=${statusFilter === 'All' ? '' : statusFilter}&search=${searchTerm}`);
+            const res = await api.get(`/orders?page=${pageNum}&limit=20&status=${statusFilter === 'All' ? '' : statusFilter}&search=${debouncedSearchTerm}`);
             const { orders: newOrders, totalPages: total } = res.data;
             
             if (isInitial) {
@@ -178,6 +186,9 @@ const AdminPharmacyOrders = () => {
                                             <div className="order-id-cell">
                                                 <span className="id-txt">#{order._id.substring(order._id.length-8).toUpperCase()}</span>
                                                 <span className="date-txt">{new Date(order.createdAt).toLocaleDateString()}</span>
+                                                {order.paymentDetails?.transactionId && (
+                                                    <span className="payment-id-tag">RP: {order.paymentDetails.transactionId}</span>
+                                                )}
                                             </div>
                                         </td>
                                         <td>
@@ -309,6 +320,12 @@ const AdminPharmacyOrders = () => {
                                                 <span className="data-label">Phone Number</span>
                                                 <span className="data-value">{selectedOrder.user?.mobile}</span>
                                             </div>
+                                            {selectedOrder.paymentDetails?.transactionId && (
+                                                <div className="data-row" style={{background: '#f0f9ff', padding: '8px', borderRadius: '8px', border: '1px dashed #bae6fd'}}>
+                                                    <span className="data-label" style={{color: '#0369a1'}}>Razorpay ID</span>
+                                                    <span className="data-value" style={{fontFamily: 'monospace', color: '#0369a1', fontWeight: 'bold'}}>{selectedOrder.paymentDetails.transactionId}</span>
+                                                </div>
+                                            )}
                                             <div className="data-row">
                                                 <span className="data-label">Shipping Address</span>
                                                 <span className="data-value address">

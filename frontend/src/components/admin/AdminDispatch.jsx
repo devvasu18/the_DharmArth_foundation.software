@@ -22,6 +22,7 @@ const AdminDispatch = () => {
         deliveryBoyId: '',
         notes: ''
     });
+    const [selectedOrderIds, setSelectedOrderIds] = useState([]);
 
     useEffect(() => {
         fetchData();
@@ -90,33 +91,72 @@ const AdminDispatch = () => {
         }
     };
 
+    const toggleOrderSelection = (orderId) => {
+        setSelectedOrderIds(prev => 
+            prev.includes(orderId) 
+                ? prev.filter(id => id !== orderId) 
+                : [...prev, orderId]
+        );
+    };
+
+    const handleBulkAssign = () => {
+        if (selectedOrderIds.length === 0) return;
+        // Open modal but set selectedOrder to a placeholder that indicates bulk
+        setSelectedOrder({ _id: 'BULK', shippingAddress: { street: 'Multiple Orders', city: `${selectedOrderIds.length} selected` } });
+        setAssignPayload({ routeId: '', busId: '', pickupStoppage: '', estimatedArrivalTime: '', deliveryBoyId: '', notes: '' });
+        setBuses([]);
+    };
+
     const submitAssignment = async (e) => {
         e.preventDefault();
-        console.log("Dispatching with Payload:", assignPayload);
+        const isBulk = selectedOrder._id === 'BULK';
+        
         try {
-            await api.post('/delivery/assign', {
-                orderId: selectedOrder._id,
-                routeId: assignPayload.routeId,
-                busId: assignPayload.busId,
-                deliveryBoyId: assignPayload.deliveryBoyId,
-                pickupStoppage: assignPayload.pickupStoppage,
-                estimatedArrivalTime: assignPayload.estimatedArrivalTime,
-                vehicleName: assignPayload.vehicleName,
-                notes: assignPayload.notes
-            });
-            toast.success("Order Successfully Dispatched!");
+            if (isBulk) {
+                await api.post('/delivery/bulk-assign', {
+                    orderIds: selectedOrderIds,
+                    routeId: assignPayload.routeId,
+                    busId: assignPayload.busId,
+                    deliveryBoyId: assignPayload.deliveryBoyId,
+                    pickupStoppage: assignPayload.pickupStoppage,
+                    estimatedArrivalTime: assignPayload.estimatedArrivalTime,
+                    vehicleName: assignPayload.vehicleName,
+                    notes: assignPayload.notes
+                });
+                toast.success(`${selectedOrderIds.length} Orders Dispatched!`);
+                setSelectedOrderIds([]);
+            } else {
+                await api.post('/delivery/assign', {
+                    orderId: selectedOrder._id,
+                    routeId: assignPayload.routeId,
+                    busId: assignPayload.busId,
+                    deliveryBoyId: assignPayload.deliveryBoyId,
+                    pickupStoppage: assignPayload.pickupStoppage,
+                    estimatedArrivalTime: assignPayload.estimatedArrivalTime,
+                    vehicleName: assignPayload.vehicleName,
+                    notes: assignPayload.notes
+                });
+                toast.success("Order Successfully Dispatched!");
+            }
             setSelectedOrder(null);
             fetchData();
         } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to dispatch order");
+            toast.error(err.response?.data?.message || "Failed to dispatch");
         }
     };
 
     return (
         <div className="dispatch-container">
             <div className="dispatch-header">
-                <h2>Order Dispatch Center</h2>
-                <p>Assign paid transactions and medicine fulfillments to the logistics fleet.</p>
+                <div>
+                    <h2>Order Dispatch Center</h2>
+                    <p>Assign paid transactions and medicine fulfillments to the logistics fleet.</p>
+                </div>
+                {selectedOrderIds.length > 0 && (
+                    <button className="btn-bulk-dispatch" onClick={handleBulkAssign}>
+                        Dispatch {selectedOrderIds.length} Selected
+                    </button>
+                )}
             </div>
 
             {loading ? (
@@ -129,14 +169,22 @@ const AdminDispatch = () => {
             ) : (
                 <div className="order-grid">
                     {orders.map(order => (
-                        <div key={order._id} className="order-card-d">
+                        <div key={order._id} className={`order-card-d ${selectedOrderIds.includes(order._id) ? 'selected' : ''}`}>
                             <div className="o-card-header">
-                                <span className="o-id">#{order._id.substring(order._id.length - 6).toUpperCase()}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <input 
+                                        type="checkbox" 
+                                        className="order-checkbox"
+                                        checked={selectedOrderIds.includes(order._id)}
+                                        onChange={() => toggleOrderSelection(order._id)}
+                                    />
+                                    <span className="o-id">#{order._id.substring(order._id.length - 6).toUpperCase()}</span>
+                                </div>
                                 <span className={`o-badge ${order.paymentDetails?.method === 'COD' ? 'cod' : 'paid'}`}>
                                     {order.paymentDetails?.method === 'COD' ? 'COD' : 'PREPAID'}
                                 </span>
                             </div>
-                            <div className="o-card-body">
+                            <div className="o-card-body" onClick={() => toggleOrderSelection(order._id)} style={{ cursor: 'pointer' }}>
                                 <div className="o-row" style={{ fontWeight: 600, color: '#1e293b' }}>
                                     {order.orderType || 'General Order'} - ₹{order.totalAmount}
                                 </div>
@@ -163,7 +211,7 @@ const AdminDispatch = () => {
                 <div className="dispatch-modal-overlay">
                     <div className="dispatch-modal-card">
                         <div className="dm-header">
-                            <h3><Navigation size={24} color="#3b82f6" /> Dispatch Configuration</h3>
+                            <h3><Navigation size={24} color="#3b82f6" /> {selectedOrder._id === 'BULK' ? 'Bulk Dispatch Configuration' : 'Dispatch Configuration'}</h3>
                             <button className="btn-close-dm" onClick={() => setSelectedOrder(null)}><X size={24} /></button>
                         </div>
 

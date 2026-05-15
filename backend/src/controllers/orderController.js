@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const User = require('../models/User');
 
 // @desc    Get logged in user orders
 // @route   GET /api/orders/my
@@ -64,18 +65,47 @@ const getOrderById = async (req, res) => {
 // @access  Private/Admin
 const getAllOrders = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const skip = (page - 1) * limit;
+        const { page = 1, limit = 20, status, search } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
 
-        const total = await Order.countDocuments();
+        const query = {};
+        if (status) {
+            query.status = status;
+        }
+
+        if (search) {
+            const User = require('../models/User');
+            // Search users by name or mobile
+            const users = await User.find({
+                $or: [
+                    { name: { $regex: search, $options: 'i' } },
+                    { mobile: { $regex: search, $options: 'i' } }
+                ]
+            }).select('_id');
+            const userIds = users.map(u => u._id);
+
+            query.$or = [
+                { user: { $in: userIds } }
+            ];
+
+            // Add ID search if it looks like a hex string
+            if (/^[0-9a-fA-F]{4,24}$/.test(search)) {
+                // If it's a full 24-char ID, use exact match
+                if (search.length === 24) {
+                    query.$or.push({ _id: search });
+                }
+                // Partial ID search is not natively supported on ObjectId in Mongoose without aggregation
+            }
+        }
+
+        const total = await Order.countDocuments(query);
         
-        const orders = await Order.find({})
+        const orders = await Order.find(query)
             .populate('user', 'name mobile')
             .populate('dispatchDetails.busId')
             .sort({ createdAt: -1 })
             .skip(skip)
-            .limit(limit);
+            .limit(parseInt(limit));
 
         // Logic to backfill image and FETCH DELIVERY BOY info
         const Bus = require('../models/Bus');
@@ -171,10 +201,55 @@ const downloadInvoice = async (req, res) => {
     }
 };
 
+// @desc    Get guest orders history
+// @route   GET /api/orders/guest-history/:mobile
+// @access  Public
+const getGuestOrders = async (req, res) => {
+    try {
+        const { mobile } = req.params;
+        const user = await User.findOne({ mobile });
+
+        if (!user) {
+            return res.json([]);
+        }
+
+        // Security Check: If user has a password, they must login
+        if (user.password) {
+            return res.status(401).json({ 
+                message: 'This account is registered. Please login to view history.',
+                loginRequired: true 
+            });
+        }
+
+        const orders = await Order.find({ user: user._id })
+            .populate('prescription', 'image')
+            .populate('dispatchDetails.busId')
+            .sort({ createdAt: -1 });
+
+        const Bus = require('../models/Bus');
+        const ordersWithBackfill = await Promise.all(orders.map(async (order) => {
+            const orderObj = order.toObject();
+            if (orderObj.dispatchDetails && !orderObj.dispatchDetails.busId && orderObj.dispatchDetails.busNumber) {
+                const liveBus = await Bus.findOne({ busNumber: orderObj.dispatchDetails.busNumber });
+                if (liveBus) {
+                    orderObj.dispatchDetails.busId = liveBus;
+                    orderObj.dispatchDetails.backfill = true;
+                }
+            }
+            return orderObj;
+        }));
+
+        res.json(ordersWithBackfill);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getMyOrders,
     getOrderById,
     getAllOrders,
     updateOrderStatus,
-    downloadInvoice
+    downloadInvoice,
+    getGuestOrders
 };

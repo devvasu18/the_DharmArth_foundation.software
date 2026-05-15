@@ -114,64 +114,123 @@ exports.deleteBus = async (req, res) => {
 
 exports.assignDelivery = async (req, res) => {
     const { orderId, deliveryBoyId, busId, routeId, notes, pickupStoppage, estimatedArrivalTime, vehicleName } = req.body;
-    console.log("Assigning Delivery Payload:", { orderId, pickupStoppage, estimatedArrivalTime, vehicleName, deliveryBoyId });
     try {
-        // 1. Check if Order exists and is paid (or COD)
-        const order = await Order.findById(orderId);
-        if (!order) return res.status(404).json({ message: 'Order not found' });
-
-        const isPaid = order.paymentDetails && order.paymentDetails.status === 'Completed';
-        const isCOD = order.paymentDetails && order.paymentDetails.method === 'COD';
-
-        if (!isPaid && !isCOD) {
-            return res.status(400).json({ message: 'Cannot assign delivery for unpaid online orders' });
-        }
-
-        // 2. Check if already assigned to an active delivery
-        const existingAssignment = await DeliveryAssignment.findOne({ 
-            orderId, 
-            status: { $in: ['Assigned', 'In Transit'] } 
+        const result = await processAssignment({
+            orderId, deliveryBoyId, busId, routeId, notes, pickupStoppage, estimatedArrivalTime, vehicleName
         });
-        if (existingAssignment) {
-            return res.status(400).json({ message: 'Order is already assigned to an active delivery' });
-        }
+        res.status(201).json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
 
-        const assignment = await DeliveryAssignment.create({
-            orderId,
-            deliveryBoyId,
-            busId,
-            routeId,
-            pickupStoppage,
-            estimatedArrivalTime,
-            vehicleName,
-            notes
-        });
+exports.bulkAssignDelivery = async (req, res) => {
+    const { orderIds, deliveryBoyId, busId, routeId, notes, pickupStoppage, estimatedArrivalTime, vehicleName } = req.body;
+    
+    if (!Array.isArray(orderIds) || orderIds.length === 0) {
+        return res.status(400).json({ message: 'No orders selected for bulk assignment' });
+    }
 
-        // 3. Fetch Bus and Route details to sync with Order for Customer/Driver view
-        const bus = await Bus.findById(busId);
-        const route = await BusRoute.findById(routeId);
+    try {
+        const results = [];
+        const errors = [];
 
-        // Update Order status and sync dispatch details (Using $set for nested safety)
-        await Order.findByIdAndUpdate(orderId, { 
-            status: 'Out for Delivery',
-            $push: { statusHistory: { status: 'Out for Delivery', note: `Assigned to ${bus?.busName || 'Vehicle'} (${bus?.busNumber || 'N/A'})` } },
-            $set: {
-                dispatchDetails: {
-                    busId: bus?._id,
-                    busNumber: bus?.busNumber,
-                    busName: bus?.busName,
-                    vehicleName,
-                    conductorNumber: bus?.mobileNumber, 
-                    routeName: route?.routeName,
-                    busImage: bus?.image,
-                    pickupStoppage,
-                    estimatedArrivalTime,
-                    dispatchedAt: Date.now()
-                }
+        for (const orderId of orderIds) {
+            try {
+                const result = await processAssignment({
+                    orderId, deliveryBoyId, busId, routeId, notes, pickupStoppage, estimatedArrivalTime, vehicleName
+                }, false); // Pass false to skip individual WhatsApp notifications
+                results.push(result);
+            } catch (err) {
+                errors.push({ orderId, message: err.message });
             }
-        });
+        }
 
-        // 4. Send WhatsApp Notification to the Delivery Boy
+        // Send a single WhatsApp notification for the batch
+        const User = require('../models/User');
+        const deliveryBoy = await User.findById(deliveryBoyId);
+        if (deliveryBoy && deliveryBoy.mobile && results.length > 0) {
+            const bus = await Bus.findById(busId);
+            const whatsappService = require('../services/whatsappService');
+            await whatsappService.sendDeliveryAssignmentNotification(
+                deliveryBoy.mobile,
+                deliveryBoy.name,
+                vehicleName || bus?.busName || 'Vehicle',
+                pickupStoppage,
+                results.length // Pass count to service if supported, or just keep original
+            );
+        }
+
+        res.status(200).json({ 
+            success: true, 
+            assignedCount: results.length,
+            errors: errors.length > 0 ? errors : undefined
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Internal helper for assignment logic
+const processAssignment = async (data, sendNotification = true) => {
+    const { orderId, deliveryBoyId, busId, routeId, notes, pickupStoppage, estimatedArrivalTime, vehicleName } = data;
+    
+    // 1. Check if Order exists and is paid (or COD)
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error(`Order ${orderId} not found`);
+
+    const isPaid = order.paymentDetails && order.paymentDetails.status === 'Completed';
+    const isCOD = order.paymentDetails && order.paymentDetails.method === 'COD';
+
+    if (!isPaid && !isCOD) {
+        throw new Error(`Order ${orderId} is unpaid`);
+    }
+
+    // 2. Check if already assigned to an active delivery
+    const existingAssignment = await DeliveryAssignment.findOne({ 
+        orderId, 
+        status: { $in: ['Assigned', 'In Transit'] } 
+    });
+    if (existingAssignment) {
+        throw new Error(`Order ${orderId} is already assigned`);
+    }
+
+    const assignment = await DeliveryAssignment.create({
+        orderId,
+        deliveryBoyId,
+        busId,
+        routeId,
+        pickupStoppage,
+        estimatedArrivalTime,
+        vehicleName,
+        notes
+    });
+
+    // 3. Sync dispatch details to Order
+    const bus = await Bus.findById(busId);
+    const route = await BusRoute.findById(routeId);
+
+    await Order.findByIdAndUpdate(orderId, { 
+        status: 'Out for Delivery',
+        $push: { statusHistory: { status: 'Out for Delivery', note: `Assigned to ${bus?.busName || 'Vehicle'} (${bus?.busNumber || 'N/A'})` } },
+        $set: {
+            dispatchDetails: {
+                busId: bus?._id,
+                busNumber: bus?.busNumber,
+                busName: bus?.busName,
+                vehicleName,
+                conductorNumber: bus?.mobileNumber, 
+                routeName: route?.routeName,
+                busImage: bus?.image,
+                pickupStoppage,
+                estimatedArrivalTime,
+                dispatchedAt: Date.now()
+            }
+        }
+    });
+
+    // 4. WhatsApp Notification (if single assignment)
+    if (sendNotification) {
         const User = require('../models/User');
         const deliveryBoy = await User.findById(deliveryBoyId);
         if (deliveryBoy && deliveryBoy.mobile) {
@@ -183,11 +242,9 @@ exports.assignDelivery = async (req, res) => {
                 pickupStoppage
             );
         }
-
-        res.status(201).json(assignment);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
     }
+
+    return assignment;
 };
 
 // --- Delivery Dashboard Data (Admin) ---
@@ -235,6 +292,88 @@ exports.getAssignedOrders = async (req, res) => {
         .sort({ updatedAt: -1 });
 
         res.json(assignments);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.bulkUpdateAssignmentStatus = async (req, res) => {
+    const { assignmentIds, status, notes, driverNumber, actualDepartureTime, handoverImage } = req.body;
+    
+    if (!Array.isArray(assignmentIds) || assignmentIds.length === 0) {
+        return res.status(400).json({ message: 'No assignments selected' });
+    }
+
+    try {
+        const results = [];
+        const errors = [];
+
+        for (const id of assignmentIds) {
+            try {
+                const assignment = await DeliveryAssignment.findById(id);
+                if (!assignment) throw new Error(`Assignment ${id} not found`);
+
+                // SECURITY: Verify ownership
+                if (assignment.deliveryBoyId.toString() !== req.user._id.toString()) {
+                    throw new Error(`Not authorized for assignment ${id}`);
+                }
+
+                assignment.status = status;
+                if (notes) assignment.notes = notes;
+
+                if (status === 'Delivered') {
+                    assignment.deliveredAt = Date.now();
+                    assignment.handoverImage = handoverImage;
+                    assignment.driverNumber = driverNumber;
+                    assignment.actualDepartureTime = actualDepartureTime || Date.now();
+
+                    await Order.findByIdAndUpdate(assignment.orderId, { 
+                        status: 'Delivered',
+                        $push: { statusHistory: { status: 'Delivered', note: 'Bulk Delivered by: ' + req.user.name } },
+                        $set: {
+                            'dispatchDetails.actualDepartureTime': assignment.actualDepartureTime,
+                            'dispatchDetails.conductorNumber': assignment.driverNumber || undefined,
+                            'dispatchDetails.busImage': assignment.handoverImage || undefined
+                        }
+                    });
+
+                    // Send WhatsApp Notification to Customer
+                    try {
+                        const updatedOrder = await Order.findById(assignment.orderId).populate('user', 'name mobile');
+                        const bus = await Bus.findById(assignment.busId);
+                        
+                        if (updatedOrder && updatedOrder.user && updatedOrder.user.mobile) {
+                            const whatsappService = require('../services/whatsappService');
+                            await whatsappService.sendOrderShippedToBusNotification(
+                                updatedOrder.user.mobile,
+                                updatedOrder.user.name,
+                                updatedOrder._id,
+                                bus?.busName || 'Express Vehicle',
+                                bus?.busNumber || 'N/A'
+                            );
+                        }
+                    } catch (notifyErr) {
+                        console.error("Bulk Handover WhatsApp Notification Error:", notifyErr);
+                    }
+                } else if (status === 'In Transit') {
+                    await Order.findByIdAndUpdate(assignment.orderId, { 
+                        status: 'Out for Delivery',
+                        $push: { statusHistory: { status: 'Out for Delivery', note: 'Marked as in transit (Bulk)' } }
+                    });
+                }
+
+                await assignment.save();
+                results.push(assignment);
+            } catch (err) {
+                errors.push({ id, message: err.message });
+            }
+        }
+
+        res.json({ 
+            success: true, 
+            updatedCount: results.length,
+            errors: errors.length > 0 ? errors : undefined
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

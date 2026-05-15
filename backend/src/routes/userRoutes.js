@@ -497,6 +497,25 @@ router.put('/profile', protect, async (req, res) => {
     }
 });
 
+// @desc    Lookup guest name by mobile
+// @route   GET /api/users/guest-lookup/:mobile
+// @access  Public
+router.get('/guest-lookup/:mobile', async (req, res) => {
+    try {
+        const user = await User.findOne({ mobile: req.params.mobile }).select('name password');
+        if (!user) {
+            return res.status(404).json({ message: 'Guest not found' });
+        }
+        // If user has a password, it's not a guest
+        if (user.password) {
+            return res.status(401).json({ message: 'User is registered. Please login.' });
+        }
+        res.json({ name: user.name });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @desc    Get public profile by referral code
 // @route   GET /api/users/v/:referralCode
 // @access  Public
