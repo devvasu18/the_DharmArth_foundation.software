@@ -1,0 +1,60 @@
+name: iOS Build (Unsigned IPA)
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+          
+      - name: Install Dependencies
+        working-directory: ./mobile
+        run: npm install --legacy-peer-deps
+        
+      - name: Prebuild iOS
+        working-directory: ./mobile
+        run: npx expo prebuild --platform ios
+        
+      - name: Install CocoaPods
+        working-directory: ./mobile/ios
+        run: pod install
+        
+      - name: Build iOS App
+        working-directory: ./mobile/ios
+        run: |
+          WORKSPACE=$(ls | grep \.xcworkspace$ | head -n 1)
+          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list | awk '/Schemes:/{getline; print $1}')
+          echo "Building workspace $WORKSPACE with scheme $SCHEME"
+          
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+            
+      - name: Package Unsigned IPA
+        working-directory: ./mobile/ios
+        run: |
+          mkdir -p Payload
+          mv build/Build/Products/Release-iphoneos/*.app Payload/
+          zip -r app.ipa Payload
+          
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: dharmarth-foundation-unsigned-ipa
+          path: mobile/ios/app.ipa
