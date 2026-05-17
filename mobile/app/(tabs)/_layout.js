@@ -138,7 +138,6 @@ export default function TabLayout() {
           shadowOpacity: 0,
           borderBottomWidth: 2,
           borderBottomColor: '#00bfa5',
-          height: 70,
         },
         headerTitleAlign: 'left',
         headerTitleStyle: {
