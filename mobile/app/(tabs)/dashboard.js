@@ -199,7 +199,7 @@ export default function DashboardScreen() {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.withdrawBtn} onPress={() => Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/dashboard')}>
+          <TouchableOpacity style={styles.withdrawBtn} onPress={() => router.push('/withdraw')}>
             <Text style={styles.withdrawBtnText}>Withdraw Now</Text>
           </TouchableOpacity>
 

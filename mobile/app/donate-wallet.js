@@ -39,7 +39,7 @@ export default function DonateWalletScreen() {
         setSettings({
           btnText: settingsRes.data.wallet_donate_btn_text || 'Donate From Wallet'
         });
-        setAmount(walletRes.data.wallet.balance.toString());
+        setAmount(parseFloat(walletRes.data.wallet.balance.toFixed(2)).toString());
       } catch (error) {
         console.error(error);
         Alert.alert("Error", "Failed to load data");

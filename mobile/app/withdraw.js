@@ -40,7 +40,7 @@ export default function WithdrawScreen() {
           minBalance: settingsRes.data.payout_min_balance || 500,
           successMessage: settingsRes.data.payout_success_message || 'Your payment will be received in your bank account in 5-7 working days.'
         });
-        setAmount(walletRes.data.wallet.balance);
+        setAmount(Math.floor(walletRes.data.wallet.balance));
       } catch (error) {
         console.error(error);
         Alert.alert("Error", "Failed to load wallet data");
