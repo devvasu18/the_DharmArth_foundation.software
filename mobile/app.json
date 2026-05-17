@@ -5,7 +5,7 @@
     "scheme": "dharmarth",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/LOGO.jpg",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
     "splash": {
@@ -24,7 +24,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/LOGO.jpg",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.dharmarth.foundation",
