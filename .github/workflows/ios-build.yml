@@ -33,7 +33,8 @@ jobs:
         working-directory: ./mobile/ios
         run: |
           WORKSPACE=$(ls | grep \.xcworkspace$ | head -n 1)
-          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list | awk '/Schemes:/{getline; print $1}')
+          # The main app scheme is always the same name as the workspace (without the .xcworkspace extension)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
           echo "Building workspace $WORKSPACE with scheme $SCHEME"
           
           xcodebuild \
