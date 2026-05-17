@@ -1,4 +1,4 @@
-name: iOS Build (Unsigned IPA)
+name: iOS Build (Simulator Zip)
 on:
   push:
     branches: [ main ]
@@ -41,16 +41,15 @@ jobs:
             -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
             -configuration Release \
-            -sdk iphoneos \
+            -sdk iphonesimulator \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
             
-      - name: Package Unsigned IPA
+      - name: Package Simulator Zip
         working-directory: ./mobile/ios
         run: |
-          mkdir -p Payload
           # Find the .app directory wherever xcodebuild decided to put it
           APP_PATH=$(find build/Build/Products -name "*.app" -type d | head -n 1)
           if [ -z "$APP_PATH" ]; then
@@ -59,11 +58,16 @@ jobs:
             exit 1
           fi
           echo "Found app at: $APP_PATH"
-          mv "$APP_PATH" Payload/
-          zip -r app.ipa Payload
           
-      - name: Upload IPA
+          # Navigate into the folder containing the .app to zip it correctly without absolute paths
+          cd $(dirname "$APP_PATH")
+          zip -r simulator-app.zip $(basename "$APP_PATH")
+          
+          # Move it back up to the ios directory
+          mv simulator-app.zip ../../../../simulator-app.zip
+          
+      - name: Upload Simulator Zip
         uses: actions/upload-artifact@v4
         with:
-          name: dharmarth-foundation-unsigned-ipa
-          path: mobile/ios/app.ipa
+          name: dharmarth-foundation-simulator-app
+          path: mobile/ios/simulator-app.zip
