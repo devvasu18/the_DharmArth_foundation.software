@@ -18,6 +18,10 @@ const prescriptionSchema = new mongoose.Schema({
         default: 'Pending'
     },
     notes: String,
+    faqAnswers: [{
+        question: String,
+        answer: String
+    }],
     verifiedItems: [{
         medicineName: String,
         dosage: String,
@@ -36,7 +40,11 @@ const prescriptionSchema = new mongoose.Schema({
         },
         estimatedArrivalDays: Number,
         alternativeSuggested: String,
-        margPID: Number
+        margPID: Number,
+        margPack: Number,
+        margBatch: String,
+        margExpiry: String,
+        margBillNo: String
     }],
     userApproved: { type: Boolean, default: false },
     approvalRequired: { type: Boolean, default: false },

@@ -38,11 +38,21 @@ exports.uploadPrescription = async (req, res) => {
             return res.status(400).json({ message: 'User identification required' });
         }
 
+        let parsedFaqAnswers = [];
+        if (req.body.faqAnswers) {
+            try {
+                parsedFaqAnswers = JSON.parse(req.body.faqAnswers);
+            } catch (e) {
+                console.error("Failed to parse faqAnswers:", e);
+            }
+        }
+
         const prescription = await Prescription.create({
             user: userId,
             image: req.file.path, // Cloudinary URL
             status: 'Pending',
             notes: req.body.notes,
+            faqAnswers: parsedFaqAnswers,
             guestName: guestInfo.name,
             guestMobile: guestInfo.mobile
         });
@@ -216,7 +226,12 @@ exports.approveAndCreateOrder = async (req, res) => {
                 frequency: item.frequency,
                 time: item.time,
                 foodRelation: item.foodRelation,
-                intakeMethod: item.intakeMethod
+                intakeMethod: item.intakeMethod,
+                margPack: item.margPack,
+                margBatch: item.margBatch,
+                margExpiry: item.margExpiry,
+                margBillNo: item.margBillNo,
+                fulfillmentStatus: item.fulfillmentStatus === 'Shortlisted' ? 'Shortlisted' : 'Packed'
             };
         });
 

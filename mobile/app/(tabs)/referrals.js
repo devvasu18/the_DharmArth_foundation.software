@@ -58,8 +58,15 @@ export default function Referrals() {
     const mobile = referral.donorMobile;
     const amount = referral.amount;
     
-    // Construct the re-donation link (pointing to web for now as app donation is not built yet)
-    const donationUrl = `https://dharmarthfoundation.org/donate?motivator=${user?.mobile}&name=${encodeURIComponent(donorName)}&mobile=${mobile}&amount=${amount}`;
+    // Construct the re-donation link (pointing to the app's donate page)
+    const donationUrl = Linking.createURL('/donate', { 
+      queryParams: { 
+        motivator: user?.mobile, 
+        name: donorName, 
+        mobile: mobile, 
+        amount: amount 
+      } 
+    });
 
     const message = `Namaste ${donorName}, this is ${motivatorName} from The DharmArth Foundation. 🕉️\n\nYour monthly contribution of ₹${amount} has stopped. We invite you to continue your noble support.\n\nRestart here: ${donationUrl}`;
 

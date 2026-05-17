@@ -156,7 +156,7 @@ const LandingScreen = () => {
                 );
               })}
             </View>
-            
+
             {/* Pagination Indicators */}
             <View style={styles.paginationContainer}>
               {visuals.map((_, index) => (
@@ -197,7 +197,17 @@ const LandingScreen = () => {
 
                 <TouchableOpacity
                   style={styles.heroCta}
-                  onPress={() => Linking.openURL(textSlides[currentTextIndex].ctaLink || 'https://the-dharm-arth-foundation-software.vercel.app/donate')}
+                  onPress={() => {
+                    let link = textSlides[currentTextIndex].ctaLink;
+                    if (!link) {
+                      link = 'https://the-dharm-arth-foundation-software.vercel.app/donate';
+                    } else if (link.startsWith('/')) {
+                      link = `https://the-dharm-arth-foundation-software.vercel.app${link}`;
+                    } else if (!link.startsWith('http')) {
+                      link = `https://the-dharm-arth-foundation-software.vercel.app/${link}`;
+                    }
+                    Linking.openURL(link).catch(err => console.log('Failed to open link:', err));
+                  }}
                 >
                   <Text style={styles.heroCtaText}>{textSlides[currentTextIndex].ctaText || 'Donate Now'}</Text>
                   <Ionicons name="arrow-forward" size={20} color="white" />
@@ -210,7 +220,7 @@ const LandingScreen = () => {
         {/* Welcome Section */}
         <View style={styles.welcomeSection}>
           <Text style={styles.welcomeTitle}>
-            Welcome to The DharmArth Foundation
+            Feed a child. Heal a patient. Save a life.
           </Text>
           <View style={styles.welcomeUnderline} />
         </View>

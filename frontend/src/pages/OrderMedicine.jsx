@@ -103,6 +103,7 @@ const OrderMedicine = () => {
     const [isOrderingForSomeoneElse, setIsOrderingForSomeoneElse] = useState(false);
 
     const [notes, setNotes] = useState('');
+    const [faqAnswers, setFaqAnswers] = useState({});
 
     const getContactTiming = () => {
         const hour = new Date().getHours();
@@ -280,9 +281,26 @@ const OrderMedicine = () => {
             return;
         }
 
+        if (pharmacyConfig?.faqs && pharmacyConfig.faqs.length > 0) {
+            const missingAnswers = pharmacyConfig.faqs.filter(faq => !faqAnswers[faq.id] || faqAnswers[faq.id].trim() === '');
+            if (missingAnswers.length > 0) {
+                toast.error(`Please answer: ${missingAnswers[0].question}`);
+                setError('Please answer all required additional questions.');
+                return;
+            }
+        }
+
         const formData = new FormData();
         formData.append('prescription', file);
         if (notes) formData.append('notes', notes);
+        
+        const answerArray = (pharmacyConfig?.faqs || [])
+            .filter(faq => faqAnswers[faq.id])
+            .map(faq => ({ question: faq.question, answer: faqAnswers[faq.id] }));
+        
+        if (answerArray.length > 0) {
+            formData.append('faqAnswers', JSON.stringify(answerArray));
+        }
         
         if (isGuest) {
             formData.append('guestName', guestName);
@@ -553,6 +571,25 @@ const OrderMedicine = () => {
                                             accept="image/*"
                                         />
                                     </div>
+
+                                    {pharmacyConfig?.faqs?.length > 0 && (
+                                        <div style={{ marginTop: '20px' }}>
+                                            <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '8px', display: 'block' }}>Additional Information</label>
+                                            {pharmacyConfig.faqs.map((faq, idx) => (
+                                                <div key={idx} style={{ marginBottom: '12px' }}>
+                                                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#64748b', marginBottom: '4px', display: 'block' }}>{faq.question} <span style={{color: '#ef4444'}}>*</span></label>
+                                                    <input 
+                                                        type="text"
+                                                        value={faqAnswers[faq.id] || ''}
+                                                        onChange={(e) => setFaqAnswers(prev => ({...prev, [faq.id]: e.target.value}))}
+                                                        placeholder="Your answer..."
+                                                        required
+                                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', fontSize: '13px' }}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
 
                                     <div style={{ marginTop: '20px' }}>
                                         <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '8px', display: 'block' }}>Optional Notes (Medicines/Quantity)</label>

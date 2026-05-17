@@ -4,11 +4,9 @@ import {
   Text, 
   StyleSheet, 
   ScrollView, 
-  TouchableOpacity, 
   ActivityIndicator,
   RefreshControl,
-  Dimensions,
-  Platform
+  Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../src/context/AuthContext';
@@ -17,44 +15,51 @@ import { Stack } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
-const NetworkNode = ({ user, level, isLast, hasChildren }) => {
-  const getBadgeColor = () => {
-    switch (level) {
-      case 'root': return '#00bfa5';
-      case 'L1': return '#10b981';
-      case 'L2': return '#3b82f6';
-      default: return '#64748b';
-    }
-  };
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  return new Date(dateString).toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+};
+
+const NetworkNode = ({ user, level, title, subtitle }) => {
+  const isYou = level === 'you';
+  const isMotivator = level === 'root';
+  const isL1 = level === 'L1';
+  const isL2 = level === 'L2';
 
   return (
-    <View style={styles.nodeContainer}>
-      <View style={styles.nodeContent}>
-        <View style={[styles.nodeIcon, { backgroundColor: getBadgeColor() + '10' }]}>
-          <Ionicons 
-            name={level === 'root' ? "person" : "people"} 
-            size={20} 
-            color={getBadgeColor()} 
-          />
+    <View style={[styles.nodeContainer, isYou && styles.youNodeContainer]}>
+      {/* Badges for L1/L2 */}
+      {(isL1 || isL2) && (
+        <View style={[styles.levelBadgeMini, isL1 ? styles.badgeL1 : styles.badgeL2]}>
+          <Text style={styles.badgeText}>{level}</Text>
         </View>
-        <View style={styles.nodeText}>
-          <View style={styles.nameRow}>
-            <Text style={styles.nodeName}>{user.name}</Text>
-            {level !== 'root' && (
-              <View style={[styles.levelBadge, { backgroundColor: getBadgeColor() }]}>
-                <Text style={styles.levelBadgeText}>{level}</Text>
-              </View>
-            )}
+      )}
+
+      <View style={styles.nodeContent}>
+        {isMotivator && (
+          <View style={[styles.nodeIconBox, { backgroundColor: '#f0fdf9' }]}>
+            <Ionicons name="shield-checkmark" size={20} color="#00bfa5" />
           </View>
-          <Text style={styles.nodeMobile}>{user.mobile}</Text>
-          {user.createdAt && (
+        )}
+        
+        <View style={styles.nodeInfo}>
+          <Text style={[styles.nodeTitle, isL2 && styles.nodeTitleSmall]} numberOfLines={1}>
+            {title || user?.name}
+          </Text>
+          <Text style={styles.nodeSubtitle}>
+            {subtitle || user?.mobile}
+          </Text>
+          {!isMotivator && user?.createdAt && (
             <Text style={styles.nodeDate}>
-              Member since {new Date(user.createdAt).toLocaleDateString()}
+              Member since {formatDate(user.createdAt)}
             </Text>
           )}
         </View>
       </View>
-      {hasChildren && <View style={styles.connectorLine} />}
     </View>
   );
 };
@@ -98,94 +103,109 @@ export default function MyNetwork() {
     );
   }
 
-  const renderL1Branch = (l1User) => {
-    const l2Group = referralTree.level2Data.find(g => g.level1User._id === l1User._id);
-    const l2Users = l2Group ? l2Group.level2Users : [];
-
-    return (
-      <View key={l1User._id} style={styles.branchWrapper}>
-        <View style={styles.l1NodeWrapper}>
-          <View style={styles.horizontalConnector} />
-          <NetworkNode user={l1User} level="L1" hasChildren={l2Users.length > 0} />
-        </View>
-        
-        {l2Users.length > 0 && (
-          <View style={styles.l2Group}>
-            {l2Users.map((l2User, idx) => (
-              <View key={l2User._id} style={styles.l2NodeWrapper}>
-                <View style={styles.verticalConnector} />
-                <View style={styles.horizontalConnectorShort} />
-                <NetworkNode user={l2User} level="L2" isLast={idx === l2Users.length - 1} />
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-    );
-  };
+  const directCount = referralTree?.level1Users?.length || 0;
+  const indirectCount = referralTree?.level2Data?.reduce((sum, g) => sum + (g?.level2Users?.length || 0), 0) || 0;
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'My Network Tree' }} />
+      <Stack.Screen options={{ title: 'My Referral Network' }} />
       
       <ScrollView 
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={styles.mainScroll}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#00bfa5']} />
         }
       >
-        {/* Stats Section */}
-        <View style={styles.statsCard}>
-          <View style={styles.statItem}>
-            <Text style={styles.statVal}>{referralTree?.level1Users.length || 0}</Text>
-            <Text style={styles.statLbl}>Direct (L1)</Text>
+        {/* Header Stats Row */}
+        <View style={styles.headerStatsRow}>
+          <View style={styles.miniStat}>
+            <View style={[styles.statIconBox, { backgroundColor: 'rgba(0, 191, 165, 0.1)' }]}>
+              <Ionicons name="people" size={20} color="#00bfa5" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.statVal}>{directCount}</Text>
+              <Text style={styles.statLbl}>Direct (L1)</Text>
+            </View>
           </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statVal}>
-              {referralTree?.level2Data.reduce((sum, g) => sum + g.level2Users.length, 0) || 0}
-            </Text>
-            <Text style={styles.statLbl}>Indirect (L2)</Text>
+          
+          <View style={styles.miniStat}>
+            <View style={[styles.statIconBox, { backgroundColor: 'rgba(99, 102, 241, 0.1)' }]}>
+              <Ionicons name="git-network" size={20} color="#6366f1" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.statVal}>{indirectCount}</Text>
+              <Text style={styles.statLbl}>Indirect (L2)</Text>
+            </View>
           </View>
         </View>
 
-        {/* Tree Section */}
-        <View style={styles.treeSection}>
-          {/* Motivator */}
-          {referralTree?.user?.referredBy && (
-            <View style={styles.motivatorContainer}>
-              <View style={styles.motivatorLabelWrapper}>
-                <Text style={styles.motivatorLabel}>MY MOTIVATOR</Text>
+        {/* Tree Viewport */}
+        <View style={styles.treeViewport}>
+          {/* Sticky Root Wrapper */}
+          <View style={styles.stickyRootWrapper}>
+            {referralTree?.user?.referredBy && (
+              <View style={styles.motivatorWrapper}>
+                <View style={styles.motivatorLabelBox}>
+                  <Text style={styles.motivatorLabelText}>MY MOTIVATOR</Text>
+                </View>
+                <NetworkNode 
+                  user={referralTree.user.referredBy} 
+                  level="root" 
+                />
+                <View style={styles.connectorVertical} />
               </View>
-              <NetworkNode user={referralTree.user.referredBy} level="root" hasChildren={true} />
-              <View style={styles.mainVerticalConnector} />
-            </View>
-          )}
-
-          {/* YOU */}
-          <View style={styles.youContainer}>
-            <View style={[styles.nodeIcon, styles.youIcon]}>
-              <Ionicons name="star" size={24} color="#00bfa5" />
-            </View>
-            <View style={styles.youContent}>
-              <Text style={styles.youTitle}>You ({referralTree?.user?.name})</Text>
-              <Text style={styles.youSubtitle}>{referralTree?.user?.mobile}</Text>
-            </View>
-          </View>
-
-          <View style={styles.mainVerticalConnector} />
-
-          {/* Referrals */}
-          <View style={styles.referralsContainer}>
-            {referralTree?.level1Users.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Ionicons name="people-outline" size={48} color="#cbd5e1" />
-                <Text style={styles.emptyText}>No referrals yet. Share your link to build your network!</Text>
-              </View>
-            ) : (
-              referralTree.level1Users.map(renderL1Branch)
             )}
+
+            {/* YOU Node */}
+            <NetworkNode 
+              user={referralTree?.user} 
+              level="you" 
+              title={`You (${referralTree?.user?.name})`}
+            />
+            {directCount > 0 && <View style={styles.connectorVertical} />}
           </View>
+
+          {/* Scrollable Tree Tracks */}
+          <ScrollView 
+            horizontal={true} 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.scrollableTreeContent}
+          >
+            <View style={styles.familyTrack}>
+              {directCount === 0 ? (
+                <View style={styles.emptyNetwork}>
+                  <Ionicons name="people-outline" size={48} color="#cbd5e1" />
+                  <Text style={styles.emptyNetworkText}>
+                    No direct referrals yet. Start sharing your link to build your network!
+                  </Text>
+                </View>
+              ) : (
+                referralTree?.level1Users?.map(l1User => {
+                  const l2Group = referralTree?.level2Data?.find(g => g?.level1User?._id === l1User._id);
+                  const l2Users = l2Group ? l2Group.level2Users : [];
+                  
+                  return (
+                    <View key={l1User._id} style={styles.familyColumn}>
+                      {/* L1 Node */}
+                      <NetworkNode user={l1User} level="L1" />
+                      
+                      {/* L2 Nodes under L1 */}
+                      {l2Users.length > 0 && (
+                        <View style={styles.level2Group}>
+                          {l2Users.map(l2User => (
+                            <View key={l2User._id} style={styles.level2NodeWrapper}>
+                              <View style={styles.connectorVerticalShort} />
+                              <NetworkNode user={l2User} level="L2" />
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+                  );
+                })
+              )}
+            </View>
+          </ScrollView>
         </View>
       </ScrollView>
     </View>
@@ -195,11 +215,7 @@ export default function MyNetwork() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
+    backgroundColor: '#f1f5f9',
   },
   centered: {
     flex: 1,
@@ -212,111 +228,183 @@ const styles = StyleSheet.create({
     color: '#64748b',
     fontWeight: '600',
   },
-  statsCard: {
+  mainScroll: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  headerStatsRow: {
     flexDirection: 'row',
-    backgroundColor: '#00bfa5',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 30,
-    elevation: 4,
-    shadowColor: '#00bfa5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
+    gap: 12,
+    marginBottom: 20,
   },
-  statItem: {
+  miniStat: {
     flex: 1,
-    alignItems: 'center',
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    height: '100%',
-  },
-  statVal: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: 'white',
-  },
-  statLbl: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '700',
-    marginTop: 4,
-    textTransform: 'uppercase',
-  },
-  treeSection: {
-    alignItems: 'center',
-  },
-  motivatorContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 0,
-  },
-  motivatorLabelWrapper: {
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  motivatorLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#64748b',
-    letterSpacing: 1,
-  },
-  nodeContainer: {
-    width: width * 0.7,
     backgroundColor: 'white',
-    borderRadius: 16,
     padding: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-  },
-  nodeContent: {
+    borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
-  nodeIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  statIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  nodeText: {
-    flex: 1,
+  statVal: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0f172a',
+    lineHeight: 24,
   },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  nodeName: {
-    fontSize: 15,
+  statLbl: {
+    fontSize: 10,
     fontWeight: '700',
-    color: '#1e293b',
+    color: '#64748b',
+    textTransform: 'uppercase',
   },
-  levelBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+  treeViewport: {
+    backgroundColor: 'white',
+    borderRadius: 24,
+    minHeight: 500,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+    elevation: 3,
   },
-  levelBadgeText: {
-    color: 'white',
-    fontSize: 9,
-    fontWeight: '900',
+  stickyRootWrapper: {
+    paddingVertical: 24,
+    alignItems: 'center',
+    backgroundColor: 'white',
+    zIndex: 10,
   },
-  nodeMobile: {
+  motivatorWrapper: {
+    alignItems: 'center',
+    marginBottom: 0,
+  },
+  motivatorLabelBox: {
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+    marginBottom: 12,
+  },
+  motivatorLabelText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#6366f1',
+    letterSpacing: 1,
+  },
+  connectorVertical: {
+    width: 2,
+    height: 30,
+    backgroundColor: '#cbd5e1',
+  },
+  connectorVerticalShort: {
+    width: 2,
+    height: 20,
+    backgroundColor: '#cbd5e1',
+  },
+  scrollableTreeContent: {
+    paddingHorizontal: 30,
+    paddingBottom: 40,
+    minWidth: '100%',
+  },
+  familyTrack: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    gap: 30,
+  },
+  familyColumn: {
+    alignItems: 'center',
+    width: 130, // fixed width for nice columns
+  },
+  level2Group: {
+    alignItems: 'center',
+  },
+  level2NodeWrapper: {
+    alignItems: 'center',
+  },
+  emptyNetwork: {
+    alignItems: 'center',
+    paddingTop: 40,
+    paddingHorizontal: 20,
+    width: width - 80,
+  },
+  emptyNetworkText: {
+    textAlign: 'center',
+    marginTop: 16,
+    color: '#94a3b8',
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  
+  /* Node Styles */
+  nodeContainer: {
+    backgroundColor: 'white',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
+    alignItems: 'center',
+    minWidth: 120,
+    maxWidth: 130,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    position: 'relative',
+  },
+  youNodeContainer: {
+    backgroundColor: '#e6fffa',
+    borderColor: '#00bfa5',
+    borderWidth: 2,
+    shadowColor: '#00bfa5',
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    paddingHorizontal: 20,
+    minWidth: 160,
+    maxWidth: 200,
+  },
+  nodeContent: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  nodeIconBox: {
+    padding: 6,
+    borderRadius: 10,
+    marginBottom: 4,
+  },
+  nodeInfo: {
+    alignItems: 'center',
+  },
+  nodeTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0f172a',
+    textAlign: 'center',
+  },
+  nodeTitleSmall: {
+    fontSize: 13,
+  },
+  nodeSubtitle: {
     fontSize: 12,
     color: '#64748b',
     marginTop: 2,
@@ -324,101 +412,37 @@ const styles = StyleSheet.create({
   nodeDate: {
     fontSize: 10,
     color: '#94a3b8',
-    marginTop: 4,
+    fontWeight: '500',
+    marginTop: 6,
+    textAlign: 'center'
   },
-  mainVerticalConnector: {
-    width: 2,
-    height: 30,
-    backgroundColor: '#cbd5e1',
-  },
-  youContainer: {
-    backgroundColor: 'white',
-    width: width * 0.8,
-    borderRadius: 20,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    borderWidth: 2,
-    borderColor: '#00bfa5',
-    elevation: 4,
-    shadowColor: '#00bfa5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
-  youIcon: {
-    backgroundColor: '#00bfa510',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-  },
-  youContent: {
-    flex: 1,
-  },
-  youTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#0f172a',
-  },
-  youSubtitle: {
-    fontSize: 14,
-    color: '#64748b',
-    fontWeight: '600',
-  },
-  referralsContainer: {
-    width: '100%',
-    paddingLeft: 20,
-  },
-  branchWrapper: {
-    marginBottom: 20,
-  },
-  l1NodeWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  horizontalConnector: {
-    width: 20,
-    height: 2,
-    backgroundColor: '#cbd5e1',
-  },
-  l2Group: {
-    marginLeft: 50,
-    marginTop: 0,
-  },
-  l2NodeWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  verticalConnector: {
-    width: 2,
-    height: '100%',
-    backgroundColor: '#cbd5e1',
+  levelBadgeMini: {
     position: 'absolute',
-    left: -30,
-    top: -12,
-  },
-  horizontalConnectorShort: {
-    width: 30,
-    height: 2,
-    backgroundColor: '#cbd5e1',
-    marginLeft: -30,
-  },
-  emptyState: {
+    top: -8,
+    right: -8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 20,
-    borderStyle: 'dashed',
-    borderWidth: 2,
-    borderColor: '#cbd5e1',
+    borderWidth: 1.5,
+    borderColor: 'white',
+    zIndex: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  emptyText: {
-    textAlign: 'center',
-    color: '#94a3b8',
-    marginTop: 12,
-    fontSize: 14,
-    fontWeight: '600',
+  badgeL1: {
+    backgroundColor: '#00bfa5',
+  },
+  badgeL2: {
+    backgroundColor: '#6366f1',
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 9,
+    fontWeight: '900',
   }
 });

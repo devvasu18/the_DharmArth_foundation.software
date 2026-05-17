@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { toast } from 'react-hot-toast';
-import { Settings as SettingsIcon, Save, Info, Percent, Truck } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Info, Percent, Truck, HelpCircle, Trash2, Plus } from 'lucide-react';
 import './PharmacySettings.css';
 
 const PharmacySettings = () => {
@@ -14,7 +14,8 @@ const PharmacySettings = () => {
         percentDeliveryThreshold: 500,
         percentDeliveryBelowThreshold: 10,
         percentDeliveryAboveThreshold: 5,
-        gstPercent: 12
+        gstPercent: 12,
+        faqs: []
     });
 
     useEffect(() => {
@@ -199,6 +200,54 @@ const PharmacySettings = () => {
                                 <small>Shown after hours to set expectations.</small>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* Dynamic Order FAQs */}
+                <div className="settings-card glass-card full-width" style={{ marginTop: '20px' }}>
+                    <div className="card-header">
+                        <HelpCircle size={20} color="#3182ce" />
+                        <h3>Dynamic Order Questions (FAQs)</h3>
+                    </div>
+                    <div className="card-body">
+                        <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '15px' }}>
+                            These questions will be asked to the user when they upload a prescription. Answers will be visible on the verification screen.
+                        </p>
+                        
+                        {(config.faqs || []).map((faq, index) => (
+                            <div key={index} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                <input 
+                                    type="text" 
+                                    value={faq.question} 
+                                    onChange={(e) => {
+                                        const newFaqs = [...(config.faqs || [])];
+                                        newFaqs[index].question = e.target.value;
+                                        setConfig({...config, faqs: newFaqs});
+                                    }}
+                                    placeholder="Enter question text..."
+                                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                                />
+                                <button 
+                                    onClick={() => {
+                                        const newFaqs = (config.faqs || []).filter((_, i) => i !== index);
+                                        setConfig({...config, faqs: newFaqs});
+                                    }}
+                                    style={{ background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', padding: '0 15px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                            </div>
+                        ))}
+                        
+                        <button 
+                            onClick={() => {
+                                const newFaqs = [...(config.faqs || []), { id: Date.now().toString(), question: '' }];
+                                setConfig({...config, faqs: newFaqs});
+                            }}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', border: '1px dashed #cbd5e1', padding: '10px 15px', borderRadius: '8px', cursor: 'pointer', color: '#3b82f6', fontWeight: '600', marginTop: '10px' }}
+                        >
+                            <Plus size={18} /> Add New Question
+                        </button>
                     </div>
                 </div>
             </div>

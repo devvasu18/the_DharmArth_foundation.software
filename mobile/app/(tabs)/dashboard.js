@@ -10,7 +10,8 @@ import {
   Linking,
   Share,
   Clipboard,
-  Alert
+  Alert,
+  Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
@@ -26,6 +27,49 @@ export default function DashboardScreen() {
   const [stats, setStats] = useState({ l1Donors: 0, l2Donors: 0 });
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
+  const [settings, setSettings] = useState(null);
+
+  // L1/L2 Donors state
+  const [donorModalVisible, setDonorModalVisible] = useState(false);
+  const [donorModalType, setDonorModalType] = useState('L1'); // 'L1' or 'L2'
+  const [donorsList, setDonorsList] = useState([]);
+  const [summaryStats, setSummaryStats] = useState({ lifetimeEarning: 0, prevMonthEarning: 0 });
+  const [filterMonth, setFilterMonth] = useState(0); // 0 for Lifetime
+  const [filterYear, setFilterYear] = useState(new Date().getFullYear());
+  const [modalLoading, setModalLoading] = useState(false);
+
+  const fetchDonorsList = async (type, month, year) => {
+    setModalLoading(true);
+    try {
+      const endpoint = type === 'L1' ? '/wallet/l1-donors' : '/wallet/l2-donors';
+      const res = await api.get(`${endpoint}?month=${month}&year=${year}`);
+      setDonorsList(res.data.donors || []);
+      setSummaryStats(res.data.summary || { lifetimeEarning: 0, prevMonthEarning: 0 });
+    } catch (err) {
+      console.error(`Error fetching ${type} donors`, err);
+      Alert.alert("Error", `Failed to load ${type} donors list.`);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleOpenDonors = (type) => {
+    setDonorModalType(type);
+    setFilterMonth(0); // default to Lifetime
+    setFilterYear(new Date().getFullYear());
+    setDonorModalVisible(true);
+    fetchDonorsList(type, 0, new Date().getFullYear());
+  };
+
+  const handleMonthChange = (m) => {
+    setFilterMonth(m);
+    fetchDonorsList(donorModalType, m, filterYear);
+  };
+
+  const handleYearChange = (y) => {
+    setFilterYear(y);
+    fetchDonorsList(donorModalType, filterMonth, y);
+  };
 
   useEffect(() => {
     if (!user) {
@@ -38,13 +82,15 @@ export default function DashboardScreen() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [walletRes, txnRes] = await Promise.all([
+      const [walletRes, txnRes, settingsRes] = await Promise.all([
         api.get('/wallet/summary'),
-        api.get('/wallet/transactions?limit=10')
+        api.get('/wallet/transactions?limit=10'),
+        api.get('/content/settings')
       ]);
       setWallet(walletRes.data.wallet);
       setStats(walletRes.data.stats);
       setTransactions(txnRes.data.transactions || []);
+      setSettings(settingsRes.data);
     } catch (error) {
       console.error("Dashboard data fetch failed", error);
     } finally {
@@ -98,11 +144,27 @@ export default function DashboardScreen() {
 
           <View style={styles.statGrid}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats.l1Donors || 0}</Text>
+              <View style={styles.statHeaderRow}>
+                <Text style={styles.statValue}>{stats.l1Donors || 0}</Text>
+                <TouchableOpacity 
+                  style={styles.eyeBtn}
+                  onPress={() => handleOpenDonors('L1')}
+                >
+                  <Ionicons name="eye-outline" size={16} color="white" />
+                </TouchableOpacity>
+              </View>
               <Text style={styles.statLabel}>L1 Donors</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats.l2Donors || 0}</Text>
+              <View style={styles.statHeaderRow}>
+                <Text style={styles.statValue}>{stats.l2Donors || 0}</Text>
+                <TouchableOpacity 
+                  style={styles.eyeBtn}
+                  onPress={() => handleOpenDonors('L2')}
+                >
+                  <Ionicons name="eye-outline" size={16} color="white" />
+                </TouchableOpacity>
+              </View>
               <Text style={styles.statLabel}>L2 Donors</Text>
             </View>
           </View>
@@ -110,6 +172,18 @@ export default function DashboardScreen() {
           <TouchableOpacity style={styles.withdrawBtn} onPress={() => Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/dashboard')}>
             <Text style={styles.withdrawBtnText}>Withdraw Now</Text>
           </TouchableOpacity>
+
+          {wallet?.balance > 0 && (
+            <TouchableOpacity 
+              style={styles.walletDonateBtn} 
+              onPress={() => router.push('/donate-wallet')}
+            >
+              <Ionicons name="heart" size={18} color="#00695c" style={{ marginRight: 8 }} />
+              <Text style={styles.walletDonateBtnText}>
+                {settings?.wallet_donate_btn_text || 'Donate From Wallet'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Share Card - mirrored from web */}
@@ -251,6 +325,155 @@ export default function DashboardScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Donors Detail Modal */}
+      <Modal
+        visible={donorModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setDonorModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderTitleRow}>
+                <Ionicons 
+                  name={donorModalType === 'L1' ? "person" : "people"} 
+                  size={24} 
+                  color="white" 
+                />
+                <Text style={styles.modalTitle}>
+                  {donorModalType === 'L1' ? 'Directly Inspired Donors' : 'Indirectly Inspired Donors'}
+                </Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.closeBtn} 
+                onPress={() => setDonorModalVisible(false)}
+              >
+                <Ionicons name="close" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Earnings Stats Cards */}
+            <View style={styles.modalStatsSection}>
+              <View style={[styles.modalStatCard, { borderLeftColor: '#00bfa5' }]}>
+                <Text style={styles.modalStatLabel}>LIFETIME</Text>
+                <Text style={styles.modalStatValue}>
+                  ₹{(summaryStats?.lifetimeEarning || 0).toFixed(2)}
+                </Text>
+              </View>
+              <View style={[styles.modalStatCard, { borderLeftColor: '#f59e0b' }]}>
+                <Text style={styles.modalStatLabel}>LAST MONTH</Text>
+                <Text style={styles.modalStatValue}>
+                  ₹{(summaryStats?.prevMonthEarning || 0).toFixed(2)}
+                </Text>
+              </View>
+            </View>
+
+            {/* Scrolling Horizontal Filters */}
+            <View style={styles.filterSection}>
+              <Text style={styles.filterSectionTitle}>Select Month</Text>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                style={styles.horizontalScroll}
+                contentContainerStyle={styles.horizontalScrollContent}
+              >
+                {["Lifetime", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, idx) => (
+                  <TouchableOpacity 
+                    key={idx} 
+                    style={[styles.filterTab, filterMonth === idx && styles.filterTabActive]}
+                    onPress={() => handleMonthChange(idx)}
+                  >
+                    <Text style={[styles.filterTabText, filterMonth === idx && styles.filterTabTextActive]}>
+                      {m}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              {filterMonth !== 0 && (
+                <>
+                  <Text style={styles.filterSectionTitle}>Select Year</Text>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false} 
+                    style={styles.horizontalScroll}
+                    contentContainerStyle={styles.horizontalScrollContent}
+                  >
+                    {[2024, 2025, 2026].map((y) => (
+                      <TouchableOpacity 
+                        key={y} 
+                        style={[styles.filterTab, filterYear === y && styles.filterTabActive]}
+                        onPress={() => handleYearChange(y)}
+                      >
+                        <Text style={[styles.filterTabText, filterYear === y && styles.filterTabTextActive]}>
+                          {y}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </>
+              )}
+            </View>
+
+            {/* Donors List */}
+            <View style={{ flex: 1 }}>
+              {modalLoading ? (
+                <View style={styles.modalCentered}>
+                  <ActivityIndicator size="large" color="#00bfa5" />
+                  <Text style={styles.modalLoadingText}>Loading donors list...</Text>
+                </View>
+              ) : donorsList.length === 0 ? (
+                <View style={styles.modalCentered}>
+                  <Ionicons name="person-outline" size={48} color="#cbd5e1" style={{ marginBottom: 12 }} />
+                  <Text style={styles.modalEmptyText}>No donors found for this period.</Text>
+                </View>
+              ) : (
+                <ScrollView style={styles.donorsListScroll}>
+                  {/* Custom Table Header */}
+                  <View style={styles.tableHeader}>
+                    <Text style={styles.tableHeaderCol}>Donor Details</Text>
+                    <Text style={[styles.tableHeaderCol, { textAlign: 'right' }]}>Your Earning</Text>
+                  </View>
+                  
+                  {donorsList.map((donor, idx) => (
+                    <View key={idx} style={styles.tableRow}>
+                      <View style={{ flex: 1, paddingRight: 10 }}>
+                        <Text style={styles.donorName}>{donor.donorName}</Text>
+                        <Text style={styles.donorMobile}>{donor.donorMobile}</Text>
+                        <Text style={styles.donorDate}>
+                          Last Donation: {new Date(donor.lastDonation || donor.createdAt).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </Text>
+                      </View>
+                      <View style={{ justifyContent: 'center' }}>
+                        <Text style={styles.donorEarning}>
+                          ₹{(donor.totalEarning || 0).toLocaleString()}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+
+            {/* Modal Footer */}
+            <View style={styles.modalFooter}>
+              <TouchableOpacity 
+                style={styles.closeFooterBtn} 
+                onPress={() => setDonorModalVisible(false)}
+              >
+                <Text style={styles.closeFooterBtnText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -323,6 +546,21 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
   withdrawBtnText: { color: '#00695c', fontWeight: '800', fontSize: 16, textTransform: 'uppercase', letterSpacing: 0.5 },
+  walletDonateBtn: {
+    backgroundColor: 'white',
+    paddingVertical: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    marginTop: 12,
+  },
+  walletDonateBtnText: { color: '#00695c', fontWeight: '800', fontSize: 16, textTransform: 'uppercase', letterSpacing: 0.5 },
 
   // Share Card
   shareCard: {
@@ -433,5 +671,210 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccfbf1'
   },
-  actionPillText: { fontSize: 11, fontWeight: '700', color: '#00bfa5' }
+  actionPillText: { fontSize: 11, fontWeight: '700', color: '#00bfa5' },
+
+  // Eye Button & Stats Custom Layout
+  statHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  eyeBtn: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: '85%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#00bfa5',
+    padding: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  modalHeaderTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: 'white',
+    flexShrink: 1,
+  },
+  closeBtn: {
+    padding: 4,
+  },
+  modalStatsSection: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 16,
+    backgroundColor: '#f8fafc',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  modalStatCard: {
+    flex: 1,
+    backgroundColor: 'white',
+    padding: 12,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  modalStatLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#64748b',
+    letterSpacing: 0.5,
+  },
+  modalStatValue: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1e293b',
+    marginTop: 4,
+  },
+  filterSection: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  filterSectionTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  horizontalScroll: {
+    marginBottom: 8,
+  },
+  horizontalScrollContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  filterTab: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginRight: 6,
+  },
+  filterTabActive: {
+    backgroundColor: '#00bfa5',
+    borderColor: '#00bfa5',
+  },
+  filterTabText: {
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  filterTabTextActive: {
+    color: 'white',
+    fontWeight: '700',
+  },
+  modalCentered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  modalLoadingText: {
+    marginTop: 12,
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  modalEmptyText: {
+    color: '#94a3b8',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  donorsListScroll: {
+    flex: 1,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#f8fafc',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  tableHeaderCol: {
+    flex: 1,
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748b',
+    textTransform: 'uppercase',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  donorName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  donorMobile: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  donorDate: {
+    fontSize: 10,
+    color: '#94a3b8',
+    marginTop: 4,
+  },
+  donorEarning: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  modalFooter: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  closeFooterBtn: {
+    backgroundColor: '#00bfa5',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  closeFooterBtnText: {
+    color: 'white',
+    fontWeight: '800',
+    fontSize: 15,
+    textTransform: 'uppercase',
+  },
 });

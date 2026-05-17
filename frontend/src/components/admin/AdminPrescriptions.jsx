@@ -13,7 +13,8 @@ const AdminPrescriptions = () => {
     const [note, setNote] = useState('');
     const [isReadOnly, setIsReadOnly] = useState(false);
     const [imageModalSrc, setImageModalSrc] = useState(null);
-    const [verifiedItems, setVerifiedItems] = useState([{ medicineName: '', frequency: '', time: '', foodRelation: '', intakeMethod: '', quantity: 1, price: '' }]);
+    const defaultItem = { medicineName: '', frequency: '', time: '', foodRelation: '', intakeMethod: '', quantity: 1, price: '', margPack: 0, margBatch: '', margExpiry: '', margBillNo: '', batches: [] };
+    const [verifiedItems, setVerifiedItems] = useState([{ ...defaultItem }]);
     const [errors, setErrors] = useState([]);
     const [searchingIndex, setSearchingIndex] = useState(null);
     const [suggestions, setSuggestions] = useState([]);
@@ -36,14 +37,14 @@ const AdminPrescriptions = () => {
                 setIsReadOnly(true);
                 setNote(selected.adminNote || '');
                 if (selected.verifiedItems && selected.verifiedItems.length > 0) {
-                    setVerifiedItems(selected.verifiedItems.map(i => ({...i, price: i.price || ''})));
+                    setVerifiedItems(selected.verifiedItems.map(i => ({...defaultItem, ...i, price: i.price || ''})));
                 } else {
-                    setVerifiedItems([{ medicineName: '', frequency: '', time: '', foodRelation: '', intakeMethod: '', quantity: 1, price: '' }]);
+                    setVerifiedItems([{ ...defaultItem }]);
                 }
             } else {
                 setIsReadOnly(false);
                 setNote('');
-                setVerifiedItems([{ medicineName: '', frequency: '', time: '', foodRelation: '', intakeMethod: '', quantity: 1, price: '' }]);
+                setVerifiedItems([{ ...defaultItem }]);
             }
         }
         setErrors([]);
@@ -65,12 +66,12 @@ const AdminPrescriptions = () => {
     };
 
     const handleAddItem = () => {
-        setVerifiedItems([...verifiedItems, { medicineName: '', frequency: '', time: '', foodRelation: '', intakeMethod: '', quantity: 1, price: '' }]);
+        setVerifiedItems([...verifiedItems, { ...defaultItem }]);
     };
 
     const handleRemoveItem = (index) => {
         const newItems = verifiedItems.filter((_, i) => i !== index);
-        setVerifiedItems(newItems.length ? newItems : [{ medicineName: '', frequency: '', time: '', foodRelation: '', intakeMethod: '', quantity: 1, price: '' }]);
+        setVerifiedItems(newItems.length ? newItems : [{ ...defaultItem }]);
     };
 
     const handleItemChange = (index, field, value) => {
@@ -118,8 +119,19 @@ const AdminPrescriptions = () => {
             medicineName: product.Name,
             price: product.mrp || product.rateA || 0,
             fulfillmentStatus: product.totalStock > 0 ? 'In Stock' : 'Shortlisted',
-            margPID: product.PID // Store for reference
+            margPID: product.PID,
+            margPack: product.Pack || 0,
+            batches: product.stocks || []
         };
+        
+        if (product.stocks && product.stocks.length > 0) {
+            newItems[index].margBatch = product.stocks[0].Batch || '';
+            if (product.stocks[0].Expiry) {
+                newItems[index].margExpiry = new Date(product.stocks[0].Expiry).toISOString().split('T')[0] || '';
+            }
+            newItems[index].price = product.stocks[0].MRP || product.stocks[0].RateA || newItems[index].price;
+        }
+
         setVerifiedItems(newItems);
         setSuggestions([]);
         setSearchingIndex(null);
@@ -147,7 +159,7 @@ const AdminPrescriptions = () => {
                 adminNote: note
             });
             setSelected(null);
-            setVerifiedItems([{ medicineName: '', frequency: '', time: '', foodRelation: '', intakeMethod: '', quantity: 1, price: '' }]);
+            setVerifiedItems([{ ...defaultItem }]);
             setNote('');
             fetchPrescriptions();
         } catch (err) {
@@ -269,6 +281,32 @@ const AdminPrescriptions = () => {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {(selected.notes || (selected.faqAnswers && selected.faqAnswers.length > 0)) && (
+                                        <section className="form-section" style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
+                                            <div className="sec-title" style={{ marginBottom: '10px' }}>
+                                                <AlertCircle size={18} color="#3b82f6" />
+                                                <h4 style={{ color: '#1e293b', margin: 0 }}>Patient Information & Notes</h4>
+                                            </div>
+                                            {selected.faqAnswers && selected.faqAnswers.length > 0 && (
+                                                <div style={{ marginBottom: selected.notes ? '15px' : '0' }}>
+                                                    {selected.faqAnswers.map((faq, idx) => (
+                                                        <div key={idx} style={{ marginBottom: '8px', background: '#fff', padding: '10px', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
+                                                            <div style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>Q: {faq.question}</div>
+                                                            <div style={{ fontSize: '14px', color: '#0f172a', marginTop: '2px' }}>A: {faq.answer}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {selected.notes && (
+                                                <div style={{ background: '#fff', padding: '10px', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
+                                                    <div style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', marginBottom: '4px' }}>Additional Notes:</div>
+                                                    <div style={{ fontSize: '14px', color: '#0f172a', whiteSpace: 'pre-wrap' }}>{selected.notes}</div>
+                                                </div>
+                                            )}
+                                        </section>
+                                    )}
+
                                     <section className="form-section">
                                         <div className="sec-title" style={{justifyContent: 'space-between'}}>
                                             <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
@@ -321,8 +359,8 @@ const AdminPrescriptions = () => {
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <div className="input-group-p qty" style={{width: '60px'}}>
-                                                            <label>Qty</label>
+                                                        <div className="input-group-p qty" style={{width: '70px', position: 'relative'}}>
+                                                            <label>Qty (Tabs)</label>
                                                             <input 
                                                                 type="number" 
                                                                 value={item.quantity}
@@ -332,6 +370,11 @@ const AdminPrescriptions = () => {
                                                                 disabled={isReadOnly}
                                                                 style={{ borderColor: errors.includes(index) && (!item.quantity) ? '#ef4444' : undefined }}
                                                             />
+                                                            {item.margPack > 1 && item.quantity > 0 && (
+                                                                <div style={{ position: 'absolute', top: '100%', left: '0', fontSize: '0.65rem', color: '#10b981', whiteSpace: 'nowrap', marginTop: '2px', fontWeight: '600' }}>
+                                                                    {Math.floor(item.quantity / item.margPack)} Strip, {item.quantity % item.margPack} Tab
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <div className="input-group-p status" style={{width: '120px'}}>
                                                             <label>Fulfillment</label>
@@ -461,6 +504,37 @@ const AdminPrescriptions = () => {
                                                                 <option value="dry">Dry</option>
                                                                 <option value="dissolved in water">Dissolve in water</option>
                                                             </select>
+                                                        </div>
+                                                        <div className="input-group-p" style={{flex: 1, minWidth: '120px'}}>
+                                                            <label style={{fontSize: '0.75rem'}}>Batch</label>
+                                                            {item.batches && item.batches.length > 0 ? (
+                                                                <select 
+                                                                    value={item.margBatch || ''} 
+                                                                    onChange={(e) => {
+                                                                        const b = item.batches.find(x => x.Batch === e.target.value);
+                                                                        handleItemChange(index, 'margBatch', e.target.value);
+                                                                        if (b && b.Expiry) handleItemChange(index, 'margExpiry', new Date(b.Expiry).toISOString().split('T')[0]);
+                                                                        if (b && (b.MRP || b.RateA)) handleItemChange(index, 'price', b.MRP || b.RateA);
+                                                                    }} 
+                                                                    disabled={isReadOnly} 
+                                                                    style={{padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e0', width: '100%'}}
+                                                                >
+                                                                    <option value="">Select...</option>
+                                                                    {item.batches.map(b => (
+                                                                        <option key={b.Batch} value={b.Batch}>{b.Batch} (Stk: {b.Stock})</option>
+                                                                    ))}
+                                                                </select>
+                                                            ) : (
+                                                                <input type="text" value={item.margBatch || ''} onChange={(e) => handleItemChange(index, 'margBatch', e.target.value)} disabled={isReadOnly} style={{padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e0', width: '100%'}} placeholder="Batch No"/>
+                                                            )}
+                                                        </div>
+                                                        <div className="input-group-p" style={{flex: 1, minWidth: '120px'}}>
+                                                            <label style={{fontSize: '0.75rem'}}>Expiry</label>
+                                                            <input type="month" value={item.margExpiry ? item.margExpiry.substring(0, 7) : ''} onChange={(e) => handleItemChange(index, 'margExpiry', e.target.value)} disabled={isReadOnly} style={{padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e0', width: '100%'}}/>
+                                                        </div>
+                                                        <div className="input-group-p" style={{flex: 1, minWidth: '100px'}}>
+                                                            <label style={{fontSize: '0.75rem'}}>Bill No (VCN)</label>
+                                                            <input type="text" value={item.margBillNo || ''} onChange={(e) => handleItemChange(index, 'margBillNo', e.target.value)} disabled={isReadOnly} style={{padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e0', width: '100%'}} placeholder="Auto/Man"/>
                                                         </div>
                                                         {errors.includes(index) && (
                                                             <div style={{width: '100%', color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', fontWeight: '500'}}>

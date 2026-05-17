@@ -21,8 +21,16 @@ export default function ShareEarn() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const referralCode = user?.referralCode || user?.mobile;
-  const shareUrl = `https://dharmarthfoundation.org/v/${referralCode}`;
+  const referralCode = user?.referralCode || user?.mobile || 'DF0000';
+  const shareUrl = `https://the-dharm-arth-foundation-software.vercel.app/v/${referralCode}`;
+
+  const name = user?.name || 'Your Name';
+  const mobilePhone = user?.mobile || '0000000000';
+  const work = user?.work || user?.roles?.[0]?.name || 'Volunteer';
+  const bio = user?.bio || 'Dedicated to supporting humanity and spreading kindness through The DharmArth Foundation.';
+  const location = user?.city ? `${user.city}, ${user?.state || ''}` : 'India';
+  const profileImage = user?.profileImage || `https://ui-avatars.com/api/?name=${name}&background=00bfa5&color=fff&size=128`;
+  const joinedDate = user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '2026';
 
   const handleShare = async () => {
     try {
@@ -55,49 +63,96 @@ export default function ShareEarn() {
         {/* Digital ID Card */}
         <View style={styles.cardContainer}>
           <View style={styles.idCard}>
-            <View style={styles.cardHeader}>
-              <View>
-                <Text style={styles.brandName}>DharmArth</Text>
-                <Text style={styles.brandTag}>FOUNDATION</Text>
+            {/* Top Pane */}
+            <View style={styles.cardTopPane}>
+              <View style={styles.photoWrapper}>
+                <Image source={{ uri: profileImage }} style={styles.photo} />
               </View>
-              <View style={styles.verifiedBadge}>
-                <Ionicons name="shield-checkmark" size={16} color="white" />
-                <Text style={styles.verifiedText}>VERIFIED</Text>
+              <View style={styles.topBrandArea}>
+                <Text style={styles.topBrandName}>DharmArth</Text>
+                <Text style={styles.topBrandTag}>FOUNDATION</Text>
               </View>
             </View>
 
-            <View style={styles.cardBody}>
-              <View style={styles.profileRow}>
-                <Image 
-                  source={{ uri: `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=00bfa5&color=fff&size=128` }} 
-                  style={styles.avatar} 
-                />
-                <View style={styles.mainInfo}>
-                  <Text style={styles.name}>{user?.name}</Text>
-                  <Text style={styles.role}>{user?.roles?.[0]?.name || 'Volunteer'}</Text>
-                  <View style={styles.idRow}>
-                    <Text style={styles.idLabel}>VOLUNTEER ID</Text>
-                    <Text style={styles.idValue}>{referralCode}</Text>
+            {/* Bottom Pane */}
+            <View style={styles.cardBottomPane}>
+              {/* Header inside Bottom */}
+              <View style={styles.bottomHeader}>
+                <View style={styles.logoArea}>
+                  <Text style={styles.foundationNameHi}>धर्मार्थ फाउंडेशन</Text>
+                  <Text style={styles.tagline}>Spreading Humanity & Hope</Text>
+                </View>
+                <View style={styles.idArea}>
+                  <Text style={styles.idLabelText}>VOLUNTEER ID</Text>
+                  <Text style={styles.idValueText}>{referralCode}</Text>
+                </View>
+              </View>
+
+              {/* User Info */}
+              <View style={styles.userInfoArea}>
+                <Text style={styles.userName}>{name}</Text>
+                <Text style={styles.userWork}>{work}</Text>
+                <Text style={styles.userBio} numberOfLines={3}>"{bio}"</Text>
+
+                {/* Grid */}
+                <View style={styles.detailsGrid}>
+                  <View style={styles.detailItem}>
+                    <Ionicons name="call" size={24} color="#1e293b" />
+                    <View style={styles.detailContent}>
+                      <Text style={styles.detailLabel}>Contact</Text>
+                      <Text style={styles.detailValue}>{mobilePhone}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Ionicons name="location" size={24} color="#1e293b" />
+                    <View style={styles.detailContent}>
+                      <Text style={styles.detailLabel}>Location</Text>
+                      <Text style={styles.detailValue} numberOfLines={1}>{location}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Ionicons name="calendar" size={24} color="#1e293b" />
+                    <View style={styles.detailContent}>
+                      <Text style={styles.detailLabel}>Verified</Text>
+                      <Text style={styles.detailValue}>{joinedDate}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Ionicons name="shield-checkmark" size={24} color="#1e293b" />
+                    <View style={styles.detailContent}>
+                      <Text style={styles.detailLabel}>Status</Text>
+                      <Text style={styles.detailValue}>Active</Text>
+                    </View>
                   </View>
                 </View>
               </View>
 
-              <View style={styles.statsRow}>
-                <View style={styles.statBox}>
-                  <Text style={styles.statValue}>{user?.totalReferrals || 0}</Text>
-                  <Text style={styles.statLabel}>Referrals</Text>
+              {/* Footer */}
+              <View style={styles.cardFooterArea}>
+                <View style={styles.footerWeb}>
+                  <Ionicons name="globe-outline" size={20} color="#00bfa5" />
+                  <Text style={styles.footerWebText}>dharmarth.com</Text>
                 </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statBox}>
-                  <Text style={styles.statValue}>₹{user?.totalEarnings || 0}</Text>
-                  <Text style={styles.statLabel}>Earned</Text>
+                <View style={styles.qrCodeBox}>
+                  <Ionicons name="qr-code" size={40} color="#1e293b" />
                 </View>
               </View>
             </View>
+          </View>
+        </View>
 
-            <View style={styles.cardFooter}>
-              <Ionicons name="qr-code" size={24} color="rgba(255,255,255,0.6)" />
-              <Text style={styles.footerText}>Official Digital Identity Card</Text>
+        {/* Your Impact Stats */}
+        <View style={styles.impactSection}>
+          <Text style={styles.sectionLabel}>Your Impact</Text>
+          <View style={styles.statsContainer}>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{user?.totalReferrals || 0}</Text>
+              <Text style={styles.statLabel}>Referrals</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>₹{user?.totalEarnings || 0}</Text>
+              <Text style={styles.statLabel}>Earned</Text>
             </View>
           </View>
         </View>
@@ -171,137 +226,211 @@ const styles = StyleSheet.create({
   },
   idCard: {
     width: width - 40,
-    backgroundColor: '#1e293b',
-    borderRadius: 24,
+    backgroundColor: 'white',
+    borderRadius: 20,
     overflow: 'hidden',
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 15,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
-  cardHeader: {
+  cardTopPane: {
+    backgroundColor: '#00bfa5',
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 20,
-    backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  brandName: {
-    fontSize: 20,
+  photoWrapper: {
+    width: 80,
+    height: 100,
+    borderRadius: 8,
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.4)',
+    backgroundColor: '#f1f5f9',
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+  },
+  photo: {
+    width: '100%',
+    height: '100%',
+  },
+  topBrandArea: {
+    alignItems: 'flex-end',
+  },
+  topBrandName: {
+    fontSize: 28,
     fontWeight: '900',
     color: 'white',
+    lineHeight: 28,
+    letterSpacing: -0.5,
   },
-  brandTag: {
-    fontSize: 8,
+  topBrandTag: {
+    fontSize: 12,
     fontWeight: '700',
-    color: '#00bfa5',
-    letterSpacing: 2,
-  },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#00bfa5',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 99,
-  },
-  verifiedText: {
     color: 'white',
-    fontSize: 10,
-    fontWeight: '800',
+    opacity: 0.9,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    marginTop: 2,
   },
-  cardBody: {
+  cardBottomPane: {
+    backgroundColor: 'white',
     padding: 24,
   },
-  profileRow: {
+  bottomHeader: {
     flexDirection: 'row',
-    gap: 20,
-    marginBottom: 24,
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 20,
   },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    backgroundColor: '#334155',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  mainInfo: {
+  logoArea: {
     flex: 1,
-    justifyContent: 'center',
   },
-  name: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: 'white',
-    marginBottom: 2,
+  foundationNameHi: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#00bfa5',
   },
-  role: {
-    fontSize: 12,
+  tagline: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    marginTop: 2,
+  },
+  idArea: {
+    alignItems: 'flex-end',
+  },
+  idLabelText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#94a3b8',
+  },
+  idValueText: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#1e293b',
+  },
+  userInfoArea: {
+    marginBottom: 20,
+  },
+  userName: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#000',
+    marginBottom: 4,
+    lineHeight: 32,
+  },
+  userWork: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#00bfa5',
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  idRow: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    padding: 8,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-  },
-  idLabel: {
-    fontSize: 8,
-    fontWeight: '700',
-    color: '#94a3b8',
-    marginBottom: 2,
-  },
-  idValue: {
+  userBio: {
     fontSize: 14,
-    fontWeight: '800',
-    color: 'white',
-    letterSpacing: 1,
+    color: '#000',
+    fontStyle: 'italic',
+    lineHeight: 20,
+    marginBottom: 24,
   },
-  statsRow: {
+  detailsGrid: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '46%',
+    gap: 8,
+  },
+  detailContent: {
+    flex: 1,
+  },
+  detailLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748b',
+    textTransform: 'uppercase',
+  },
+  detailValue: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#1e293b',
+  },
+  cardFooterArea: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  footerWeb: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  footerWebText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  qrCodeBox: {
+    backgroundColor: 'white',
+    padding: 4,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  impactSection: {
+    marginBottom: 30,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
     borderRadius: 16,
-    padding: 16,
+    padding: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   statBox: {
     flex: 1,
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: 'white',
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#00bfa5',
   },
   statLabel: {
-    fontSize: 10,
-    color: '#94a3b8',
-    fontWeight: '600',
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '700',
     marginTop: 4,
   },
   statDivider: {
     width: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#e2e8f0',
     height: '100%',
-  },
-  cardFooter: {
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-  },
-  footerText: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.4)',
-    fontWeight: '600',
-    letterSpacing: 0.5,
   },
   shareSection: {
     marginBottom: 30,

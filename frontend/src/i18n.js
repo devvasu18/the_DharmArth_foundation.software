@@ -38,7 +38,7 @@ i18n
                         "changeLanguage": "Change Language"
                     },
                     "home": {
-                        "welcomeTitle": "Welcome to the Dharmarth Medical Foundation",
+                        "welcomeTitle": "Feed a child, Heal a patient, Save a life.",
                         "welcomeSubtitle": "Empowering change through your generous contributions."
                     },
                     "hero": {
@@ -188,7 +188,7 @@ i18n
                         "changeLanguage": "भाषा बदलें"
                     },
                     "home": {
-                        "welcomeTitle": "धर्मार्थ मेडिकल फाउंडेशन में आपका स्वागत है",
+                        "welcomeTitle": "एक बच्चे का पेट भरें। एक मरीज़ का इलाज करें। एक जीवन बचाएं।",
                         "welcomeSubtitle": "अपने  योगदान के माध्यम से बदलाव को सक्षम करें।"
                     },
                     "hero": {

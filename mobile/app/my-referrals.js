@@ -52,6 +52,7 @@ export default function MyReferrals() {
   };
 
   useEffect(() => {
+    setLoading(true);
     fetchReferrals(1, true);
   }, [statusFilter]);
 
@@ -169,31 +170,38 @@ export default function MyReferrals() {
         </View>
       </View>
 
-      <FlatList
-        data={referrals}
-        renderItem={renderItem}
-        keyExtractor={item => item._id}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#00bfa5']} />
-        }
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
-        ListEmptyComponent={
-          !loading && (
-            <View style={styles.empty}>
-              <Ionicons name="people-outline" size={64} color="#e2e8f0" />
-              <Text style={styles.emptyText}>No {statusFilter} referrals found</Text>
-            </View>
-          )
-        }
-        ListFooterComponent={hasMore ? <ActivityIndicator style={{ padding: 20 }} color="#00bfa5" /> : null}
-      />
+      {loading && !refreshing ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#00bfa5" />
+        </View>
+      ) : (
+        <FlatList
+          data={referrals}
+          renderItem={renderItem}
+          keyExtractor={item => item._id}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#00bfa5']} />
+          }
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={
+            !loading && (
+              <View style={styles.empty}>
+                <Ionicons name="people-outline" size={64} color="#e2e8f0" />
+                <Text style={styles.emptyText}>No {statusFilter} referrals found</Text>
+              </View>
+            )
+          }
+          ListFooterComponent={hasMore ? <ActivityIndicator style={{ padding: 20 }} color="#00bfa5" /> : null}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   container: { flex: 1, backgroundColor: '#f8fafc' },
   header: { backgroundColor: 'white', padding: 20, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   headerContent: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 20 },

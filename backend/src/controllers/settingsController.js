@@ -51,13 +51,15 @@ const getPharmacyConfig = async () => {
             percentDeliveryAboveThreshold: 5,
             gstPercent: 12,
             dayTimeContactText: "Pharmacist will contact you in 10-20 minutes",
-            nightTimeContactText: "Foundation will contact you at 8:30 AM"
+            nightTimeContactText: "Foundation will contact you at 8:30 AM",
+            faqs: []
         };
     }
     // Ensure new fields have defaults if they don't exist in saved config
     const mergedConfig = {
         dayTimeContactText: "Pharmacist will contact you in 10-20 minutes",
         nightTimeContactText: "Foundation will contact you at 8:30 AM",
+        faqs: [],
         ...config.value
     };
     return mergedConfig;

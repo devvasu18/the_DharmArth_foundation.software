@@ -83,24 +83,30 @@ class InvoiceService {
 
     generateInvoiceTable(doc, order) {
         let i;
-        const invoiceTableTop = 330;
+        let invoiceTableTop = 330;
 
         doc.font('Helvetica-Bold');
-        this.generateTableRow(
-            doc,
-            invoiceTableTop,
-            'Item',
-            'Dosage',
-            'Qty',
-            'Price',
-            'Total'
-        );
+        this.generateTableRow(doc, invoiceTableTop, 'Item', 'Dosage', 'Qty', 'Price', 'Total');
         this.generateHr(doc, invoiceTableTop + 20);
-        doc.font('Helvetica');
+        doc.font('Helvetica').fillColor('#444444');
+
+        let position = invoiceTableTop + 30;
 
         for (i = 0; i < order.items.length; i++) {
             const item = order.items[i];
-            const position = invoiceTableTop + (i + 1) * 30;
+            
+            // Prevent overlapping at bottom
+            if (position > 680) {
+                doc.addPage();
+                position = 50;
+                
+                doc.font('Helvetica-Bold');
+                this.generateTableRow(doc, position, 'Item', 'Dosage', 'Qty', 'Price', 'Total');
+                this.generateHr(doc, position + 20);
+                doc.font('Helvetica').fillColor('#444444');
+                position += 30;
+            }
+
             this.generateTableRow(
                 doc,
                 position,
@@ -111,31 +117,32 @@ class InvoiceService {
                 `₹${(item.price * item.quantity).toFixed(2)}`
             );
 
+            // Add sub-row for MARG details if they exist
+            let hasMargDetails = item.margBatch || item.margExpiry || item.margBillNo || item.margPack;
+            if (hasMargDetails) {
+                position += 15;
+                doc.fontSize(8).fillColor('#666666');
+                let detailsStr = [];
+                if (item.margBatch) detailsStr.push(`Batch: ${item.margBatch}`);
+                if (item.margExpiry) detailsStr.push(`Exp: ${item.margExpiry.substring(0, 7)}`);
+                if (item.margBillNo) detailsStr.push(`VCN: ${item.margBillNo}`);
+                if (item.margPack && item.margPack > 1) {
+                    detailsStr.push(`Conv: ${Math.floor(item.quantity/item.margPack)} Strip, ${item.quantity%item.margPack} Tab`);
+                }
+                doc.text(detailsStr.join(' | '), 50, position, { width: 450 });
+                doc.fillColor('#444444').fontSize(10);
+            }
+
             this.generateHr(doc, position + 20);
+            position += 30;
         }
 
-        const subtotalPosition = invoiceTableTop + (i + 1) * 30 + 30;
-        this.generateTableRow(
-            doc,
-            subtotalPosition,
-            '',
-            '',
-            '',
-            'Subtotal',
-            `₹${order.totalAmount.toFixed(2)}`
-        );
+        const subtotalPosition = position + 10;
+        this.generateTableRow(doc, subtotalPosition, '', '', '', 'Subtotal', `₹${order.totalAmount.toFixed(2)}`);
 
         const paidToDatePosition = subtotalPosition + 20;
         doc.font('Helvetica-Bold');
-        this.generateTableRow(
-            doc,
-            paidToDatePosition,
-            '',
-            '',
-            '',
-            'Amount Paid',
-            `₹${order.totalAmount.toFixed(2)}`
-        );
+        this.generateTableRow(doc, paidToDatePosition, '', '', '', 'Amount Paid', `₹${order.totalAmount.toFixed(2)}`);
         doc.font('Helvetica');
     }
 

@@ -17,7 +17,10 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "We need your location to automatically fill your delivery address for donations."
-      }
+      },
+      "associatedDomains": [
+        "applinks:the-dharm-arth-foundation-software.vercel.app"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -29,6 +32,28 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "the-dharm-arth-foundation-software.vercel.app",
+              "pathPrefix": "/v"
+            },
+            {
+              "scheme": "https",
+              "host": "the-dharm-arth-foundation-software.vercel.app",
+              "pathPrefix": "/donate"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
       ]
     },
     "web": {

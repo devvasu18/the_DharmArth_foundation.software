@@ -135,7 +135,8 @@ exports.searchProductsWithStock = async (req, res) => {
                     Pack: 1,
                     totalStock: { $sum: '$stocks.Stock' },
                     mrp: { $max: '$stocks.MRP' },
-                    rateA: { $max: '$stocks.RateA' }
+                    rateA: { $max: '$stocks.RateA' },
+                    stocks: 1
                 }
             },
             { $limit: 10 },

@@ -24,7 +24,11 @@ const orderSchema = new mongoose.Schema({
             type: String, 
             enum: ['Packed', 'Shortlisted', 'Received'], 
             default: 'Packed' 
-        }
+        },
+        margPack: Number,
+        margBatch: String,
+        margExpiry: String,
+        margBillNo: String
     }],
     totalAmount: {
         type: Number,

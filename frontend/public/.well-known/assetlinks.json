@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.dharmarth.foundation",
+      "sha256_cert_fingerprints": [
+        "14:6D:E9:83:C5:EC:D2:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12"
+      ]
+    }
+  }
+]
