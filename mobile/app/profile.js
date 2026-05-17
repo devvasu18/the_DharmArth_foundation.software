@@ -96,7 +96,7 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <Stack.Screen options={{ title: 'Edit Profile', headerTitleAlign: 'center' }} />
+      <Stack.Screen options={{ title: 'My Profile', headerTitleAlign: 'center' }} />
       
       <View style={styles.formCard}>
         <Text style={styles.sectionTitle}>My Identity Profile</Text>
