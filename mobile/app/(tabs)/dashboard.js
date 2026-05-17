@@ -38,12 +38,39 @@ export default function DashboardScreen() {
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [modalLoading, setModalLoading] = useState(false);
 
+  const getUniqueDonors = (list) => {
+    const grouped = {};
+    list.forEach(donor => {
+      const key = donor.donorMobile;
+      if (!key) return;
+      if (!grouped[key]) {
+        grouped[key] = {
+          ...donor,
+          totalEarning: donor.totalEarning || 0,
+          lastDonation: donor.lastDonation || donor.createdAt
+        };
+      } else {
+        grouped[key].totalEarning += (donor.totalEarning || 0);
+        const currentDate = new Date(donor.lastDonation || donor.createdAt);
+        const existingDate = new Date(grouped[key].lastDonation);
+        if (currentDate > existingDate) {
+          grouped[key].lastDonation = donor.lastDonation || donor.createdAt;
+        }
+      }
+    });
+    return Object.values(grouped);
+  };
+
   const fetchDonorsList = async (type, month, year) => {
     setModalLoading(true);
     try {
       const endpoint = type === 'L1' ? '/wallet/l1-donors' : '/wallet/l2-donors';
       const res = await api.get(`${endpoint}?month=${month}&year=${year}`);
-      setDonorsList(res.data.donors || []);
+
+      // Deduplicate and aggregate list by donorMobile
+      const uniqueList = getUniqueDonors(res.data.donors || []);
+
+      setDonorsList(uniqueList);
       setSummaryStats(res.data.summary || { lifetimeEarning: 0, prevMonthEarning: 0 });
     } catch (err) {
       console.error(`Error fetching ${type} donors`, err);
@@ -146,26 +173,29 @@ export default function DashboardScreen() {
             <View style={styles.statItem}>
               <View style={styles.statHeaderRow}>
                 <Text style={styles.statValue}>{stats.l1Donors || 0}</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.eyeBtn}
                   onPress={() => handleOpenDonors('L1')}
                 >
                   <Ionicons name="eye-outline" size={16} color="white" />
                 </TouchableOpacity>
               </View>
-              <Text style={styles.statLabel}>L1 Donors</Text>
+              <Text style={styles.statLabel}>Directly Inspired Donor</Text>
             </View>
+
+            <View style={styles.statSeparator} />
+
             <View style={styles.statItem}>
               <View style={styles.statHeaderRow}>
                 <Text style={styles.statValue}>{stats.l2Donors || 0}</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.eyeBtn}
                   onPress={() => handleOpenDonors('L2')}
                 >
                   <Ionicons name="eye-outline" size={16} color="white" />
                 </TouchableOpacity>
               </View>
-              <Text style={styles.statLabel}>L2 Donors</Text>
+              <Text style={styles.statLabel}>Partner-Inspired Donor</Text>
             </View>
           </View>
 
@@ -174,8 +204,8 @@ export default function DashboardScreen() {
           </TouchableOpacity>
 
           {wallet?.balance > 0 && (
-            <TouchableOpacity 
-              style={styles.walletDonateBtn} 
+            <TouchableOpacity
+              style={styles.walletDonateBtn}
               onPress={() => router.push('/donate-wallet')}
             >
               <Ionicons name="heart" size={18} color="#00695c" style={{ marginRight: 8 }} />
@@ -338,17 +368,17 @@ export default function DashboardScreen() {
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderTitleRow}>
-                <Ionicons 
-                  name={donorModalType === 'L1' ? "person" : "people"} 
-                  size={24} 
-                  color="white" 
+                <Ionicons
+                  name={donorModalType === 'L1' ? "person" : "people"}
+                  size={24}
+                  color="white"
                 />
                 <Text style={styles.modalTitle}>
                   {donorModalType === 'L1' ? 'Directly Inspired Donors' : 'Indirectly Inspired Donors'}
                 </Text>
               </View>
-              <TouchableOpacity 
-                style={styles.closeBtn} 
+              <TouchableOpacity
+                style={styles.closeBtn}
                 onPress={() => setDonorModalVisible(false)}
               >
                 <Ionicons name="close" size={24} color="white" />
@@ -374,15 +404,15 @@ export default function DashboardScreen() {
             {/* Scrolling Horizontal Filters */}
             <View style={styles.filterSection}>
               <Text style={styles.filterSectionTitle}>Select Month</Text>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false} 
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
                 style={styles.horizontalScroll}
                 contentContainerStyle={styles.horizontalScrollContent}
               >
                 {["Lifetime", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, idx) => (
-                  <TouchableOpacity 
-                    key={idx} 
+                  <TouchableOpacity
+                    key={idx}
                     style={[styles.filterTab, filterMonth === idx && styles.filterTabActive]}
                     onPress={() => handleMonthChange(idx)}
                   >
@@ -396,15 +426,15 @@ export default function DashboardScreen() {
               {filterMonth !== 0 && (
                 <>
                   <Text style={styles.filterSectionTitle}>Select Year</Text>
-                  <ScrollView 
-                    horizontal 
-                    showsHorizontalScrollIndicator={false} 
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
                     style={styles.horizontalScroll}
                     contentContainerStyle={styles.horizontalScrollContent}
                   >
                     {[2024, 2025, 2026].map((y) => (
-                      <TouchableOpacity 
-                        key={y} 
+                      <TouchableOpacity
+                        key={y}
                         style={[styles.filterTab, filterYear === y && styles.filterTabActive]}
                         onPress={() => handleYearChange(y)}
                       >
@@ -437,7 +467,7 @@ export default function DashboardScreen() {
                     <Text style={styles.tableHeaderCol}>Donor Details</Text>
                     <Text style={[styles.tableHeaderCol, { textAlign: 'right' }]}>Your Earning</Text>
                   </View>
-                  
+
                   {donorsList.map((donor, idx) => (
                     <View key={idx} style={styles.tableRow}>
                       <View style={{ flex: 1, paddingRight: 10 }}>
@@ -464,8 +494,8 @@ export default function DashboardScreen() {
 
             {/* Modal Footer */}
             <View style={styles.modalFooter}>
-              <TouchableOpacity 
-                style={styles.closeFooterBtn} 
+              <TouchableOpacity
+                style={styles.closeFooterBtn}
                 onPress={() => setDonorModalVisible(false)}
               >
                 <Text style={styles.closeFooterBtnText}>Close</Text>
@@ -530,10 +560,11 @@ const styles = StyleSheet.create({
     gap: 8
   },
   statText: { color: 'white', fontSize: 13, fontWeight: '600' },
-  statGrid: { flexDirection: 'row', gap: 20, marginBottom: 20 },
-  statItem: { flex: 1 },
+  statGrid: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  statItem: { flex: 1, alignItems: 'center' },
   statValue: { color: 'white', fontSize: 24, fontWeight: '800' },
-  statLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
+  statLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 9, fontWeight: '700', textTransform: 'uppercase', textAlign: 'center' },
+  statSeparator: { width: 1, height: '70%', backgroundColor: 'rgba(255,255,255,0.25)', marginHorizontal: 8 },
   withdrawBtn: {
     backgroundColor: 'white',
     paddingVertical: 16,
@@ -674,7 +705,7 @@ const styles = StyleSheet.create({
   actionPillText: { fontSize: 11, fontWeight: '700', color: '#00bfa5' },
 
   // Eye Button & Stats Custom Layout
-  statHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  statHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 4 },
   eyeBtn: {
     backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 6,

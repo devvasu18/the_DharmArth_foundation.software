@@ -222,7 +222,7 @@ export default function TabLayout() {
                 <View style={styles.menuHeader}>
                   <View style={styles.userInfo}>
                     <Image
-                      source={{ uri: `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=00bfa5&color=fff` }}
+                      source={{ uri: user?.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=00bfa5&color=fff` }}
                       style={styles.avatar}
                     />
                     <View>

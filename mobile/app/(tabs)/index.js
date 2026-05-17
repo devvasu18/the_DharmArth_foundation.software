@@ -101,7 +101,7 @@ const LandingScreen = () => {
   }, [textSlides.length]);
 
   const handleDonate = () => {
-    Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/donate');
+    router.push('/donate');
   };
 
   const handleJoin = () => {
@@ -198,15 +198,20 @@ const LandingScreen = () => {
                 <TouchableOpacity
                   style={styles.heroCta}
                   onPress={() => {
-                    let link = textSlides[currentTextIndex].ctaLink;
-                    if (!link) {
-                      link = 'https://the-dharm-arth-foundation-software.vercel.app/donate';
-                    } else if (link.startsWith('/')) {
-                      link = `https://the-dharm-arth-foundation-software.vercel.app${link}`;
-                    } else if (!link.startsWith('http')) {
-                      link = `https://the-dharm-arth-foundation-software.vercel.app/${link}`;
+                    const link = textSlides[currentTextIndex].ctaLink || '';
+                    if (!link || link === '/donate' || link.endsWith('/donate')) {
+                      router.push('/donate');
+                    } else if (link === '/events' || link.endsWith('/events')) {
+                      router.push('/events');
+                    } else {
+                      let webLink = link;
+                      if (link.startsWith('/')) {
+                        webLink = `https://the-dharm-arth-foundation-software.vercel.app${link}`;
+                      } else if (!link.startsWith('http')) {
+                        webLink = `https://the-dharm-arth-foundation-software.vercel.app/${link}`;
+                      }
+                      Linking.openURL(webLink).catch(err => console.log('Failed to open link:', err));
                     }
-                    Linking.openURL(link).catch(err => console.log('Failed to open link:', err));
                   }}
                 >
                   <Text style={styles.heroCtaText}>{textSlides[currentTextIndex].ctaText || 'Donate Now'}</Text>
@@ -220,7 +225,7 @@ const LandingScreen = () => {
         {/* Welcome Section */}
         <View style={styles.welcomeSection}>
           <Text style={styles.welcomeTitle}>
-            Feed a child. Heal a patient. Save a life.
+            Feed a child, Heal a patient, Save a life.
           </Text>
           <View style={styles.welcomeUnderline} />
         </View>

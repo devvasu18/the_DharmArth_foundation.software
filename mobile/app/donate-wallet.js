@@ -139,8 +139,13 @@ export default function DonateWalletScreen() {
               <TextInput
                 style={styles.amountInput}
                 value={amount}
-                onChangeText={setAmount}
-                keyboardType="number-pad"
+                onChangeText={(val) => {
+                  // Only allow digits and at most one decimal point with max 2 decimal places
+                  if (val === '' || /^\d*\.?\d{0,2}$/.test(val)) {
+                    setAmount(val);
+                  }
+                }}
+                keyboardType="decimal-pad"
                 placeholder="0.00"
               />
             </View>
