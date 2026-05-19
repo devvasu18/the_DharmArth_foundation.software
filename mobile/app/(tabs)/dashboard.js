@@ -199,6 +199,15 @@ export default function DashboardScreen() {
             </View>
           </View>
 
+          <TouchableOpacity
+            style={styles.viewNetworkLink}
+            onPress={() => router.push('/my-network')}
+          >
+            <Ionicons name="git-network" size={16} color="white" />
+            <Text style={styles.viewNetworkLinkText}>View Network Tree</Text>
+            <Ionicons name="arrow-forward" size={14} color="rgba(255,255,255,0.8)" />
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.withdrawBtn} onPress={() => router.push('/withdraw')}>
             <Text style={styles.withdrawBtnText}>Withdraw Now</Text>
           </TouchableOpacity>
@@ -565,6 +574,22 @@ const styles = StyleSheet.create({
   statValue: { color: 'white', fontSize: 24, fontWeight: '800' },
   statLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 9, fontWeight: '700', textTransform: 'uppercase', textAlign: 'center' },
   statSeparator: { width: 1, height: '70%', backgroundColor: 'rgba(255,255,255,0.25)', marginHorizontal: 8 },
+  viewNetworkLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.15)',
+    paddingTop: 16,
+    paddingBottom: 8,
+    marginBottom: 20,
+  },
+  viewNetworkLinkText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '700',
+  },
   withdrawBtn: {
     backgroundColor: 'white',
     paddingVertical: 16,
