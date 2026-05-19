@@ -236,7 +236,9 @@ export default function TabLayout() {
                 </View>
 
                 <View style={styles.menuList}>
-                  {menuItems.map((item, index) => (
+                  {menuItems
+                    .filter(item => item.label !== 'Share & Earn' || user)
+                    .map((item, index) => (
                     <TouchableOpacity
                       key={`menu-item-${index}`}
                       style={styles.menuItem}
