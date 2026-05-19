@@ -10,19 +10,6 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Image 
-          source={require('../assets/LOGO.jpg')} 
-          style={styles.loadingLogo} 
-          resizeMode="contain" 
-        />
-        <ActivityIndicator size="large" color="#00bfa5" style={{ marginTop: 24 }} />
-      </View>
-    );
-  }
-
   useEffect(() => {
     if (loading) return;
 
@@ -36,6 +23,19 @@ function RootLayoutNav() {
       router.replace('/dashboard');
     }
   }, [user, loading, segments]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Image 
+          source={require('../assets/LOGO.jpg')} 
+          style={styles.loadingLogo} 
+          resizeMode="contain" 
+        />
+        <ActivityIndicator size="large" color="#00bfa5" style={{ marginTop: 24 }} />
+      </View>
+    );
+  }
 
   return (
     <Stack>
