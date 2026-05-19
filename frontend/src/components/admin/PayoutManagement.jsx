@@ -101,7 +101,7 @@ const PayoutManagement = () => {
             const today = new Date();
             const dateStr = today.toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
             const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD
-            const fileNameForSheet = `MODY2021${dateStr}`;
+            const fileNameForSheet = `payout-${formattedDate}`;
             
             const totalAmount = toExport.reduce((sum, p) => sum + p.amount, 0);
 
