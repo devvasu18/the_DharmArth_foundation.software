@@ -89,6 +89,11 @@ export default function TabLayout() {
   const navigateTo = (route) => {
     setMenuVisible(false);
 
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
     // Intercept if on donate page
     if (pathname === '/donate' || pathname === 'donate') {
       setExitTargetRoute(route === 'profile' ? '/profile' : route);
@@ -150,7 +155,13 @@ export default function TabLayout() {
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <TouchableOpacity
               style={{ marginRight: 16, padding: 4, position: 'relative' }}
-              onPress={() => router.push('/notifications')}
+              onPress={() => {
+                if (!user) {
+                  router.push('/login');
+                } else {
+                  router.push('/notifications');
+                }
+              }}
             >
               <Ionicons name="notifications-outline" size={28} color="#0f172a" />
               {unreadCount > 0 && (
