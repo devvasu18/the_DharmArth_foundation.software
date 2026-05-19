@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -27,6 +27,7 @@ export default function DonateWalletScreen() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [submitting, setSubmitting] = useState(false);
   const [settings, setSettings] = useState({ btnText: 'Donate From Wallet' });
+  const otpRefs = useRef([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -100,9 +101,47 @@ export default function DonateWalletScreen() {
   };
 
   const handleOtpChange = (value, index) => {
+    const cleanValue = value.replace(/[^0-9]/g, '');
+    if (cleanValue.length > 1) {
+      if (cleanValue.length === 6) {
+        const pastedOtp = cleanValue.split('');
+        const newOtp = [...otp];
+        for (let i = 0; i < 6; i++) {
+          newOtp[i] = pastedOtp[i] || '';
+        }
+        setOtp(newOtp);
+        otpRefs.current[5]?.focus();
+        return;
+      }
+      
+      const lastDigit = cleanValue.slice(-1);
+      const newOtp = [...otp];
+      newOtp[index] = lastDigit;
+      setOtp(newOtp);
+      if (index < 5) {
+        otpRefs.current[index + 1]?.focus();
+      }
+      return;
+    }
+
     const newOtp = [...otp];
-    newOtp[index] = value;
+    newOtp[index] = cleanValue;
     setOtp(newOtp);
+
+    if (cleanValue && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyPress = (e, index) => {
+    if (e.nativeEvent.key === 'Backspace') {
+      if (!otp[index] && index > 0) {
+        const newOtp = [...otp];
+        newOtp[index - 1] = '';
+        setOtp(newOtp);
+        otpRefs.current[index - 1]?.focus();
+      }
+    }
   };
 
   if (loading) {
@@ -174,11 +213,15 @@ export default function DonateWalletScreen() {
               {otp.map((digit, idx) => (
                 <TextInput
                   key={idx}
+                  ref={(ref) => {
+                    otpRefs.current[idx] = ref;
+                  }}
                   style={styles.otpInput}
                   value={digit}
                   onChangeText={(val) => handleOtpChange(val, idx)}
+                  onKeyPress={(e) => handleKeyPress(e, idx)}
                   keyboardType="number-pad"
-                  maxLength={1}
+                  maxLength={6}
                 />
               ))}
             </View>

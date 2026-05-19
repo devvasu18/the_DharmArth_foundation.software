@@ -57,7 +57,7 @@ const PayoutModal = ({ isOpen, onClose, wallet, user, onSuccess, onEditDetails }
     // Effect for initializing amount - ONLY run once when opening
     useEffect(() => {
         if (isOpen) {
-            setWithdrawAmount(currentBalance);
+            setWithdrawAmount(Math.floor(currentBalance));
         } else {
             setShowConfirmStep(false);
             setShowSuccessStep(false);

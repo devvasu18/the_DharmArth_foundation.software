@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -27,6 +27,7 @@ export default function WithdrawScreen() {
   const [step, setStep] = useState(1); // 1: Amount, 2: OTP, 3: Success
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [submitting, setSubmitting] = useState(false);
+  const otpRefs = useRef([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -102,9 +103,47 @@ export default function WithdrawScreen() {
   };
 
   const handleOtpChange = (value, index) => {
+    const cleanValue = value.replace(/[^0-9]/g, '');
+    if (cleanValue.length > 1) {
+      if (cleanValue.length === 6) {
+        const pastedOtp = cleanValue.split('');
+        const newOtp = [...otp];
+        for (let i = 0; i < 6; i++) {
+          newOtp[i] = pastedOtp[i] || '';
+        }
+        setOtp(newOtp);
+        otpRefs.current[5]?.focus();
+        return;
+      }
+      
+      const lastDigit = cleanValue.slice(-1);
+      const newOtp = [...otp];
+      newOtp[index] = lastDigit;
+      setOtp(newOtp);
+      if (index < 5) {
+        otpRefs.current[index + 1]?.focus();
+      }
+      return;
+    }
+
     const newOtp = [...otp];
-    newOtp[index] = value;
+    newOtp[index] = cleanValue;
     setOtp(newOtp);
+
+    if (cleanValue && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyPress = (e, index) => {
+    if (e.nativeEvent.key === 'Backspace') {
+      if (!otp[index] && index > 0) {
+        const newOtp = [...otp];
+        newOtp[index - 1] = '';
+        setOtp(newOtp);
+        otpRefs.current[index - 1]?.focus();
+      }
+    }
   };
 
   if (loading) {
@@ -169,7 +208,14 @@ export default function WithdrawScreen() {
               </View>
 
               <View style={styles.bankPreview}>
-                <Text style={styles.bankPreviewLabel}>Transfer to:</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <Text style={styles.bankPreviewLabel}>Transfer to:</Text>
+                  {user.payoutCredentials?.accountNumber && (
+                    <TouchableOpacity onPress={() => router.push('/bank-details')}>
+                      <Text style={styles.changeLinkText}>Change</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
                 {user.payoutCredentials?.accountNumber ? (
                   <View style={styles.bankRow}>
                     <Ionicons name="business-outline" size={20} color="#00bfa5" />
@@ -210,11 +256,15 @@ export default function WithdrawScreen() {
               {otp.map((digit, idx) => (
                 <TextInput
                   key={idx}
+                  ref={(ref) => {
+                    otpRefs.current[idx] = ref;
+                  }}
                   style={styles.otpInput}
                   value={digit}
                   onChangeText={(val) => handleOtpChange(val, idx)}
+                  onKeyPress={(e) => handleKeyPress(e, idx)}
                   keyboardType="number-pad"
-                  maxLength={1}
+                  maxLength={6}
                   selectTextOnFocus
                 />
               ))}
@@ -338,7 +388,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: '#64748b',
-    marginBottom: 12,
+    textTransform: 'uppercase',
+  },
+  changeLinkText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#00bfa5',
     textTransform: 'uppercase',
   },
   bankRow: {
