@@ -3,11 +3,25 @@ import { AuthProvider } from '../src/context/AuthContext';
 import { useEffect } from 'react';
 import { useAuth } from '../src/context/AuthContext';
 import { useRouter, useSegments } from 'expo-router';
+import { View, Image, ActivityIndicator, StyleSheet } from 'react-native';
 
 function RootLayoutNav() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Image 
+          source={require('../assets/LOGO.jpg')} 
+          style={styles.loadingLogo} 
+          resizeMode="contain" 
+        />
+        <ActivityIndicator size="large" color="#00bfa5" style={{ marginTop: 24 }} />
+      </View>
+    );
+  }
 
   useEffect(() => {
     if (loading) return;
@@ -66,3 +80,16 @@ export default function RootLayout() {
     </AuthProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingLogo: {
+    width: 240,
+    height: 240,
+  },
+});
