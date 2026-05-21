@@ -24,6 +24,7 @@ const DonationForm = ({ onSuccess }) => {
     const [motivatorName, setMotivatorName] = useState('');
     const [need80G, setNeed80G] = useState(false);
     const [isMotivatorLocked, setIsMotivatorLocked] = useState(false);
+    const [wasAutoFetched, setWasAutoFetched] = useState(false);
     const [donationType] = useState('monthly'); // Always monthly now
     const [donationLabel, setDonationLabel] = useState('');
     const [donationLabelHi, setDonationLabelHi] = useState('');
@@ -141,6 +142,15 @@ const DonationForm = ({ onSuccess }) => {
 
     // Auto-fetch motivator by phone number for non-logged in users
     useEffect(() => {
+        // If guest removes a digit from their mobile number, unlock and clear any auto-fetched motivator
+        if (mobile.length < 10 && wasAutoFetched) {
+            setMotivatorMobile('');
+            setMotivatorName('');
+            setIsMotivatorLocked(false);
+            setWasAutoFetched(false);
+            return;
+        }
+
         const fetchPreviousMotivator = async () => {
             // Only fetch if it's a valid 10-digit mobile and user is NOT logged in 
             // and we don't already have a motivator (like from a ref link)
@@ -151,6 +161,7 @@ const DonationForm = ({ onSuccess }) => {
                         setMotivatorMobile(data.motivatorMobile);
                         if (data.motivatorName) setMotivatorName(data.motivatorName);
                         setIsMotivatorLocked(true);
+                        setWasAutoFetched(true);
                         toast.success("Welcome back! Your previous motivator has been auto-selected.", {
                             icon: '👋',
                             duration: 3000
@@ -164,7 +175,7 @@ const DonationForm = ({ onSuccess }) => {
 
         const timer = setTimeout(fetchPreviousMotivator, 800);
         return () => clearTimeout(timer);
-    }, [mobile, authUser, motivatorMobile]);
+    }, [mobile, authUser, motivatorMobile, wasAutoFetched]);
 
     // Check for referral link and pre-fill data
     useEffect(() => {

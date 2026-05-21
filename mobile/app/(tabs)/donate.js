@@ -48,6 +48,7 @@ export default function DonateScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [isValidatingMotivator, setIsValidatingMotivator] = useState(false);
   const [isMotivatorLocked, setIsMotivatorLocked] = useState(false);
+  const [wasAutoFetched, setWasAutoFetched] = useState(false);
 
   const [donationLabel, setDonationLabel] = useState('');
   const [donationLabelLink, setDonationLabelLink] = useState('');
@@ -159,6 +160,15 @@ export default function DonateScreen() {
 
   // Auto-fetch previous motivator for GUEST users when they type their mobile number
   useEffect(() => {
+    // If guest removes a digit from their mobile number, unlock and clear any auto-fetched motivator
+    if (mobile.length < 10 && wasAutoFetched) {
+      setMotivatorMobile('');
+      setMotivatorName('');
+      setIsMotivatorLocked(false);
+      setWasAutoFetched(false);
+      return;
+    }
+
     const fetchPreviousMotivator = async () => {
       // Only for guests (not logged in), full 10-digit number, no motivator set yet
       if (mobile.length === 10 && !authUser && !motivatorMobile) {
@@ -168,6 +178,7 @@ export default function DonateScreen() {
             setMotivatorMobile(data.motivatorMobile);
             if (data.motivatorName) setMotivatorName(data.motivatorName);
             setIsMotivatorLocked(true);
+            setWasAutoFetched(true);
           }
         } catch (error) {
           // Silently fail — guest just won't have pre-filled motivator
@@ -178,7 +189,7 @@ export default function DonateScreen() {
 
     const timer = setTimeout(fetchPreviousMotivator, 800);
     return () => clearTimeout(timer);
-  }, [mobile, authUser, motivatorMobile]);
+  }, [mobile, authUser, motivatorMobile, wasAutoFetched]);
 
   const handleDonate = async () => {
     const finalAmount = parseInt(customAmount) || amount;
