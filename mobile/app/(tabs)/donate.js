@@ -18,12 +18,14 @@ import * as Location from 'expo-location';
 import LocationModal from '../../src/components/LocationModal';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
+import { useTranslation } from '../../src/context/LanguageContext';
 import api from '../../src/services/api';
 import { useLocationFlow } from '../../src/hooks/useLocationFlow';
 import RazorpayCheckout from 'react-native-razorpay';
 import DonationExitModal from '../../src/components/DonationExitModal';
 
 export default function DonateScreen() {
+  const { t, locale } = useTranslation();
   const { user: authUser } = useAuth();
   const router = useRouter();
 
@@ -269,14 +271,18 @@ export default function DonateScreen() {
           </View>
 
           <Text style={styles.successTitle}>
-            Thank You, {fullName.split(' ')[0]}!
+            {locale === 'hi' ? `धन्यवाद, ${fullName.split(' ')[0]}!` : `Thank You, ${fullName.split(' ')[0]}!`}
           </Text>
           <Text style={styles.successMessage}>
-            Your donation of <Text style={{ fontWeight: 'bold' }}>₹{donationSuccess.amount.toLocaleString('en-IN')}</Text> was successful.
+            {locale === 'hi' ? (
+              <Text>आपका <Text style={{ fontWeight: 'bold' }}>₹{donationSuccess.amount.toLocaleString('en-IN')}</Text> का दान सफल रहा।</Text>
+            ) : (
+              <Text>Your donation of <Text style={{ fontWeight: 'bold' }}>₹{donationSuccess.amount.toLocaleString('en-IN')}</Text> was successful.</Text>
+            )}
           </Text>
 
           <View style={styles.transactionBox}>
-            <Text style={styles.transactionLabel}>Transaction ID</Text>
+            <Text style={styles.transactionLabel}>{locale === 'hi' ? 'लेनदेन आईडी' : 'Transaction ID'}</Text>
             <Text style={styles.transactionId}>{donationSuccess.donationId}</Text>
           </View>
 
@@ -284,31 +290,31 @@ export default function DonateScreen() {
             <View style={styles.claimAccountBox}>
               {donationSuccess.isAlreadyRegistered ? (
                 <View style={{ alignItems: 'center' }}>
-                  <Text style={styles.claimTitle}>Welcome Back!</Text>
+                  <Text style={styles.claimTitle}>{locale === 'hi' ? 'आपका स्वागत है!' : 'Welcome Back!'}</Text>
                   <Text style={styles.claimDesc}>
-                    You already have an account with us. Login to track this donation and access your certificates.
+                    {locale === 'hi' ? 'आपका पहले से ही हमारे पास एक खाता है। इस दान को ट्रैक करने और अपने प्रमाणपत्रों को एक्सेस करने के लिए लॉगिन करें।' : 'You already have an account with us. Login to track this donation and access your certificates.'}
                   </Text>
                   <TouchableOpacity
                     style={[styles.donateBtn, { marginTop: 10, width: '100%' }]}
                     onPress={() => router.push('/login')}
                   >
-                    <Text style={styles.donateBtnText}>Login to Your Account</Text>
+                    <Text style={styles.donateBtnText}>{locale === 'hi' ? 'अपने खाते में लॉगिन करें' : 'Login to Your Account'}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
                 <View style={{ width: '100%' }}>
-                  <Text style={styles.claimTitle}>Claim Your Account</Text>
+                  <Text style={styles.claimTitle}>{locale === 'hi' ? 'अपने खाते का दावा करें' : 'Claim Your Account'}</Text>
                   <Text style={styles.claimDesc}>
-                    Create a password to securely access your 80G certificates and track your donations.
+                    {locale === 'hi' ? 'अपने 80G प्रमाणपत्रों को सुरक्षित रूप से एक्सेस करने और अपने दान को ट्रैक करने के लिए एक पासवर्ड बनाएं।' : 'Create a password to securely access your 80G certificates and track your donations.'}
                   </Text>
 
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Create Password</Text>
+                    <Text style={styles.label}>{locale === 'hi' ? 'पासवर्ड बनाएं' : 'Create Password'}</Text>
                     <View style={styles.passwordInputWrapper}>
                       <Ionicons name="lock-closed-outline" size={20} color="#64748b" style={styles.inputIcon} />
                       <TextInput
                         style={styles.passwordInput}
-                        placeholder="Min. 6 characters"
+                        placeholder={locale === 'hi' ? 'न्यूनतम 6 वर्ण' : 'Min. 6 characters'}
                         secureTextEntry
                         value={registerPassword}
                         onChangeText={setRegisterPassword}
@@ -317,12 +323,12 @@ export default function DonateScreen() {
                   </View>
 
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Confirm Password</Text>
+                    <Text style={styles.label}>{locale === 'hi' ? 'पासवर्ड की पुष्टि करें' : 'Confirm Password'}</Text>
                     <View style={styles.passwordInputWrapper}>
                       <Ionicons name="lock-closed-outline" size={20} color="#64748b" style={styles.inputIcon} />
                       <TextInput
                         style={styles.passwordInput}
-                        placeholder="Re-enter password"
+                        placeholder={locale === 'hi' ? 'पासवर्ड पुनः दर्ज करें' : 'Re-enter password'}
                         secureTextEntry
                         value={registerConfirmPassword}
                         onChangeText={setRegisterConfirmPassword}
@@ -338,7 +344,7 @@ export default function DonateScreen() {
                     {isRegistering ? (
                       <ActivityIndicator color="white" />
                     ) : (
-                      <Text style={styles.donateBtnText}>Create Account</Text>
+                      <Text style={styles.donateBtnText}>{locale === 'hi' ? 'खाता बनाएं' : 'Create Account'}</Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -350,7 +356,11 @@ export default function DonateScreen() {
             style={styles.goHomeBtn}
             onPress={() => router.replace(isLoggedIn ? '/dashboard' : '/')}
           >
-            <Text style={styles.goHomeText}>{isLoggedIn ? 'Go to Dashboard' : 'Skip & Go Home'}</Text>
+            <Text style={styles.goHomeText}>
+              {isLoggedIn 
+                ? (locale === 'hi' ? 'डैशबोर्ड पर जाएं' : 'Go to Dashboard') 
+                : (locale === 'hi' ? 'छोड़ें और होम पर जाएं' : 'Skip & Go Home')}
+            </Text>
             <Ionicons name="arrow-forward" size={18} color="#00bfa5" />
           </TouchableOpacity>
         </ScrollView>
@@ -363,7 +373,7 @@ export default function DonateScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
         {/* Amount Selection */}
-        <Text style={styles.sectionTitle}>Select Donation Amount</Text>
+        <Text style={styles.sectionTitle}>{locale === 'hi' ? 'दान राशि चुनें' : 'Select Donation Amount'}</Text>
 
         {!!donationLabel && (
           <View style={styles.subtitleContainer}>
@@ -373,7 +383,7 @@ export default function DonateScreen() {
                 style={styles.subtitleLinkBtn}
                 onPress={() => Linking.openURL(donationLabelLink)}
               >
-                <Text style={styles.subtitleLinkText}>{donationLabelBtnText || 'Learn More'}</Text>
+                <Text style={styles.subtitleLinkText}>{donationLabelBtnText || (locale === 'hi' ? 'और जानें' : 'Learn More')}</Text>
                 <Ionicons name="open-outline" size={14} color="#00bfa5" />
               </TouchableOpacity>
             )}
@@ -388,7 +398,7 @@ export default function DonateScreen() {
               onPress={() => { setAmount(p); setCustomAmount(p.toString()); }}
             >
               <Text style={[styles.amountBtnText, amount === p && styles.amountBtnTextActive]}>₹{p.toLocaleString('en-IN')}</Text>
-              {config.popularAmount === p && <View style={styles.popularBadge}><Text style={styles.popularText}>POPULAR</Text></View>}
+              {config.popularAmount === p && <View style={styles.popularBadge}><Text style={styles.popularText}>{locale === 'hi' ? 'लोकप्रिय' : 'POPULAR'}</Text></View>}
             </TouchableOpacity>
           ))}
         </View>
@@ -397,7 +407,7 @@ export default function DonateScreen() {
           <Text style={styles.currencySymbol}>₹</Text>
           <TextInput
             style={styles.customInput}
-            placeholder="Custom Amount"
+            placeholder={locale === 'hi' ? 'कस्टम राशि' : 'Custom Amount'}
             keyboardType="number-pad"
             value={customAmount}
             onChangeText={(t) => { setCustomAmount(t); setAmount(0); }}
@@ -406,28 +416,28 @@ export default function DonateScreen() {
 
         <View style={styles.citizenCheck}>
           <Ionicons name="checkbox" size={20} color="#00bfa5" />
-          <Text style={styles.checkText}>I am an Indian Citizen</Text>
+          <Text style={styles.checkText}>{locale === 'hi' ? 'मैं एक भारतीय नागरिक हूँ' : 'I am an Indian Citizen'}</Text>
         </View>
 
         {/* Personal Details */}
         <View style={styles.formSection}>
           <View style={styles.sectionHeader}>
             <Ionicons name="person" size={20} color="#00bfa5" />
-            <Text style={styles.sectionHeaderText}>Personal Details</Text>
+            <Text style={styles.sectionHeaderText}>{locale === 'hi' ? 'व्यक्तिगत विवरण' : 'Personal Details'}</Text>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name *</Text>
+            <Text style={styles.label}>{locale === 'hi' ? 'पूरा नाम *' : 'Full Name *'}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Ex. Raghu Kumar"
+              placeholder={locale === 'hi' ? 'जैसे: रघु कुमार' : "Ex. Raghu Kumar"}
               value={fullName}
               onChangeText={setFullName}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Mobile Number *</Text>
+            <Text style={styles.label}>{locale === 'hi' ? 'मोबाइल नंबर *' : 'Mobile Number *'}</Text>
             <View style={styles.phoneInputRow}>
               <View style={styles.flagAddon}><Text style={styles.flagText}>+91</Text></View>
               <TextInput
@@ -442,7 +452,7 @@ export default function DonateScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
+            <Text style={styles.label}>{locale === 'hi' ? 'ईमेल पता' : 'Email Address'}</Text>
             <TextInput
               style={styles.input}
               placeholder="mail@example.com"
@@ -454,19 +464,23 @@ export default function DonateScreen() {
 
           <View style={styles.inputGroup}>
             <View style={styles.labelRow}>
-              <Text style={styles.label}>Address (Optional)</Text>
+              <Text style={styles.label}>{locale === 'hi' ? 'पता (वैकल्पिक)' : 'Address (Optional)'}</Text>
               <TouchableOpacity
                 style={styles.detectBtn}
                 onPress={handleDetectLocation}
                 disabled={isDetecting}
               >
                 <Ionicons name="location" size={14} color="#00bfa5" />
-                <Text style={styles.detectBtnText}>{isDetecting ? 'Detecting...' : 'Auto Detect'}</Text>
+                <Text style={styles.detectBtnText}>
+                  {isDetecting 
+                    ? (locale === 'hi' ? 'पता लगा रहा है...' : 'Detecting...') 
+                    : (locale === 'hi' ? 'ऑटो पता लगाएँ' : 'Auto Detect')}
+                </Text>
               </TouchableOpacity>
             </View>
             <TextInput
               style={[styles.input, styles.textArea]}
-              placeholder="Ex. H.No 123, Sector 4, New Delhi"
+              placeholder={locale === 'hi' ? 'जैसे: मकान नंबर 123, सेक्टर 4, नई दिल्ली' : "Ex. H.No 123, Sector 4, New Delhi"}
               multiline
               numberOfLines={3}
               value={address}
@@ -479,15 +493,15 @@ export default function DonateScreen() {
         <View style={styles.formSection}>
           <View style={styles.sectionHeader}>
             <Ionicons name="phone-portrait" size={20} color="#00bfa5" />
-            <Text style={styles.sectionHeaderText}>Motivator Details</Text>
+            <Text style={styles.sectionHeaderText}>{locale === 'hi' ? 'प्रेरक विवरण' : 'Motivator Details'}</Text>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Motivated By (Mobile/ID)</Text>
+            <Text style={styles.label}>{locale === 'hi' ? 'द्वारा प्रेरित (मोबाइल/आईडी)' : 'Motivated By (Mobile/ID)'}</Text>
             <View style={styles.motivatorInputWrapper}>
               <TextInput
                 style={[styles.input, isMotivatorLocked && styles.inputLocked]}
-                placeholder="Mobile Number"
+                placeholder={locale === 'hi' ? 'मोबाइल नंबर' : "Mobile Number"}
                 keyboardType="phone-pad"
                 value={motivatorMobile}
                 onChangeText={setMotivatorMobile}
@@ -498,7 +512,9 @@ export default function DonateScreen() {
             {motivatorName ? (
               <Text style={styles.motivatorFound}>✓ {motivatorName}</Text>
             ) : motivatorMobile.length >= 10 ? (
-              <Text style={styles.motivatorError}>Motivator not found</Text>
+              <Text style={styles.motivatorError}>
+                {locale === 'hi' ? 'प्रेरक नहीं मिला' : 'Motivator not found'}
+              </Text>
             ) : null}
           </View>
         </View>
@@ -510,13 +526,13 @@ export default function DonateScreen() {
             onPress={() => setNeed80G(!need80G)}
           >
             <Ionicons name={need80G ? "checkbox" : "square-outline"} size={24} color="#00bfa5" />
-            <Text style={styles.checkboxLabel}>I want 80G Tax Benefit</Text>
+            <Text style={styles.checkboxLabel}>{locale === 'hi' ? 'मुझे 80G टैक्स लाभ चाहिए' : 'I want 80G Tax Benefit'}</Text>
           </TouchableOpacity>
 
           {need80G && (
             <View style={styles.taxInputs}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>PAN Number *</Text>
+                <Text style={styles.label}>{locale === 'hi' ? 'पैन नंबर *' : 'PAN Number *'}</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="ABCDE1234F"
@@ -527,10 +543,10 @@ export default function DonateScreen() {
                 />
               </View>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Aadhaar Number *</Text>
+                <Text style={styles.label}>{locale === 'hi' ? 'आधार नंबर *' : 'Aadhaar Number *'}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="12-digit Aadhaar"
+                  placeholder={locale === 'hi' ? '12-अंकीय आधार' : "12-digit Aadhaar"}
                   keyboardType="number-pad"
                   maxLength={12}
                   value={aadhaar}
@@ -550,7 +566,9 @@ export default function DonateScreen() {
             <ActivityIndicator color="white" />
           ) : (
             <>
-              <Text style={styles.donateBtnText}>Proceed to Payment</Text>
+              <Text style={styles.donateBtnText}>
+                {locale === 'hi' ? 'भुगतान के लिए आगे बढ़ें' : 'Proceed to Payment'}
+              </Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </>
           )}
@@ -558,7 +576,9 @@ export default function DonateScreen() {
 
         <View style={styles.secureNote}>
           <Ionicons name="shield-checkmark" size={16} color="#64748b" />
-          <Text style={styles.secureText}>Secure 256-bit encrypted payment via Razorpay</Text>
+          <Text style={styles.secureText}>
+            {locale === 'hi' ? 'रेज़रपे के माध्यम से सुरक्षित 256-बिट एन्क्रिप्टेड भुगतान' : 'Secure 256-bit encrypted payment via Razorpay'}
+          </Text>
         </View>
 
         <View style={{ height: 40 }} />

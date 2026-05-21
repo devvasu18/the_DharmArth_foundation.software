@@ -18,10 +18,12 @@ import DonationExitModal from '../../src/components/DonationExitModal';
 import { io } from "socket.io-client";
 import { Audio } from 'expo-av';
 import api, { API_BASE_URL } from '../../src/services/api';
+import { useTranslation } from '../../src/context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
 export default function TabLayout() {
+  const { t, locale, changeLanguage } = useTranslation();
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -72,12 +74,12 @@ export default function TabLayout() {
   }, [user?._id, pathname]); // Re-fetch on pathname change to catch mark-read updates
 
   const menuItems = [
-    { label: 'My Earnings', icon: 'wallet-outline', route: '/dashboard' },
-    { label: 'My Profile', icon: 'person-outline', route: '/profile' },
-    { label: 'My Subscriptions', icon: 'card-outline', route: '/my-subscriptions' },
-    { label: 'My Network', icon: 'git-network-outline', route: '/my-network' },
-    { label: 'My Referrals', icon: 'people-outline', route: '/my-referrals' },
-    { label: 'Share & Earn', icon: 'share-social-outline', route: '/share-earn' }
+    { label: t('navbar.myEarnings'), icon: 'wallet-outline', route: '/dashboard' },
+    { label: t('navbar.myProfile'), icon: 'person-outline', route: '/profile' },
+    { label: t('navbar.mySubscriptions'), icon: 'card-outline', route: '/my-subscriptions' },
+    { label: t('navbar.myNetwork'), icon: 'git-network-outline', route: '/my-network' },
+    { label: t('navbar.myReferrals'), icon: 'people-outline', route: '/my-referrals' },
+    { label: t('navbar.shareAndEarn'), icon: 'share-social-outline', route: '/share-earn' }
   ];
 
   const handleLogout = () => {
@@ -154,6 +156,14 @@ export default function TabLayout() {
         headerRight: () => (
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <TouchableOpacity
+              style={{ marginRight: 14, padding: 4 }}
+              onPress={() => changeLanguage(locale === 'en' ? 'hi' : 'en')}
+            >
+              <Text style={{ fontSize: 14, fontWeight: '900', color: '#00bfa5' }}>
+                {locale === 'en' ? 'हिंदी' : 'EN'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={{ marginRight: 16, padding: 4, position: 'relative' }}
               onPress={() => {
                 if (!user) {
@@ -185,8 +195,8 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Dharmarth',
-            tabBarLabel: 'Home',
+            title: t('navbar.brand'),
+            tabBarLabel: t('navbar.home'),
             tabBarIcon: ({ color }) => <Ionicons name="home" size={24} color={color} />,
           }}
           listeners={{ tabPress: (e) => handleTabChange(e, '/index') }}
@@ -194,16 +204,16 @@ export default function TabLayout() {
         <Tabs.Screen
           name="donate"
           options={{
-            title: 'Donate',
-            tabBarLabel: 'Donate',
+            title: t('navbar.donate'),
+            tabBarLabel: t('navbar.donate'),
             tabBarIcon: ({ color }) => <Ionicons name="heart" size={24} color={color} />,
           }}
         />
         <Tabs.Screen
           name="events"
           options={{
-            title: 'Events',
-            tabBarLabel: 'Events',
+            title: t('navbar.events'),
+            tabBarLabel: t('navbar.events'),
             tabBarIcon: ({ color }) => <Ionicons name="calendar" size={24} color={color} />,
           }}
           listeners={{ tabPress: (e) => handleTabChange(e, '/events') }}
@@ -211,8 +221,8 @@ export default function TabLayout() {
         <Tabs.Screen
           name="dashboard"
           options={{
-            title: 'Dashboard',
-            tabBarLabel: 'Profile',
+            title: t('navbar.dashboard'),
+            tabBarLabel: t('navbar.profile'),
             tabBarIcon: ({ color }) => <Ionicons name="person" size={24} color={color} />,
           }}
           listeners={{ tabPress: (e) => handleTabChange(e, '/dashboard') }}
@@ -248,7 +258,7 @@ export default function TabLayout() {
 
                 <View style={styles.menuList}>
                   {menuItems
-                    .filter(item => item.label !== 'Share & Earn' || user)
+                    .filter(item => item.route !== '/share-earn' || user)
                     .map((item, index) => (
                     <TouchableOpacity
                       key={`menu-item-${index}`}
@@ -269,7 +279,7 @@ export default function TabLayout() {
                       onPress={handleLogout}
                     >
                       <Ionicons name="log-out-outline" size={22} color="#ef4444" />
-                      <Text style={[styles.menuItemText, { color: '#ef4444' }]}>Logout</Text>
+                      <Text style={[styles.menuItemText, { color: '#ef4444' }]}>{t('navbar.logout')}</Text>
                     </TouchableOpacity>
                   ) : (
                     <TouchableOpacity
@@ -280,7 +290,7 @@ export default function TabLayout() {
                       }}
                     >
                       <Ionicons name="log-in-outline" size={22} color="#00bfa5" />
-                      <Text style={[styles.menuItemText, { color: '#00bfa5' }]}>Login</Text>
+                      <Text style={[styles.menuItemText, { color: '#00bfa5' }]}>{t('navbar.login')}</Text>
                     </TouchableOpacity>
                   )}
                 </View>

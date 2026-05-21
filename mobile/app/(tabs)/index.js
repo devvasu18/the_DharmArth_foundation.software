@@ -11,6 +11,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
+import { useTranslation } from '../../src/context/LanguageContext';
 import api from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
@@ -43,6 +44,7 @@ const FAQItem = ({ question, answer }) => {
 };
 
 const LandingScreen = () => {
+  const { t, locale } = useTranslation();
   const { user } = useAuth();
   const router = useRouter();
   const [visuals, setVisuals] = useState([]);
@@ -176,23 +178,23 @@ const LandingScreen = () => {
             {textSlides[currentTextIndex] && (
               <View key={`hero-txt-${textSlides[currentTextIndex]._id || ''}-${currentTextIndex}`}>
                 <Text style={styles.heroTitle}>
-                  {textSlides[currentTextIndex].title}
+                  {locale === 'hi' && textSlides[currentTextIndex].title_hi ? textSlides[currentTextIndex].title_hi : textSlides[currentTextIndex].title}
                 </Text>
 
                 <View style={styles.impactStats}>
                   <View style={styles.impactItem}>
                     <Text style={styles.impactNumber}>0%</Text>
-                    <Text style={styles.impactLabel}>PLATFORM FEE</Text>
+                    <Text style={styles.impactLabel}>{t('home.platformFee')}</Text>
                   </View>
                   <View style={styles.impactDivider} />
                   <View style={styles.impactItem}>
                     <Text style={styles.impactNumber}>72 Lakh+</Text>
-                    <Text style={styles.impactLabel}>CONTRIBUTORS</Text>
+                    <Text style={styles.impactLabel}>{t('home.contributors')}</Text>
                   </View>
                 </View>
 
                 <Text style={styles.heroDescription}>
-                  {textSlides[currentTextIndex].subtitle || 'Empowering change through your generous contributions.'}
+                  {locale === 'hi' && textSlides[currentTextIndex].subtitle_hi ? textSlides[currentTextIndex].subtitle_hi : (textSlides[currentTextIndex].subtitle || 'Empowering change through your generous contributions.')}
                 </Text>
 
                 <TouchableOpacity
@@ -214,7 +216,9 @@ const LandingScreen = () => {
                     }
                   }}
                 >
-                  <Text style={styles.heroCtaText}>{textSlides[currentTextIndex].ctaText || 'Donate Now'}</Text>
+                  <Text style={styles.heroCtaText}>
+                    {locale === 'hi' && textSlides[currentTextIndex].ctaText_hi ? textSlides[currentTextIndex].ctaText_hi : (textSlides[currentTextIndex].ctaText || 'Donate Now')}
+                  </Text>
                   <Ionicons name="arrow-forward" size={20} color="white" />
                 </TouchableOpacity>
               </View>
@@ -225,7 +229,7 @@ const LandingScreen = () => {
         {/* Welcome Section */}
         <View style={styles.welcomeSection}>
           <Text style={styles.welcomeTitle}>
-            Feed a child, Heal a patient, Save a life.
+            {t('home.feedChild')}
           </Text>
           <View style={styles.welcomeUnderline} />
         </View>
@@ -235,21 +239,25 @@ const LandingScreen = () => {
           <View key={`crowd-${section._id || ''}-${index}`} style={[styles.crowdSection, index % 2 !== 0 && styles.crowdSectionAlt]}>
             <Image source={{ uri: section.imageUrl }} style={styles.crowdImage} />
             <View style={styles.crowdContent}>
-              <Text style={styles.crowdTitle}>{section.title}</Text>
-              <Text style={styles.crowdText}>{section.text.replace(/<[^>]*>?/gm, '')}</Text>
+              <Text style={styles.crowdTitle}>
+                {locale === 'hi' && section.title_hi ? section.title_hi : section.title}
+              </Text>
+              <Text style={styles.crowdText}>
+                {locale === 'hi' && section.text_hi ? section.text_hi.replace(/<[^>]*>?/gm, '') : section.text.replace(/<[^>]*>?/gm, '')}
+              </Text>
             </View>
           </View>
         ))}
 
         {/* Why Us Section */}
         <View style={styles.whyUsSection}>
-          <Text style={styles.sectionHeading}>Why Choose Us?</Text>
+          <Text style={styles.sectionHeading}>{t('home.whyChooseUs')}</Text>
           <View style={styles.whyUsGrid}>
             {[
-              { icon: 'trophy-outline', text: 'Transparent & Accountable' },
-              { icon: 'people-outline', text: 'Community Driven' },
-              { icon: 'medical-outline', text: 'Life Saving Aid' },
-              { icon: 'card-outline', text: 'Secure Payments' }
+              { icon: 'trophy-outline', text: locale === 'hi' ? 'पारदर्शी और जवाबदेह' : 'Transparent & Accountable' },
+              { icon: 'people-outline', text: locale === 'hi' ? 'समुदाय संचालित' : 'Community Driven' },
+              { icon: 'medical-outline', text: locale === 'hi' ? 'जीवन रक्षक सहायता' : 'Life Saving Aid' },
+              { icon: 'card-outline', text: locale === 'hi' ? 'सुरक्षित भुगतान' : 'Secure Payments' }
             ].map((item, i) => (
               <View key={`why-${i}`} style={styles.whyUsItem}>
                 <View style={styles.whyUsIcon}>
@@ -269,15 +277,15 @@ const LandingScreen = () => {
             resizeMode="cover"
           />
           <View style={styles.monthlyGivingContent}>
-            <Text style={styles.monthlyGivingTitle}>Gift Smiles with Monthly Giving</Text>
+            <Text style={styles.monthlyGivingTitle}>{t('home.giftSmiles')}</Text>
             <Text style={styles.monthlyGivingText}>
-              <Text style={styles.monthlyHighlight}>6,619 Lives</Text> Have Been Saved With Monthly Contributions From <Text style={styles.monthlyHighlight}>4,21,908 Contributors</Text>. Save Countless Lives By Giving Monthly.
+              <Text style={styles.monthlyHighlight}>{locale === 'hi' ? '6,619 जीवन' : '6,619 Lives'}</Text> {t('home.savedText')} <Text style={styles.monthlyHighlight}>{locale === 'hi' ? '4,21,908 योगदानकर्ताओं' : '4,21,908 Contributors'}</Text>. {t('home.saveCountless')}
             </Text>
             <TouchableOpacity
               style={styles.monthlyGivingBtn}
               onPress={() => router.push('/dashboard')}
             >
-              <Text style={styles.monthlyGivingBtnText}>Join & Earn Monthly</Text>
+              <Text style={styles.monthlyGivingBtnText}>{t('home.joinEarnMonthly')}</Text>
               <Ionicons name="arrow-forward" size={18} color="white" />
             </TouchableOpacity>
           </View>
@@ -286,9 +294,13 @@ const LandingScreen = () => {
         {/* FAQ Section */}
         {faqs.length > 0 && (
           <View style={styles.faqSection}>
-            <Text style={styles.sectionHeading}>Frequently Asked Questions</Text>
+            <Text style={styles.sectionHeading}>{t('home.faqTitle')}</Text>
             {faqs.map((faq, index) => (
-              <FAQItem key={faq._id || index} question={faq.question} answer={faq.answer} />
+              <FAQItem 
+                key={faq._id || index} 
+                question={locale === 'hi' && faq.question_hi ? faq.question_hi : faq.question} 
+                answer={locale === 'hi' && faq.answer_hi ? faq.answer_hi : faq.answer} 
+              />
             ))}
           </View>
         )}

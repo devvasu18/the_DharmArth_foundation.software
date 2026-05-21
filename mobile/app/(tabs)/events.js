@@ -15,10 +15,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, Link, useFocusEffect, useRouter } from 'expo-router';
 import api from '../../src/services/api';
+import { useTranslation } from '../../src/context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
 export default function EventsScreen() {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const [events, setEvents] = useState([]);
   const [headerSlides, setHeaderSlides] = useState([]);
@@ -95,6 +97,26 @@ export default function EventsScreen() {
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getFilterLabel = (f) => {
+    if (locale === 'hi') {
+      if (f === 'all') return 'सभी';
+      if (f === 'upcoming') return 'आगामी';
+      if (f === 'past') return 'पिछला';
+    }
+    return f.charAt(0).toUpperCase() + f.slice(1);
+  };
+
+  const getCategoryLabel = (cat) => {
+    if (locale === 'hi') {
+      if (cat === 'all') return 'सभी श्रेणियां';
+      if (cat === 'Health Blog') return 'स्वास्थ्य ब्लॉग';
+      if (cat === 'Medical Camp') return 'चिकित्सा शिविर';
+      if (cat === 'Social Event') return 'सामाजिक कार्यक्रम';
+      if (cat === 'Success Story') return 'सफलता की कहानी';
+    }
+    return cat === 'all' ? 'All Categories' : cat;
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -131,14 +153,20 @@ export default function EventsScreen() {
                     <Image source={{ uri: slide.url }} style={styles.headerImage} resizeMode="cover" />
                     <View style={styles.headerOverlay} />
                     <View style={styles.headerContent}>
-                      <Text style={styles.headerTitle}>{slide.title}</Text>
-                      <Text style={styles.headerSubtitle}>{slide.subtitle}</Text>
+                      <Text style={styles.headerTitle}>
+                        {locale === 'hi' && slide.title_hi ? slide.title_hi : slide.title}
+                      </Text>
+                      <Text style={styles.headerSubtitle}>
+                        {locale === 'hi' && slide.subtitle_hi ? slide.subtitle_hi : slide.subtitle}
+                      </Text>
                       {slide.ctaLink && (
                         <TouchableOpacity 
                           style={styles.headerCta} 
                           onPress={() => Linking.openURL(`https://the-dharm-arth-foundation-software.vercel.app${slide.ctaLink}`)}
                         >
-                          <Text style={styles.headerCtaText}>{slide.ctaText || 'Learn More'}</Text>
+                          <Text style={styles.headerCtaText}>
+                            {locale === 'hi' && slide.ctaText_hi ? slide.ctaText_hi : (slide.ctaText || 'Learn More')}
+                          </Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -164,7 +192,7 @@ export default function EventsScreen() {
                 onPress={() => setFilter(f)}
               >
                 <Text style={[styles.tabText, filter === f && styles.activeTabText]}>
-                  {f.charAt(0).toUpperCase() + f.slice(1)}
+                  {getFilterLabel(f)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -174,7 +202,7 @@ export default function EventsScreen() {
             <Ionicons name="search" size={20} color="#94a3b8" />
             <TextInput 
               style={styles.searchInput}
-              placeholder="Search events..."
+              placeholder={locale === 'hi' ? 'आयोजन खोजें...' : 'Search events...'}
               value={searchTerm}
               onChangeText={setSearchTerm}
             />
@@ -188,7 +216,7 @@ export default function EventsScreen() {
                 onPress={() => setCategoryFilter(cat)}
               >
                 <Text style={[styles.catPillText, categoryFilter === cat && styles.activeCatPillText]}>
-                  {cat === 'all' ? 'All Categories' : cat}
+                  {getCategoryLabel(cat)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -200,7 +228,9 @@ export default function EventsScreen() {
           {loading ? (
             <ActivityIndicator size="large" color="#00bfa5" style={{ padding: 40 }} />
           ) : filteredEvents.length === 0 ? (
-            <Text style={styles.noEvents}>No events found matching your criteria.</Text>
+            <Text style={styles.noEvents}>
+              {locale === 'hi' ? 'आपकी खोज के अनुकूल कोई कार्यक्रम नहीं मिले।' : 'No events found matching your criteria.'}
+            </Text>
           ) : (
             filteredEvents.map((event, index) => (
               <TouchableOpacity 
@@ -214,7 +244,7 @@ export default function EventsScreen() {
                     {event.status.toUpperCase()}
                   </Text>
                   {event.category && (
-                    <Text style={styles.categoryBadge}>{event.category}</Text>
+                    <Text style={styles.categoryBadge}>{getCategoryLabel(event.category)}</Text>
                   )}
                 </View>
                 <View style={styles.eventCardContent}>
@@ -227,8 +257,12 @@ export default function EventsScreen() {
                       <Ionicons name="location-outline" size={12} /> {event.location || 'Online'}
                     </Text>
                   </View>
-                  <Text style={styles.eventTitle}>{event.title}</Text>
-                  <Text style={styles.eventDesc} numberOfLines={2}>{event.shortDescription}</Text>
+                  <Text style={styles.eventTitle}>
+                    {locale === 'hi' && event.title_hi ? event.title_hi : event.title}
+                  </Text>
+                  <Text style={styles.eventDesc} numberOfLines={2}>
+                    {locale === 'hi' && event.shortDescription_hi ? event.shortDescription_hi : event.shortDescription}
+                  </Text>
                 </View>
               </TouchableOpacity>
             ))
@@ -237,16 +271,24 @@ export default function EventsScreen() {
 
         {/* Engagement Section */}
         <View style={styles.engagementSection}>
-          <Text style={styles.engagementTitle}>Be The Change You Want To See</Text>
+          <Text style={styles.engagementTitle}>
+            {locale === 'hi' ? 'वह बदलाव बनें जो आप देखना चाहते हैं' : 'Be The Change You Want To See'}
+          </Text>
           
           <View style={styles.ctaCard}>
             <View style={[styles.iconBox, { backgroundColor: '#fef2f2' }]}>
               <Ionicons name="heart" size={32} color="#ef4444" />
             </View>
-            <Text style={styles.ctaTitle}>Become a Volunteer</Text>
-            <Text style={styles.ctaDesc}>Join our on-ground team and experience the joy of giving firsthand.</Text>
+            <Text style={styles.ctaTitle}>
+              {locale === 'hi' ? 'स्वयंसेवक बनें' : 'Become a Volunteer'}
+            </Text>
+            <Text style={styles.ctaDesc}>
+              {locale === 'hi' ? 'हमारी जमीनी टीम से जुड़ें और सीधे देने की खुशी का अनुभव करें।' : 'Join our on-ground team and experience the joy of giving firsthand.'}
+            </Text>
             <TouchableOpacity style={styles.ctaBtn} onPress={() => Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/signup')}>
-              <Text style={styles.ctaBtnText}>Join Now</Text>
+              <Text style={styles.ctaBtnText}>
+                {locale === 'hi' ? 'अभी जुड़ें' : 'Join Now'}
+              </Text>
               <Ionicons name="arrow-forward" size={16} color="white" />
             </TouchableOpacity>
           </View>
@@ -255,10 +297,16 @@ export default function EventsScreen() {
             <View style={[styles.iconBox, { backgroundColor: '#f0fdfa' }]}>
               <Ionicons name="people" size={32} color="#00bfa5" />
             </View>
-            <Text style={styles.ctaTitle}>Partner With Us</Text>
-            <Text style={styles.ctaDesc}>Collaborate with us to amplify our impact and reach more lives.</Text>
+            <Text style={styles.ctaTitle}>
+              {locale === 'hi' ? 'हमारे साथ भागीदार बनें' : 'Partner With Us'}
+            </Text>
+            <Text style={styles.ctaDesc}>
+              {locale === 'hi' ? 'हमारे साथ सहयोग करके अपना प्रभाव बढ़ाएं और अधिक लोगों तक पहुंचें।' : 'Collaborate with us to amplify our impact and reach more lives.'}
+            </Text>
             <TouchableOpacity style={[styles.ctaBtn, { backgroundColor: '#1e293b' }]} onPress={() => Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/contact')}>
-              <Text style={styles.ctaBtnText}>Contact Us</Text>
+              <Text style={styles.ctaBtnText}>
+                {locale === 'hi' ? 'संपर्क करें' : 'Contact Us'}
+              </Text>
               <Ionicons name="arrow-forward" size={16} color="white" />
             </TouchableOpacity>
           </View>
