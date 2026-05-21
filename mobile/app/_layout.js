@@ -118,14 +118,17 @@ function RootLayoutNav() {
   );
 }
 
+// Initialize OneSignal outside the component tree to ensure it runs before any context/auth hooks
+const oneSignalAppId = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID;
+if (oneSignalAppId) {
+  OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+  OneSignal.initialize(oneSignalAppId);
+  // We will request permissions inside the component
+}
+
 export default function RootLayout() {
   useEffect(() => {
-    // OneSignal Initialization
-    // Requires EXPO_PUBLIC_ONESIGNAL_APP_ID in .env
-    const oneSignalAppId = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID;
     if (oneSignalAppId) {
-      OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-      OneSignal.initialize(oneSignalAppId);
       OneSignal.Notifications.requestPermission(true);
     }
   }, []);
