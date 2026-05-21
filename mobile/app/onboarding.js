@@ -66,7 +66,7 @@ export default function OnboardingScreen() {
     }
   }).current;
 
-  const viewConfig = useRef({ viewAreaCoveragePercentageThreshold: 50 }).current;
+  const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
   const handleNext = async () => {
     if (currentIndex < SLIDES.length - 1) {
