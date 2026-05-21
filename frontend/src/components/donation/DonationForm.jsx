@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useConfirm } from '../../context/ConfirmContext';
@@ -38,6 +38,7 @@ const DonationForm = ({ onSuccess }) => {
     const [address, setAddress] = useState('');
     const [isDetecting, setIsDetecting] = useState(false);
     const [showLocationModal, setShowLocationModal] = useState(false);
+    const locationDetectedRef = useRef(false);
     const [pan, setPan] = useState('');
     const [aadhaar, setAadhaar] = useState('');
     const [errors, setErrors] = useState({});
@@ -241,8 +242,10 @@ const DonationForm = ({ onSuccess }) => {
         return () => clearTimeout(timer);
     }, [motivatorMobile, mobile, isMotivatorLocked]);
 
-    // Auto-detect location on mount
+    // Auto-detect location on mount — guard prevents double-fire in React 18 Strict Mode
     useEffect(() => {
+        if (locationDetectedRef.current) return;
+        locationDetectedRef.current = true;
         detectLocation();
     }, []);
 
