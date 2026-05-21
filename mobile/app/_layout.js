@@ -119,12 +119,9 @@ function RootLayoutNav() {
 }
 
 // Initialize OneSignal outside the component tree to ensure it runs before any context/auth hooks
-const oneSignalAppId = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID;
-if (oneSignalAppId) {
-  OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-  OneSignal.initialize(oneSignalAppId);
-  // We will request permissions inside the component
-}
+const oneSignalAppId = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID || '93331230-247c-47e7-9211-53b53d59332d';
+OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+OneSignal.initialize(oneSignalAppId);
 
 export default function RootLayout() {
   useEffect(() => {

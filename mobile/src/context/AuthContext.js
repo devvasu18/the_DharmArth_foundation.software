@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
             const { data } = await api.get('/users/profile');
             setUser(data);
             if (data && data._id) {
+                OneSignal.initialize(process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID || '93331230-247c-47e7-9211-53b53d59332d');
                 OneSignal.login(String(data._id));
             }
             
@@ -55,6 +56,7 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         await AsyncStorage.setItem('user', JSON.stringify(userData));
         if (userData && userData._id) {
+            OneSignal.initialize(process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID || '93331230-247c-47e7-9211-53b53d59332d');
             OneSignal.login(String(userData._id));
         }
     };
