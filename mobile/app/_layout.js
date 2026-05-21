@@ -45,8 +45,8 @@ function RootLayoutNav() {
         }
 
         const inAuthGroup = segments[0] === '(auth)';
-        const publicRoutes = ['index', 'donate', 'events'];
-        const isPublicRoute = segments.length <= 1 || (segments[0] === '(tabs)' && publicRoutes.includes(segments[1])) || segments[0] === 'event';
+        const publicRoutes = ['index', 'donate', 'events', 'contact'];
+        const isPublicRoute = segments.length <= 1 || (segments[0] === '(tabs)' && publicRoutes.includes(segments[1])) || segments[0] === 'event' || segments[0] === 'contact';
 
         if (!user && !inAuthGroup && !isPublicRoute && !inOnboarding) {
           router.replace('/login');
@@ -105,6 +105,12 @@ function RootLayoutNav() {
           headerStyle: { backgroundColor: 'white' },
           headerTitleStyle: { fontWeight: '800', color: '#1e293b' },
           headerTintColor: '#00bfa5'
+        }} 
+      />
+      <Stack.Screen 
+        name="contact" 
+        options={{ 
+          headerShown: false
         }} 
       />
     </Stack>

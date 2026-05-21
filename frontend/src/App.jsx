@@ -29,6 +29,7 @@ const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 const UserProfile = lazy(() => import('./pages/UserProfile'));
 const PublicVolunteerCard = lazy(() => import('./pages/PublicVolunteerCard'));
 const MyNetwork = lazy(() => import('./pages/MyNetwork'));
+const Contact = lazy(() => import('./pages/Contact'));
 
 // Admin Components
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
@@ -92,6 +93,7 @@ const router = createBrowserRouter(
       <Route path="/start-fundraiser" element={<StartFundraiser />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="/v/:referralCode" element={<PublicVolunteerCard />} />
+      <Route path="/contact" element={<Contact />} />
       
       {/* Protected User Routes */}
       <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />

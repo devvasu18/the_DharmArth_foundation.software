@@ -285,7 +285,7 @@ export default function EventsScreen() {
             <Text style={styles.ctaDesc}>
               {locale === 'hi' ? 'हमारी जमीनी टीम से जुड़ें और सीधे देने की खुशी का अनुभव करें।' : 'Join our on-ground team and experience the joy of giving firsthand.'}
             </Text>
-            <TouchableOpacity style={styles.ctaBtn} onPress={() => Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/signup')}>
+            <TouchableOpacity style={styles.ctaBtn} onPress={() => router.push('/donate')}>
               <Text style={styles.ctaBtnText}>
                 {locale === 'hi' ? 'अभी जुड़ें' : 'Join Now'}
               </Text>
@@ -303,7 +303,7 @@ export default function EventsScreen() {
             <Text style={styles.ctaDesc}>
               {locale === 'hi' ? 'हमारे साथ सहयोग करके अपना प्रभाव बढ़ाएं और अधिक लोगों तक पहुंचें।' : 'Collaborate with us to amplify our impact and reach more lives.'}
             </Text>
-            <TouchableOpacity style={[styles.ctaBtn, { backgroundColor: '#1e293b' }]} onPress={() => Linking.openURL('https://the-dharm-arth-foundation-software.vercel.app/contact')}>
+            <TouchableOpacity style={[styles.ctaBtn, { backgroundColor: '#1e293b' }]} onPress={() => router.push('/contact')}>
               <Text style={styles.ctaBtnText}>
                 {locale === 'hi' ? 'संपर्क करें' : 'Contact Us'}
               </Text>

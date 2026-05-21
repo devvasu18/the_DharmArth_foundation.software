@@ -291,7 +291,7 @@ const Events = () => {
                                 <li><CheckCircle size={16} /> {t('events.networkingOpportunities')}</li>
                                 <li><CheckCircle size={16} /> {t('events.skillDevelopment')}</li>
                             </ul>
-                            <Link to="/volunteer" className="cta-btn primary">
+                            <Link to="/donate" className="cta-btn primary">
                                 {t('events.joinNow')} <ArrowRight size={16} />
                             </Link>
                         </div>
