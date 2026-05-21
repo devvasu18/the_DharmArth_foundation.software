@@ -33,23 +33,33 @@ function RootLayoutNav() {
   useEffect(() => {
     if (loading || !onboardingChecked) return;
 
-    const inOnboarding = segments[0] === 'onboarding';
+    const performNavigationCheck = async () => {
+      try {
+        const val = await AsyncStorage.getItem('hasCompletedOnboarding');
+        const hasCompleted = val === 'true';
+        const inOnboarding = segments[0] === 'onboarding';
 
-    if (showOnboarding && !inOnboarding) {
-      router.replace('/onboarding');
-      return;
-    }
+        if (!hasCompleted && !inOnboarding) {
+          router.replace('/onboarding');
+          return;
+        }
 
-    const inAuthGroup = segments[0] === '(auth)';
-    const publicRoutes = ['index', 'donate', 'events'];
-    const isPublicRoute = segments.length <= 1 || (segments[0] === '(tabs)' && publicRoutes.includes(segments[1])) || segments[0] === 'event';
+        const inAuthGroup = segments[0] === '(auth)';
+        const publicRoutes = ['index', 'donate', 'events'];
+        const isPublicRoute = segments.length <= 1 || (segments[0] === '(tabs)' && publicRoutes.includes(segments[1])) || segments[0] === 'event';
 
-    if (!user && !inAuthGroup && !isPublicRoute && !inOnboarding) {
-      router.replace('/login');
-    } else if (user && inAuthGroup) {
-      router.replace('/dashboard');
-    }
-  }, [user, loading, segments, onboardingChecked, showOnboarding]);
+        if (!user && !inAuthGroup && !isPublicRoute && !inOnboarding) {
+          router.replace('/login');
+        } else if (user && inAuthGroup) {
+          router.replace('/dashboard');
+        }
+      } catch (e) {
+        console.error('Navigation check failed:', e);
+      }
+    };
+
+    performNavigationCheck();
+  }, [user, loading, segments, onboardingChecked]);
 
   if (loading || !onboardingChecked) {
     return (
