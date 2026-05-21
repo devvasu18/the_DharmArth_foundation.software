@@ -29,6 +29,7 @@ export default function TabLayout() {
   const pathname = usePathname();
   const [menuVisible, setMenuVisible] = useState(false);
   const [exitModalVisible, setExitModalVisible] = useState(false);
+  const [langModalVisible, setLangModalVisible] = useState(false);
   const [exitTargetRoute, setExitTargetRoute] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const socketRef = React.useRef(null);
@@ -153,16 +154,15 @@ export default function TabLayout() {
           fontSize: 26,
           marginLeft: 8,
         },
+        headerLeft: () => (
+          <Image
+            source={require('../../assets/LOGO.jpg')}
+            style={{ width: 34, height: 34, borderRadius: 17, marginLeft: 16 }}
+            resizeMode="contain"
+          />
+        ),
         headerRight: () => (
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity
-              style={{ marginRight: 14, padding: 4 }}
-              onPress={() => changeLanguage(locale === 'en' ? 'hi' : 'en')}
-            >
-              <Text style={{ fontSize: 14, fontWeight: '900', color: '#00bfa5' }}>
-                {locale === 'en' ? 'हिंदी' : 'EN'}
-              </Text>
-            </TouchableOpacity>
             <TouchableOpacity
               style={{ marginRight: 16, padding: 4, position: 'relative' }}
               onPress={() => {
@@ -271,6 +271,18 @@ export default function TabLayout() {
                     </TouchableOpacity>
                   ))}
 
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => {
+                      setMenuVisible(false);
+                      setLangModalVisible(true);
+                    }}
+                  >
+                    <Ionicons name="globe-outline" size={22} color="#475569" />
+                    <Text style={styles.menuItemText}>{t('navbar.changeLanguage')}</Text>
+                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  </TouchableOpacity>
+
                   <View style={styles.divider} />
 
                   {user ? (
@@ -300,6 +312,65 @@ export default function TabLayout() {
                   <Text style={styles.footerVersion}>v1.0.0 Mirror Experience</Text>
                 </View>
               </View>
+            </View>
+          </Pressable>
+        </View>
+      )}
+
+      {/* Language Selection Modal */}
+      {langModalVisible && (
+        <View style={[StyleSheet.absoluteFill, { zIndex: 10000, elevation: 10000 }]}>
+          <Pressable
+            style={styles.langOverlay}
+            onPress={() => setLangModalVisible(false)}
+          >
+            <View style={styles.langModalContainer}>
+              <Text style={styles.langModalTitle}>{t('navbar.changeLanguage')}</Text>
+              
+              <TouchableOpacity
+                style={[
+                  styles.langOption,
+                  locale === 'en' && styles.langOptionSelected
+                ]}
+                onPress={async () => {
+                  await changeLanguage('en');
+                  setLangModalVisible(false);
+                }}
+              >
+                <Text style={[
+                  styles.langOptionText,
+                  locale === 'en' && styles.langOptionTextSelected
+                ]}>English</Text>
+                {locale === 'en' && (
+                  <Ionicons name="checkmark-circle" size={22} color="#00bfa5" />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.langOption,
+                  locale === 'hi' && styles.langOptionSelected
+                ]}
+                onPress={async () => {
+                  await changeLanguage('hi');
+                  setLangModalVisible(false);
+                }}
+              >
+                <Text style={[
+                  styles.langOptionText,
+                  locale === 'hi' && styles.langOptionTextSelected
+                ]}>हिंदी (Hindi)</Text>
+                {locale === 'hi' && (
+                  <Ionicons name="checkmark-circle" size={22} color="#00bfa5" />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.langCancelBtn}
+                onPress={() => setLangModalVisible(false)}
+              >
+                <Text style={styles.langCancelBtnText}>{locale === 'en' ? 'Cancel' : 'रद्द करें'}</Text>
+              </TouchableOpacity>
             </View>
           </Pressable>
         </View>
@@ -427,5 +498,67 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 10,
     fontWeight: '900',
+  },
+  langOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  langModalContainer: {
+    width: '100%',
+    maxWidth: 300,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    elevation: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+  },
+  langModalTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#1e293b',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  langOption: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#f1f5f9',
+    marginBottom: 12,
+  },
+  langOptionSelected: {
+    borderColor: '#00bfa5',
+    backgroundColor: '#e6fffa',
+  },
+  langOptionText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  langOptionTextSelected: {
+    color: '#004d40',
+  },
+  langCancelBtn: {
+    marginTop: 8,
+    paddingVertical: 12,
+    width: '100%',
+    alignItems: 'center',
+  },
+  langCancelBtnText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#64748b',
   }
 });

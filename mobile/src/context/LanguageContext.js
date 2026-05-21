@@ -23,7 +23,8 @@ const translations = {
       notifications: "Notifications",
       markAllRead: "Mark all read",
       noNotifications: "No notifications yet",
-      changeLanguage: "Change Language"
+      changeLanguage: "Change Language",
+      brand: "Dharmarth"
     },
     home: {
       platformFee: "PLATFORM FEE",
@@ -83,7 +84,8 @@ const translations = {
       notifications: "सूचनाएं",
       markAllRead: "सभी को पढ़ा हुआ चिह्नित करें",
       noNotifications: "कोई नई सूचना नहीं",
-      changeLanguage: "भाषा बदलें"
+      changeLanguage: "भाषा बदलें",
+      brand: "धर्मार्थ"
     },
     home: {
       platformFee: "प्लेटफॉर्म शुल्क",
