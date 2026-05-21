@@ -72,6 +72,7 @@
       [
         "onesignal-expo-plugin",
         {
+          "mode": "development",
           "sounds": ["./assets/ring.wav"]
         }
       ]
