@@ -18,6 +18,14 @@ const faqSchema = new mongoose.Schema({
     isVisible: {
         type: Boolean,
         default: true
+    },
+    question_hi: {
+        type: String,
+        trim: true
+    },
+    answer_hi: {
+        type: String,
+        trim: true
     }
 }, { timestamps: true });
 

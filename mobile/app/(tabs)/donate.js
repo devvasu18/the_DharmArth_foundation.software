@@ -137,7 +137,7 @@ export default function DonateScreen() {
     };
     const timer = setTimeout(validate, 500);
     return () => clearTimeout(timer);
-  }, [motivatorMobile]);
+  }, [motivatorMobile, mobile]);
 
   const handleDonate = async () => {
     const finalAmount = parseInt(customAmount) || amount;
@@ -498,24 +498,62 @@ export default function DonateScreen() {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>{locale === 'hi' ? 'द्वारा प्रेरित (मोबाइल/आईडी)' : 'Motivated By (Mobile/ID)'}</Text>
-            <View style={styles.motivatorInputWrapper}>
-              <TextInput
-                style={[styles.input, isMotivatorLocked && styles.inputLocked]}
-                placeholder={locale === 'hi' ? 'मोबाइल नंबर' : "Mobile Number"}
-                keyboardType="phone-pad"
-                value={motivatorMobile}
-                onChangeText={setMotivatorMobile}
-                editable={!isMotivatorLocked}
-              />
-              {isValidatingMotivator && <ActivityIndicator style={styles.innerLoader} size="small" color="#00bfa5" />}
-            </View>
-            {motivatorName ? (
-              <Text style={styles.motivatorFound}>✓ {motivatorName}</Text>
-            ) : motivatorMobile.length >= 10 ? (
-              <Text style={styles.motivatorError}>
-                {locale === 'hi' ? 'प्रेरक नहीं मिला' : 'Motivator not found'}
-              </Text>
-            ) : null}
+
+            {isMotivatorLocked && motivatorName ? (
+              /* Locked verified motivator chip */
+              <View style={styles.motivatorChip}>
+                <View style={styles.motivatorAvatar}>
+                  <Ionicons name="person" size={22} color="#00bfa5" />
+                </View>
+                <View style={styles.motivatorChipInfo}>
+                  <Text style={styles.motivatorChipName}>{motivatorName}</Text>
+                  <View style={styles.motivatorChipBadge}>
+                    <Ionicons name="shield-checkmark" size={13} color="white" />
+                    <Text style={styles.motivatorChipBadgeText}>{locale === 'hi' ? 'सत्यापित प्रेरक' : 'Verified Motivator'}</Text>
+                  </View>
+                </View>
+                <View style={styles.motivatorLockIcon}>
+                  <Ionicons name="lock-closed" size={16} color="#94a3b8" />
+                </View>
+              </View>
+            ) : (
+              <>
+                <View style={styles.motivatorInputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder={locale === 'hi' ? 'मोबाइल नंबर या रेफरल कोड' : 'Mobile Number or Referral Code'}
+                    keyboardType="phone-pad"
+                    maxLength={15}
+                    value={motivatorMobile}
+                    onChangeText={(val) => setMotivatorMobile(val.toUpperCase().replace(/\s/g, ''))}
+                    editable={!isMotivatorLocked}
+                  />
+                  {isValidatingMotivator && (
+                    <ActivityIndicator style={styles.innerLoader} size="small" color="#00bfa5" />
+                  )}
+                </View>
+
+                {motivatorName ? (
+                  /* Verified chip shown below input */
+                  <View style={styles.motivatorChip}>
+                    <View style={styles.motivatorAvatar}>
+                      <Ionicons name="person" size={22} color="#00bfa5" />
+                    </View>
+                    <View style={styles.motivatorChipInfo}>
+                      <Text style={styles.motivatorChipName}>{motivatorName}</Text>
+                      <View style={styles.motivatorChipBadge}>
+                        <Ionicons name="shield-checkmark" size={13} color="white" />
+                        <Text style={styles.motivatorChipBadgeText}>{locale === 'hi' ? 'सत्यापित प्रेरक' : 'Verified Motivator'}</Text>
+                      </View>
+                    </View>
+                  </View>
+                ) : motivatorMobile.length >= 10 && !isValidatingMotivator ? (
+                  <Text style={styles.motivatorError}>
+                    {locale === 'hi' ? '❌ प्रेरक नहीं मिला' : '❌ Motivator not found'}
+                  </Text>
+                ) : null}
+              </>
+            )}
           </View>
         </View>
 
@@ -872,5 +910,79 @@ const styles = StyleSheet.create({
     color: '#00bfa5',
     fontSize: 12,
     fontWeight: '700',
+  },
+  motivatorInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  innerLoader: {
+    position: 'absolute',
+    right: 14,
+  },
+  inputLocked: {
+    backgroundColor: '#f1f5f9',
+    color: '#64748b',
+  },
+  motivatorError: {
+    fontSize: 13,
+    color: '#ef4444',
+    fontWeight: '600',
+    marginTop: 6,
+  },
+  motivatorFound: {
+    fontSize: 13,
+    color: '#00bfa5',
+    fontWeight: '700',
+    marginTop: 6,
+  },
+  // Premium verified motivator chip
+  motivatorChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e6fffa',
+    borderWidth: 1.5,
+    borderColor: '#00bfa5',
+    borderRadius: 16,
+    padding: 14,
+    marginTop: 12,
+    gap: 12,
+  },
+  motivatorAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'white',
+    borderWidth: 2,
+    borderColor: '#00bfa5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  motivatorChipInfo: {
+    flex: 1,
+  },
+  motivatorChipName: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0f172a',
+    marginBottom: 4,
+  },
+  motivatorChipBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#00bfa5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  motivatorChipBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: 'white',
+  },
+  motivatorLockIcon: {
+    padding: 4,
   },
 });
