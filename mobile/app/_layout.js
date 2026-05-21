@@ -6,6 +6,7 @@ import { useAuth } from '../src/context/AuthContext';
 import { useRouter, useSegments } from 'expo-router';
 import { View, Image, ActivityIndicator, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LogLevel, OneSignal } from 'react-native-onesignal';
 
 function RootLayoutNav() {
   const { user, loading } = useAuth();
@@ -118,6 +119,17 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    // OneSignal Initialization
+    // Requires EXPO_PUBLIC_ONESIGNAL_APP_ID in .env
+    const oneSignalAppId = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID;
+    if (oneSignalAppId) {
+      OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+      OneSignal.initialize(oneSignalAppId);
+      OneSignal.Notifications.requestPermission(true);
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <LanguageProvider>

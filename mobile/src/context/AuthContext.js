@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
+import { OneSignal } from 'react-native-onesignal';
 
 const AuthContext = createContext();
 
@@ -12,6 +13,9 @@ export const AuthProvider = ({ children }) => {
         try {
             const { data } = await api.get('/users/profile');
             setUser(data);
+            if (data && data._id) {
+                OneSignal.login(String(data._id));
+            }
             
             const storedUser = await AsyncStorage.getItem('user');
             if (storedUser) {
@@ -50,6 +54,9 @@ export const AuthProvider = ({ children }) => {
     const login = async (userData) => {
         setUser(userData);
         await AsyncStorage.setItem('user', JSON.stringify(userData));
+        if (userData && userData._id) {
+            OneSignal.login(String(userData._id));
+        }
     };
 
     const logout = async () => {
@@ -58,6 +65,7 @@ export const AuthProvider = ({ children }) => {
         } catch (err) {
             console.error("Logout failed on server", err);
         }
+        OneSignal.logout();
         setUser(null);
         await AsyncStorage.removeItem('user');
     };

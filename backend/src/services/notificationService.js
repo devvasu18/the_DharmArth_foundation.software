@@ -4,6 +4,7 @@
  */
 const Notification = require('../models/Notification');
 const whatsappService = require('./whatsappService');
+const oneSignalService = require('./oneSignalService');
 
 class NotificationService {
 
@@ -49,6 +50,17 @@ class NotificationService {
             if (whatsapp) {
                 console.log(`[WHATSAPP SENDING] To: ${whatsapp} | Msg: ${message}`);
                 await whatsappService.sendMessage(whatsapp, message);
+            }
+
+            // 5. Send Push Notification via OneSignal
+            if (userId) {
+                // By default, trigger the loud ringing sound for these notifications
+                await oneSignalService.sendPush({
+                    userIds: [userId],
+                    title: type.replace(/_/g, ' '),
+                    message: message,
+                    useRingingSound: true
+                });
             }
 
             return notification;

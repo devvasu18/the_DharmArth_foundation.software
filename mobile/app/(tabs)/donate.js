@@ -23,6 +23,8 @@ import api from '../../src/services/api';
 import { useLocationFlow } from '../../src/hooks/useLocationFlow';
 import RazorpayCheckout from 'react-native-razorpay';
 import DonationExitModal from '../../src/components/DonationExitModal';
+import { validatePAN, validateAadhaar } from '../../src/utils/validators';
+import { Modal } from 'react-native';
 
 export default function DonateScreen() {
   const { t, locale } = useTranslation();
@@ -61,6 +63,11 @@ export default function DonateScreen() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+
+  // PAN Confirmation State
+  const [confirmPan, setConfirmPan] = useState('');
+  const [showPanModal, setShowPanModal] = useState(false);
+  const [confirmError, setConfirmError] = useState('');
 
   const { requestLocation, loading: isDetecting } = useLocationFlow();
 
@@ -199,11 +206,39 @@ export default function DonateScreen() {
       return;
     }
 
-    if (need80G && (!pan || !aadhaar)) {
-      Alert.alert('Error', 'PAN and Aadhaar are required for 80G benefit.');
+    if (need80G) {
+      if (!pan || !aadhaar) {
+        Alert.alert('Error', 'PAN and Aadhaar are required for 80G benefit.');
+        return;
+      }
+      if (!validatePAN(pan)) {
+        Alert.alert('Error', 'Invalid PAN Number format (e.g. ABCDE1234F)');
+        return;
+      }
+      if (!validateAadhaar(aadhaar)) {
+        Alert.alert('Error', 'Invalid Aadhaar Number');
+        return;
+      }
+      setConfirmPan('');
+      setConfirmError('');
+      setShowPanModal(true);
+    } else {
+      submitDonation();
+    }
+  };
+
+  const handlePanConfirm = () => {
+    if (confirmPan.toUpperCase() !== pan.toUpperCase()) {
+      setConfirmError("PAN numbers do not match.");
       return;
     }
+    setConfirmError('');
+    setShowPanModal(false);
+    submitDonation();
+  };
 
+  const submitDonation = async () => {
+    const finalAmount = parseInt(customAmount) || amount;
     setSubmitting(true);
     try {
       // Create the donation intent on backend
@@ -678,6 +713,54 @@ export default function DonateScreen() {
         onClose={() => setShowLocationModal(false)}
         onDetect={handleDetectLocation}
       />
+
+      {/* PAN Confirmation Modal */}
+      <Modal
+        visible={showPanModal}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Confirm PAN Details</Text>
+            </View>
+
+            <Text style={styles.modalText}>
+              Please re-enter your PAN Number for verification.
+            </Text>
+            
+            <TextInput
+              style={[styles.input, confirmError ? styles.inputError : null, { marginBottom: 10 }]}
+              placeholder="Enter PAN Number again"
+              value={confirmPan}
+              onChangeText={(text) => {
+                setConfirmPan(text.toUpperCase());
+                if (confirmError) setConfirmError('');
+              }}
+              autoCapitalize="characters"
+              maxLength={10}
+            />
+            {confirmError ? <Text style={styles.errorText}>{confirmError}</Text> : null}
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnCancel]}
+                onPress={() => setShowPanModal(false)}
+              >
+                <Text style={styles.modalBtnCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnConfirm]}
+                onPress={handlePanConfirm}
+              >
+                <Text style={styles.modalBtnConfirmText}>Verify & Pay</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -685,6 +768,77 @@ export default function DonateScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  
+  // PAN Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    width: '100%',
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10
+  },
+  modalHeader: {
+    marginBottom: 16
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1e293b'
+  },
+  modalText: {
+    fontSize: 15,
+    color: '#64748b',
+    marginBottom: 20,
+    lineHeight: 22
+  },
+  inputError: {
+    borderColor: '#ef4444',
+    borderWidth: 1
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 13,
+    marginBottom: 16
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 10
+  },
+  modalBtn: {
+    flex: 1,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  modalBtnCancel: {
+    backgroundColor: '#f1f5f9'
+  },
+  modalBtnCancelText: {
+    color: '#64748b',
+    fontSize: 16,
+    fontWeight: '700'
+  },
+  modalBtnConfirm: {
+    backgroundColor: '#00bfa5'
+  },
+  modalBtnConfirmText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700'
+  },
   scrollContent: { padding: 20 },
   sectionTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b', marginBottom: 12 },
   subtitleContainer: {

@@ -68,6 +68,12 @@
           "locationAlwaysPermission": "Allow $(PRODUCT_NAME) to use your location even in the background.",
           "isAndroidBackgroundLocationEnabled": false
         }
+      ],
+      [
+        "onesignal-expo-plugin",
+        {
+          "sounds": ["./assets/ring.wav"]
+        }
       ]
     ],
     "extra": {
