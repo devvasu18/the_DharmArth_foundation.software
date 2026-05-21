@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Crown, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../services/api';
 import Navbar from '../components/layout/Navbar';
 
@@ -9,6 +10,7 @@ import './Leaderboard.css';
 
 const Leaderboard = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [period, setPeriod] = useState('month'); // today, week, month, all-time
     const [donors, setDonors] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -58,7 +60,7 @@ const Leaderboard = () => {
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
                         >
-                            LEADERBOARD
+                            {t('leaderboard.title')}
                         </motion.h1>
 
                         <div className="period-tabs">
@@ -68,7 +70,7 @@ const Leaderboard = () => {
                                     className={`period-tab ${period === p ? 'active' : ''}`}
                                     onClick={() => setPeriod(p)}
                                 >
-                                    {p === 'all-time' ? 'ALL TIME' : p.toUpperCase()}
+                                    {t(`leaderboard.tabs.${p}`).toUpperCase()}
                                 </button>
                             ))}
                         </div>
@@ -76,7 +78,7 @@ const Leaderboard = () => {
 
                     {loading ? (
                         <div className="loading-container">
-                            <div className="pulse">FETCHING CHAMPIONS...</div>
+                            <div className="pulse">{t('leaderboard.fetching')}</div>
                         </div>
                     ) : donors.length > 0 ? (
                         <>
@@ -134,9 +136,9 @@ const Leaderboard = () => {
                         </>
                     ) : (
                         <div className="empty-container">
-                            <p>No donations recorded for this period yet.</p>
+                            <p>{t('leaderboard.noDonations')}</p>
                             <button className="btn btn-primary" style={{ marginTop: '1rem' }} onClick={() => navigate('/donate')}>
-                                Be the First!
+                                {t('leaderboard.beFirst')}
                             </button>
                         </div>
                     )}

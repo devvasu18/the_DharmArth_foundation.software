@@ -7,16 +7,20 @@ import Footer from '../components/layout/Footer';
 import SimplifyDosage from '../components/SimplifyDosage';
 import { useConfirm } from '../context/ConfirmContext';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import './OrderMedicine.css';
 
 const VerifiedItemRow = ({ item }) => {
+    const { t } = useTranslation();
     const [showDosage, setShowDosage] = useState(false);
     const hasDosage = item.time || item.frequency || item.foodRelation || item.intakeMethod || item.dosage;
 
     return (
         <div style={{ marginBottom: '15px', borderBottom: '2px solid #cbd5e0', paddingBottom: '10px' }}>
             <div className="item-row" style={{ borderBottom: 'none', padding: 0, marginBottom: '8px' }}>
-                <div className="item-name" style={{ fontWeight: '600', color: '#2d3748', fontSize: '1.1rem' }}>{item.medicineName} (Qty: {item.quantity || 1})</div>
+                <div className="item-name" style={{ fontWeight: '600', color: '#2d3748', fontSize: '1.1rem' }}>
+                    {item.medicineName} ({t('pharmacy.unit')}: {item.quantity || 1})
+                </div>
                 <div className="item-price" style={{ fontWeight: 'bold' }}>₹{Number(item.price || 0).toFixed(2)}</div>
             </div>
             {hasDosage ? (
@@ -29,7 +33,7 @@ const VerifiedItemRow = ({ item }) => {
                             cursor: 'pointer', padding: 0, fontWeight: '500', display: 'flex', alignItems: 'center'
                         }}
                     >
-                        {showDosage ? 'Hide Dosage Instructions' : 'View Dosage Instructions'}
+                        {showDosage ? t('pharmacy.hideDosage') : t('pharmacy.viewDosage')}
                     </button>
                     {showDosage && (
                         <div style={{ marginTop: '12px', animation: 'fadeIn 0.3s ease-in-out' }}>
@@ -45,7 +49,7 @@ const VerifiedItemRow = ({ item }) => {
                 </div>
             ) : (
                 <div style={{ fontSize: '13px', color: '#718096', marginTop: '4px' }}>
-                    <Info size={12} style={{ display: 'inline', marginRight: '4px' }} /> No special dosage instructions provided.
+                    <Info size={12} style={{ display: 'inline', marginRight: '4px' }} /> {t('pharmacy.noDosage')}
                 </div>
             )}
         </div>
@@ -53,6 +57,7 @@ const VerifiedItemRow = ({ item }) => {
 };
 
 const OrderMedicine = () => {
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const { showAlert } = useConfirm();
     const [file, setFile] = useState(null);
@@ -109,13 +114,17 @@ const OrderMedicine = () => {
         const hour = new Date().getHours();
         if (hour >= 21 || hour < 8) {
             return {
-                text: pharmacyConfig?.nightTimeContactText || "Foundation will contact you at 8:30 AM",
+                text: i18n.language === 'hi'
+                    ? (pharmacyConfig?.nightTimeContactTextHi || pharmacyConfig?.nightTimeContactText || "फाउंडेशन आपसे सुबह 8:30 बजे संपर्क करेगा")
+                    : (pharmacyConfig?.nightTimeContactText || "Foundation will contact you at 8:30 AM"),
                 icon: <Clock size={14} />,
                 type: 'night'
             };
         } else {
             return {
-                text: pharmacyConfig?.dayTimeContactText || "Pharmacist will contact you in 10-20 minutes",
+                text: i18n.language === 'hi'
+                    ? (pharmacyConfig?.dayTimeContactTextHi || pharmacyConfig?.dayTimeContactText || "फार्मासिस्ट आपसे 10-20 मिनट में संपर्क करेगा")
+                    : (pharmacyConfig?.dayTimeContactText || "Pharmacist will contact you in 10-20 minutes"),
                 icon: <Zap size={14} />,
                 type: 'day'
             };
@@ -175,9 +184,9 @@ const OrderMedicine = () => {
         setIsSyncing(true);
         try {
             await Promise.all([fetchHistory(), fetchOrders()]);
-            toast.success('Activity Log updated');
+            toast.success(t('pharmacy.logUpdated'));
         } catch (err) {
-            toast.error('Sync failed');
+            toast.error(t('pharmacy.syncFailed'));
         } finally {
             setTimeout(() => setIsSyncing(false), 800);
         }
@@ -189,7 +198,7 @@ const OrderMedicine = () => {
             return;
         }
 
-        toast.loading("Detecting location...");
+        toast.loading(t('pharmacy.detectingLocation'));
         navigator.geolocation.getCurrentPosition(
             async (position) => {
                 const { latitude, longitude } = position.coords;
@@ -206,9 +215,9 @@ const OrderMedicine = () => {
                     }));
 
                     toast.dismiss();
-                    toast.success("Location detected!");
+                    toast.success(t('pharmacy.locationDetected'));
                     if (!data.postcode) {
-                        toast("Please verify your PIN code manually", { icon: '📍' });
+                        toast(t('pharmacy.verifyPin'), { icon: '📍' });
                     }
                 } catch (err) {
                     toast.dismiss();
@@ -217,7 +226,7 @@ const OrderMedicine = () => {
             },
             () => {
                 toast.dismiss();
-                toast.error("Location access denied.");
+                toast.error(t('pharmacy.locationDenied'));
             }
         );
     };
@@ -253,7 +262,7 @@ const OrderMedicine = () => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
             if (selectedFile.size > 4 * 1024 * 1024) {
-                toast.error("Please select an image smaller than 4MB");
+                toast.error(t('pharmacy.maxSizeError'));
                 e.target.value = null;
                 return;
             }
@@ -277,15 +286,15 @@ const OrderMedicine = () => {
         }
 
         if (!file) {
-            setError('Please select a file to upload');
+            setError(t('pharmacy.selectFile'));
             return;
         }
 
         if (pharmacyConfig?.faqs && pharmacyConfig.faqs.length > 0) {
             const missingAnswers = pharmacyConfig.faqs.filter(faq => !faqAnswers[faq.id] || faqAnswers[faq.id].trim() === '');
             if (missingAnswers.length > 0) {
-                toast.error(`Please answer: ${missingAnswers[0].question}`);
-                setError('Please answer all required additional questions.');
+                toast.error(`${t('pharmacy.yourAnswer')}: ${missingAnswers[0].question}`);
+                setError(t('pharmacy.answerRequired'));
                 return;
             }
         }
@@ -336,11 +345,11 @@ const OrderMedicine = () => {
     const handleGuestSubmit = (e) => {
         e.preventDefault();
         if (!guestName || !guestMobile) {
-            toast.error("Please fill all guest details");
+            toast.error(t('pharmacy.fillGuest'));
             return;
         }
         if (guestMobile.length < 10) {
-            toast.error("Please enter a valid mobile number");
+            toast.error(t('pharmacy.validMobile'));
             return;
         }
         handleSubmit(null, true);
@@ -349,27 +358,27 @@ const OrderMedicine = () => {
     const handleCopyLink = (prescriptionId) => {
         const url = `${window.location.origin}/checkout/${prescriptionId}`;
         navigator.clipboard.writeText(url);
-        toast.success('Link Copied!');
+        toast.success(t('pharmacy.linkCopied'));
     };
 
     const getOrderBadge = (status) => {
         switch (status) {
-            case 'Payment Pending': return <span className="status-badge pending" style={{ background: '#fff3cd', color: '#856404' }}>Pending Payment</span>;
-            case 'Processing': return <span className="status-badge review" style={{ background: '#d1ecf1', color: '#0c5460' }}>Processing</span>;
-            case 'Out for Delivery': return <span className="status-badge verified" style={{ background: '#d4edda', color: '#155724' }}>Out for Delivery</span>;
-            case 'Delivered': return <span className="status-badge verified"><CheckCircle size={14} /> Delivered</span>;
-            case 'Cancelled': return <span className="status-badge rejected"><X size={14} /> Cancelled</span>;
+            case 'Payment Pending': return <span className="status-badge pending" style={{ background: '#fff3cd', color: '#856404' }}>{t('pharmacy.badges.pendingPayment')}</span>;
+            case 'Processing': return <span className="status-badge review" style={{ background: '#d1ecf1', color: '#0c5460' }}>{t('pharmacy.badges.processing')}</span>;
+            case 'Out for Delivery': return <span className="status-badge verified" style={{ background: '#d4edda', color: '#155724' }}>{t('pharmacy.badges.outForDelivery')}</span>;
+            case 'Delivered': return <span className="status-badge verified"><CheckCircle size={14} /> {t('pharmacy.badges.delivered')}</span>;
+            case 'Cancelled': return <span className="status-badge rejected"><X size={14} /> {t('pharmacy.badges.cancelled')}</span>;
             default: return <span className="status-badge pending">{status}</span>;
         }
     };
 
     const getStatusBadge = (status) => {
         switch (status) {
-            case 'Pending': return <span className="status-badge pending"><Clock size={14} /> Pending</span>;
-            case 'Verified': return <span className="status-badge verified"><CheckCircle size={14} /> Verified</span>;
-            case 'Rejected': return <span className="status-badge rejected"><AlertCircle size={14} /> Rejected</span>;
-            case 'Under Review': return <span className="status-badge review"><FileText size={14} /> Reviewing</span>;
-            case 'Ordered': return <span className="status-badge verified" style={{ background: '#ebf8ff', color: '#2b6cb0' }}><Zap size={14} /> Ordered</span>;
+            case 'Pending': return <span className="status-badge pending"><Clock size={14} /> {t('pharmacy.badges.pending')}</span>;
+            case 'Verified': return <span className="status-badge verified"><CheckCircle size={14} /> {t('pharmacy.badges.verified')}</span>;
+            case 'Rejected': return <span className="status-badge rejected"><AlertCircle size={14} /> {t('pharmacy.badges.rejected')}</span>;
+            case 'Under Review': return <span className="status-badge review"><FileText size={14} /> {t('pharmacy.badges.reviewing')}</span>;
+            case 'Ordered': return <span className="status-badge verified" style={{ background: '#ebf8ff', color: '#2b6cb0' }}><Zap size={14} /> {t('pharmacy.badges.ordered')}</span>;
             default: return <span>{status}</span>;
         }
     };
@@ -411,7 +420,7 @@ const OrderMedicine = () => {
             }
 
             // 2. Check stock in bulk
-            toast.loading('Checking current stock...', { id: 'stock-check' });
+            toast.loading(t('pharmacy.checkingStock'), { id: 'stock-check' });
             const res = await api.post('/marg/check-stock-bulk', { pids });
             const availability = res.data.availability || {};
 
@@ -419,25 +428,26 @@ const OrderMedicine = () => {
             const allInStock = pids.every(pid => availability[pid] === true);
 
             if (allInStock) {
-                toast.success('All items in stock!', { id: 'stock-check' });
+                toast.success(t('pharmacy.allInStock'), { id: 'stock-check' });
                 setShowRecentModal(false);
                 openCheckoutModal(prescription, true);
             } else {
                 // 4. If any item is out of stock, re-submit as prescription request
-                toast('Some items out of stock. Re-submitting as request...', { id: 'stock-check', icon: '⏳' });
+                toast(t('pharmacy.outOfStockResubmit'), { id: 'stock-check', icon: '⏳' });
 
                 await api.post(`/prescriptions/${prescription._id}/re-submit`);
 
                 setShowRecentModal(false);
                 showAlert({
-                    title: 'Stock Update',
-                    message: 'Some medicines from your previous order are currently out of stock. We have automatically re-submitted your prescription as a new request. Our pharmacists will verify and notify you once they are available.',
-                    confirmText: 'Got it',
+                    title: t('pharmacy.stockUpdateTitle'),
+                    message: t('pharmacy.stockUpdateMsg'),
+                    confirmText: t('pharmacy.gotIt'),
                     showCancel: false
                 });
 
                 // Refresh data to show the new pending prescription
-                fetchTrackingInfo();
+                fetchHistory();
+                fetchOrders();
             }
         } catch (err) {
             console.error('Reorder failed', err);
@@ -448,7 +458,7 @@ const OrderMedicine = () => {
     const openCheckoutModal = (prescription, isReorder = false) => {
         const availableItems = prescription.verifiedItems?.filter(i => i.isAvailable) || [];
         if (availableItems.length === 0) {
-            toast.error('No verified items are available for checkout.');
+            toast.error(t('pharmacy.noVerifiedItems'));
             return;
         }
         setIsReorderFlow(isReorder);
@@ -480,7 +490,7 @@ const OrderMedicine = () => {
                 setHistoryTab('orders'); // Auto-switch to orders tab to show progress
             }, 2500);
         } catch (err) {
-            setCheckoutError(err.response?.data?.message || 'Checkout failed.');
+            setCheckoutError(err.response?.data?.message || t('pharmacy.checkoutFailed'));
         } finally {
             setCheckoutLoading(false);
         }
@@ -495,16 +505,16 @@ const OrderMedicine = () => {
             <main className="order-medicine-main">
                 {/* Hero Header */}
                 <div className="hero-head">
-                    <div className="badge-pill">Premium Pharmacy Service</div>
-                    <h1>Order Medicine</h1>
-                    <p>Upload your doctor's receipt and let our certified pharmacists handle the rest. We deliver directly to your doorstep via our trusted network.</p>
+                    <div className="badge-pill">{t('pharmacy.premiumService')}</div>
+                    <h1>{t('pharmacy.orderMedicine')}</h1>
+                    <p>{t('pharmacy.heroSubtitle')}</p>
                     <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'center', gap: '15px' }}>
                         <button 
                             className="refresh-btn" 
                             onClick={() => navigate('/order-history')}
                             style={{ background: '#3182ce', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '15px' }}
                         >
-                            <Clock size={18} /> View Order History
+                            <Clock size={18} /> {t('pharmacy.viewHistory')}
                         </button>
                     </div>
                 </div>
@@ -515,20 +525,20 @@ const OrderMedicine = () => {
                         <div className="steps-grid">
                             <div className="step-card">
                                 <div className="step-icon"><Camera size={24} /></div>
-                                <h4>1. Upload Photo</h4>
-                                <p>Take a clear photo of your doctor's receipt.</p>
+                                <h4>{t('pharmacy.steps.uploadTitle')}</h4>
+                                <p>{t('pharmacy.steps.uploadDesc')}</p>
                             </div>
                             <div className="step-arrow"><ArrowRight /></div>
                             <div className="step-card">
                                 <div className="step-icon"><ShieldCheck size={24} /></div>
-                                <h4>2. Verification</h4>
-                                <p>Our pharmacist reviews and confirms stock availability.</p>
+                                <h4>{t('pharmacy.steps.verifyTitle')}</h4>
+                                <p>{t('pharmacy.steps.verifyDesc')}</p>
                             </div>
                             <div className="step-arrow"><ArrowRight /></div>
                             <div className="step-card">
                                 <div className="step-icon"><Truck size={24} /></div>
-                                <h4>3. Fast Delivery</h4>
-                                <p>Get medicines delivered via our express bus routes.</p>
+                                <h4>{t('pharmacy.steps.deliveryTitle')}</h4>
+                                <p>{t('pharmacy.steps.deliveryDesc')}</p>
                             </div>
                         </div>
                     </div>
@@ -540,7 +550,7 @@ const OrderMedicine = () => {
                         <div className="form-column">
                             <div className="upload-box glass-card">
                                 <div className="card-header">
-                                    <h3>Send Your Prescription</h3>
+                                    <h3>{t('pharmacy.sendPrescription')}</h3>
                                     <Zap size={20} color="#f6ad55" />
                                 </div>
                                 <form onSubmit={handleSubmit}>
@@ -551,16 +561,16 @@ const OrderMedicine = () => {
                                         {preview ? (
                                             <div className="preview-container">
                                                 <img src={preview} alt="Upload Preview" />
-                                                <div className="change-btn">Change Photo</div>
+                                                <div className="change-btn">{t('pharmacy.changePhoto', { defaultValue: 'Change Photo' })}</div>
                                             </div>
                                         ) : (
                                             <div className="placeholder">
                                                 <div className="icon-circle">
                                                     <Upload size={32} />
                                                 </div>
-                                                <p>Drop your prescription image here</p>
-                                                <span>Supports JPG, PNG (Max 4MB)</span>
-                                                <small className="text-gray-500 mt-2 block">Maximum upload size: 4MB</small>
+                                                <p>{t('pharmacy.dropPrescription')}</p>
+                                                <span>{t('pharmacy.supports')}</span>
+                                                <small className="text-gray-500 mt-2 block">{t('pharmacy.maxSize')}</small>
                                             </div>
                                         )}
                                         <input
@@ -574,15 +584,17 @@ const OrderMedicine = () => {
 
                                     {pharmacyConfig?.faqs?.length > 0 && (
                                         <div style={{ marginTop: '20px' }}>
-                                            <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '8px', display: 'block' }}>Additional Information</label>
+                                            <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '8px', display: 'block' }}>{t('pharmacy.additionalInfo')}</label>
                                             {pharmacyConfig.faqs.map((faq, idx) => (
                                                 <div key={idx} style={{ marginBottom: '12px' }}>
-                                                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#64748b', marginBottom: '4px', display: 'block' }}>{faq.question} <span style={{color: '#ef4444'}}>*</span></label>
+                                                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#64748b', marginBottom: '4px', display: 'block' }}>
+                                                        {(i18n.language === 'hi' && faq.question_hi) ? faq.question_hi : faq.question} <span style={{color: '#ef4444'}}>*</span>
+                                                    </label>
                                                     <input 
                                                         type="text"
                                                         value={faqAnswers[faq.id] || ''}
                                                         onChange={(e) => setFaqAnswers(prev => ({...prev, [faq.id]: e.target.value}))}
-                                                        placeholder="Your answer..."
+                                                        placeholder={t('pharmacy.yourAnswer')}
                                                         required
                                                         style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', fontSize: '13px' }}
                                                     />
@@ -592,11 +604,11 @@ const OrderMedicine = () => {
                                     )}
 
                                     <div style={{ marginTop: '20px' }}>
-                                        <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '8px', display: 'block' }}>Optional Notes (Medicines/Quantity)</label>
+                                        <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '8px', display: 'block' }}>{t('pharmacy.optionalNotes')}</label>
                                         <textarea
                                             value={notes}
                                             onChange={(e) => setNotes(e.target.value)}
-                                            placeholder="Mention specific brand or additional instructions..."
+                                            placeholder={t('pharmacy.placeholderNotes')}
                                             style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', background: '#f8fafc', fontSize: '13px', minHeight: '80px', resize: 'none' }}
                                         />
                                     </div>
@@ -619,7 +631,7 @@ const OrderMedicine = () => {
                                         ) : (
                                             <>
                                                 <Zap size={18} fill="currentColor" />
-                                                Submit Now
+                                                {t('pharmacy.submitNow')}
                                             </>
                                         )}
                                     </button>
@@ -637,12 +649,12 @@ const OrderMedicine = () => {
                                     onClick={() => setShowRecentModal(true)}
                                 >
                                     <Clock size={18} />
-                                    Select from Previous (90 Days)
+                                    {t('pharmacy.selectPrevious')}
                                 </button>
 
                                 <div className="security-tag">
                                     <ShieldCheck size={14} />
-                                    <span>Encrypted & Private</span>
+                                    <span>{t('pharmacy.encryptedPrivate')}</span>
                                 </div>
                             </div>
                         </div>
@@ -653,10 +665,10 @@ const OrderMedicine = () => {
                                 <div className="card-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '15px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            <h3 style={{ margin: 0 }}>History/Recent</h3>
+                                            <h3 style={{ margin: 0 }}>{t('pharmacy.historyRecent')}</h3>
                                             {!localStorage.getItem('user') && localStorage.getItem('guestMobile') && (
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#64748b', fontWeight: '600', background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px' }}>
-                                                    <User size={10} /> Viewing as Guest ({localStorage.getItem('guestMobile')})
+                                                    <User size={10} /> {t('pharmacy.viewingAsGuest', { mobile: localStorage.getItem('guestMobile') })}
                                                 </div>
                                             )}
                                         </div>
@@ -666,7 +678,7 @@ const OrderMedicine = () => {
                                             disabled={isSyncing}
                                         >
                                             <Clock size={16} style={{ transform: isSyncing ? 'rotate(360deg)' : 'none', transition: 'transform 0.8s ease' }} />
-                                            {isSyncing ? 'Syncing...' : 'Refresh'}
+                                            {isSyncing ? t('pharmacy.syncing') : t('pharmacy.refresh')}
                                         </button>
                                     </div>
                                     <div className="tab-switcher" style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '8px', width: '100%' }}>
@@ -675,14 +687,14 @@ const OrderMedicine = () => {
                                             onClick={() => setHistoryTab('prescriptions')}
                                             style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: historyTab === 'prescriptions' ? '#fff' : 'transparent', fontWeight: historyTab === 'prescriptions' ? '600' : '400', boxShadow: historyTab === 'prescriptions' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s', outline: 'none' }}
                                         >
-                                            Prescriptions ({filteredPrescriptions.length})
+                                            {t('pharmacy.prescriptionsTab', { count: filteredPrescriptions.length })}
                                         </button>
                                         <button
                                             className={`tab-btn ${historyTab === 'orders' ? 'active' : ''}`}
                                             onClick={() => setHistoryTab('orders')}
                                             style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: historyTab === 'orders' ? '#fff' : 'transparent', fontWeight: historyTab === 'orders' ? '600' : '400', boxShadow: historyTab === 'orders' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s', outline: 'none' }}
                                         >
-                                            Track Orders ({myOrders.length})
+                                            {t('pharmacy.trackOrdersTab', { count: myOrders.length })}
                                         </button>
                                     </div>
                                 </div>
@@ -692,13 +704,13 @@ const OrderMedicine = () => {
                                         filteredPrescriptions.length === 0 ? (
                                             <div className="empty-state-cool">
                                                 <FileText size={48} strokeWidth={1} />
-                                                <p>No prescriptions</p>
+                                                <p>{t('pharmacy.noPrescriptions')}</p>
                                                 {!localStorage.getItem('user') && !localStorage.getItem('guestMobile') && (
                                                     <button 
                                                         onClick={() => navigate('/login')}
                                                         style={{ marginTop: '10px', fontSize: '12px', color: '#3182ce', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600', textDecoration: 'underline' }}
                                                     >
-                                                        Login to see your previous history
+                                                        {t('pharmacy.loginToSeeHistory')}
                                                     </button>
                                                 )}
                                             </div>
@@ -715,18 +727,18 @@ const OrderMedicine = () => {
                                                         </div>
                                                         <div className="meta-footer">
                                                             {p.status === 'Verified' ? (
-                                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                                 <div style={{ display: 'flex', gap: '8px' }}>
                                                                     <button
                                                                         className="btn-action-primary"
                                                                         onClick={() => navigate(`/checkout/${p._id}`)}
                                                                         style={{ flex: 1 }}
                                                                     >
-                                                                        Review & Checkout
+                                                                        {t('pharmacy.reviewCheckout')}
                                                                     </button>
                                                                     <button
                                                                         className="btn-action-secondary"
                                                                         onClick={() => handleCopyLink(p._id)}
-                                                                        title="Share Payment Link"
+                                                                        title={t('pharmacy.sharePaymentLink')}
                                                                         style={{ width: '40px', padding: '0', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
                                                                     >
                                                                         <Share2 size={16} />
@@ -742,11 +754,11 @@ const OrderMedicine = () => {
                                                                         setCheckoutModalOpen(true);
                                                                     }}
                                                                 >
-                                                                    <FileText size={16} /> View Dosage Instructions
+                                                                    <FileText size={16} /> {t('pharmacy.viewDosageInst')}
                                                                 </button>
                                                             ) : (
                                                                 <div className="status-msg">
-                                                                    {p.status === 'Pending' ? 'Pharmacist is looking at it' : p.status === 'Rejected' ? 'Verification failed' : 'Being reviewed'}
+                                                                    {p.status === 'Pending' ? t('pharmacy.statusPending') : p.status === 'Rejected' ? t('pharmacy.statusRejected') : t('pharmacy.statusReviewing')}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -758,7 +770,7 @@ const OrderMedicine = () => {
                                         myOrders.length === 0 ? (
                                             <div className="empty-state-cool">
                                                 <Truck size={48} strokeWidth={1} />
-                                                <p>No active orders</p>
+                                                <p>{t('pharmacy.noActiveOrders')}</p>
                                             </div>
                                         ) : (
                                             myOrders.map(order => (
@@ -773,18 +785,18 @@ const OrderMedicine = () => {
                                                 >
                                                     <div style={{ width: '100%' }}>
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                                            <span style={{ fontWeight: '700', color: '#1a202c' }}>Order #{order._id.substring(order._id.length - 6).toUpperCase()}</span>
+                                                            <span style={{ fontWeight: '700', color: '#1a202c' }}>{t('pharmacy.orderNum', { id: order._id.substring(order._id.length - 6).toUpperCase() })}</span>
                                                             {getOrderBadge(order.status)}
                                                         </div>
                                                         <div style={{ fontSize: '13px', color: '#4a5568', marginBottom: '10px' }}>
-                                                            {order.items.length} Medicines • ₹{order.totalAmount.toFixed(2)}
+                                                            {t('pharmacy.medicinesCount', { count: order.items.length, price: order.totalAmount.toFixed(2) })}
                                                         </div>
                                                         <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px', fontSize: '12px', color: '#718096', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                             <div>
                                                                 <MapPin size={12} style={{ display: 'inline', marginRight: '4px' }} />
                                                                 {order.shippingAddress?.city}
                                                             </div>
-                                                            <span style={{ color: '#3182ce', fontWeight: 'bold' }}>View Details →</span>
+                                                            <span style={{ color: '#3182ce', fontWeight: 'bold' }}>{t('pharmacy.viewDetails')}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -795,14 +807,14 @@ const OrderMedicine = () => {
                                 {!localStorage.getItem('user') && localStorage.getItem('guestMobile') && (
                                     <div style={{ marginTop: '15px', padding: '12px', background: '#eff6ff', borderRadius: '10px', border: '1px solid #bfdbfe', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <div style={{ fontSize: '12px', color: '#1e40af', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <Info size={14} /> Synced via Guest History
+                                            <Info size={14} /> {t('pharmacy.syncedViaGuest')}
                                         </div>
-                                        <p style={{ fontSize: '11px', color: '#3b82f6', margin: 0 }}>Create an account to sync your history across all devices permanently.</p>
+                                        <p style={{ fontSize: '11px', color: '#3b82f6', margin: 0 }}>{t('pharmacy.syncMsg')}</p>
                                         <button 
                                             onClick={() => navigate('/login')}
                                             style={{ width: '100%', padding: '8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', transition: 'background 0.2s' }}
                                         >
-                                            Login / Register Now
+                                            {t('pharmacy.loginRegisterNow')}
                                         </button>
                                     </div>
                                 )}
@@ -819,37 +831,37 @@ const OrderMedicine = () => {
                 <div className="checkout-modal-overlay">
                     <div className="checkout-modal-card">
                         <div className="checkout-header">
-                            <h2>{selectedPrescription.status === 'Ordered' ? 'Order Details & Dosage' : 'Confirm Your Reorder'}</h2>
+                            <h2>{selectedPrescription.status === 'Ordered' ? t('pharmacy.orderDetailsDosage') : t('pharmacy.confirmReorder')}</h2>
                             <button className="btn-close" onClick={() => setCheckoutModalOpen(false)}>
                                 <X size={24} />
                             </button>
                         </div>
 
                         <div className="verified-items-list">
-                            <h4 style={{ marginBottom: '10px', color: '#4a5568' }}>Verified Items Available</h4>
+                            <h4 style={{ marginBottom: '10px', color: '#4a5568' }}>{t('pharmacy.verifiedItemsAvailable')}</h4>
                             {selectedPrescription.verifiedItems.filter(i => i.isAvailable).map((item, idx) => (
                                 <VerifiedItemRow key={idx} item={item} />
                             ))}
                             <div className="checkout-total">
-                                <span>Grand Total</span>
+                                <span>{t('pharmacy.grandTotal')}</span>
                                 <span>₹{calculateTotal(selectedPrescription.verifiedItems).toFixed(2)}</span>
                             </div>
                         </div>
                         {checkoutSuccess ? (
                             <div className="checkout-alert alert-success">
                                 <CheckCircle size={20} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-                                Order placed successfully! Check your dashboard.
+                                {t('pharmacy.orderPlacedSuccess')}
                             </div>
                         ) : (selectedPrescription.status === 'Ordered' && !isReorderFlow) ? (
                             <div className="checkout-alert alert-success" style={{ marginTop: '20px' }}>
                                 <CheckCircle size={20} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-                                This order has already been placed. Follow the dosage instructions above.
+                                {t('pharmacy.orderAlreadyPlaced')}
                             </div>
                         ) : (
                             <form onSubmit={handleCheckoutSubmit} className="checkout-form">
                                 <div className="shipping-address-section" style={{ marginBottom: '20px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                        <h4 style={{ margin: 0, color: '#4a5568' }}>Shipping Address</h4>
+                                        <h4 style={{ margin: 0, color: '#4a5568' }}>{t('pharmacy.shippingAddress')}</h4>
                                         <div style={{ display: 'flex', gap: '8px' }}>
                                             <button
                                                 type="button"
@@ -857,7 +869,7 @@ const OrderMedicine = () => {
                                                 onClick={handleDetectLocation}
                                                 style={{ fontSize: '12px', background: '#ebf8ff', border: '1px solid #90cdf4', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: '#2b6cb0' }}
                                             >
-                                                <MapPin size={14} /> Detect Location
+                                                <MapPin size={14} /> {t('pharmacy.detectLocation')}
                                             </button>
                                             {savedAddresses.length > 0 && (
                                                 <button
@@ -870,7 +882,7 @@ const OrderMedicine = () => {
                                                     }}
                                                     style={{ fontSize: '12px', background: '#f7fafc', border: '1px solid #e2e8f0', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                                                 >
-                                                    <Plus size={14} /> Add New
+                                                    <Plus size={14} /> {t('pharmacy.addNew')}
                                                 </button>
                                             )}
                                         </div>
@@ -892,7 +904,7 @@ const OrderMedicine = () => {
                                                     <div style={{ display: 'flex', gap: '10px' }}>
                                                         <MapPin size={18} color={shippingDetails._id === addr._id ? '#3182ce' : '#a0aec0'} style={{ marginTop: '2px' }} />
                                                         <div style={{ fontSize: '14px', flex: 1 }}>
-                                                            <div style={{ fontWeight: '600', marginBottom: '2px' }}>{addr.label || 'Home'}</div>
+                                                            <div style={{ fontWeight: '600', marginBottom: '2px' }}>{addr.label || t('pharmacy.home')}</div>
                                                             <div style={{ color: '#4a5568' }}>{addr.street}, {addr.city}, {addr.zip}</div>
                                                             <div style={{ color: '#718096', fontSize: '12px', marginTop: '4px' }}>
                                                                 Phone: {addr.phone} {addr.altPhone && `| Alt: ${addr.altPhone}`}
@@ -913,22 +925,22 @@ const OrderMedicine = () => {
                                     ) : (
                                         <div className="new-address-form" style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '3px solid #cbd5e1' }}>
                                             <div className="form-group" style={{ marginBottom: '15px' }}>
-                                                <label>Street Address</label>
-                                                <input type="text" required value={shippingDetails.street} onChange={e => setShippingDetails({ ...shippingDetails, street: e.target.value })} placeholder="House No, Building, Street" />
+                                                <label>{t('pharmacy.streetAddress')}</label>
+                                                <input type="text" required value={shippingDetails.street} onChange={e => setShippingDetails({ ...shippingDetails, street: e.target.value })} placeholder={t('pharmacy.placeholderStreet')} />
                                             </div>
                                             <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
                                                 <div className="form-group" style={{ flex: 1 }}>
-                                                    <label>City</label>
-                                                    <input type="text" required value={shippingDetails.city} onChange={e => setShippingDetails({ ...shippingDetails, city: e.target.value })} placeholder="City" />
+                                                    <label>{t('pharmacy.city')}</label>
+                                                    <input type="text" required value={shippingDetails.city} onChange={e => setShippingDetails({ ...shippingDetails, city: e.target.value })} placeholder={t('pharmacy.city')} />
                                                 </div>
                                                 <div className="form-group" style={{ flex: 1 }}>
-                                                    <label>PIN Code</label>
-                                                    <input type="text" required value={shippingDetails.zip} onChange={e => setShippingDetails({ ...shippingDetails, zip: e.target.value })} placeholder="Pin Code" />
+                                                    <label>{t('pharmacy.pinCode')}</label>
+                                                    <input type="text" required value={shippingDetails.zip} onChange={e => setShippingDetails({ ...shippingDetails, zip: e.target.value })} placeholder={t('pharmacy.placeholderPin')} />
                                                 </div>
                                             </div>
                                             <div className="form-group" style={{ marginBottom: '15px' }}>
-                                                <label>State</label>
-                                                <input type="text" required value={shippingDetails.state} onChange={e => setShippingDetails({ ...shippingDetails, state: e.target.value })} placeholder="State" />
+                                                <label>{t('pharmacy.state')}</label>
+                                                <input type="text" required value={shippingDetails.state} onChange={e => setShippingDetails({ ...shippingDetails, state: e.target.value })} placeholder={t('pharmacy.state')} />
                                             </div>
                                             <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', justifyContent: 'flex-start' }} onClick={() => setIsOrderingForSomeoneElse(!isOrderingForSomeoneElse)}>
                                                 <input
@@ -941,18 +953,18 @@ const OrderMedicine = () => {
                                                     }}
                                                     style={{ width: '18px', height: '18px', cursor: 'pointer', margin: 0 }}
                                                 />
-                                                <label htmlFor="someone-else" style={{ margin: 0, cursor: 'pointer', fontWeight: '500', color: '#3182ce', fontSize: '14px' }}>Ordering for someone else?</label>
+                                                <label htmlFor="someone-else" style={{ margin: 0, cursor: 'pointer', fontWeight: '500', color: '#3182ce', fontSize: '14px' }}>{t('pharmacy.orderingForSomeoneElse')}</label>
                                             </div>
 
                                             {isOrderingForSomeoneElse && (
                                                 <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
                                                     <div className="form-group" style={{ flex: 1 }}>
-                                                        <label>Receiver's Phone Number</label>
-                                                        <input type="text" required value={shippingDetails.phone} onChange={e => setShippingDetails({ ...shippingDetails, phone: e.target.value })} placeholder="Mobile Number" />
+                                                        <label>{t('pharmacy.receiverPhone')}</label>
+                                                        <input type="text" required value={shippingDetails.phone} onChange={e => setShippingDetails({ ...shippingDetails, phone: e.target.value })} placeholder={t('pharmacy.placeholderMobile')} />
                                                     </div>
                                                     <div className="form-group" style={{ flex: 1 }}>
-                                                        <label>Alternative Mob. No. (Optional)</label>
-                                                        <input type="text" value={shippingDetails.altPhone || ''} onChange={e => setShippingDetails({ ...shippingDetails, altPhone: e.target.value })} placeholder="Emergency contact" />
+                                                        <label>{t('pharmacy.altPhoneOptional')}</label>
+                                                        <input type="text" value={shippingDetails.altPhone || ''} onChange={e => setShippingDetails({ ...shippingDetails, altPhone: e.target.value })} placeholder={t('pharmacy.placeholderAltPhone')} />
                                                     </div>
                                                 </div>
                                             )}
@@ -965,7 +977,7 @@ const OrderMedicine = () => {
                                                     }}
                                                     style={{ width: '100%', padding: '8px', background: 'none', border: '1px solid #cbd5e0', borderRadius: '6px', color: '#4a5568', fontSize: '13px', cursor: 'pointer' }}
                                                 >
-                                                    Cancel and pick saved address
+                                                    {t('pharmacy.cancelSavedAddress')}
                                                 </button>
                                             )}
                                         </div>
@@ -973,11 +985,11 @@ const OrderMedicine = () => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Payment Method</label>
+                                    <label>{t('pharmacy.paymentMethod')}</label>
                                     <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
-                                        <option value="Online">Online / Card / UPI</option>
-                                        <option value="COD">Cash on Delivery (COD)</option>
-                                        <option value="Wallet">Digital Wallet</option>
+                                        <option value="Online">{t('pharmacy.onlinePayment')}</option>
+                                        <option value="COD">{t('pharmacy.codPayment')}</option>
+                                        <option value="Wallet">{t('pharmacy.walletPayment')}</option>
                                     </select>
                                 </div>
 
@@ -987,7 +999,7 @@ const OrderMedicine = () => {
                                     {checkoutLoading ? <div className="loader" style={{ margin: '0 auto' }}></div> : (
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                                             <Zap size={18} fill="currentColor" />
-                                            <span>Confirm & Place Reorder (₹{calculateTotal(selectedPrescription.verifiedItems).toFixed(2)})</span>
+                                            <span>{t('pharmacy.confirmPlaceReorder', { total: calculateTotal(selectedPrescription.verifiedItems).toFixed(2) })}</span>
                                         </div>
                                     )}
                                 </button>
@@ -1003,8 +1015,8 @@ const OrderMedicine = () => {
                     <div className="checkout-modal-card" style={{ maxWidth: '600px' }}>
                         <div className="modal-header-gradient" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '20px 24px' }}>
                             <div>
-                                <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'white' }}>Recent Verified Prescriptions</h2>
-                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.7, color: 'white' }}>Select an item below to quickly reorder</p>
+                                <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'white' }}>{t('pharmacy.recentVerifiedPrescriptions')}</h2>
+                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', opacity: 0.7, color: 'white' }}>{t('pharmacy.selectToReorder')}</p>
                             </div>
                             <button className="close-btn-light" onClick={() => setShowRecentModal(false)}>
                                 <X size={20} />
@@ -1013,7 +1025,7 @@ const OrderMedicine = () => {
 
                         <div className="modal-body-p" style={{ padding: '20px', maxHeight: '70vh', overflowY: 'auto' }}>
                             <p style={{ color: '#718096', fontSize: '14px', marginBottom: '20px' }}>
-                                You can select and re-order from any prescription uploaded in the last 90 days that has been verified.
+                                {t('pharmacy.reorderLimitInfo')}
                             </p>
 
                             {(() => {
@@ -1029,7 +1041,7 @@ const OrderMedicine = () => {
                                     return (
                                         <div style={{ textAlign: 'center', padding: '40px 0' }}>
                                             <FileText size={48} color="#cbd5e0" style={{ margin: '0 auto 15px' }} />
-                                            <p style={{ color: '#a0aec0' }}>No verified prescriptions found in the last 90 days.</p>
+                                            <p style={{ color: '#a0aec0' }}>{t('pharmacy.noVerifiedLast90')}</p>
                                         </div>
                                     );
                                 }
@@ -1056,7 +1068,7 @@ const OrderMedicine = () => {
                                                     {getStatusBadge(p.status)}
                                                 </div>
                                                 <div style={{ fontSize: '13px', color: '#718096' }}>
-                                                    {p.verifiedItems?.length || 0} Verified Medicines
+                                                    {t('pharmacy.verifiedMedicinesCount', { count: p.verifiedItems?.length || 0 })}
                                                 </div>
                                             </div>
                                             <button
@@ -1064,7 +1076,7 @@ const OrderMedicine = () => {
                                                 style={{ padding: '8px 24px', fontSize: '13px', borderRadius: '10px' }}
                                                 onClick={() => handleReorder(p)}
                                             >
-                                                Reorder Now
+                                                {t('pharmacy.reorderNow')}
                                             </button>
                                         </div>
                                     </div>
@@ -1082,19 +1094,19 @@ const OrderMedicine = () => {
                         <div className="modal-header-gradient">
                             <div className="header-text">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div className="order-badge color-white">ORDER ID: #{selectedTrackOrder._id.substring(selectedTrackOrder._id.length - 8).toUpperCase()}</div>
+                                    <div className="order-badge color-white">{t('pharmacy.orderIdPrefix', { id: selectedTrackOrder._id.substring(selectedTrackOrder._id.length - 8).toUpperCase() })}</div>
                                     <button
                                         onClick={() => {
                                             const url = `${window.location.origin}/track/${selectedTrackOrder._id}`;
                                             navigator.clipboard.writeText(url);
-                                            toast.success('Tracking link copied!');
+                                            toast.success(t('pharmacy.trackingLinkCopied'));
                                         }}
                                         style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '6px', color: '#cbd5e1', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
                                     >
-                                        <Share2 size={12} /> Copy Link
+                                        <Share2 size={12} /> {t('pharmacy.copyLink')}
                                     </button>
                                 </div>
-                                <h2 style={{ margin: 0, fontSize: '20px' }}>Order Tracker</h2>
+                                <h2 style={{ margin: 0, fontSize: '20px' }}>{t('pharmacy.orderTracker')}</h2>
                             </div>
                             <button className="close-btn-light" onClick={() => setTrackModalOpen(false)}>
                                 <X size={20} />
@@ -1118,19 +1130,19 @@ const OrderMedicine = () => {
 
                                 <div className={`progress-step ${['Pending', 'Processing', 'Out for Delivery', 'Delivered'].indexOf(selectedTrackOrder.status) >= 0 ? 'active' : ''}`}>
                                     <div className="step-point"></div>
-                                    <span>Pending</span>
+                                    <span>{t('pharmacy.badges.pending')}</span>
                                 </div>
                                 <div className={`progress-step ${['Processing', 'Out for Delivery', 'Delivered'].indexOf(selectedTrackOrder.status) >= 0 ? 'active' : ''}`}>
                                     <div className="step-point"></div>
-                                    <span>Processing</span>
+                                    <span>{t('pharmacy.badges.processing')}</span>
                                 </div>
                                 <div className={`progress-step ${['Out for Delivery', 'Delivered'].indexOf(selectedTrackOrder.status) >= 0 ? 'active' : ''}`}>
                                     <div className="step-point"></div>
-                                    <span>Shipping</span>
+                                    <span>{t('pharmacy.shipping')}</span>
                                 </div>
                                 <div className={`progress-step ${selectedTrackOrder.status === 'Delivered' ? 'active' : ''}`}>
                                     <div className="step-point"></div>
-                                    <span>Delivered</span>
+                                    <span>{t('pharmacy.badges.delivered')}</span>
                                 </div>
                             </div>
 
@@ -1146,17 +1158,17 @@ const OrderMedicine = () => {
                                     <section className="customer-info-pane" style={{ display: 'flex', flexDirection: 'column', minHeight: '550px', background: 'white', borderRadius: '20px', border: '2px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' }}>
                                         <div className="pane-header" style={{ background: '#f8fafc', padding: '12px 20px', borderBottom: '2px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <div className="icon-circle" style={{ width: '32px', height: '32px', background: 'white', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }}><Truck size={18} /></div>
-                                            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', margin: 0 }}>Dispatch & Logistics</h3>
+                                            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', margin: 0 }}>{t('pharmacy.dispatchLogistics')}</h3>
                                         </div>
                                         <div className="pane-content" style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                             <div className="pill-info" style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px' }}>
                                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                                                     <div className="data-row">
-                                                        <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Vehicle Name</span>
+                                                        <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>{t('pharmacy.vehicleName')}</span>
                                                         <span className="data-value" style={{ display: 'block', fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>{selectedTrackOrder.dispatchDetails?.vehicleName || 'N/A'}</span>
                                                     </div>
                                                     <div className="data-row">
-                                                        <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Bus Number</span>
+                                                        <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>{t('pharmacy.busNumber')}</span>
                                                         <span className="data-value" style={{ display: 'block', fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>{selectedTrackOrder.dispatchDetails?.busNumber || 'N/A'}</span>
                                                     </div>
                                                 </div>
@@ -1164,18 +1176,18 @@ const OrderMedicine = () => {
 
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                                 <div className="data-row">
-                                                    <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Meet Bus At</span>
-                                                    <span className="data-value" style={{ display: 'block', fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>{selectedTrackOrder.dispatchDetails?.pickupStoppage || 'Finalizing Station...'}</span>
+                                                    <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>{t('pharmacy.meetBusAt')}</span>
+                                                    <span className="data-value" style={{ display: 'block', fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>{selectedTrackOrder.dispatchDetails?.pickupStoppage || t('pharmacy.finalizingStation')}</span>
                                                 </div>
                                                 <div className="data-row">
-                                                    <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Driver Number</span>
+                                                    <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>{t('pharmacy.driverNumber')}</span>
                                                     <span className="data-value" style={{ display: 'block', fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>{selectedTrackOrder.dispatchDetails?.conductorNumber || selectedTrackOrder.shippingAddress?.phone}</span>
                                                 </div>
                                             </div>
 
                                             <div className="data-row" style={{ marginTop: '5px' }}>
-                                                <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Estimated Arrival</span>
-                                                <span className="data-value" style={{ display: 'block', fontSize: '24px', fontWeight: '900', color: '#3b82f6' }}>{selectedTrackOrder.dispatchDetails?.estimatedArrivalTime || 'Awaiting Schedule'}</span>
+                                                <span className="data-label" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>{t('pharmacy.estimatedArrival')}</span>
+                                                <span className="data-value" style={{ display: 'block', fontSize: '24px', fontWeight: '900', color: '#3b82f6' }}>{selectedTrackOrder.dispatchDetails?.estimatedArrivalTime || t('pharmacy.awaitingSchedule')}</span>
                                             </div>
 
                                             <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', background: '#f8fafc', cursor: 'pointer', height: '140px', marginTop: 'auto' }} onClick={() => {
@@ -1184,7 +1196,7 @@ const OrderMedicine = () => {
                                             }}>
                                                 {(() => {
                                                     const finalImage = selectedTrackOrder.dispatchDetails?.busId?.image || selectedTrackOrder.dispatchDetails?.busImage;
-                                                    if (!finalImage) return <div style={{ padding: '50px', textAlign: 'center', fontSize: '11px', color: '#94a3b8' }}>Identity Photo Pending</div>;
+                                                    if (!finalImage) return <div style={{ padding: '50px', textAlign: 'center', fontSize: '11px', color: '#94a3b8' }}>{t('pharmacy.identityPhotoPending')}</div>;
                                                     const resolvedUrl = finalImage.startsWith('http')
                                                         ? finalImage
                                                         : `${API_BASE_URL}${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
@@ -1200,9 +1212,9 @@ const OrderMedicine = () => {
                                     <div className="pane-header" style={{ background: '#f8fafc', padding: '16px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                             <div className="icon-circle" style={{ width: '36px', height: '36px', background: '#38a169', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}><ShoppingBag size={20} /></div>
-                                            <h3 style={{ fontSize: '14px', fontWeight: '800', textTransform: 'uppercase', margin: 0, color: '#1e293b' }}>Order Summary</h3>
+                                            <h3 style={{ fontSize: '14px', fontWeight: '800', textTransform: 'uppercase', margin: 0, color: '#1e293b' }}>{t('pharmacy.orderSummary')}</h3>
                                         </div>
-                                        <div style={{ fontSize: '10px', background: '#dcfce7', color: '#166534', padding: '4px 10px', borderRadius: '20px', fontWeight: '800', textTransform: 'uppercase' }}>Verified Packet</div>
+                                        <div style={{ fontSize: '10px', background: '#dcfce7', color: '#166534', padding: '4px 10px', borderRadius: '20px', fontWeight: '800', textTransform: 'uppercase' }}>{t('pharmacy.verifiedPacket')}</div>
                                     </div>
 
                                     <div className="pane-content" style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -1218,7 +1230,7 @@ const OrderMedicine = () => {
                                                             <span style={{ fontWeight: '800', color: '#1e293b', fontSize: '14px' }}>₹{item.price?.toFixed(2)}</span>
                                                         </div>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
-                                                            <span style={{ fontSize: '12px', color: '#94a3b8' }}>{item.quantity} Unit{item.quantity > 1 ? 's' : ''}</span>
+                                                            <span style={{ fontSize: '12px', color: '#94a3b8' }}>{t('pharmacy.unitCount', { count: item.quantity, plural: item.quantity > 1 ? 's' : '' })}</span>
                                                             {item.frequency && (
                                                                 <span style={{ width: '3px', height: '3px', background: '#cbd5e1', borderRadius: '50%' }}></span>
                                                             )}
@@ -1231,7 +1243,7 @@ const OrderMedicine = () => {
 
                                         <div className="receipt-footer" style={{ background: '#f8fafc', padding: '20px', borderRadius: '20px', border: '1px solid #f1f5f9' }}>
                                             <div style={{ marginBottom: '15px' }}>
-                                                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.5px' }}>Deliver To</div>
+                                                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.5px' }}>{t('pharmacy.deliverTo')}</div>
                                                 <div style={{ fontSize: '13px', color: '#475569', fontWeight: '600', lineHeight: '1.4' }}>
                                                     {selectedTrackOrder.shippingAddress?.street},<br />
                                                     {selectedTrackOrder.shippingAddress?.city} - {selectedTrackOrder.shippingAddress?.zip}
@@ -1240,14 +1252,14 @@ const OrderMedicine = () => {
 
                                             <div style={{ borderTop: '1px dashed #e2e8f0', margin: '15px 0', paddingTop: '15px' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                                    <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '600' }}>Items Total</span>
+                                                    <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '600' }}>{t('pharmacy.itemsTotal')}</span>
                                                     <span style={{ fontSize: '13px', color: '#475569', fontWeight: '700' }}>₹{selectedTrackOrder.totalAmount.toFixed(2)}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #e2e8f0' }}>
-                                                    <span style={{ fontSize: '15px', color: '#1e293b', fontWeight: '800' }}>Amount Paid</span>
+                                                    <span style={{ fontSize: '15px', color: '#1e293b', fontWeight: '800' }}>{t('pharmacy.amountPaid')}</span>
                                                     <div style={{ textAlign: 'right' }}>
                                                         <div style={{ fontSize: '22px', color: '#16a34a', fontWeight: '900', lineHeight: '1' }}>₹{selectedTrackOrder.totalAmount.toFixed(2)}</div>
-                                                        <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '700', textTransform: 'uppercase', marginTop: '4px' }}>✓ Transaction Success</div>
+                                                        <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '700', textTransform: 'uppercase', marginTop: '4px' }}>{t('pharmacy.transactionSuccess')}</div>
                                                     </div>
                                                 </div>
 
@@ -1274,7 +1286,7 @@ const OrderMedicine = () => {
                                                     onMouseOut={(e) => e.target.style.background = '#fff'}
                                                 >
                                                     <FileText size={16} />
-                                                    Download Digital Invoice
+                                                    {t('pharmacy.downloadInvoice')}
                                                 </button>
                                             </div>
                                         </div>
@@ -1312,18 +1324,18 @@ const OrderMedicine = () => {
                         <div style={{ width: '80px', height: '80px', background: '#f0fff4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', color: '#38a169' }}>
                             <CheckCircle size={40} />
                         </div>
-                        <h2 style={{ fontSize: '1.8rem', color: '#2d3748', marginBottom: '16px' }}>Prescription Submitted!</h2>
+                        <h2 style={{ fontSize: '1.8rem', color: '#2d3748', marginBottom: '16px' }}>{t('pharmacy.prescriptionSubmitted')}</h2>
                         <div style={{ color: '#718096', lineHeight: '1.6', fontSize: '1.05rem', marginBottom: '30px' }}>
-                            <p style={{ marginBottom: '15px' }}>Your prescription has been securely uploaded and sent for verification.</p>
-                            <p style={{ marginBottom: '15px', fontWeight: '600', color: '#4a5568' }}>This will be verified within 24-48 hours.</p>
-                            <p>Once verified, you will need to provide your delivery address and confirm the final amount to complete the order. {localStorage.getItem('user') ? 'You can track this process from the Activity Log on this page.' : 'Our pharmacist will contact you on the provided mobile number for further details.'}</p>
+                            <p style={{ marginBottom: '15px' }}>{t('pharmacy.postUploadMsg1')}</p>
+                            <p style={{ marginBottom: '15px', fontWeight: '600', color: '#4a5568' }}>{t('pharmacy.postUploadMsg2')}</p>
+                            <p>{t('pharmacy.postUploadMsg3', { trackingNote: localStorage.getItem('user') ? t('pharmacy.postUploadTrackUser') : t('pharmacy.postUploadTrackGuest') })}</p>
                         </div>
                         <button
                             className="btn-submit-premium"
                             style={{ marginTop: '0' }}
                             onClick={() => setShowPostUploadModal(false)}
                         >
-                            Got it, thanks!
+                            {t('pharmacy.gotItThanks')}
                         </button>
                     </div>
                 </div>
@@ -1334,35 +1346,35 @@ const OrderMedicine = () => {
                 <div className="checkout-modal-overlay" style={{ zIndex: 2000 }}>
                     <div className="checkout-modal-card" style={{ maxWidth: '450px', padding: '30px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#2d3748' }}>Guest Information</h2>
+                            <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#2d3748' }}>{t('pharmacy.guestInfo')}</h2>
                             <button onClick={() => setShowGuestModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#718096' }}>
                                 <X size={24} />
                             </button>
                         </div>
                         <p style={{ color: '#718096', marginBottom: '24px', fontSize: '0.95rem' }}>
-                            Please provide your name and mobile number so our pharmacist can contact you regarding your prescription.
+                            {t('pharmacy.guestInfoMsg')}
                         </p>
                         <form onSubmit={handleGuestSubmit}>
                             <div className="form-group" style={{ marginBottom: '20px' }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#4a5568' }}>Full Name</label>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#4a5568' }}>{t('pharmacy.fullName')}</label>
                                 <input 
                                     type="text" 
                                     required 
                                     value={guestName} 
                                     onChange={e => setGuestName(e.target.value)} 
-                                    placeholder="Enter your full name" 
+                                    placeholder={t('pharmacy.placeholderFullName')} 
                                     style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid #e2e8f0', outline: 'none' }}
-                                />
+                                  />
                             </div>
                             <div className="form-group" style={{ marginBottom: '24px' }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#4a5568' }}>Mobile Number</label>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#4a5568' }}>{t('pharmacy.mobileNumber')}</label>
                                 <input 
                                     type="tel" 
                                     required 
                                     maxLength="10"
                                     value={guestMobile} 
                                     onChange={e => setGuestMobile(e.target.value.replace(/\D/g, ''))} 
-                                    placeholder="Enter 10-digit mobile number" 
+                                    placeholder={t('pharmacy.placeholderMobile10')} 
                                     style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid #e2e8f0', outline: 'none' }}
                                 />
                             </div>
@@ -1372,7 +1384,7 @@ const OrderMedicine = () => {
                                 disabled={loading}
                                 style={{ width: '100%', margin: 0 }}
                             >
-                                {loading ? <div className="loader"></div> : 'Confirm and Submit'}
+                                {loading ? <div className="loader"></div> : t('pharmacy.confirmSubmit')}
                             </button>
                         </form>
                     </div>

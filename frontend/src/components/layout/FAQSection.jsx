@@ -6,7 +6,7 @@ import api from '../../services/api';
 
 
 const FAQSection = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [faqs, setFaqs] = useState([]);
     const [activeIndex, setActiveIndex] = useState(null);
 
@@ -16,7 +16,10 @@ const FAQSection = () => {
                 const { data } = await api.get('/content/faqs');
                 if (data && data.length > 0) {
                     // Map API fields to UI expected fields
-                    const mappedFaqs = data.map(f => ({ q: f.question, a: f.answer }));
+                    const mappedFaqs = data.map(f => ({ 
+                        q: i18n.language === 'hi' && f.question_hi ? f.question_hi : f.question, 
+                        a: i18n.language === 'hi' && f.answer_hi ? f.answer_hi : f.answer 
+                    }));
                     setFaqs(mappedFaqs);
                 } else {
                     // Fallback to translations if DB is empty
@@ -30,7 +33,7 @@ const FAQSection = () => {
             }
         };
         fetchFaqs();
-    }, [t]);
+    }, [t, i18n.language]);
 
     const toggleFAQ = (index) => {
         setActiveIndex(activeIndex === index ? null : index);

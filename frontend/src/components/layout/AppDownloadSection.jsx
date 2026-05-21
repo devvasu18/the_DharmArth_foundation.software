@@ -67,7 +67,7 @@ const AppDownloadSection = () => {
                                     </svg>
                                 </div>
                                 <div className="store-text-col">
-                                    <span className="store-subtitle">GET IT ON</span>
+                                    <span className="store-subtitle">{t('app.getItOn')}</span>
                                     <span className="store-title-text">Google Play</span>
                                 </div>
                             </a>
@@ -80,7 +80,7 @@ const AppDownloadSection = () => {
                                     </svg>
                                 </div>
                                 <div className="store-text-col">
-                                    <span className="store-subtitle">Download on the</span>
+                                    <span className="store-subtitle">{t('app.downloadOn')}</span>
                                     <span className="store-title-text">App Store</span>
                                 </div>
                             </a>

@@ -13,12 +13,12 @@ const Footer = ({ variant = 'default' }) => {
                     <div className="footer-small-content">
                         <div className="footer-brand">
                             <h2>Dharmarth</h2>
-                            <p>© {new Date().getFullYear()} The Dharmarth Foundation. All Rights Reserved.</p>
+                            <p>© {new Date().getFullYear()} {t('footer.brand', 'The Dharmarth Foundation')}. {t('footer.allRightsReserved', 'All Rights Reserved.')}</p>
                         </div>
                         <div className="footer-small-links">
-                            <a href="#">Privacy Policy</a>
-                            <a href="#">Terms of Use</a>
-                            <a href="#">Contact Support</a>
+                            <a href="#">{t('footer.privacyPolicy')}</a>
+                            <a href="#">{t('footer.termsOfUse')}</a>
+                            <a href="#">{t('footer.contactSupport')}</a>
                         </div>
                     </div>
                 </div>
@@ -41,7 +41,7 @@ const Footer = ({ variant = 'default' }) => {
                             <span className="social-icon"><Phone size={18} /></span>
                         </div>
                         <div className="footer-stats">
-                            <div ><span className="stat-val">2.5M+</span> Followers</div>
+                            <div ><span className="stat-val">{t('footer.followersCount')}</span> {t('footer.followersLabel')}</div>
                         </div>
 
                         <div style={{ marginTop: '2rem' }}>
@@ -54,52 +54,52 @@ const Footer = ({ variant = 'default' }) => {
                     <div className="footer-col">
                         <h3>{t('footer.causes')}</h3>
                         <ul className="footer-links">
-                            <li><a href="#">Medical Crowdfunding</a></li>
-                            <li><a href="#">Cancer Crowdfunding</a></li>
-                            <li><a href="#">Transplant Crowdfunding</a></li>
-                            <li><a href="#">Education Crowdfunding</a></li>
-                            <li><a href="#">Sports Crowdfunding</a></li>
-                            <li><a href="#">Child Welfare</a></li>
-                            <li><a href="#">Animal Donations</a></li>
+                            <li><a href="#">{t('footer.c1')}</a></li>
+                            <li><a href="#">{t('footer.c2')}</a></li>
+                            <li><a href="#">{t('footer.c3')}</a></li>
+                            <li><a href="#">{t('footer.c4')}</a></li>
+                            <li><a href="#">{t('footer.c5')}</a></li>
+                            <li><a href="#">{t('footer.c6')}</a></li>
+                            <li><a href="#">{t('footer.c7')}</a></li>
                         </ul>
                     </div>
 
                     <div className="footer-col">
                         <h3>{t('footer.howItWorks')}</h3>
                         <ul className="footer-links">
-                            <li><a href="#">Fundraising for NGOs</a></li>
-                            <li><a href="#">Sponsor A Child</a></li>
-                            <li><a href="#">Fundraising Tips</a></li>
-                            <li><a href="#">What is Crowdfunding?</a></li>
-                            <li><a href="#">Corporates</a></li>
-                            <li><a href="#">Withdraw Funds</a></li>
-                            <li><a href="#">Browse Donation</a></li>
+                            <li><a href="#">{t('footer.h1')}</a></li>
+                            <li><a href="#">{t('footer.h2')}</a></li>
+                            <li><a href="#">{t('footer.h3')}</a></li>
+                            <li><a href="#">{t('footer.h4')}</a></li>
+                            <li><a href="#">{t('footer.h5')}</a></li>
+                            <li><a href="#">{t('footer.h6')}</a></li>
+                            <li><a href="#">{t('footer.h7')}</a></li>
                         </ul>
                     </div>
 
                     <div className="footer-col">
                         <h3>{t('footer.aboutUs')}</h3>
                         <ul className="footer-links">
-                            <li><a href="#">Team Dharmarth</a></li>
-                            <li><a href="#">In The News</a></li>
-                            <li><a href="#">Web Stories</a></li>
-                            <li><a href="#">Careers</a></li>
-                            <li><a href="#">Dharmarth Blog</a></li>
-                            <li><a href="#">Success Stories</a></li>
-                            <li><a href="#">Is Dharmarth Genuine?</a></li>
+                            <li><a href="#">{t('footer.a1')}</a></li>
+                            <li><a href="#">{t('footer.a2')}</a></li>
+                            <li><a href="#">{t('footer.a3')}</a></li>
+                            <li><a href="#">{t('footer.a4')}</a></li>
+                            <li><a href="#">{t('footer.a5')}</a></li>
+                            <li><a href="#">{t('footer.a6')}</a></li>
+                            <li><a href="#">{t('footer.a7')}</a></li>
                         </ul>
                     </div>
 
                     <div className="footer-col">
                         <h3>{t('footer.support')}</h3>
                         <ul className="footer-links">
-                            <li><a href="#">Medical Finance</a></li>
-                            <li><a href="#">FAQs & Help Center</a></li>
-                            <li><a href="#">Are Dharmarth Campaigns Genuine?</a></li>
-                            <li><a href="#">Donation Video</a></li>
-                            <li><a href="#">Trust & Safety</a></li>
-                            <li><a href="#">Plans & Pricing</a></li>
-                            <li><a href="#">Contact Us</a></li>
+                            <li><a href="#">{t('footer.s1')}</a></li>
+                            <li><a href="#">{t('footer.s2')}</a></li>
+                            <li><a href="#">{t('footer.s3')}</a></li>
+                            <li><a href="#">{t('footer.s4')}</a></li>
+                            <li><a href="#">{t('footer.s5')}</a></li>
+                            <li><a href="#">{t('footer.s6')}</a></li>
+                            <li><a href="#">{t('footer.s7')}</a></li>
                         </ul>
                     </div>
                 </div>

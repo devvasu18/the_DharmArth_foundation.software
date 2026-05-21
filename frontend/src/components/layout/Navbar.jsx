@@ -29,14 +29,14 @@ const Navbar = () => {
                     transition={{ duration: 0.2 }}
                 >
                     <div className="notif-header">
-                        <h3>Notifications</h3>
+                        <h3>{t('navbar.notifications')}</h3>
                         {unreadCount > 0 && (
-                            <button onClick={handleMarkAllRead}>Mark all read</button>
+                            <button onClick={handleMarkAllRead}>{t('navbar.markAllRead')}</button>
                         )}
                     </div>
                     <div className="notif-list">
                         {notifications.length === 0 ? (
-                            <div className="notif-empty">No notifications yet</div>
+                            <div className="notif-empty">{t('navbar.noNotifications')}</div>
                         ) : (
                             notifications.map((notif, idx) => (
                                 <div 
@@ -217,27 +217,25 @@ const Navbar = () => {
                 <div className="navbar-links hidden-mobile">
                     {!isDeliveryPartner && (
                         <>
-
                             <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.home')}</NavLink>
                             <NavLink to="/events" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.fundraiseFor')}</NavLink>
-                            <NavLink to="/p/join-and-earn" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('Join & Earn')}</NavLink>
+                            <NavLink to="/p/join-and-earn" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.joinAndEarn')}</NavLink>
                             {user && (
-                                <NavLink to={`/v/${user.referralCode || user.mobile}`} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Share & Earn</NavLink>
+                                <NavLink to={`/v/${user.referralCode || user.mobile}`} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.shareAndEarn')}</NavLink>
                             )}
-                            <NavLink to="/leaderboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Leaderboard</NavLink>
-                            <NavLink to="/p/about-us" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>About Us</NavLink>
+                            <NavLink to="/leaderboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.leaderboard')}</NavLink>
+                            <NavLink to="/p/about-us" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.aboutUs')}</NavLink>
                             {/* <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.doctorAvailability')}</NavLink>*/}
-                            <NavLink to="/order-medicine" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Order Medicine</NavLink>
+                            <NavLink to="/order-medicine" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.orderMedicine')}</NavLink>
                         </>
                     )}
-
 
                     {user?.isSuperAdmin && (
                         <NavLink to="/admin" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.admin')}</NavLink>
                     )}
 
                     {isDeliveryPartner && (
-                        <NavLink to="/delivery-boy" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Delivery Feed</NavLink>
+                        <NavLink to="/delivery-boy" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.deliveryFeed')}</NavLink>
                     )}
                 </div>
 
@@ -279,11 +277,11 @@ const Navbar = () => {
                                 }}>
                                     {!user.isSuperAdmin && !isDeliveryPartner && (
                                         <>
-                                            <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>My Earnings</Link>
-                                            <Link to="/profile" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}> Profile</Link>
+                                            <Link to="/dashboard" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.myEarnings')}</Link>
+                                            <Link to="/profile" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.profile')}</Link>
                                             <Link to="/my-subscriptions" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.subscriptions') || 'My Subscriptions'}</Link>
-                                            <Link to="/my-referrals" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>My Referrals</Link>
-                                            <Link to="/my-network" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>My Network</Link>
+                                            <Link to="/my-referrals" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.myReferrals')}</Link>
+                                            <Link to="/my-network" style={{ display: 'block', padding: '8px', color: '#333', textDecoration: 'none' }} onClick={() => setIsProfileOpen(false)}>{t('navbar.myNetwork')}</Link>
                                         </>
                                     )}
                                     <div onClick={handleLogout} style={{ display: 'block', padding: '8px', color: 'red', cursor: 'pointer' }}>{t('navbar.logout')}</div>
@@ -329,17 +327,16 @@ const Navbar = () => {
                     {user && user.isSuperAdmin && <NavLink to="/admin" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.admin')}</NavLink>}
 
                     {isDeliveryPartner && (
-                        <NavLink to="/delivery-boy" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>Delivery Feed</NavLink>
+                        <NavLink to="/delivery-boy" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.deliveryFeed')}</NavLink>
                     )}
-
                     {user && !user.isSuperAdmin && !isDeliveryPartner && (
                         <>
-                            <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>My Earning</NavLink>
-                            <NavLink to="/profile" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}> Profile</NavLink>
+                            <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.myEarnings')}</NavLink>
+                            <NavLink to="/profile" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.profile')}</NavLink>
                             <NavLink to="/my-subscriptions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.subscriptions') || 'My Subscriptions'}</NavLink>
-                            <NavLink to="/my-referrals" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>My Referrals</NavLink>
-                            <NavLink to="/my-network" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>My Network</NavLink>
-                            <NavLink to={`/v/${user.referralCode || user.mobile}`} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>Share & Earn</NavLink>
+                            <NavLink to="/my-referrals" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.myReferrals')}</NavLink>
+                            <NavLink to="/my-network" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.myNetwork')}</NavLink>
+                            <NavLink to={`/v/${user.referralCode || user.mobile}`} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.shareAndEarn')}</NavLink>
                         </>
                     )}
                     {!user ? (
@@ -368,7 +365,7 @@ const Navbar = () => {
                     </NavLink>
                     <NavLink to={user ? "/dashboard" : "/login"} className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}>
                         <UserIcon size={20} className="nav-icon" />
-                        <span>{user ? 'My Profile' : t('navbar.signIn')}</span>
+                        <span>{user ? t('navbar.profile') : t('navbar.signIn')}</span>
                     </NavLink>
                 </div>
             )}

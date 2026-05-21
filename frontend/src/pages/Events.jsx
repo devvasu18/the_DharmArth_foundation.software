@@ -275,8 +275,8 @@ const Events = () => {
             <section className="events-engagement-section">
                 <div className="container">
                     <div className="engagement-header">
-                        <h2 style={{ fontSize: 'var(--text-4xl)', marginBottom: 'var(--spacing-4)', color: 'var(--secondary)' }}>Be The Change You Want To See</h2>
-                        <p>Events are just the beginning. Become a permanent part of our journey.</p>
+                        <h2 style={{ fontSize: 'var(--text-4xl)', marginBottom: 'var(--spacing-4)', color: 'var(--secondary)' }}>{t('events.beTheChange')}</h2>
+                        <p>{t('events.eventsBeginning')}</p>
                     </div>
 
                     <div className="cta-cards-container">
@@ -284,15 +284,15 @@ const Events = () => {
                             <div className="card-icon-wrapper">
                                 <Heart size={32} />
                             </div>
-                            <h3>Become a Volunteer</h3>
-                            <p>Join our on-ground team and experience the joy of giving firsthand.</p>
+                            <h3>{t('events.becomeVolunteer')}</h3>
+                            <p>{t('events.volunteerDesc')}</p>
                             <ul className="cta-benefits">
-                                <li><CheckCircle size={16} /> Certificate of Appreciation</li>
-                                <li><CheckCircle size={16} /> Networking Opportunities</li>
-                                <li><CheckCircle size={16} /> Skill Development</li>
+                                <li><CheckCircle size={16} /> {t('events.certAppreciation')}</li>
+                                <li><CheckCircle size={16} /> {t('events.networkingOpportunities')}</li>
+                                <li><CheckCircle size={16} /> {t('events.skillDevelopment')}</li>
                             </ul>
                             <Link to="/volunteer" className="cta-btn primary">
-                                Join Now <ArrowRight size={16} />
+                                {t('events.joinNow')} <ArrowRight size={16} />
                             </Link>
                         </div>
 
@@ -300,15 +300,15 @@ const Events = () => {
                             <div className="card-icon-wrapper secondary">
                                 <Users size={32} />
                             </div>
-                            <h3>Partner With Us</h3>
-                            <p>Collaborate with us to amplify our impact and reach more lives.</p>
+                            <h3>{t('events.partnerWithUs')}</h3>
+                            <p>{t('events.partnerDesc')}</p>
                             <ul className="cta-benefits">
-                                <li><CheckCircle size={16} /> CSR Opportunities</li>
-                                <li><CheckCircle size={16} /> Brand Visibility</li>
-                                <li><CheckCircle size={16} /> Joint Impact Reports</li>
+                                <li><CheckCircle size={16} /> {t('events.csrOpportunities')}</li>
+                                <li><CheckCircle size={16} /> {t('events.brandVisibility')}</li>
+                                <li><CheckCircle size={16} /> {t('events.jointImpactReports')}</li>
                             </ul>
                             <Link to="/contact" className="cta-btn secondary">
-                                Contact Us <ArrowRight size={16} />
+                                {t('events.contactUs')} <ArrowRight size={16} />
                             </Link>
                         </div>
                     </div>
@@ -320,13 +320,13 @@ const Events = () => {
                                 <Smartphone size={24} />
                             </div>
                             <div className="text-box">
-                                <h3>Don't Miss an Update</h3>
-                                <p>Get the latest event news and impact stories via SMS/WhatsApp.</p>
+                                <h3>{t('events.dontMissUpdate')}</h3>
+                                <p>{t('events.smsUpdates')}</p>
                             </div>
                         </div>
                         <div className="newsletter-form">
-                            <input type="tel" placeholder="Enter your mobile number" />
-                            <button className="subscribe-btn">Subscribe</button>
+                            <input type="tel" placeholder={t('events.enterMobilePlaceholder')} />
+                            <button className="subscribe-btn">{t('events.subscribe')}</button>
                         </div>
                     </div>
                 </div>
@@ -336,10 +336,10 @@ const Events = () => {
             <section className="events-video-section">
                 <div className="container">
                     <div className="video-section-header">
-                        <h2 style={{ fontSize: 'var(--text-4xl)', marginBottom: 'var(--spacing-4)', color: 'var(--secondary)' }}>Our Impact in Motion</h2>
+                        <h2 style={{ fontSize: 'var(--text-4xl)', marginBottom: 'var(--spacing-4)', color: 'var(--secondary)' }}>{t('events.ourImpactInMotion')}</h2>
 
                         <a href="https://www.youtube.com/@TheDharmarthFoundation" target="_blank" rel="noreferrer" className="view-channel-link">
-                            View Channel <ArrowRight size={16} />
+                            {t('events.viewChannel')} <ArrowRight size={16} />
                         </a>
                     </div>
 
@@ -378,7 +378,7 @@ const Events = () => {
                                     </div>
                                     <div className="side-video-info">
                                         <h4>{video.title}</h4>
-                                        <span className="watch-now-txt">Watch Now</span>
+                                        <span className="watch-now-txt">{t('events.watchNow')}</span>
                                     </div>
                                 </div>
                             ))}

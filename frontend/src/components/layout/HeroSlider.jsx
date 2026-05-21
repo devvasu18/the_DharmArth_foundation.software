@@ -11,7 +11,6 @@ const HeroSlider = () => {
     const [textSlides, setTextSlides] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [currentTextIndex, setCurrentTextIndex] = useState(0);
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
 
     useEffect(() => {
@@ -48,23 +47,13 @@ const HeroSlider = () => {
     const heroMode = slides.length >= 4;
 
     useEffect(() => {
-        if (heroMode && slides.length > 0) {
+        if (slides.length > 1) {
             const interval = setInterval(() => {
                 setCurrentIndex((prev) => (prev + 1) % slides.length);
-            }, 5000);
+            }, 6000); // Calm unified 6-second transition
             return () => clearInterval(interval);
         }
-    }, [heroMode, slides.length]);
-
-    // Rotate text independently if there are multiple text contents
-    useEffect(() => {
-        if (textSlides.length > 1) {
-            const interval = setInterval(() => {
-                setCurrentTextIndex((prev) => (prev + 1) % textSlides.length);
-            }, 6000);
-            return () => clearInterval(interval);
-        }
-    }, [textSlides.length]);
+    }, [slides.length]);
 
     if (loading) return <div style={{ height: '550px', background: '#F0F9FF' }}></div>;
     // We display even if only text or only images exist?
@@ -73,8 +62,30 @@ const HeroSlider = () => {
     // Assuming at least one image exists for now.
     if (slides.length === 0 && textSlides.length === 0) return null;
 
-    // Use currentTextIndex for text, fallback to first
-    const activeTextSlide = textSlides[currentTextIndex] || textSlides[0];
+    // Synchronize text with the active visual slide index
+    const activeTextSlide = textSlides[currentIndex] || textSlides[0];
+
+    const getTranslatedText = (text) => {
+        if (!text || typeof text !== 'string') return text;
+        const cleanText = text.replace(/<[^>]*>/g, '').trim().toLowerCase();
+
+        if (cleanText.includes('education for all')) {
+            return 'सभी के लिए शिक्षा';
+        }
+        if (cleanText.includes('welcome to the dharmarth')) {
+            return 'धर्मार्थ मेडिकल फाउंडेशन में आपका स्वागत है';
+        }
+        if (cleanText.includes('empowering change through your generous')) {
+            return 'अपने योगदान के माध्यम से बदलाव को सक्षम करें।';
+        }
+        if (cleanText.includes('donate now')) {
+            return 'अभी दान करें';
+        }
+        if (cleanText.includes('donate')) {
+            return 'दान करें';
+        }
+        return text;
+    };
 
     const xOffset = isMobile ? 120 : 220;
     const enterExitOffset = isMobile ? 220 : 400;
@@ -207,7 +218,9 @@ const HeroSlider = () => {
                             className="hero-text-wrapper"
                         >
                             <h1 className="hero-title black">
-                                {i18n.language === 'hi' && activeTextSlide.title_hi ? activeTextSlide.title_hi : activeTextSlide.title}
+                                {i18n.language === 'hi' 
+                                    ? (activeTextSlide.title_hi || getTranslatedText(activeTextSlide.title)) 
+                                    : activeTextSlide.title}
                             </h1>
 
                             <div className="hero-stats">
@@ -224,11 +237,15 @@ const HeroSlider = () => {
                             </div>
 
                             <p className="hero-description">
-                                {i18n.language === 'hi' && activeTextSlide.subtitle_hi ? activeTextSlide.subtitle_hi : (activeTextSlide.subtitle || t('hero.defaultSubtitle'))}
+                                {i18n.language === 'hi' 
+                                    ? (activeTextSlide.subtitle_hi || getTranslatedText(activeTextSlide.subtitle)) 
+                                    : (activeTextSlide.subtitle || t('hero.defaultSubtitle'))}
                             </p>
 
                             <Link to={activeTextSlide.ctaLink} className="hero-cta-btn">
-                                {activeTextSlide.ctaText}
+                                {i18n.language === 'hi' 
+                                    ? (activeTextSlide.ctaText_hi || getTranslatedText(activeTextSlide.ctaText)) 
+                                    : (activeTextSlide.ctaText || 'Donate')}
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M5 12h14"></path>
                                     <path d="M12 5l7 7-7 7"></path>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../services/api';
 import VolunteerCard from '../components/user/VolunteerCard';
 import Navbar from '../components/layout/Navbar';
@@ -10,6 +11,7 @@ import toast from 'react-hot-toast';
 const PublicVolunteerCard = () => {
     const { referralCode } = useParams();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [volunteer, setVolunteer] = useState(null);
     const [loading, setLoading] = useState(true);
     const [cardScale, setCardScale] = useState(1);
@@ -20,14 +22,14 @@ const PublicVolunteerCard = () => {
                 const { data } = await api.get(`/users/v/${referralCode}`);
                 setVolunteer(data);
             } catch (err) {
-                toast.error("Volunteer profile not found");
+                toast.error(t('volunteer.notFound'));
                 navigate('/');
             } finally {
                 setLoading(false);
             }
         };
         fetchVolunteer();
-    }, [referralCode, navigate]);
+    }, [referralCode, navigate, t]);
 
     useEffect(() => {
         const updateScale = () => {
@@ -66,7 +68,7 @@ const PublicVolunteerCard = () => {
 
 
                         <p className="foundation-mission">
-                            Official Volunteer at <strong>The DharmArth Foundation</strong>
+                            {t('volunteer.officialVolunteer')}
                         </p>
                     </div>
 
@@ -92,15 +94,15 @@ const PublicVolunteerCard = () => {
                         <div className="trust-badges">
                             <div className="trust-item">
                                 <Award size={20} />
-                                <span>Official ID</span>
+                                <span>{t('volunteer.officialId')}</span>
                             </div>
                             <div className="trust-item">
                                 <ShieldCheck size={20} />
-                                <span>Secured Portal</span>
+                                <span>{t('volunteer.securedPortal')}</span>
                             </div>
                             <div className="trust-item">
                                 <Users size={20} />
-                                <span>Community Trust</span>
+                                <span>{t('volunteer.communityTrust')}</span>
                             </div>
                         </div>
                     </div>
@@ -109,9 +111,9 @@ const PublicVolunteerCard = () => {
                     <div className="action-card">
                         <div className="action-content">
                             <Heart size={40} className="heart-icon" />
-                            <h2>Support My Cause</h2>
+                            <h2>{t('volunteer.supportMyCause')}</h2>
                             <p>
-                                I am volunteering to help The DharmArth Foundation raise funds for healthcare, education, and social welfare. Every contribution matters.
+                                {t('volunteer.supportDescription')}
                             </p>
 
                             <button
@@ -119,7 +121,7 @@ const PublicVolunteerCard = () => {
                                 className="donate-primary-btn"
                             >
                                 <Heart size={20} fill="white" />
-                                <span>Donate Now via My Link</span>
+                                <span>{t('volunteer.donateNowLink')}</span>
                             </button>
 
                             <div className="social-actions">
@@ -127,21 +129,21 @@ const PublicVolunteerCard = () => {
                                     className="secondary-action-btn"
                                     onClick={() => {
                                         navigator.share({
-                                            title: `Verified Volunteer: ${volunteer.name}`,
-                                            text: `Support The DharmArth Foundation through ${volunteer.name}'s verified profile.`,
+                                            title: t('volunteer.verifiedVolunteerTitle', { name: volunteer.name }),
+                                            text: t('volunteer.shareText', { name: volunteer.name }),
                                             url: shareUrl
                                         }).catch(() => {
                                             navigator.clipboard.writeText(shareUrl);
-                                            toast.success("Profile link copied!");
+                                            toast.success(t('volunteer.linkCopied'));
                                         });
                                     }}
                                 >
                                     <Share2 size={18} />
-                                    <span>Share Profile Page</span>
+                                    <span>{t('volunteer.shareProfilePage')}</span>
                                 </button>
                                 <button className="secondary-action-btn" onClick={() => navigate('/')}>
                                     <ExternalLink size={18} />
-                                    <span>Foundation Home</span>
+                                    <span>{t('volunteer.foundationHome')}</span>
                                 </button>
                             </div>
                         </div>
@@ -151,14 +153,14 @@ const PublicVolunteerCard = () => {
                     <div className="foundation-info-box">
                         <div className="info-header">
                             <Info size={20} />
-                            <h3>About The DharmArth Foundation</h3>
+                            <h3>{t('volunteer.aboutFoundation')}</h3>
                         </div>
                         <p>
-                            The DharmArth Foundation is dedicated to empowering communities through transparent and impactful social initiatives. By donating through this verified volunteer, you ensure that your contribution goes directly towards our ongoing humanitarian projects.
+                            {t('volunteer.aboutDescription')}
                         </p>
                         <div className="back-link">
                             <button onClick={() => navigate('/')}>
-                                <ArrowLeft size={16} /> Back to main website
+                                <ArrowLeft size={16} /> {t('volunteer.backToMain')}
                             </button>
                         </div>
                     </div>

@@ -83,7 +83,7 @@
 .hero-section .hero-title {
     font-size: clamp(2rem, 4.5vw, 3.25rem);
     font-weight: 900;
-    line-height: 1;
+    line-height: 1.35;
     color: #1a1a1a;
     margin-bottom: 1.5rem;
     letter-spacing: -0.04em;
@@ -208,7 +208,7 @@
 
     .hero-section .hero-title {
         font-size: 1.55rem;
-        line-height: 1.25;
+        line-height: 1.4;
         margin-bottom: 0.75rem;
     }
 

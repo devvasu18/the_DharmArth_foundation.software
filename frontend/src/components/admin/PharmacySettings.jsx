@@ -7,6 +7,7 @@ import './PharmacySettings.css';
 const PharmacySettings = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [faqLang, setFaqLang] = useState('en');
     const [config, setConfig] = useState({
         platformFeePercent: 2,
         deliveryChargeType: 'flat',
@@ -205,9 +206,51 @@ const PharmacySettings = () => {
 
                 {/* Dynamic Order FAQs */}
                 <div className="settings-card glass-card full-width" style={{ marginTop: '20px' }}>
-                    <div className="card-header">
-                        <HelpCircle size={20} color="#3182ce" />
-                        <h3>Dynamic Order Questions (FAQs)</h3>
+                    <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <HelpCircle size={20} color="#3182ce" />
+                            <h3>Dynamic Order Questions (FAQs)</h3>
+                        </div>
+                        <div className="faq-lang-tabs" style={{ display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '6px' }}>
+                            <button
+                                type="button"
+                                onClick={() => setFaqLang('en')}
+                                style={{
+                                    border: 'none',
+                                    padding: '6px 12px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '12px',
+                                    fontWeight: '600',
+                                    background: faqLang === 'en' ? '#fff' : 'transparent',
+                                    color: faqLang === 'en' ? '#0f172a' : '#64748b',
+                                    boxShadow: faqLang === 'en' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                                    transition: 'all 0.2s',
+                                    outline: 'none'
+                                }}
+                            >
+                                English
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFaqLang('hi')}
+                                style={{
+                                    border: 'none',
+                                    padding: '6px 12px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '12px',
+                                    fontWeight: '600',
+                                    background: faqLang === 'hi' ? '#fff' : 'transparent',
+                                    color: faqLang === 'hi' ? '#0f172a' : '#64748b',
+                                    boxShadow: faqLang === 'hi' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                                    transition: 'all 0.2s',
+                                    outline: 'none'
+                                }}
+                            >
+                                Hindi (हिंदी)
+                            </button>
+                        </div>
                     </div>
                     <div className="card-body">
                         <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '15px' }}>
@@ -216,17 +259,31 @@ const PharmacySettings = () => {
                         
                         {(config.faqs || []).map((faq, index) => (
                             <div key={index} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                                <input 
-                                    type="text" 
-                                    value={faq.question} 
-                                    onChange={(e) => {
-                                        const newFaqs = [...(config.faqs || [])];
-                                        newFaqs[index].question = e.target.value;
-                                        setConfig({...config, faqs: newFaqs});
-                                    }}
-                                    placeholder="Enter question text..."
-                                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                                />
+                                {faqLang === 'en' ? (
+                                    <input 
+                                        type="text" 
+                                        value={faq.question || ''} 
+                                        onChange={(e) => {
+                                            const newFaqs = [...(config.faqs || [])];
+                                            newFaqs[index].question = e.target.value;
+                                            setConfig({...config, faqs: newFaqs});
+                                        }}
+                                        placeholder="Enter question in English..."
+                                        style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                                    />
+                                ) : (
+                                    <input 
+                                        type="text" 
+                                        value={faq.question_hi || ''} 
+                                        onChange={(e) => {
+                                            const newFaqs = [...(config.faqs || [])];
+                                            newFaqs[index].question_hi = e.target.value;
+                                            setConfig({...config, faqs: newFaqs});
+                                        }}
+                                        placeholder="हिंदी में प्रश्न दर्ज करें..."
+                                        style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                                    />
+                                )}
                                 <button 
                                     onClick={() => {
                                         const newFaqs = (config.faqs || []).filter((_, i) => i !== index);
@@ -241,7 +298,7 @@ const PharmacySettings = () => {
                         
                         <button 
                             onClick={() => {
-                                const newFaqs = [...(config.faqs || []), { id: Date.now().toString(), question: '' }];
+                                const newFaqs = [...(config.faqs || []), { id: Date.now().toString(), question: '', question_hi: '' }];
                                 setConfig({...config, faqs: newFaqs});
                             }}
                             style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', border: '1px dashed #cbd5e1', padding: '10px 15px', borderRadius: '8px', cursor: 'pointer', color: '#3b82f6', fontWeight: '600', marginTop: '10px' }}

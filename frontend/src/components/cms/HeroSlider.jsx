@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const HeroSlider = ({ data }) => {
+    const { t } = useTranslation();
     const slides = Array.isArray(data) ? data : (data?.slides || []);
     const sliderType = data?.sliderType || 'hero';
     const [currentSlide, setCurrentSlide] = useState(0);
@@ -22,8 +24,8 @@ const HeroSlider = ({ data }) => {
                 <div className="cms-container">
                     <div className="flex items-end justify-between mb-12">
                         <div>
-                            <span className="text-teal-600 font-bold uppercase tracking-widest text-xs mb-3 block">Discover More</span>
-                            <h2 className="cms-heading">{data?.title || 'Featured Content'}</h2>
+                            <span className="text-teal-600 font-bold uppercase tracking-widest text-xs mb-3 block">{t('cms.discoverMore')}</span>
+                            <h2 className="cms-heading">{data?.title || t('cms.featuredContent')}</h2>
                             <p className="cms-subheading">{data?.subtitle}</p>
                         </div>
                     </div>
@@ -54,8 +56,8 @@ const HeroSlider = ({ data }) => {
             <section className="cms-section py-32 bg-gray-50/50">
                 <div className="cms-container">
                     <div className="text-center mb-20">
-                        <span className="text-teal-600 font-bold uppercase tracking-widest text-xs mb-4 block">Our Work</span>
-                        <h2 className="cms-heading">{data?.title || 'Our Initiatives'}</h2>
+                        <span className="text-teal-600 font-bold uppercase tracking-widest text-xs mb-4 block">{t('cms.ourWork')}</span>
+                        <h2 className="cms-heading">{data?.title || t('cms.ourInitiatives')}</h2>
                         <div className="w-24 h-1 bg-teal-500 mx-auto mt-6 mb-8 rounded-full" />
                         <p className="cms-subheading mx-auto">{data?.subtitle}</p>
                     </div>
@@ -66,7 +68,7 @@ const HeroSlider = ({ data }) => {
                                     <img src={slide.image} alt={slide.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
                                     <div className="absolute inset-0 bg-teal-900/10 group-hover:bg-transparent transition-all" />
                                     <div className="absolute top-6 left-6">
-                                        <span className="bg-white/95 backdrop-blur px-4 py-2 rounded-xl text-xs font-bold text-teal-600 uppercase tracking-widest shadow-lg">Impact</span>
+                                        <span className="bg-white/95 backdrop-blur px-4 py-2 rounded-xl text-xs font-bold text-teal-600 uppercase tracking-widest shadow-lg">{t('cms.impact')}</span>
                                     </div>
                                 </div>
                                 <div className="p-10">
@@ -140,14 +142,14 @@ const HeroSlider = ({ data }) => {
                                             </div>
                                             <div className="h-12 w-px bg-white/20 mx-2" />
                                             <div className="text-xs font-bold uppercase tracking-widest text-white/60">
-                                                Making a Difference <br /> Together
+                                                {t('cms.makingDifferenceTogether')}
                                             </div>
                                         </div>
 
                                         <h1 
                                             className="text-5xl md:text-8xl font-black mb-6 uppercase tracking-tighter"
                                             style={{ color: slide.titleColor || '#ffffff' }}
-                                            dangerouslySetInnerHTML={{ __html: slide.title || 'United Hope Foundation' }}
+                                            dangerouslySetInnerHTML={{ __html: slide.title || t('cms.defaultTitle') }}
                                         />
                                         
                                         <div 
@@ -158,7 +160,7 @@ const HeroSlider = ({ data }) => {
                                         <p 
                                             className="text-lg md:text-2xl mb-12 font-medium uppercase tracking-widest"
                                             style={{ color: slide.subtitleColor || 'rgba(255,255,255,0.9)' }}
-                                            dangerouslySetInnerHTML={{ __html: slide.subtitle || 'Empowering Communities. Changing Lives.' }}
+                                            dangerouslySetInnerHTML={{ __html: slide.subtitle || t('cms.defaultSubtitle') }}
                                         />
 
                                         <div className={`flex flex-wrap gap-6 ${align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : ''}`}>
@@ -170,7 +172,7 @@ const HeroSlider = ({ data }) => {
                                                     color: slide.btnTextColor || '#ffffff'
                                                 }}
                                             >
-                                                {slide.buttonText || 'Join Us'}
+                                                {slide.buttonText || t('cms.joinUs')}
                                             </a>
                                             
                                             {slide.buttonLink && slide.buttonLink !== '#' && (
@@ -178,7 +180,7 @@ const HeroSlider = ({ data }) => {
                                                     href={slide.buttonLink} 
                                                     className="px-10 py-5 bg-white/10 backdrop-blur-md text-white font-black rounded-xl transition-all border border-white/30 uppercase tracking-widest"
                                                 >
-                                                    Learn More
+                                                    {t('cms.learnMore')}
                                                 </a>
                                             )}
                                         </div>

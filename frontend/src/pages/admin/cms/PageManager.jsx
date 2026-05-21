@@ -719,6 +719,7 @@ const DataEditor = ({ component, onClose, onSave }) => {
                                                     {RICHTEXT_KEYS.includes(key) ? (
                                                         <div className="cms-ckeditor-wrapper">
                                                             <CKEditor
+                                                                key={`${key}-${activeLang}`}
                                                                 editor={ClassicEditor}
                                                                 data={(activeLang === 'hi' && isTranslatable(key)) ? (data[`${key}_hi`] || '') : (data[key] || '')}
                                                                 onChange={(event, editor) => {
@@ -845,6 +846,7 @@ const DataEditor = ({ component, onClose, onSave }) => {
                                                                         {RICHTEXT_KEYS.includes(subKey) ? (
                                                                             <div className="cms-ckeditor-wrapper">
                                                                                 <CKEditor
+                                                                                    key={`${subKey}-${activeLang}-${idx}`}
                                                                                     editor={ClassicEditor}
                                                                                     data={(activeLang === 'hi' && isTranslatable(subKey)) ? (item[`${subKey}_hi`] || '') : (item[subKey] || '')}
                                                                                     onChange={(event, editor) => {
