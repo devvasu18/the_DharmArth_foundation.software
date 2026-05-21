@@ -20,7 +20,7 @@ const leadSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['chat', 'donation_exit'],
+        enum: ['chat', 'donation_exit', 'contact'],
         default: 'chat'
     },
     source: {

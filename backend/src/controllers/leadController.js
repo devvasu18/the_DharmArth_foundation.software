@@ -3,7 +3,7 @@ const Lead = require('../models/Lead');
 // Create a new lead
 exports.createLead = async (req, res) => {
     try {
-        const { mobile, language, chatHistory, userId, name, email, type, source } = req.body;
+        const { mobile, language, chatHistory, userId, name, email, type, source, notes } = req.body;
 
         if (!mobile) {
             return res.status(400).json({ message: 'Mobile number is required' });
@@ -24,7 +24,8 @@ exports.createLead = async (req, res) => {
             name,
             email,
             type,
-            source
+            source,
+            notes
         });
 
         await newLead.save();

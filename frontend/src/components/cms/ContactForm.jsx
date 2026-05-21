@@ -46,8 +46,9 @@ const ContactForm = ({ data }) => {
                 name: `${form.firstName} ${form.lastName}`.trim(),
                 email: form.email,
                 mobile: form.mobile,
-                message: form.message,
-                source: 'contact_form'
+                notes: form.message,
+                type: 'contact',
+                source: 'cms_contact_form'
             });
         } catch (err) {
             // Submit silently — still show success to user

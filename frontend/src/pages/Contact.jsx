@@ -35,8 +35,10 @@ export default function Contact() {
             await api.post('/leads', {
                 name: formData.name,
                 email: formData.email,
-                phone: formData.phone,
-                notes: `Subject: ${formData.subject || 'General Inquiry'}\nMessage: ${formData.message}`
+                mobile: formData.phone,
+                notes: `Subject: ${formData.subject || 'General Inquiry'}\nMessage: ${formData.message}`,
+                type: 'contact',
+                source: 'web_contact_page'
             });
             toast.success(
                 i18n.language === 'hi'

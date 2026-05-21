@@ -42,7 +42,10 @@ export default function ContactScreen() {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
-        notes: `Subject: ${formData.subject || 'Mobile Inquiry'}\nMessage: ${formData.message}`
+        mobile: formData.phone,
+        notes: `Subject: ${formData.subject || 'Mobile Inquiry'}\nMessage: ${formData.message}`,
+        type: 'contact',
+        source: 'mobile_app'
       });
       setSuccess(true);
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
