@@ -148,12 +148,16 @@ export default function TabLayout() {
           borderBottomColor: '#00bfa5',
         },
         headerTitleAlign: 'left',
-        headerTitleStyle: {
-          fontWeight: '900',
-          color: '#00bfa5',
-          fontSize: 26,
-          marginLeft: 8,
-        },
+        headerTitle: () => (
+          <Text style={{
+            fontWeight: '900',
+            color: '#00bfa5',
+            fontSize: 26,
+            marginLeft: 8,
+          }}>
+            {t('navbar.brand')}
+          </Text>
+        ),
         headerLeft: () => (
           <Image
             source={require('../../assets/LOGO.jpg')}
