@@ -72,8 +72,14 @@ export default function DonateScreen() {
         setEmail(authUser.email || '');
 
         if (authUser.referredBy) {
+          // Directly referred — highest priority
           setMotivatorMobile(authUser.referredBy.mobile || authUser.referredBy.referralCode || '');
           setMotivatorName(authUser.referredBy.name || '');
+          setIsMotivatorLocked(true);
+        } else if (authUser.lastMotivatorMobile) {
+          // Previously used motivator — auto-lock
+          setMotivatorMobile(authUser.lastMotivatorMobile);
+          if (authUser.lastMotivatorName) setMotivatorName(authUser.lastMotivatorName);
           setIsMotivatorLocked(true);
         }
       }
@@ -116,10 +122,19 @@ export default function DonateScreen() {
     }
   };
 
-  // Validate Motivator logic
+  // Debounced motivator validation — mirrors web logic exactly
   useEffect(() => {
-    const validate = async () => {
-      if (motivatorMobile.length >= 10 && !isMotivatorLocked) {
+    const checkMotivator = async () => {
+      // Skip if locked and already have name
+      if (isMotivatorLocked && motivatorName) return;
+
+      // Self-referral guard
+      if (motivatorMobile && mobile && motivatorMobile === mobile) {
+        setMotivatorName('');
+        return;
+      }
+
+      if (motivatorMobile.length >= 4) {
         setIsValidatingMotivator(true);
         try {
           const { data } = await api.get(`/donate/validate-motivator/${motivatorMobile}?currentMobile=${mobile}`);
@@ -133,11 +148,37 @@ export default function DonateScreen() {
         } finally {
           setIsValidatingMotivator(false);
         }
+      } else {
+        setMotivatorName('');
       }
     };
-    const timer = setTimeout(validate, 500);
+
+    const timer = setTimeout(checkMotivator, 500);
     return () => clearTimeout(timer);
-  }, [motivatorMobile, mobile]);
+  }, [motivatorMobile, mobile, isMotivatorLocked]);
+
+  // Auto-fetch previous motivator for GUEST users when they type their mobile number
+  useEffect(() => {
+    const fetchPreviousMotivator = async () => {
+      // Only for guests (not logged in), full 10-digit number, no motivator set yet
+      if (mobile.length === 10 && !authUser && !motivatorMobile) {
+        try {
+          const { data } = await api.get(`/donate/previous-motivator/${mobile}`);
+          if (data.motivatorMobile) {
+            setMotivatorMobile(data.motivatorMobile);
+            if (data.motivatorName) setMotivatorName(data.motivatorName);
+            setIsMotivatorLocked(true);
+          }
+        } catch (error) {
+          // Silently fail — guest just won't have pre-filled motivator
+          console.log('No previous motivator found for this number');
+        }
+      }
+    };
+
+    const timer = setTimeout(fetchPreviousMotivator, 800);
+    return () => clearTimeout(timer);
+  }, [mobile, authUser, motivatorMobile]);
 
   const handleDonate = async () => {
     const finalAmount = parseInt(customAmount) || amount;
