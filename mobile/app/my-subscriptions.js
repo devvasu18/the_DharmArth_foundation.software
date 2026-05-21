@@ -9,7 +9,8 @@ import {
   Alert,
   Linking,
   Modal,
-  TextInput
+  TextInput,
+  RefreshControl
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../src/context/AuthContext';
@@ -198,8 +199,14 @@ export default function MySubscriptions() {
         renderItem={renderItem}
         keyExtractor={item => item._id}
         contentContainerStyle={styles.list}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#00bfa5']}
+            tintColor="#00bfa5"
+          />
+        }
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         ListEmptyComponent={

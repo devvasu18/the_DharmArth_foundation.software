@@ -30,7 +30,8 @@
   },
   "devDependencies": {
     "@react-native-community/cli": "latest",
-    "@react-native/metro-config": "latest"
+    "@react-native/metro-config": "latest",
+    "eas-cli": "^19.0.1"
   },
   "private": true
 }

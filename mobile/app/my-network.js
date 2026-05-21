@@ -113,7 +113,7 @@ export default function MyNetwork() {
       <ScrollView 
         contentContainerStyle={styles.mainScroll}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#00bfa5']} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#00bfa5']} tintColor="#00bfa5" />
         }
       >
         {/* Header Stats Row */}

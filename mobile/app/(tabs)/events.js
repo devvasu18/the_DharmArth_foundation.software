@@ -9,7 +9,8 @@ import {
   TextInput, 
   ActivityIndicator, 
   Dimensions,
-  Linking
+  Linking,
+  RefreshControl
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, Link, useFocusEffect, useRouter } from 'expo-router';
@@ -23,6 +24,7 @@ export default function EventsScreen() {
   const [headerSlides, setHeaderSlides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [headerLoading, setHeaderLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -73,13 +75,39 @@ export default function EventsScreen() {
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const [headersRes, eventsRes] = await Promise.all([
+        api.get('/event-headers'),
+        api.get(`/events?status=${filter === 'all' ? '' : filter}&category=${categoryFilter === 'all' ? '' : categoryFilter}`)
+      ]);
+      setHeaderSlides(headersRes.data);
+      setEvents(eventsRes.data.events || []);
+    } catch (err) {
+      console.error('Failed to refresh events', err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const filteredEvents = events.filter(event => 
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#00bfa5']}
+            tintColor="#00bfa5"
+          />
+        }
+      >
         
         {/* Header Slider */}
         <View style={styles.headerSlider}>

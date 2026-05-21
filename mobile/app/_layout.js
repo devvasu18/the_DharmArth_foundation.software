@@ -1,30 +1,56 @@
 import { Stack } from 'expo-router';
 import { AuthProvider } from '../src/context/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../src/context/AuthContext';
 import { useRouter, useSegments } from 'expo-router';
 import { View, Image, ActivityIndicator, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function RootLayoutNav() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    if (loading) return;
+    const checkOnboarding = async () => {
+      try {
+        const val = await AsyncStorage.getItem('hasCompletedOnboarding');
+        if (val !== 'true') {
+          setShowOnboarding(true);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setOnboardingChecked(true);
+      }
+    };
+    checkOnboarding();
+  }, []);
+
+  useEffect(() => {
+    if (loading || !onboardingChecked) return;
+
+    const inOnboarding = segments[0] === 'onboarding';
+
+    if (showOnboarding && !inOnboarding) {
+      router.replace('/onboarding');
+      return;
+    }
 
     const inAuthGroup = segments[0] === '(auth)';
     const publicRoutes = ['index', 'donate', 'events'];
     const isPublicRoute = segments.length <= 1 || (segments[0] === '(tabs)' && publicRoutes.includes(segments[1])) || segments[0] === 'event';
 
-    if (!user && !inAuthGroup && !isPublicRoute) {
+    if (!user && !inAuthGroup && !isPublicRoute && !inOnboarding) {
       router.replace('/login');
     } else if (user && inAuthGroup) {
       router.replace('/dashboard');
     }
-  }, [user, loading, segments]);
+  }, [user, loading, segments, onboardingChecked, showOnboarding]);
 
-  if (loading) {
+  if (loading || !onboardingChecked) {
     return (
       <View style={styles.loadingContainer}>
         <Image 
@@ -39,6 +65,7 @@ function RootLayoutNav() {
 
   return (
     <Stack>
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)/login" options={{ title: 'Login', headerShown: false }} />
       <Stack.Screen name="(auth)/signup" options={{ title: 'Sign Up', headerShown: false }} />

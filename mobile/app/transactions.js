@@ -212,7 +212,7 @@ export default function TransactionsScreen() {
         keyExtractor={item => item._id}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#00bfa5']} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#00bfa5']} tintColor="#00bfa5" />
         }
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}

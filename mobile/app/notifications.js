@@ -90,7 +90,7 @@ export default function NotificationsScreen() {
         keyExtractor={item => item._id}
         contentContainerStyle={styles.list}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchNotifications(); }} color="#00bfa5" />
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchNotifications(); }} colors={['#00bfa5']} tintColor="#00bfa5" />
         }
         ListEmptyComponent={
           !loading && (

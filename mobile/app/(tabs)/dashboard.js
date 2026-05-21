@@ -11,7 +11,8 @@ import {
   Share,
   Clipboard,
   Alert,
-  Modal
+  Modal,
+  RefreshControl
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
@@ -26,8 +27,10 @@ export default function DashboardScreen() {
   const [wallet, setWallet] = useState(null);
   const [stats, setStats] = useState({ l1Donors: 0, l2Donors: 0 });
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const [settings, setSettings] = useState(null);
+
 
   // L1/L2 Donors state
   const [donorModalVisible, setDonorModalVisible] = useState(false);
@@ -125,6 +128,25 @@ export default function DashboardScreen() {
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const [walletRes, txnRes, settingsRes] = await Promise.all([
+        api.get('/wallet/summary'),
+        api.get('/wallet/transactions?limit=10'),
+        api.get('/content/settings')
+      ]);
+      setWallet(walletRes.data.wallet);
+      setStats(walletRes.data.stats);
+      setTransactions(txnRes.data.transactions || []);
+      setSettings(settingsRes.data);
+    } catch (error) {
+      console.error("Dashboard refresh failed", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const handleCopyLink = () => {
     const link = `https://the-dharm-arth-foundation-software.vercel.app/donate?ref=${user.referralCode || user.mobile}`;
     Clipboard.setString(link);
@@ -153,7 +175,18 @@ export default function DashboardScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#00bfa5']}
+            tintColor="#00bfa5"
+          />
+        }
+      >
 
         {/* Wallet Card - mirrored from web */}
         <View style={styles.walletCard}>

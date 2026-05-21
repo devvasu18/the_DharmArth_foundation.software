@@ -28,10 +28,13 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.dharmarth.foundation",
+      "versionCode": 1,
       "edgeToEdgeEnabled": true,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "intentFilters": [
         {
@@ -68,6 +71,12 @@
           "isAndroidBackgroundLocationEnabled": false
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "abd5cdf8-134c-4998-a51a-72eb5d18e401"
+      }
+    }
   }
 }
