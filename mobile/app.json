@@ -73,7 +73,10 @@
         "onesignal-expo-plugin",
         {
           "mode": "development",
-          "sounds": ["./assets/ring.wav"]
+          "sounds": ["./assets/ring.wav"],
+          "smallIcons": ["./assets/adaptive-icon.png"],
+          "largeIcons": ["./assets/icon.png"],
+          "smallIconAccentColor": "#00bfa5"
         }
       ]
     ],
