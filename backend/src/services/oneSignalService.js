@@ -59,7 +59,33 @@ class OneSignalService {
             console.log(`[ONESIGNAL] Push sent to ${externalIds.join(', ')}:`, response.data);
             return response.data;
         } catch (error) {
-            console.error('[ONESIGNAL] Failed to send push notification:', error.response?.data || error.message);
+            const errorData = error.response?.data;
+            const hasChannelError = errorData && errorData.errors && (
+                errorData.errors.includes('Could not find android_channel_id') ||
+                JSON.stringify(errorData.errors).includes('android_channel_id')
+            );
+
+            if (hasChannelError && payload.android_channel_id) {
+                console.warn(`[ONESIGNAL] Channel '${payload.android_channel_id}' not found on OneSignal dashboard. Retrying without custom channel...`);
+                
+                // Remove the custom Android channel to fall back to the default channel
+                delete payload.android_channel_id;
+
+                try {
+                    const response = await axios.post('https://api.onesignal.com/notifications', payload, {
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8',
+                            'Authorization': `Basic ${this.restApiKey}`
+                        }
+                    });
+                    console.log(`[ONESIGNAL] Push sent (fallback) to ${externalIds.join(', ')}:`, response.data);
+                    return response.data;
+                } catch (retryError) {
+                    console.error('[ONESIGNAL] Failed to send push notification on fallback retry:', retryError.response?.data || retryError.message);
+                }
+            } else {
+                console.error('[ONESIGNAL] Failed to send push notification:', errorData || error.message);
+            }
         }
     }
 }
