@@ -74,7 +74,7 @@
         {
           "mode": "development",
           "sounds": ["./assets/ring.wav"],
-          "smallIcons": ["./assets/adaptive-icon.png"],
+          "smallIcons": ["./assets/notification-icon.png"],
           "largeIcons": ["./assets/icon.png"],
           "smallIconAccentColor": "#00bfa5"
         }
