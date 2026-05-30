@@ -51,7 +51,7 @@ const EventDetails = () => {
       case 'image':
         const imgUrl = block.content?.url?.startsWith('http') 
           ? block.content.url 
-          : `https://the-dharmarth-foundation-software-tidi.onrender.com${block.content?.url?.startsWith('/') ? '' : '/'}${block.content?.url}`;
+          : `https://api.thedharmarth.com${block.content?.url?.startsWith('/') ? '' : '/'}${block.content?.url}`;
         return (
           <View key={`detail-${index}`} style={styles.detailBlock}>
              <Image source={{ uri: imgUrl }} style={styles.detailImage} resizeMode="cover" />

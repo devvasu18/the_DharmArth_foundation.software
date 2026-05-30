@@ -72,7 +72,7 @@
       [
         "onesignal-expo-plugin",
         {
-          "mode": "development",
+          "mode": "production",
           "sounds": ["./assets/ring.wav"],
           "smallIcons": ["./assets/notification-icon.png"],
           "largeIcons": ["./assets/icon.png"],

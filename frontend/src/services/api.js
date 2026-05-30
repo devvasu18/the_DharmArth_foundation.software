@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-let API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+let API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.thedharmarth.com';
 
 // Remove trailing slash if it exists to prevent double slashes in requests
 if (API_BASE_URL.endsWith('/')) {
