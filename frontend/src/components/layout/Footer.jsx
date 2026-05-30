@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Facebook, Twitter, Linkedin, Youtube, Instagram, Phone, Mail } from 'lucide-react';
 import './Footer.css';
@@ -16,7 +17,7 @@ const Footer = ({ variant = 'default' }) => {
                             <p>© {new Date().getFullYear()} {t('footer.brand', 'The Dharmarth Foundation')}. {t('footer.allRightsReserved', 'All Rights Reserved.')}</p>
                         </div>
                         <div className="footer-small-links">
-                            <a href="#">{t('footer.privacyPolicy')}</a>
+                            <Link to="/privacy-policy">{t('footer.privacyPolicy')}</Link>
                             <a href="#">{t('footer.termsOfUse')}</a>
                             <a href="#">{t('footer.contactSupport')}</a>
                         </div>
