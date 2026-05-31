@@ -81,6 +81,27 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    // Soft Delete fields (used instead of hard delete to preserve commission/referral audit trails)
+    isDeleted: {
+        type: Boolean,
+        default: false,
+        index: true
+    },
+    deletedAt: {
+        type: Date,
+        default: null
+    },
+    deletionReason: {
+        type: String,
+        maxlength: 500
+    },
+    // Snapshot of identity at time of deletion — so admin can still trace commission sources
+    deletedUserSnapshot: {
+        name: String,
+        mobile: String,
+        referralCode: String,
+        isMotivator: Boolean
+    },
     savedAddresses: [{
         street: String,
         city: String,

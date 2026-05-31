@@ -539,4 +539,311 @@ router.get('/v/:referralCode', async (req, res) => {
     }
 });
 
+// ============================================================
+// DELETE ACCOUNT FEATURE (Play Store Compliance)
+// ============================================================
+
+// @desc    Send OTP to user for account deletion (with pre-flight checks)
+// @route   POST /api/users/delete-account/send-otp
+// @access  Private (logged-in user only)
+router.post('/delete-account/send-otp', protect, async (req, res) => {
+    try {
+        const whatsappService = require('../services/whatsappService');
+        const Order = require('../models/Order');
+        const PayoutRequest = require('../models/PayoutRequest');
+        const Subscription = require('../models/Subscription');
+
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: 'User not found.' });
+        if (user.isDeleted) return res.status(400).json({ message: 'Account is already deleted.' });
+        if (user.isSuperAdmin) return res.status(403).json({ message: 'Super Admin accounts cannot be deleted via this route.' });
+
+        // --- PRE-FLIGHT CHECK 1: Active Orders ---
+        const activeOrders = await Order.countDocuments({
+            user: user._id,
+            status: { $in: ['Awaiting Approval', 'Payment Pending', 'Processing', 'Out for Delivery'] }
+        });
+        if (activeOrders > 0) {
+            return res.status(400).json({
+                blocked: true,
+                reason: 'active_orders',
+                message: `You have ${activeOrders} active order(s). Please wait for delivery or contact support before deleting your account.`,
+                count: activeOrders
+            });
+        }
+
+        // --- PRE-FLIGHT CHECK 2: Pending Payout Requests ---
+        if (user.isMotivator) {
+            const pendingPayouts = await PayoutRequest.countDocuments({
+                user: user._id,
+                status: { $in: ['pending', 'approved', 'exported'] }
+            });
+            if (pendingPayouts > 0) {
+                return res.status(400).json({
+                    blocked: true,
+                    reason: 'pending_payouts',
+                    message: `You have ${pendingPayouts} pending payout request(s). Please wait for them to be processed before deleting your account.`,
+                    count: pendingPayouts
+                });
+            }
+        }
+
+        // --- PRE-FLIGHT CHECK 3: Active Subscriptions ---
+        const activeSubscriptions = await Subscription.countDocuments({
+            donorUserId: user._id,
+            status: { $in: ['created', 'active'] }
+        });
+        if (activeSubscriptions > 0) {
+            return res.status(400).json({
+                blocked: true,
+                reason: 'active_subscriptions',
+                message: `You have ${activeSubscriptions} active monthly donation subscription(s). Please cancel them first from the Subscriptions section.`,
+                count: activeSubscriptions
+            });
+        }
+
+        // --- WALLET BALANCE INFO (not a blocker — will be auto-donated) ---
+        const wallet = await Wallet.findOne({ user: user._id });
+        const walletBalance = wallet ? wallet.balance : 0;
+
+        // --- ALL CHECKS PASSED: Send OTP ---
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        user.otp = otp;
+        user.otpExpires = otpExpires;
+        await user.save();
+
+        const otpSent = await whatsappService._sendWhatsAppNow(user.mobile, 
+            `Your OTP for *Account Deletion* at The DharmArth Foundation is: *${otp}*. Valid for 10 minutes. ⚠️ This action is permanent and cannot be undone.`
+        );
+
+        if (!otpSent) {
+            return res.status(500).json({ message: 'Failed to send OTP via WhatsApp. Please try again.' });
+        }
+
+        res.json({
+            success: true,
+            message: `OTP sent to your registered mobile number.`,
+            walletBalance,      // Frontend shows donation warning if > 0
+            maskedMobile: `${user.mobile.substring(0, 2)}XXXXXX${user.mobile.slice(-2)}`
+        });
+
+    } catch (error) {
+        console.error('[DELETE ACCOUNT OTP ERROR]', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
+// @desc    Permanently delete user account (soft delete with snapshot)
+// @route   DELETE /api/users/delete-account
+// @access  Private (logged-in user only)
+router.delete('/delete-account', protect, async (req, res) => {
+    try {
+        const { otp, reason } = req.body;
+
+        if (!otp) return res.status(400).json({ message: 'OTP is required to confirm account deletion.' });
+
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: 'User not found.' });
+        if (user.isDeleted) return res.status(400).json({ message: 'Account is already deleted.' });
+        if (user.isSuperAdmin) return res.status(403).json({ message: 'Super Admin accounts cannot be deleted.' });
+
+        // --- VERIFY OTP ---
+        if (!user.otp || user.otp !== otp || user.otpExpires < new Date()) {
+            return res.status(400).json({ message: 'Invalid or expired OTP. Please request a new OTP.' });
+        }
+
+        const userId = user._id;
+        const userName = user.name;
+        const userMobile = user.mobile;
+        const userReferralCode = user.referralCode;
+
+        // --- Re-run pre-flight checks (safety net) ---
+        const Order = require('../models/Order');
+        const PayoutRequest = require('../models/PayoutRequest');
+        const Subscription = require('../models/Subscription');
+        const Transaction = require('../models/Transaction');
+        const Prescription = require('../models/Prescription');
+        const Notification = require('../models/Notification');
+        const EventRegistration = require('../models/EventRegistration');
+        const Donation = require('../models/Donation');
+
+        const activeOrders = await Order.countDocuments({
+            user: userId,
+            status: { $in: ['Awaiting Approval', 'Payment Pending', 'Processing', 'Out for Delivery'] }
+        });
+        if (activeOrders > 0) {
+            return res.status(400).json({ message: `Cannot delete: ${activeOrders} active order(s) exist.` });
+        }
+
+        if (user.isMotivator) {
+            const pendingPayouts = await PayoutRequest.countDocuments({
+                user: userId,
+                status: { $in: ['pending', 'approved', 'exported'] }
+            });
+            if (pendingPayouts > 0) {
+                return res.status(400).json({ message: `Cannot delete: ${pendingPayouts} pending payout(s) exist.` });
+            }
+        }
+
+        const activeSubscriptions = await Subscription.countDocuments({
+            donorUserId: userId,
+            status: { $in: ['created', 'active'] }
+        });
+        if (activeSubscriptions > 0) {
+            return res.status(400).json({ message: `Cannot delete: ${activeSubscriptions} active subscription(s) exist.` });
+        }
+
+        // ============================================================
+        // WALLET BALANCE DONATION to Foundation
+        // ============================================================
+        const wallet = await Wallet.findOne({ user: userId });
+        const walletBalance = wallet ? wallet.balance : 0;
+
+        if (wallet && walletBalance > 0) {
+            // Record the auto-donation transaction for audit trail
+            await Transaction.create({
+                wallet: wallet._id,
+                amount: walletBalance,
+                type: 'debit',
+                reason: 'wallet_donation',
+                description: `Auto-donated ₹${walletBalance} to The DharmArth Foundation upon account deletion by ${userName} (${userMobile})`
+            });
+            // Zero out the wallet balance
+            wallet.balance = 0;
+            await wallet.save();
+        }
+
+        // ============================================================
+        // SOFT DELETE — Preserve audit trail, clear PII
+        // ============================================================
+        // Store a snapshot BEFORE clearing so admin can always trace commission sources
+        user.deletedUserSnapshot = {
+            name: userName,
+            mobile: userMobile,
+            referralCode: userReferralCode,
+            isMotivator: user.isMotivator
+        };
+
+        // Mark as deleted
+        user.isDeleted = true;
+        user.deletedAt = new Date();
+        user.deletionReason = reason || 'User requested deletion';
+
+        // Clear sensitive PII (account becomes unusable)
+        user.password = undefined;
+        user.otp = undefined;
+        user.otpExpires = undefined;
+        user.profileImage = undefined;
+        user.savedAddresses = [];
+        user.payoutCredentials = undefined;
+        user.email = undefined; // Free the email too
+
+        // ⚠️  IMPORTANT: Anonymize mobile so the number is released from the unique index.
+        // This allows the same person to re-register with a fresh account if they wish.
+        // The original mobile is already safely stored in deletedUserSnapshot above.
+        // Donation.level1UserId / level2UserId still point to this User _id (unchanged),
+        // so commission history remains fully traceable via the _id reference.
+        user.mobile = `DELETED_${Date.now()}_${userMobile.slice(-4)}`;
+
+        // Also anonymize referralCode to release it from the unique index
+        user.referralCode = `DEL_${userId.toString().slice(-8)}`;
+
+        await user.save();
+
+        // ============================================================
+        // CLEAN UP: Remove truly personal data (no audit value)
+        // ============================================================
+        // 1. Delete prescriptions (medical data, no financial value)
+        await Prescription.deleteMany({ user: userId });
+
+        // 2. Delete personal notifications
+        await Notification.deleteMany({ user: userId });
+
+        // 3. Null the user link on event registrations (keep event attendance records)
+        await EventRegistration.updateMany({ user: userId }, { $set: { user: null } });
+
+        // 4. Mark completed payout requests as 'account_deleted' for admin visibility
+        await PayoutRequest.updateMany(
+            { user: userId, status: { $in: ['completed', 'failed', 'rejected'] } },
+            { $set: { adminNotes: `Account deleted on ${new Date().toISOString()}` } }
+        );
+
+        // NOTE: Orders, Donations, Transactions, Wallet are kept as-is.
+        // Donation.level1UserId / level2UserId still point to the (now soft-deleted) User.
+        // Admin can still see who generated commission by checking deletedUserSnapshot.
+
+        console.log(`[DELETE ACCOUNT] User ${userName} (${userMobile}) soft-deleted. Wallet auto-donated: ₹${walletBalance}`);
+
+        res.json({
+            success: true,
+            message: 'Your account has been successfully deleted.',
+            walletDonated: walletBalance
+        });
+
+    } catch (error) {
+        console.error('[DELETE ACCOUNT ERROR]', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
+// @desc    Manual Account Deletion Request (Public — from web form, no auth needed)
+// @route   POST /api/users/request-account-deletion
+// @access  Public
+router.post('/request-account-deletion', async (req, res) => {
+    try {
+        const { name, mobile, reason } = req.body;
+
+        if (!name || !mobile) {
+            return res.status(400).json({ message: 'Name and mobile number are required.' });
+        }
+
+        const cleanMobile = String(mobile).replace(/\D/g, '').slice(-10);
+        if (!/^[6-9]\d{9}$/.test(cleanMobile)) {
+            return res.status(400).json({ message: 'Please provide a valid 10-digit Indian mobile number.' });
+        }
+
+        // Check if user actually exists
+        const user = await User.findOne({ mobile: cleanMobile });
+
+        const whatsappService = require('../services/whatsappService');
+        const Setting = require('../models/Setting');
+
+        // Notify admin
+        const adminMobileSetting = await Setting.findOne({ key: 'admin_suspension_mobile' });
+        const adminMobile = adminMobileSetting?.value || process.env.ADMIN_MOBILE;
+
+        if (adminMobile) {
+            await whatsappService._sendWhatsAppNow(adminMobile,
+                `🗑️ *Manual Account Deletion Request*\n\n` +
+                `Name: ${name}\n` +
+                `Mobile: ${cleanMobile}\n` +
+                `Account Found: ${user ? 'Yes' : 'No'}\n` +
+                `Reason: ${reason || 'Not provided'}\n\n` +
+                `Please verify and delete manually within 7 working days.`
+            );
+        }
+
+        // Send confirmation to requester
+        await whatsappService.sendMessage(cleanMobile,
+            `🙏 Dear ${name}, we have received your account deletion request for The DharmArth Foundation app.\n\n` +
+            `Our team will verify your identity and process it within *7 working days*.\n\n` +
+            `If you need urgent assistance, email us at info@thedharmarth.com`
+        );
+
+        res.json({
+            success: true,
+            message: 'Your deletion request has been submitted. You will receive a WhatsApp confirmation shortly.'
+        });
+
+    } catch (error) {
+        console.error('[MANUAL DELETION REQUEST ERROR]', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;
+

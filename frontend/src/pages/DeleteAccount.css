@@ -1,0 +1,452 @@
+/* ═══════════════════════════════════════════════════════════
+   Delete Account Public Page — CSS
+   ═══════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+.da-page {
+  font-family: 'Inter', sans-serif;
+  background: #f8fafc;
+  min-height: 100vh;
+  color: #1e293b;
+}
+
+/* ── Header ─────────────────────────────────────── */
+.da-header {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  padding: 32px 20px;
+}
+
+.da-header-inner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.da-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.da-logo-circle {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #00bfa5, #0d9488);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0, 191, 165, 0.35);
+}
+
+.da-org-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 4px 0;
+}
+
+.da-org-tagline {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* ── Container ──────────────────────────────────── */
+.da-container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Intro Card ─────────────────────────────────── */
+.da-intro-card {
+  background: linear-gradient(135deg, #fff1f2 0%, #fff5f5 100%);
+  border: 1.5px solid #fecdd3;
+  border-radius: 20px;
+  padding: 32px;
+  text-align: center;
+}
+
+.da-intro-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.da-section-title {
+  font-size: 26px;
+  font-weight: 900;
+  color: #1e293b;
+  margin: 0 0 14px 0;
+}
+
+.da-intro-text {
+  font-size: 15px;
+  color: #64748b;
+  line-height: 1.7;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* ── Generic Card ───────────────────────────────── */
+.da-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+
+.da-card-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 14px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.da-step-num {
+  font-size: 20px;
+}
+
+.da-card-desc {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 20px 0;
+  line-height: 1.7;
+}
+
+/* ── Steps List ─────────────────────────────────── */
+.da-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 24px;
+  margin: 0;
+}
+
+.da-steps li {
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.6;
+  padding: 2px 0;
+}
+
+.da-steps li strong {
+  color: #1e293b;
+}
+
+/* ── Data Grid ──────────────────────────────────── */
+.da-data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 560px) {
+  .da-data-grid { grid-template-columns: 1fr; }
+}
+
+.da-data-col {
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.da-deleted {
+  background: #fff5f5;
+  border: 1px solid #fecdd3;
+}
+
+.da-retained {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+.da-data-col-header {
+  margin-bottom: 14px;
+}
+
+.da-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.da-badge-red {
+  background: #fecdd3;
+  color: #9f1239;
+}
+
+.da-badge-amber {
+  background: #fde68a;
+  color: #92400e;
+}
+
+.da-data-col ul {
+  padding-left: 0;
+  margin: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.da-data-col li {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.da-retained-note {
+  font-size: 12px;
+  color: #92400e;
+  margin-top: 14px;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+/* ── Notices ────────────────────────────────────── */
+.da-notice {
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.da-notice-purple {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+}
+
+.da-notice-teal {
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+}
+
+.da-notice-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.da-notice strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.da-notice p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.7;
+}
+
+/* ── Blocker List ───────────────────────────────── */
+.da-block-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.da-block-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.da-block-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.da-block-list strong {
+  color: #1e293b;
+}
+
+/* ── Form ───────────────────────────────────────── */
+.da-form-card {
+  border: 2px dashed #cbd5e1;
+  background: #f8fafc;
+}
+
+.da-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.da-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.da-form-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.da-required {
+  color: #e11d48;
+}
+
+.da-form-group input,
+.da-form-group textarea {
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-family: 'Inter', sans-serif;
+  color: #1e293b;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+  resize: vertical;
+}
+
+.da-form-group input:focus,
+.da-form-group textarea:focus {
+  border-color: #e11d48;
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.08);
+}
+
+.da-form-error {
+  font-size: 13px;
+  color: #e11d48;
+  font-weight: 600;
+  background: #fff0f3;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0;
+}
+
+.da-form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* ── Buttons ────────────────────────────────────── */
+.da-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s ease;
+}
+
+.da-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.da-btn-danger {
+  background: #e11d48;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3);
+}
+
+.da-btn-danger:hover:not(:disabled) {
+  background: #be123c;
+  transform: translateY(-1px);
+}
+
+.da-btn-outline {
+  background: transparent;
+  color: #e11d48;
+  border: 1.5px solid #e11d48;
+}
+
+.da-btn-outline:hover {
+  background: #fff0f3;
+}
+
+.da-btn-ghost {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.da-btn-ghost:hover {
+  background: #e2e8f0;
+}
+
+/* ── Success ────────────────────────────────────── */
+.da-success {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.da-success-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.da-success h4 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 10px 0;
+}
+
+.da-success p {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.7;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+/* ── Contact ────────────────────────────────────── */
+.da-contact {
+  text-align: center;
+  padding: 20px 0 0;
+}
+
+.da-contact p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 6px 0;
+}
+
+.da-contact a {
+  color: #00bfa5;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.da-contact a:hover {
+  text-decoration: underline;
+}
+
+.da-contact-sub {
+  font-size: 12px;
+  color: #94a3b8 !important;
+}

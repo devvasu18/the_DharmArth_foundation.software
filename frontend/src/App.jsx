@@ -31,6 +31,7 @@ const PublicVolunteerCard = lazy(() => import('./pages/PublicVolunteerCard'));
 const MyNetwork = lazy(() => import('./pages/MyNetwork'));
 const Contact = lazy(() => import('./pages/Contact'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const DeleteAccount = lazy(() => import('./pages/DeleteAccount'));
 
 // Admin Components
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
@@ -96,6 +97,7 @@ const router = createBrowserRouter(
       <Route path="/v/:referralCode" element={<PublicVolunteerCard />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/delete-account" element={<DeleteAccount />} />
       
       {/* Protected User Routes */}
       <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />

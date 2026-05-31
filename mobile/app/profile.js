@@ -228,11 +228,30 @@ export default function ProfileScreen() {
           <Text style={styles.viewCardText}>View Full ID Card</Text>
         </TouchableOpacity>
       </View>
-      
+
+      {/* ─── DANGER ZONE ─────────────────────────────────── */}
+      <View style={styles.dangerZone}>
+        <View style={styles.dangerZoneHeader}>
+          <Ionicons name="alert-circle" size={18} color="#e11d48" />
+          <Text style={styles.dangerZoneTitle}>Danger Zone</Text>
+        </View>
+        <Text style={styles.dangerZoneDesc}>
+          Deleting your account will permanently remove your profile and login access.
+        </Text>
+        <TouchableOpacity
+          style={styles.deleteAccountBtn}
+          onPress={() => router.push('/delete-account')}
+        >
+          <Ionicons name="trash-outline" size={18} color="#e11d48" />
+          <Text style={styles.deleteAccountBtnText}>Delete My Account</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={{ height: 40 }} />
     </ScrollView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
@@ -317,5 +336,32 @@ const styles = StyleSheet.create({
   },
   previewTitle: { fontSize: 15, fontWeight: '700', color: '#134e4a' },
   viewCardBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'white', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#00bfa5' },
-  viewCardText: { color: '#00bfa5', fontSize: 13, fontWeight: '700' }
+  viewCardText: { color: '#00bfa5', fontSize: 13, fontWeight: '700' },
+
+  // Danger Zone
+  dangerZone: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: '#fff5f5',
+    borderWidth: 1.5,
+    borderColor: '#fecdd3',
+    borderRadius: 16,
+    padding: 20,
+  },
+  dangerZoneHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  dangerZoneTitle: { fontSize: 15, fontWeight: '800', color: '#e11d48' },
+  dangerZoneDesc: { fontSize: 13, color: '#9f1239', lineHeight: 20, marginBottom: 16 },
+  deleteAccountBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 13,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#e11d48',
+    backgroundColor: '#fff',
+  },
+  deleteAccountBtnText: { color: '#e11d48', fontSize: 14, fontWeight: '800' },
 });
+

@@ -55,6 +55,9 @@ const loginUser = async (req, res) => {
         const isValid = user ? await user.matchPassword(password) : await require('bcryptjs').compare(password, dummyPassword);
 
         if (user && isValid) {
+            if (user.isDeleted) {
+                return res.status(403).json({ message: 'This account has been deleted. Please contact support if this was a mistake.' });
+            }
             if (user.isSuspended) {
                 return res.status(403).json({ message: 'Account suspended. Please contact Support Team.' });
             }
@@ -181,6 +184,11 @@ const checkUserStatus = async (req, res) => {
             return res.json({ exists: false });
         }
 
+        // Treat deleted accounts as non-existent for auth purposes
+        if (user.isDeleted) {
+            return res.json({ exists: false });
+        }
+
         res.json({
             exists: true,
             hasPassword: !!user.password,
@@ -224,6 +232,10 @@ const sendOTP = async (req, res) => {
 
         if (!user) {
             return res.status(404).json({ message: 'User not found. Please register first.' });
+        }
+
+        if (user.isDeleted) {
+            return res.status(403).json({ message: 'This account has been deleted.' });
         }
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -273,6 +285,10 @@ const verifyOTP = async (req, res) => {
 
         if (!user || !user.otp || user.otp !== otp || user.otpExpires < new Date()) {
             return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+
+        if (user.isDeleted) {
+            return res.status(403).json({ message: 'This account has been deleted.' });
         }
 
         if (user.isSuspended) {
