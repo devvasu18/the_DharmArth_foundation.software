@@ -183,13 +183,29 @@ const LandingScreen = () => {
 
                 <View style={styles.impactStats}>
                   <View style={styles.impactItem}>
-                    <Text style={styles.impactNumber}>0%</Text>
-                    <Text style={styles.impactLabel}>{t('home.platformFee')}</Text>
+                    <Text style={styles.impactNumber}>
+                      {locale === 'hi' 
+                        ? (textSlides[currentTextIndex].stat1Number_hi || textSlides[currentTextIndex].stat1Number || "0%") 
+                        : (textSlides[currentTextIndex].stat1Number || "0%")}
+                    </Text>
+                    <Text style={styles.impactLabel}>
+                      {locale === 'hi' 
+                        ? (textSlides[currentTextIndex].stat1Label_hi || textSlides[currentTextIndex].stat1Label || t('home.platformFee')) 
+                        : (textSlides[currentTextIndex].stat1Label || t('home.platformFee'))}
+                    </Text>
                   </View>
                   <View style={styles.impactDivider} />
                   <View style={styles.impactItem}>
-                    <Text style={styles.impactNumber}>72 Lakh+</Text>
-                    <Text style={styles.impactLabel}>{t('home.contributors')}</Text>
+                    <Text style={styles.impactNumber}>
+                      {locale === 'hi' 
+                        ? (textSlides[currentTextIndex].stat2Number_hi || textSlides[currentTextIndex].stat2Number || "72 लाख+") 
+                        : (textSlides[currentTextIndex].stat2Number || "72 Lakh+")}
+                    </Text>
+                    <Text style={styles.impactLabel}>
+                      {locale === 'hi' 
+                        ? (textSlides[currentTextIndex].stat2Label_hi || textSlides[currentTextIndex].stat2Label || t('home.contributors')) 
+                        : (textSlides[currentTextIndex].stat2Label || t('home.contributors'))}
+                    </Text>
                   </View>
                 </View>
 

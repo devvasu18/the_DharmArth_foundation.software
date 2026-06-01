@@ -226,12 +226,28 @@ const HeroSlider = () => {
                             <div className="hero-stats">
                                 {/* Hardcoded stats for visual matching or dynamic if available */}
                                 <div className="stat-item">
-                                    <h3>{t('hero.feePercent')}</h3>
-                                    <p>{t('hero.feeLabel')}</p>
+                                    <h3>
+                                        {i18n.language === 'hi' 
+                                            ? (activeTextSlide.stat1Number_hi || activeTextSlide.stat1Number || t('hero.feePercent')) 
+                                            : (activeTextSlide.stat1Number || t('hero.feePercent'))}
+                                    </h3>
+                                    <p>
+                                        {i18n.language === 'hi' 
+                                            ? (activeTextSlide.stat1Label_hi || activeTextSlide.stat1Label || t('hero.feeLabel')) 
+                                            : (activeTextSlide.stat1Label || t('hero.feeLabel'))}
+                                    </p>
                                 </div>
                                 <div className="stat-item">
-                                    <h3>72 Lakh+</h3>
-                                    <p>{t('hero.contributorsLabel')}</p>
+                                    <h3>
+                                        {i18n.language === 'hi' 
+                                            ? (activeTextSlide.stat2Number_hi || activeTextSlide.stat2Number || "72 लाख+") 
+                                            : (activeTextSlide.stat2Number || "72 Lakh+")}
+                                    </h3>
+                                    <p>
+                                        {i18n.language === 'hi' 
+                                            ? (activeTextSlide.stat2Label_hi || activeTextSlide.stat2Label || t('hero.contributorsLabel')) 
+                                            : (activeTextSlide.stat2Label || t('hero.contributorsLabel'))}
+                                    </p>
                                 </div>
 
                             </div>

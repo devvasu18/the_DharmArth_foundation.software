@@ -77,10 +77,45 @@ const getPublicPharmacySettings = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+// Helper to get app version config
+const getAppVersionConfig = async () => {
+    const config = await Settings.findOne({ key: 'app_config' });
+    if (!config) {
+        // Return defaults
+        return {
+            latestVersion: "1.0.0",
+            latestVersionCode: 1,
+            forceUpdate: false,
+            playStoreUrl: "https://play.google.com/store/apps/details?id=com.thedharmarth.foundation"
+        };
+    }
+    // Ensure all fields have defaults if they don't exist
+    return {
+        latestVersion: "1.0.0",
+        latestVersionCode: 1,
+        forceUpdate: false,
+        playStoreUrl: "https://play.google.com/store/apps/details?id=com.thedharmarth.foundation",
+        ...config.value
+    };
+};
+
+// @desc    Get public app version settings
+// @route   GET /api/settings/app-version/public
+// @access  Public
+const getPublicAppVersionSettings = async (req, res) => {
+    try {
+        const config = await getAppVersionConfig();
+        res.json(config);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 module.exports = {
     getSettings,
     updateSettings,
     getPharmacyConfig,
-    getPublicPharmacySettings
+    getPublicPharmacySettings,
+    getPublicAppVersionSettings
 };
+

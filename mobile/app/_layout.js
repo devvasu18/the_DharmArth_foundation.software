@@ -7,6 +7,8 @@ import { useRouter, useSegments } from 'expo-router';
 import { View, Image, ActivityIndicator, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LogLevel, OneSignal } from 'react-native-onesignal';
+import UpdateModal from '../src/components/UpdateModal';
+import { checkAndRunUpdates } from '../src/utils/updateHandler';
 
 function RootLayoutNav() {
   const { user, loading } = useAuth();
@@ -14,6 +16,15 @@ function RootLayoutNav() {
   const router = useRouter();
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState({
+    show: false,
+    forceUpdate: false,
+    playStoreUrl: ''
+  });
+
+  useEffect(() => {
+    checkAndRunUpdates(setUpdateInfo);
+  }, []);
 
   useEffect(() => {
     const checkOnboarding = async () => {
@@ -76,45 +87,53 @@ function RootLayoutNav() {
   }
 
   return (
-    <Stack>
-      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)/login" options={{ title: 'Login', headerShown: false }} />
-      <Stack.Screen name="(auth)/signup" options={{ title: 'Sign Up', headerShown: false }} />
-      <Stack.Screen 
-        name="my-subscriptions" 
-        options={{ 
-          title: 'My Subscriptions',
-          headerStyle: { backgroundColor: 'white' },
-          headerTitleStyle: { fontWeight: '800', color: '#1e293b' },
-          headerTintColor: '#00bfa5'
-        }} 
+    <>
+      <Stack>
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)/login" options={{ title: 'Login', headerShown: false }} />
+        <Stack.Screen name="(auth)/signup" options={{ title: 'Sign Up', headerShown: false }} />
+        <Stack.Screen 
+          name="my-subscriptions" 
+          options={{ 
+            title: 'My Subscriptions',
+            headerStyle: { backgroundColor: 'white' },
+            headerTitleStyle: { fontWeight: '800', color: '#1e293b' },
+            headerTintColor: '#00bfa5'
+          }} 
+        />
+        <Stack.Screen 
+          name="my-referrals" 
+          options={{ 
+            title: 'My Referrals',
+            headerStyle: { backgroundColor: 'white' },
+            headerTitleStyle: { fontWeight: '800', color: '#1e293b' },
+            headerTintColor: '#00bfa5'
+          }} 
+        />
+        <Stack.Screen 
+          name="profile" 
+          options={{ 
+            title: 'My Profile',
+            headerStyle: { backgroundColor: 'white' },
+            headerTitleStyle: { fontWeight: '800', color: '#1e293b' },
+            headerTintColor: '#00bfa5'
+          }} 
+        />
+        <Stack.Screen 
+          name="contact" 
+          options={{ 
+            headerShown: false
+          }} 
+        />
+      </Stack>
+      <UpdateModal
+        isOpen={updateInfo.show}
+        forceUpdate={updateInfo.forceUpdate}
+        playStoreUrl={updateInfo.playStoreUrl}
+        onClose={() => setUpdateInfo(prev => ({ ...prev, show: false }))}
       />
-      <Stack.Screen 
-        name="my-referrals" 
-        options={{ 
-          title: 'My Referrals',
-          headerStyle: { backgroundColor: 'white' },
-          headerTitleStyle: { fontWeight: '800', color: '#1e293b' },
-          headerTintColor: '#00bfa5'
-        }} 
-      />
-      <Stack.Screen 
-        name="profile" 
-        options={{ 
-          title: 'My Profile',
-          headerStyle: { backgroundColor: 'white' },
-          headerTitleStyle: { fontWeight: '800', color: '#1e293b' },
-          headerTintColor: '#00bfa5'
-        }} 
-      />
-      <Stack.Screen 
-        name="contact" 
-        options={{ 
-          headerShown: false
-        }} 
-      />
-    </Stack>
+    </>
   );
 }
 

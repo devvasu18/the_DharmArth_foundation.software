@@ -18,7 +18,9 @@ const AdminSliders = () => {
 
     // Form State
     const [formData, setFormData] = useState({
-        title: '', title_hi: '', subtitle: '', subtitle_hi: '', imageUrl: '', order: 0, ctaLink: '', ctaText: 'Donate', ctaText_hi: '', type: 'image'
+        title: '', title_hi: '', subtitle: '', subtitle_hi: '', imageUrl: '', order: 0, ctaLink: '', ctaText: 'Donate', ctaText_hi: '', type: 'image',
+        stat1Number: '', stat1Number_hi: '', stat1Label: '', stat1Label_hi: '',
+        stat2Number: '', stat2Number_hi: '', stat2Label: '', stat2Label_hi: ''
     });
 
     useEffect(() => {
@@ -76,7 +78,15 @@ const AdminSliders = () => {
             ctaLink: slider.ctaLink || '',
             ctaText: slider.ctaText || 'Donate',
             ctaText_hi: slider.ctaText_hi || '',
-            type: slider.type || 'image'
+            type: slider.type || 'image',
+            stat1Number: slider.stat1Number || '',
+            stat1Number_hi: slider.stat1Number_hi || '',
+            stat1Label: slider.stat1Label || '',
+            stat1Label_hi: slider.stat1Label_hi || '',
+            stat2Number: slider.stat2Number || '',
+            stat2Number_hi: slider.stat2Number_hi || '',
+            stat2Label: slider.stat2Label || '',
+            stat2Label_hi: slider.stat2Label_hi || ''
         });
         setActiveTab(slider.type === 'text' ? 'text' : 'image');
         setEditingId(slider._id);
@@ -87,7 +97,9 @@ const AdminSliders = () => {
     const resetForm = () => {
         setFormData({
             title: '', title_hi: '', subtitle: '', subtitle_hi: '', imageUrl: '', order: 0, ctaLink: '', ctaText: 'Donate', ctaText_hi: '',
-            type: activeTab
+            type: activeTab,
+            stat1Number: '', stat1Number_hi: '', stat1Label: '', stat1Label_hi: '',
+            stat2Number: '', stat2Number_hi: '', stat2Label: '', stat2Label_hi: ''
         });
         setEditingId(null);
         setIsAdding(false);
@@ -247,6 +259,27 @@ const AdminSliders = () => {
                                                 <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>CTA Button Text</label>
                                                 <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. Donate Now" value={formData.ctaText} onChange={e => setFormData({ ...formData, ctaText: e.target.value })} />
                                             </div>
+                                            {/* Dynamic Stats (English) */}
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                                                <div>
+                                                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>Stat 1 Number (English)</label>
+                                                    <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. 0%" value={formData.stat1Number} onChange={e => setFormData({ ...formData, stat1Number: e.target.value })} />
+                                                </div>
+                                                <div>
+                                                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>Stat 1 Label (English)</label>
+                                                    <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. Platform Fee" value={formData.stat1Label} onChange={e => setFormData({ ...formData, stat1Label: e.target.value })} />
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                                                <div>
+                                                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>Stat 2 Number (English)</label>
+                                                    <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. 72 Lakh+" value={formData.stat2Number} onChange={e => setFormData({ ...formData, stat2Number: e.target.value })} />
+                                                </div>
+                                                <div>
+                                                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>Stat 2 Label (English)</label>
+                                                    <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. Contributors" value={formData.stat2Label} onChange={e => setFormData({ ...formData, stat2Label: e.target.value })} />
+                                                </div>
+                                            </div>
                                         </>
                                     ) : (
                                         <>
@@ -261,6 +294,27 @@ const AdminSliders = () => {
                                             <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                                                 <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>CTA Button Text (Hindi)</label>
                                                 <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. दान करें" value={formData.ctaText_hi} onChange={e => setFormData({ ...formData, ctaText_hi: e.target.value })} />
+                                            </div>
+                                            {/* Dynamic Stats (Hindi) */}
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                                                <div>
+                                                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>Stat 1 Number (Hindi)</label>
+                                                    <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. 0%" value={formData.stat1Number_hi} onChange={e => setFormData({ ...formData, stat1Number_hi: e.target.value })} />
+                                                </div>
+                                                <div>
+                                                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>Stat 1 Label (Hindi)</label>
+                                                    <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. प्लेटफ़ॉर्म शुल्क" value={formData.stat1Label_hi} onChange={e => setFormData({ ...formData, stat1Label_hi: e.target.value })} />
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                                                <div>
+                                                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>Stat 2 Number (Hindi)</label>
+                                                    <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. 72 लाख+" value={formData.stat2Number_hi} onChange={e => setFormData({ ...formData, stat2Number_hi: e.target.value })} />
+                                                </div>
+                                                <div>
+                                                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#334155' }}>Stat 2 Label (Hindi)</label>
+                                                    <input className="form-input" style={{ width: '100%', padding: '0.75rem' }} placeholder="e.g. योगदानकर्ता" value={formData.stat2Label_hi} onChange={e => setFormData({ ...formData, stat2Label_hi: e.target.value })} />
+                                                </div>
                                             </div>
                                         </>
                                     )}
