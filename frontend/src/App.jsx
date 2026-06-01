@@ -32,6 +32,7 @@ const MyNetwork = lazy(() => import('./pages/MyNetwork'));
 const Contact = lazy(() => import('./pages/Contact'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const DeleteAccount = lazy(() => import('./pages/DeleteAccount'));
+const ChildSafety = lazy(() => import('./pages/ChildSafety'));
 
 // Admin Components
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
@@ -98,6 +99,7 @@ const router = createBrowserRouter(
       <Route path="/contact" element={<Contact />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/delete-account" element={<DeleteAccount />} />
+      <Route path="/child-safety" element={<ChildSafety />} />
       
       {/* Protected User Routes */}
       <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />

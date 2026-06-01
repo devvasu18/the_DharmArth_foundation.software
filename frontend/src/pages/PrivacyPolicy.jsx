@@ -1,11 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, Mail, Phone, ChevronRight } from 'lucide-react';
+import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
 import './PrivacyPolicy.css';
 
 const PrivacyPolicy = () => {
     return (
         <div className="privacy-page">
+            <Navbar />
             {/* Hero Section */}
             <div className="privacy-hero">
                 <div className="privacy-hero-overlay" />
@@ -216,6 +219,7 @@ const PrivacyPolicy = () => {
                     </div>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 };

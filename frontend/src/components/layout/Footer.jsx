@@ -113,8 +113,15 @@ const Footer = ({ variant = 'default' }) => {
                         <span className="payment-icon">UPI</span>
                         <span className="payment-icon">100% Secure</span>
                     </div>
-                    <div className="copyright">
-                        {t('footer.copyright')}
+                    <div className="copyright" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                        <div>{t('footer.copyright')}</div>
+                        <div style={{ display: 'flex', gap: '16px', fontSize: '0.85rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '4px' }}>
+                            <Link to="/privacy-policy" style={{ color: '#888', textDecoration: 'none' }}>Privacy Policy</Link>
+                            <span style={{ color: '#ccc' }}>|</span>
+                            <Link to="/child-safety" style={{ color: '#888', textDecoration: 'none' }}>Child Safety Standards</Link>
+                            <span style={{ color: '#ccc' }}>|</span>
+                            <Link to="/delete-account" style={{ color: '#888', textDecoration: 'none' }}>Delete Account</Link>
+                        </div>
                     </div>
                 </div>
             </div>
