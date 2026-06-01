@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import Navbar from '../components/layout/Navbar';
+import api from '../services/api';
 import './DeleteAccount.css';
-
-const API_BASE = 'https://api.thedharmarth.com/api';
 
 export default function DeleteAccount() {
   const [formStep, setFormStep] = useState('info'); // 'info' | 'form' | 'submitted'
@@ -23,11 +22,15 @@ export default function DeleteAccount() {
     setError('');
     setIsSubmitting(true);
     try {
-      // This hits an admin notification endpoint – admin reviews manually
-      await axios.post(`${API_BASE}/users/request-account-deletion`, formData);
+      await api.post('/users/request-account-deletion', formData);
       setFormStep('submitted');
     } catch (err) {
-      setError(err.response?.data?.message || 'Submission failed. Please email us directly.');
+      const status = err.response?.status;
+      if (status >= 500 || !err.response) {
+        setError('Our server is temporarily unavailable. Please try again later or email us directly at thedharmarth@gmail.com');
+      } else {
+        setError(err.response?.data?.message || 'Submission failed. Please email us directly at thedharmarth@gmail.com');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -35,17 +38,11 @@ export default function DeleteAccount() {
 
   return (
     <div className="da-page">
-      {/* Header */}
-      <div className="da-header">
-        <div className="da-header-inner">
-          <div className="da-logo-row">
-            <div className="da-logo-circle">🕉️</div>
-            <div>
-              <h1 className="da-org-name">The DharmArth Foundation</h1>
-              <p className="da-org-tagline">Data Deletion &amp; Account Removal Policy</p>
-            </div>
-          </div>
-        </div>
+      <Navbar />
+
+      {/* Page Title Strip */}
+      <div className="da-page-title-strip">
+        <span className="da-page-title-label">Account &amp; Data Deletion Policy</span>
       </div>
 
       <div className="da-container">
@@ -237,7 +234,7 @@ export default function DeleteAccount() {
 
         {/* Contact */}
         <div className="da-contact">
-          <p>Questions? Email us at <a href="mailto:info@thedharmarth.com">info@thedharmarth.com</a></p>
+          <p>Questions? Email us at <a href="mailto:thedharmarth@gmail.com">thedharmarth@gmail.com</a></p>
           <p className="da-contact-sub">The DharmArth Foundation · Registered Non-Profit · India</p>
         </div>
 

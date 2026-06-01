@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/layout/Navbar';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { User, Mail, Phone, Briefcase, Info, MapPin, Camera, Save, Download, Share2, ArrowLeft } from 'lucide-react';
+import { User, Mail, Phone, Briefcase, Info, MapPin, Camera, Save, Download, Share2, ArrowLeft, Trash2, AlertTriangle, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -13,10 +13,22 @@ const DEFAULT_AVATAR_URL = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1
 
 
 const UserProfile = () => {
-    const { user, setUser, refreshUser } = useAuth();
+    const { user, setUser, refreshUser, logout } = useAuth();
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const cardRef = useRef(null);
+
+    // ── Delete Account State ────────────────────────────────
+    const [deleteStep, setDeleteStep] = useState('idle'); // 'idle' | 'warning' | 'otp' | 'deleting'
+    const [deleteOtp, setDeleteOtp] = useState('');
+    const [deleteReason, setDeleteReason] = useState('');
+    const [deleteMasked, setDeleteMasked] = useState('');
+    const [deleteWallet, setDeleteWallet] = useState(0);
+    const [deleteBlocked, setDeleteBlocked] = useState(null);
+    const [isSendingDeleteOtp, setIsSendingDeleteOtp] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteCountdown, setDeleteCountdown] = useState(0);
+    const deleteTimerRef = useRef(null);
 
     const [formData, setFormData] = useState({
         name: user?.name || '',
@@ -90,6 +102,60 @@ const UserProfile = () => {
             toast.error(error.response?.data?.message || "Failed to update profile");
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    // ── Delete Account Handlers ─────────────────────────────
+    const startDeleteCountdown = () => {
+        setDeleteCountdown(120);
+        deleteTimerRef.current = setInterval(() => {
+            setDeleteCountdown(prev => {
+                if (prev <= 1) { clearInterval(deleteTimerRef.current); return 0; }
+                return prev - 1;
+            });
+        }, 1000);
+    };
+
+    const handleSendDeleteOtp = async () => {
+        setIsSendingDeleteOtp(true);
+        setDeleteBlocked(null);
+        try {
+            const { data } = await api.post('/users/delete-account/send-otp');
+            setDeleteMasked(data.maskedMobile || '');
+            setDeleteWallet(data.walletBalance || 0);
+            setDeleteStep('otp');
+            startDeleteCountdown();
+        } catch (err) {
+            const errData = err.response?.data;
+            if (errData?.blocked) {
+                setDeleteBlocked(errData.message);
+            } else {
+                toast.error(errData?.message || 'Failed to send OTP. Please try again.');
+            }
+        } finally {
+            setIsSendingDeleteOtp(false);
+        }
+    };
+
+    const handleConfirmDelete = async () => {
+        if (deleteOtp.length !== 6) { toast.error('Please enter the 6-digit OTP.'); return; }
+        if (!window.confirm(
+            deleteWallet > 0
+                ? `Your wallet balance of ₹${deleteWallet} will be donated to The DharmArth Foundation.\n\nThis action is PERMANENT. Are you absolutely sure?`
+                : 'This action is PERMANENT and cannot be undone. Are you absolutely sure?'
+        )) return;
+
+        setIsDeleting(true);
+        try {
+            await api.delete('/users/delete-account', {
+                data: { otp: deleteOtp, reason: deleteReason || 'User requested deletion' }
+            });
+            toast.success('Account deleted successfully.');
+            await logout();
+            navigate('/');
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to delete account.');
+            setIsDeleting(false);
         }
     };
 
@@ -292,6 +358,143 @@ const UserProfile = () => {
                                 {isSaving ? "Saving..." : "Save Profile Details"}
                             </button>
                         </form>
+
+                        {/* ─── DANGER ZONE ──────────────────────────── */}
+                        <div className="danger-zone-box">
+                            <div className="danger-zone-header">
+                                <AlertTriangle size={18} color="#e11d48" />
+                                <span className="danger-zone-title">Danger Zone</span>
+                            </div>
+                            <p className="danger-zone-desc">
+                                Permanently delete your account. This action cannot be undone.
+                            </p>
+
+                            {deleteStep === 'idle' && (
+                                <button
+                                    type="button"
+                                    className="delete-account-trigger-btn"
+                                    onClick={() => setDeleteStep('warning')}
+                                >
+                                    <Trash2 size={16} />
+                                    Delete My Account
+                                </button>
+                            )}
+
+                            {deleteStep === 'warning' && (
+                                <div className="delete-warning-panel">
+                                    <div className="delete-impact-list">
+                                        <div className="delete-impact-col delete-impact-col--red">
+                                            <span className="delete-impact-label">🗑️ Permanently Deleted</span>
+                                            <ul>
+                                                <li>Profile &amp; login access</li>
+                                                <li>Prescriptions &amp; medical records</li>
+                                                <li>Saved addresses &amp; notifications</li>
+                                            </ul>
+                                        </div>
+                                        <div className="delete-impact-col delete-impact-col--amber">
+                                            <span className="delete-impact-label">📋 Kept for Legal Records</span>
+                                            <ul>
+                                                <li>Donation history (80G receipts)</li>
+                                                <li>Commission &amp; transaction records</li>
+                                                <li>Completed order history</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    {deleteWallet > 0 && (
+                                        <div className="delete-wallet-note">
+                                            💜 Your wallet balance of <strong>₹{deleteWallet}</strong> will be auto-donated to the Foundation.
+                                        </div>
+                                    )}
+
+                                    <div style={{ marginBottom: '1rem' }}>
+                                        <label className="input-label">Reason for leaving (optional)</label>
+                                        <textarea
+                                            className="form-control"
+                                            style={{ minHeight: 70, resize: 'vertical', fontSize: '0.9rem' }}
+                                            placeholder="Tell us why..."
+                                            value={deleteReason}
+                                            onChange={e => setDeleteReason(e.target.value)}
+                                            maxLength={200}
+                                        />
+                                    </div>
+
+                                    {deleteBlocked && (
+                                        <div className="delete-blocked-msg">
+                                            <AlertTriangle size={16} /> {deleteBlocked}
+                                        </div>
+                                    )}
+
+                                    <div className="delete-action-row">
+                                        <button
+                                            type="button"
+                                            className="delete-cancel-btn"
+                                            onClick={() => { setDeleteStep('idle'); setDeleteBlocked(null); setDeleteReason(''); }}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="delete-otp-btn"
+                                            onClick={handleSendDeleteOtp}
+                                            disabled={isSendingDeleteOtp}
+                                        >
+                                            {isSendingDeleteOtp ? 'Sending...' : 'Send OTP to Confirm'}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {deleteStep === 'otp' && (
+                                <div className="delete-otp-panel">
+                                    <p className="delete-otp-hint">
+                                        OTP sent to <strong>{deleteMasked}</strong> via WhatsApp.
+                                    </p>
+                                    {deleteWallet > 0 && (
+                                        <div className="delete-wallet-note">
+                                            ⚠️ Wallet balance of <strong>₹{deleteWallet}</strong> will be donated to Foundation upon deletion.
+                                        </div>
+                                    )}
+                                    <input
+                                        type="number"
+                                        className="delete-otp-input"
+                                        placeholder="Enter 6-digit OTP"
+                                        value={deleteOtp}
+                                        onChange={e => setDeleteOtp(e.target.value.slice(0, 6))}
+                                        maxLength={6}
+                                        autoFocus
+                                    />
+                                    <div className="delete-action-row">
+                                        <button
+                                            type="button"
+                                            className="delete-cancel-btn"
+                                            onClick={() => { setDeleteStep('warning'); setDeleteOtp(''); }}
+                                        >
+                                            ← Back
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="delete-otp-btn"
+                                            style={{ background: '#e11d48' }}
+                                            onClick={handleConfirmDelete}
+                                            disabled={isDeleting || deleteOtp.length !== 6}
+                                        >
+                                            <Trash2 size={14} />
+                                            {isDeleting ? 'Deleting...' : 'Yes, Delete My Account'}
+                                        </button>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className="delete-resend-btn"
+                                        onClick={handleSendDeleteOtp}
+                                        disabled={deleteCountdown > 0 || isSendingDeleteOtp}
+                                    >
+                                        <RefreshCw size={13} />
+                                        {deleteCountdown > 0 ? `Resend OTP in ${deleteCountdown}s` : 'Resend OTP'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Right Side: Card Preview & Actions */}
@@ -699,7 +902,195 @@ const UserProfile = () => {
                     }
                 }
 
+                /* ── Danger Zone ─────────────────────────────── */
+                .danger-zone-box {
+                    margin-top: 2rem;
+                    background: #fff5f5;
+                    border: 1.5px solid #fecdd3;
+                    border-radius: 16px;
+                    padding: 1.5rem;
+                }
+                .danger-zone-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 6px;
+                }
+                .danger-zone-title {
+                    font-size: 1rem;
+                    font-weight: 800;
+                    color: #e11d48;
+                }
+                .danger-zone-desc {
+                    font-size: 0.875rem;
+                    color: #9f1239;
+                    margin: 0 0 1rem 0;
+                    line-height: 1.5;
+                }
+                .delete-account-trigger-btn {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 0.6rem 1.25rem;
+                    background: white;
+                    border: 1.5px solid #e11d48;
+                    border-radius: 10px;
+                    color: #e11d48;
+                    font-size: 0.875rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.18s ease;
+                }
+                .delete-account-trigger-btn:hover {
+                    background: #fff0f3;
+                }
+                .delete-warning-panel, .delete-otp-panel {
+                    margin-top: 0.5rem;
+                }
+                .delete-impact-list {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 12px;
+                    margin-bottom: 1rem;
+                }
+                @media (max-width: 640px) {
+                    .delete-impact-list { grid-template-columns: 1fr; }
+                }
+                .delete-impact-col {
+                    border-radius: 10px;
+                    padding: 12px;
+                    font-size: 0.8rem;
+                }
+                .delete-impact-col--red {
+                    background: #fff0f3;
+                    border: 1px solid #fecdd3;
+                }
+                .delete-impact-col--amber {
+                    background: #fffbeb;
+                    border: 1px solid #fde68a;
+                }
+                .delete-impact-label {
+                    display: block;
+                    font-weight: 700;
+                    font-size: 0.75rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.3px;
+                    margin-bottom: 8px;
+                    color: #475569;
+                }
+                .delete-impact-col ul {
+                    padding-left: 16px;
+                    margin: 0;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                }
+                .delete-impact-col li {
+                    color: #64748b;
+                    line-height: 1.5;
+                }
+                .delete-wallet-note {
+                    background: #f5f3ff;
+                    border: 1px solid #ddd6fe;
+                    border-radius: 10px;
+                    padding: 10px 14px;
+                    font-size: 0.85rem;
+                    color: #5b21b6;
+                    margin-bottom: 1rem;
+                    line-height: 1.5;
+                }
+                .delete-blocked-msg {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 8px;
+                    background: #fff0f3;
+                    border: 1px solid #fecdd3;
+                    border-radius: 10px;
+                    padding: 10px 14px;
+                    font-size: 0.85rem;
+                    color: #9f1239;
+                    font-weight: 600;
+                    margin-bottom: 1rem;
+                    line-height: 1.5;
+                }
+                .delete-action-row {
+                    display: flex;
+                    gap: 10px;
+                    justify-content: flex-end;
+                    margin-top: 1rem;
+                }
+                .delete-cancel-btn {
+                    padding: 0.6rem 1.25rem;
+                    background: #f1f5f9;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 10px;
+                    color: #64748b;
+                    font-size: 0.875rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: background 0.15s;
+                }
+                .delete-cancel-btn:hover { background: #e2e8f0; }
+                .delete-otp-btn {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 0.6rem 1.25rem;
+                    background: #dc2626;
+                    border: none;
+                    border-radius: 10px;
+                    color: white;
+                    font-size: 0.875rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: background 0.15s;
+                    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+                }
+                .delete-otp-btn:hover:not(:disabled) { background: #b91c1c; }
+                .delete-otp-btn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+                .delete-otp-hint {
+                    font-size: 0.875rem;
+                    color: #64748b;
+                    margin: 0 0 1rem 0;
+                    line-height: 1.6;
+                }
+                .delete-otp-input {
+                    width: 100%;
+                    padding: 0.85rem 1rem;
+                    border: 2px solid #e11d48;
+                    border-radius: 12px;
+                    font-size: 1.5rem;
+                    font-weight: 800;
+                    text-align: center;
+                    letter-spacing: 8px;
+                    color: #1e293b;
+                    outline: none;
+                    box-sizing: border-box;
+                    margin-bottom: 0.5rem;
+                    transition: box-shadow 0.2s;
+                }
+                .delete-otp-input:focus {
+                    box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.1);
+                }
+                .delete-resend-btn {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                    width: 100%;
+                    margin-top: 10px;
+                    background: none;
+                    border: none;
+                    color: #00bfa5;
+                    font-size: 0.85rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                    padding: 8px;
+                }
+                .delete-resend-btn:disabled { color: #94a3b8; cursor: not-allowed; }
+
             `}</style>
+
         </div>
     );
 };

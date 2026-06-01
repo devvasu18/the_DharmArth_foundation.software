@@ -812,31 +812,45 @@ router.post('/request-account-deletion', async (req, res) => {
         const whatsappService = require('../services/whatsappService');
         const Setting = require('../models/Setting');
 
-        // Notify admin
-        const adminMobileSetting = await Setting.findOne({ key: 'admin_suspension_mobile' });
-        const adminMobile = adminMobileSetting?.value || process.env.ADMIN_MOBILE;
+        let whatsappSent = false;
 
-        if (adminMobile) {
-            await whatsappService._sendWhatsAppNow(adminMobile,
-                `🗑️ *Manual Account Deletion Request*\n\n` +
-                `Name: ${name}\n` +
-                `Mobile: ${cleanMobile}\n` +
-                `Account Found: ${user ? 'Yes' : 'No'}\n` +
-                `Reason: ${reason || 'Not provided'}\n\n` +
-                `Please verify and delete manually within 7 working days.`
-            );
+        // Notify admin (non-blocking — WhatsApp failure won't kill the request)
+        try {
+            const adminMobileSetting = await Setting.findOne({ key: 'admin_suspension_mobile' });
+            const adminMobile = adminMobileSetting?.value || process.env.ADMIN_MOBILE;
+
+            if (adminMobile) {
+                await whatsappService._sendWhatsAppNow(adminMobile,
+                    `🗑️ *Manual Account Deletion Request*\n\n` +
+                    `Name: ${name}\n` +
+                    `Mobile: ${cleanMobile}\n` +
+                    `Account Found: ${user ? 'Yes' : 'No'}\n` +
+                    `Reason: ${reason || 'Not provided'}\n\n` +
+                    `Please verify and delete manually within 7 working days.`
+                );
+            }
+        } catch (waErr) {
+            console.warn('[DELETE REQUEST] Admin WhatsApp notification failed (service may be down):', waErr.message);
         }
 
-        // Send confirmation to requester
-        await whatsappService.sendMessage(cleanMobile,
-            `🙏 Dear ${name}, we have received your account deletion request for The DharmArth Foundation app.\n\n` +
-            `Our team will verify your identity and process it within *7 working days*.\n\n` +
-            `If you need urgent assistance, email us at info@thedharmarth.com`
-        );
+        // Send confirmation to requester (non-blocking)
+        try {
+            await whatsappService.sendMessage(cleanMobile,
+                `🙏 Dear ${name}, we have received your account deletion request for The DharmArth Foundation app.\n\n` +
+                `Our team will verify your identity and process it within *7 working days*.\n\n` +
+                `If you need urgent assistance, email us at thedharmarth@gmail.com`
+            );
+            whatsappSent = true;
+        } catch (waErr) {
+            console.warn('[DELETE REQUEST] User WhatsApp confirmation failed (service may be down):', waErr.message);
+        }
 
         res.json({
             success: true,
-            message: 'Your deletion request has been submitted. You will receive a WhatsApp confirmation shortly.'
+            message: whatsappSent
+                ? 'Your deletion request has been submitted. You will receive a WhatsApp confirmation shortly.'
+                : 'Your deletion request has been submitted. Our team will contact you within 7 working days.',
+            whatsappSent
         });
 
     } catch (error) {
