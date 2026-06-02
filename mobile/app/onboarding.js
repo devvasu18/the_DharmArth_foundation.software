@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from '../src/context/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -56,6 +57,7 @@ const SLIDES = [
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   const slidesRef = useRef(null);
@@ -116,6 +118,10 @@ export default function OnboardingScreen() {
       extrapolate: 'clamp'
     });
 
+    const title = t(`onboarding.s${item.id}.title`);
+    const subtitle = t(`onboarding.s${item.id}.subtitle`);
+    const description = t(`onboarding.s${item.id}.description`);
+
     return (
       <View style={styles.slideContainer}>
         {/* Animated Feature Icon Box */}
@@ -131,9 +137,9 @@ export default function OnboardingScreen() {
 
         {/* Slide Copy */}
         <View style={styles.textContainer}>
-          <Text style={styles.subtitle}>{item.subtitle.toUpperCase()}</Text>
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.description}>{item.description}</Text>
+          <Text style={styles.subtitle}>{subtitle.toUpperCase()}</Text>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.description}>{description}</Text>
         </View>
       </View>
     );
@@ -147,7 +153,7 @@ export default function OnboardingScreen() {
       <View style={styles.header}>
         {currentIndex < SLIDES.length - 1 && (
           <TouchableOpacity onPress={handleSkip} activeOpacity={0.7}>
-            <Text style={styles.skipText}>Skip</Text>
+            <Text style={styles.skipText}>{t('onboarding.skip')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -208,7 +214,7 @@ export default function OnboardingScreen() {
           activeOpacity={0.8}
         >
           <Text style={styles.primaryBtnText}>
-            {currentIndex === SLIDES.length - 1 ? 'Get Started' : 'Next'}
+            {currentIndex === SLIDES.length - 1 ? t('onboarding.getStarted') : t('onboarding.next')}
           </Text>
           <Ionicons
             name={currentIndex === SLIDES.length - 1 ? "checkmark-circle" : "arrow-forward"}

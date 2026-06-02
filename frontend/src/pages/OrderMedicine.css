@@ -10,7 +10,6 @@
     background: var(--order-bg);
     min-height: 100vh;
     width: 100%;
-    overflow-x: hidden;
     position: relative;
 }
 
@@ -297,9 +296,16 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    max-height: 550px;
+    max-height: 350px;
     overflow-y: auto;
     padding-right: 12px;
+}
+
+.history-column {
+    position: sticky;
+    top: 90px;
+    align-self: start;
+    height: fit-content;
 }
 
 /* Premium Scrollbar */
@@ -1287,4 +1293,41 @@
     .share-link-btn, .external-link-btn {
         width: 100% !important;
     }
+}
+
+/* Upload Box Scrollable layout */
+.upload-box {
+    display: flex;
+    flex-direction: column;
+    max-height: 950px;
+    overflow: hidden;
+}
+
+.upload-box form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.form-scroll-fields {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 12px;
+    margin-bottom: 5px;
+}
+
+/* Premium Scrollbar for Form Fields scroll container */
+.form-scroll-fields::-webkit-scrollbar {
+    width: 6px;
+}
+.form-scroll-fields::-webkit-scrollbar-track {
+    background: transparent;
+}
+.form-scroll-fields::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+}
+.form-scroll-fields::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
 }

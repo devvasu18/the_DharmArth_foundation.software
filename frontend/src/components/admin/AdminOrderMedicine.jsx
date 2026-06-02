@@ -173,6 +173,12 @@ const AdminOrderMedicine = () => {
 
         // Handle Medicine Name Autocomplete Search
         if (field === 'medicineName') {
+            newItems[index].margPID = undefined;
+            newItems[index].batches = [];
+            newItems[index].margBatch = '';
+            newItems[index].margExpiry = '';
+            newItems[index].isManualAllowed = false;
+
             if (value.length > 2) {
                 searchMargProducts(index, value);
             } else {
@@ -191,9 +197,27 @@ const AdminOrderMedicine = () => {
         searchTimeout = setTimeout(async () => {
             try {
                 const res = await api.get(`/marg/search-products?search=${query}`);
-                setSuggestions(res.data.products || []);
+                const products = res.data.products || [];
+                setSuggestions(products);
+                
+                if (products.length === 0) {
+                    setVerifiedItems(prev => {
+                        const updated = [...prev];
+                        if (updated[index]) {
+                            updated[index].isManualAllowed = true;
+                        }
+                        return updated;
+                    });
+                }
             } catch (err) {
                 console.error("MARG Search failed", err);
+                setVerifiedItems(prev => {
+                    const updated = [...prev];
+                    if (updated[index]) {
+                        updated[index].isManualAllowed = true;
+                    }
+                    return updated;
+                });
             } finally {
                 setIsSearching(false);
             }
@@ -511,6 +535,30 @@ const AdminOrderMedicine = () => {
                                                             </div>
                                                         </div>
                                                     ))}
+                                                    {!isSearching && suggestions.length === 0 && (
+                                                        <div className="suggestion-item no-match" style={{ padding: '12px', textAlign: 'center', color: '#ea580c', fontWeight: '600', cursor: 'pointer' }} onClick={() => {
+                                                            const newItems = [...verifiedItems];
+                                                            newItems[index].isManualAllowed = true;
+                                                            setVerifiedItems(newItems);
+                                                            setSuggestions([]);
+                                                            setSearchingIndex(null);
+                                                            toast.success("Manual entry unlocked for this item!");
+                                                        }}>
+                                                            ⚠️ No MARG products found. Click here to allow manual entry.
+                                                        </div>
+                                                    )}
+                                                    {!isSearching && suggestions.length > 0 && (
+                                                        <div className="suggestion-item custom-fallback" style={{ borderTop: '1px dashed #cbd5e1', padding: '10px', textAlign: 'center', color: '#3b82f6', fontWeight: '600', cursor: 'pointer' }} onClick={() => {
+                                                            const newItems = [...verifiedItems];
+                                                            newItems[index].isManualAllowed = true;
+                                                            setVerifiedItems(newItems);
+                                                            setSuggestions([]);
+                                                            setSearchingIndex(null);
+                                                            toast.success("Manual entry unlocked for this item!");
+                                                        }}>
+                                                            ➕ Not in list? Force unlock manual entry
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -674,16 +722,36 @@ const AdminOrderMedicine = () => {
                                                     ))}
                                                 </select>
                                             ) : (
-                                                <input type="text" value={item.margBatch || ''} onChange={(e) => handleItemChange(index, 'margBatch', e.target.value)} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e0', width: '100%', fontSize: '0.85rem' }} placeholder="Batch No"/>
+                                                <input 
+                                                    type="text" 
+                                                    value={item.margBatch || ''} 
+                                                    onChange={(e) => handleItemChange(index, 'margBatch', e.target.value)} 
+                                                    disabled={!item.isManualAllowed} 
+                                                    style={{ padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e0', width: '100%', fontSize: '0.85rem', backgroundColor: (!item.isManualAllowed) ? '#f1f5f9' : '#ffffff' }} 
+                                                    placeholder={(!item.isManualAllowed && !item.margPID) ? "Search MARG first..." : "Batch No"}
+                                                />
                                             )}
                                         </div>
                                         <div className="input-group-p" style={{ flex: 1, minWidth: '120px' }}>
                                             <label style={{ fontSize: '0.75rem' }}>Expiry</label>
-                                            <input type="month" value={item.margExpiry ? item.margExpiry.substring(0, 7) : ''} onChange={(e) => handleItemChange(index, 'margExpiry', e.target.value)} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e0', width: '100%', fontSize: '0.85rem' }}/>
+                                            <input 
+                                                type="month" 
+                                                value={item.margExpiry ? item.margExpiry.substring(0, 7) : ''} 
+                                                onChange={(e) => handleItemChange(index, 'margExpiry', e.target.value)} 
+                                                disabled={!item.isManualAllowed && !item.margPID} 
+                                                style={{ padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e0', width: '100%', fontSize: '0.85rem', backgroundColor: (!item.isManualAllowed && !item.margPID) ? '#f1f5f9' : '#ffffff' }}
+                                            />
                                         </div>
                                         <div className="input-group-p" style={{ flex: 1, minWidth: '100px' }}>
                                             <label style={{ fontSize: '0.75rem' }}>Bill No (VCN)</label>
-                                            <input type="text" value={item.margBillNo || ''} onChange={(e) => handleItemChange(index, 'margBillNo', e.target.value)} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e0', width: '100%', fontSize: '0.85rem' }} placeholder="Auto/Man"/>
+                                            <input 
+                                                type="text" 
+                                                value={item.margBillNo || ''} 
+                                                onChange={(e) => handleItemChange(index, 'margBillNo', e.target.value)} 
+                                                disabled={!item.isManualAllowed} 
+                                                style={{ padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e0', width: '100%', fontSize: '0.85rem', backgroundColor: (!item.isManualAllowed) ? '#f1f5f9' : '#ffffff' }} 
+                                                placeholder={(!item.isManualAllowed && !item.margPID) ? "Search MARG first..." : "Auto/Man"}
+                                            />
                                         </div>
                                         {errors.includes(index) && (
                                             <div style={{ width: '100%', color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', fontWeight: '500' }}>

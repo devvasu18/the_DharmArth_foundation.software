@@ -133,8 +133,10 @@ const SharedCheckout = () => {
                 setSuccess(true);
             }
 
-            // If the patient has saved addresses, show them to the payer (relative)
-            if (res.data.user?.savedAddresses && res.data.user.savedAddresses.length > 0) {
+            // Prioritize the pre-filled pending shipping address from the prescription
+            if (res.data.pendingShippingAddress && res.data.pendingShippingAddress.street) {
+                setShippingDetails(res.data.pendingShippingAddress);
+            } else if (res.data.user?.savedAddresses && res.data.user.savedAddresses.length > 0) {
                 setSavedAddresses(res.data.user.savedAddresses);
                 setShippingDetails(res.data.user.savedAddresses[0]);
             }
@@ -354,117 +356,81 @@ const SharedCheckout = () => {
                                             <span className="val">{prescription.user?.mobile}</span>
                                         </div>
                                     </div>
-                                    <div className="presc-mini-shared" onClick={() => setImageModalSrc(prescription.image)}>
-                                        <img
-                                            src={prescription.image.startsWith('http') ? prescription.image : `${API_BASE_URL}${prescription.image.startsWith('/') ? '' : '/'}${prescription.image}`}
-                                            alt="Prescription"
-                                        />
-                                        <div className="mini-overlay">
-                                            <Search size={16} />
-                                            <span>View</span>
+                                    {prescription.image ? (
+                                        <div className="presc-mini-shared" onClick={() => setImageModalSrc(prescription.image)}>
+                                            <img
+                                                src={prescription.image.startsWith('http') ? prescription.image : `${API_BASE_URL}${prescription.image.startsWith('/') ? '' : '/'}${prescription.image}`}
+                                                alt="Prescription"
+                                            />
+                                            <div className="mini-overlay">
+                                                <Search size={16} />
+                                                <span>View</span>
+                                            </div>
                                         </div>
-                                    </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', width: '80px', height: '80px', cursor: 'default' }}>
+                                            <Package size={28} color="#2563eb" style={{ opacity: 0.8 }} />
+                                            <span style={{ fontSize: '9px', color: '#1d4ed8', fontWeight: 'bold', marginTop: '4px', textAlign: 'center' }}>Manual Order</span>
+                                        </div>
+                                    )}
                                 </div>
                                 {prescription.adminNote && (
                                     <div className="admin-note-shared">
                                         <p><strong>Pharmacist Note:</strong> {prescription.adminNote}</p>
                                     </div>
                                 )}
-                            </section>
-
-                            {/* 2. Shipping Address */}
-                            <section className="pane-card form-card">
-                                <div className="card-header-p">
+                            </section>                            {/* 2. Shipping Address */}
+                            <section className="pane-card form-card" style={{ padding: '24px' }}>
+                                <div className="card-header-p" style={{ marginBottom: '15px' }}>
                                     <MapPin size={20} />
-                                    <h3>Shipping Address</h3>
+                                    <h3>Delivery Address</h3>
                                 </div>
-                                <p className="address-hint-shared">Select the patient's delivery location or enter a new one</p>
+                                
+                                <div style={{ 
+                                    background: '#f8fafc', 
+                                    border: '1px solid #e2e8f0', 
+                                    borderRadius: '16px', 
+                                    padding: '20px', 
+                                    display: 'flex', 
+                                    flexDirection: 'column', 
+                                    gap: '15px' 
+                                }}>
+                                    <div>
+                                        <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Street Address</span>
+                                        <span style={{ fontSize: '15px', color: '#1e293b', fontWeight: '600', lineHeight: '1.4' }}>
+                                            {shippingDetails.street || 'N/A'}
+                                        </span>
+                                    </div>
 
-                                {savedAddresses.length > 0 && (
-                                    <div className="saved-addresses-selector-shared">
-                                        <div className="address-pills-row-shared">
-                                            {savedAddresses.map((addr, idx) => (
-                                                <div
-                                                    key={idx}
-                                                    className={`addr-pill-shared ${shippingDetails.street === addr.street ? 'active' : ''}`}
-                                                    onClick={() => handleAddressSelect(addr)}
-                                                >
-                                                    <strong>{addr.city}</strong>
-                                                    <span className="addr-text-full">{addr.street}</span>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+                                        <div>
+                                            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>City</span>
+                                            <span style={{ fontSize: '14px', color: '#1e293b', fontWeight: '600' }}>{shippingDetails.city || 'N/A'}</span>
+                                        </div>
+                                        <div>
+                                            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>State</span>
+                                            <span style={{ fontSize: '14px', color: '#1e293b', fontWeight: '600' }}>{shippingDetails.state || 'N/A'}</span>
+                                        </div>
+                                        <div>
+                                            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>PIN Code</span>
+                                            <span style={{ fontSize: '14px', color: '#1e293b', fontWeight: '700' }}>{shippingDetails.zip || 'N/A'}</span>
+                                        </div>
+                                    </div>
+
+                                    {(shippingDetails.phone || prescription.user?.mobile) && (
+                                        <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: '15px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                            <div>
+                                                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Contact Phone</span>
+                                                <span style={{ fontSize: '14px', color: '#1e293b', fontWeight: '600' }}>
+                                                    {shippingDetails.phone || prescription.user?.mobile}
+                                                </span>
+                                            </div>
+                                            {shippingDetails.altPhone && (
+                                                <div>
+                                                    <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Alternate Phone</span>
+                                                    <span style={{ fontSize: '14px', color: '#1e293b', fontWeight: '600' }}>{shippingDetails.altPhone}</span>
                                                 </div>
-                                            ))}
-                                            <div
-                                                className={`addr-pill-shared ${!savedAddresses.some(a => a.street === shippingDetails.street) ? 'active' : ''}`}
-                                                onClick={() => {
-                                                    setShippingDetails({ street: '', city: '', state: '', zip: '', phone: prescription.user?.mobile || '', altPhone: '' });
-                                                    setIsOrderingForOther(false);
-                                                }}
-                                            >
-                                                <strong>+ New</strong>
-                                                <span className="addr-text-full">Custom Address</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="form-grid-shared">
-                                    <div className="input-group-shared full" style={{ position: 'relative' }}>
-                                        <label>Delivery Street Address</label>
-                                        <input
-                                            type="text"
-                                            name="street"
-                                            value={shippingDetails.street}
-                                            onChange={handleInputChange}
-                                            placeholder={isDetecting ? "Detecting address..." : "House / Plot Number, Area"}
-                                            required
-                                            style={{ paddingRight: '100px' }}
-                                        />
-                                        <button
-                                            type="button"
-                                            className="detect-location-btn-shared"
-                                            onClick={detectLocation}
-                                            disabled={isDetecting}
-                                        >
-                                            <MapPin size={14} />
-                                            <span>{isDetecting ? '...' : 'Detect'}</span>
-                                        </button>
-                                    </div>
-                                    <div className="input-group-shared">
-                                        <label>State</label>
-                                        <input type="text" name="state" value={shippingDetails.state} onChange={handleInputChange} placeholder="e.g. Rajasthan" required />
-                                    </div>
-                                    <div className="input-group-shared">
-                                        <label>City</label>
-                                        <input type="text" name="city" value={shippingDetails.city} onChange={handleInputChange} placeholder="e.g. Nagaur" required />
-                                    </div>
-                                    <div className="input-group-shared">
-                                        <label>PIN Code</label>
-                                        <input type="text" name="zip" value={shippingDetails.zip} onChange={handleInputChange} placeholder="341001" required />
-                                    </div>
-                                    {/* Only show the checkbox if the current phone is NOT a custom saved number */}
-                                    {(!(shippingDetails.phone && shippingDetails.phone !== prescription.user?.mobile)) && (
-                                        <div className="checkbox-group-shared">
-                                            <label className="checkbox-wrap-p">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isOrderingForOther}
-                                                    onChange={(e) => setIsOrderingForOther(e.target.checked)}
-                                                />
-                                                <span className="check-text">Ordering for someone else?</span>
-                                            </label>
-                                        </div>
-                                    )}
-
-                                    {(isOrderingForOther || (shippingDetails.phone && shippingDetails.phone !== prescription.user?.mobile)) && (
-                                        <div className="form-grid-shared phone-grid-p">
-                                            <div className="input-group-shared">
-                                                <label>Primary Phone</label>
-                                                <input type="tel" name="phone" value={shippingDetails.phone} onChange={handleInputChange} placeholder="10 Digit Number" required />
-                                            </div>
-                                            <div className="input-group-shared">
-                                                <label>Alternate Phone</label>
-                                                <input type="tel" name="altPhone" value={shippingDetails.altPhone} onChange={handleInputChange} placeholder="Optional" />
-                                            </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

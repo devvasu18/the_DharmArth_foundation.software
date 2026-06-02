@@ -619,7 +619,8 @@ const OrderMedicine = () => {
                                     <Zap size={20} color="#f6ad55" />
                                 </div>
                                 <form onSubmit={handleSubmit}>
-                                    {/* Step 1: Delivery Address */}
+                                    <div className="form-scroll-fields">
+                                        {/* Step 1: Delivery Address */}
                                     <div className="address-section-premium" style={{ marginBottom: '25px', paddingBottom: '20px', borderBottom: '1px solid #cbd5e1' }}>
                                          <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '700', color: '#1e293b', marginBottom: '15px' }}>
                                              <MapPin size={18} color="#e53e3e" />
@@ -872,6 +873,7 @@ const OrderMedicine = () => {
 
                                     {error && <div className="alert alert-error">{error}</div>}
                                     {success && <div className="alert alert-success">Successfully uploaded! Review in progress.</div>}
+                                    </div>
 
                                     <button className="btn-submit-premium" disabled={loading} style={{ marginTop: '20px' }}>
                                         {loading ? (

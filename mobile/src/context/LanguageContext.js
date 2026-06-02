@@ -63,6 +63,31 @@ const translations = {
       raisedOf: "raised of",
       volunteer: "Volunteer Now",
       viewDetails: "View Details"
+    },
+    onboarding: {
+      s1: {
+        title: "Divine Support",
+        subtitle: "Cow Seva & Medical Aid",
+        description: "Support noble causes like cow shelters, health camps, and child education. Directly touch lives with your kind contributions."
+      },
+      s2: {
+        title: "Inspire & Earn",
+        subtitle: "10% Wallet Commission",
+        description: "Share your personal referral link with your family and networks. Earn a 10% instant reward for every inspired donation."
+      },
+      s3: {
+        title: "Grow Your Network",
+        subtitle: "Multi-Level Tracking",
+        description: "Track directly inspired L1 and partner-inspired L2 donors via a visual network tree. Download your 80G tax certificates instantly."
+      },
+      s4: {
+        title: "Secure Payouts",
+        subtitle: "Direct Bank Transfer",
+        description: "Manage your earnings inside a secure wallet. Withdraw funds directly to your verified bank account at any time with total safety."
+      },
+      skip: "Skip",
+      getStarted: "Get Started",
+      next: "Next"
     }
   },
   hi: {
@@ -124,6 +149,31 @@ const translations = {
       raisedOf: "एकत्रित किए गए",
       volunteer: "अभी स्वयंसेवक बनें",
       viewDetails: "विवरण देखें"
+    },
+    onboarding: {
+      s1: {
+        title: "दैवीय सहायता",
+        subtitle: "गौ सेवा और चिकित्सा सहायता",
+        description: "गौशालाओं, स्वास्थ्य शिविरों और बाल शिक्षा जैसे नेक कार्यों का समर्थन करें। अपने दयालु योगदान से सीधे जीवन को छुएं।"
+      },
+      s2: {
+        title: "प्रेरित करें और कमाएं",
+        subtitle: "10% वॉलेट कमीशन",
+        description: "अपने व्यक्तिगत रेफरल लिंक को अपने परिवार और नेटवर्क के साथ साझा करें। प्रत्येक प्रेरित दान के लिए 10% त्वरित इनाम अर्जित करें।"
+      },
+      s3: {
+        title: "अपना नेटवर्क बढ़ाएं",
+        subtitle: "बहु-स्तरीय ट्रैकिंग",
+        description: "एक विज़ुअल नेटवर्क ट्री के माध्यम से सीधे प्रेरित L1 और भागीदार-प्रेरित L2 दाताओं को ट्रैक करें। अपने 80G टैक्स प्रमाण पत्र तुरंत डाउनलोड करें।"
+      },
+      s4: {
+        title: "सुरक्षित भुगतान",
+        subtitle: "सीधा बैंक ट्रांसफर",
+        description: "अपने सुरक्षित वॉलेट के भीतर अपनी कमाई का प्रबंधन करें। पूर्ण सुरक्षा के साथ किसी भी समय अपने सत्यापित बैंक खाते में सीधे धन निकालें।"
+      },
+      skip: "छोड़ें",
+      getStarted: "शुरू करें",
+      next: "अगला"
     }
   }
 };

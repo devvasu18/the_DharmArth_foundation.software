@@ -538,6 +538,17 @@ exports.createAdminOrder = async (req, res) => {
         });
         await prescription.save();
 
+        // Send automatic WhatsApp/SMS notifications with the checkout link to the customer!
+        try {
+            const populatedPrescription = await Prescription.findById(prescription._id).populate('user');
+            if (populatedPrescription && populatedPrescription.user) {
+                const io = req.app.get('io');
+                await notificationService.notifyPrescriptionVerifiedUser(populatedPrescription, populatedPrescription.user, io);
+            }
+        } catch (notifErr) {
+            console.error("Failed to send checkout notification to customer:", notifErr);
+        }
+
         res.status(201).json(prescription);
     } catch (error) {
         res.status(500).json({ message: error.message });
