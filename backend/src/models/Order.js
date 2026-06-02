@@ -63,6 +63,11 @@ const orderSchema = new mongoose.Schema({
         enum: ['Medicine', 'Donation', 'Event'],
         default: 'Medicine'
     },
+    orderSource: {
+        type: String,
+        enum: ['Website', 'Created by Medical/Admin'],
+        default: 'Website'
+    },
     statusHistory: [{
         status: String,
         updatedAt: { type: Date, default: Date.now },

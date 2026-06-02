@@ -193,10 +193,25 @@ const AdminPharmacyOrders = () => {
                                         </td>
                                         <td>
                                             <div className="customer-cell">
-                                                <div className="avatar">{order.user?.name?.charAt(0) || 'U'}</div>
+                                                <div className="avatar">{order.user?.name?.charAt(0) || 'G'}</div>
                                                 <div className="info">
-                                                    <span className="name">{order.user?.name}</span>
+                                                    <span className="name">{order.user?.name || 'Guest User'}</span>
                                                     <span className="phone">{order.user?.mobile}</span>
+                                                    {order.orderSource === 'Created by Medical/Admin' && (
+                                                        <span style={{
+                                                            fontSize: '9px',
+                                                            backgroundColor: '#eff6ff',
+                                                            color: '#1d4ed8',
+                                                            padding: '1px 6px',
+                                                            borderRadius: '8px',
+                                                            fontWeight: '600',
+                                                            display: 'inline-block',
+                                                            marginTop: '2px',
+                                                            width: 'fit-content'
+                                                        }}>
+                                                            Created by Medical/Admin
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </td>
@@ -314,12 +329,18 @@ const AdminPharmacyOrders = () => {
                                         <div className="pane-content">
                                             <div className="data-row">
                                                 <span className="data-label">Full Name</span>
-                                                <span className="data-value">{selectedOrder.user?.name}</span>
+                                                <span className="data-value">{selectedOrder.user?.name || 'Guest User'}</span>
                                             </div>
                                             <div className="data-row">
                                                 <span className="data-label">Phone Number</span>
                                                 <span className="data-value">{selectedOrder.user?.mobile}</span>
                                             </div>
+                                            {selectedOrder.orderSource === 'Created by Medical/Admin' && (
+                                                <div className="data-row" style={{background: '#f0f9ff', padding: '8px', borderRadius: '8px', border: '1px dashed #bae6fd'}}>
+                                                    <span className="data-label" style={{color: '#0369a1'}}>Order Source</span>
+                                                    <span className="data-value" style={{color: '#0369a1', fontWeight: 'bold'}}>Created by Medical/Admin</span>
+                                                </div>
+                                            )}
                                             {selectedOrder.paymentDetails?.transactionId && (
                                                 <div className="data-row" style={{background: '#f0f9ff', padding: '8px', borderRadius: '8px', border: '1px dashed #bae6fd'}}>
                                                     <span className="data-label" style={{color: '#0369a1'}}>Razorpay ID</span>

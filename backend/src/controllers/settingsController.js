@@ -52,7 +52,8 @@ const getPharmacyConfig = async () => {
             gstPercent: 12,
             dayTimeContactText: "Pharmacist will contact you in 10-20 minutes",
             nightTimeContactText: "Foundation will contact you at 8:30 AM",
-            faqs: []
+            faqs: [],
+            acceptedPincodes: ''
         };
     }
     // Ensure new fields have defaults if they don't exist in saved config
@@ -60,6 +61,7 @@ const getPharmacyConfig = async () => {
         dayTimeContactText: "Pharmacist will contact you in 10-20 minutes",
         nightTimeContactText: "Foundation will contact you at 8:30 AM",
         faqs: [],
+        acceptedPincodes: '',
         ...config.value
     };
     return mergedConfig;

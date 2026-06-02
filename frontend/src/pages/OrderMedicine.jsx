@@ -6,6 +6,7 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import SimplifyDosage from '../components/SimplifyDosage';
 import { useConfirm } from '../context/ConfirmContext';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import './OrderMedicine.css';
@@ -59,6 +60,7 @@ const VerifiedItemRow = ({ item }) => {
 const OrderMedicine = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const { showAlert } = useConfirm();
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
@@ -192,41 +194,61 @@ const OrderMedicine = () => {
         }
     }
 
+    const [isDetecting, setIsDetecting] = useState(false);
+    const [showLocationHelp, setShowLocationHelp] = useState(false);
+
     const handleDetectLocation = () => {
         if (!navigator.geolocation) {
             toast.error("Geolocation is not supported by your browser");
             return;
         }
 
-        toast.loading(t('pharmacy.detectingLocation'));
+        setIsDetecting(true);
+        toast.loading(t('pharmacy.detectingLocation') || "Detecting location...", { id: 'detect-location' });
         navigator.geolocation.getCurrentPosition(
             async (position) => {
-                const { latitude, longitude } = position.coords;
                 try {
-                    // Using a free reverse geocoding API (BigDataCloud or similar)
-                    const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-                    const data = await res.json();
+                    const { latitude, longitude } = position.coords;
+                    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+                    const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`);
+                    const data = await response.json();
 
-                    setShippingDetails(prev => ({
-                        ...prev,
-                        city: data.city || data.locality || '',
-                        state: data.principalSubdivision || '',
-                        zip: data.postcode || ''
-                    }));
+                    if (data.status === 'OK' && data.results[0]) {
+                        const components = data.results[0].address_components;
+                        let street = data.results[0].formatted_address;
+                        let city = '';
+                        let state = '';
+                        let zip = '';
 
-                    toast.dismiss();
-                    toast.success(t('pharmacy.locationDetected'));
-                    if (!data.postcode) {
-                        toast(t('pharmacy.verifyPin'), { icon: '📍' });
+                        components.forEach(c => {
+                            if (c.types.includes('locality')) city = c.long_name;
+                            if (c.types.includes('administrative_area_level_1')) state = c.long_name;
+                            if (c.types.includes('postal_code')) zip = c.long_name;
+                        });
+
+                        setShippingDetails(prev => ({
+                            ...prev,
+                            street,
+                            city: city || prev.city,
+                            state: state || prev.state,
+                            zip: zip || prev.zip
+                        }));
+                        toast.success(t('pharmacy.locationDetected') || "Location detected!", { id: 'detect-location' });
+                    } else {
+                        toast.error("Failed to fetch address. Please enter manually.", { id: 'detect-location' });
                     }
-                } catch (err) {
-                    toast.dismiss();
-                    toast.error("Failed to resolve address. Please enter manually.");
+                } catch (error) {
+                    console.error("Location error:", error);
+                    toast.error("Error detecting location", { id: 'detect-location' });
+                } finally {
+                    setIsDetecting(false);
                 }
             },
-            () => {
-                toast.dismiss();
-                toast.error(t('pharmacy.locationDenied'));
+            (error) => {
+                setIsDetecting(false);
+                toast.dismiss('detect-location');
+                console.error("Location error:", error);
+                setShowLocationHelp(true);
             }
         );
     };
@@ -239,6 +261,9 @@ const OrderMedicine = () => {
         fetchHistory();
         fetchOrders();
         fetchPharmacyConfig();
+        if (localStorage.getItem('user')) {
+            fetchSavedAddresses();
+        }
     }, []);
 
     useEffect(() => {
@@ -285,6 +310,33 @@ const OrderMedicine = () => {
             return;
         }
 
+        // Validate Address details first
+        if (!shippingDetails.street || !shippingDetails.city || !shippingDetails.state || !shippingDetails.zip) {
+            toast.error(t('pharmacy.fillAddress') || "Please fill in all delivery address fields.");
+            setError(t('pharmacy.fillAddress') || "Please fill in all delivery address fields.");
+            return;
+        }
+
+        // Phone is required for delivery
+        const deliveryPhone = shippingDetails.phone || guestMobile || (user ? user.mobile : '');
+        if (!deliveryPhone) {
+            toast.error(t('pharmacy.phoneRequired') || "A contact number is required for delivery.");
+            setError(t('pharmacy.phoneRequired') || "A contact number is required for delivery.");
+            return;
+        }
+
+        // Validate Pincode serviceability
+        const userPincode = shippingDetails.zip.trim();
+        if (pharmacyConfig?.acceptedPincodes && pharmacyConfig.acceptedPincodes.trim() !== '') {
+            const allowedPincodes = pharmacyConfig.acceptedPincodes.split(',').map(pin => pin.trim());
+            if (!allowedPincodes.includes(userPincode)) {
+                const errMsg = `${t('pharmacy.unserviceablePin') || "Sorry, we do not deliver to this pin code. Serviceable pin codes are"}: ${allowedPincodes.join(', ')}`;
+                toast.error(errMsg);
+                setError(errMsg);
+                return;
+            }
+        }
+
         if (!file) {
             setError(t('pharmacy.selectFile'));
             return;
@@ -315,6 +367,11 @@ const OrderMedicine = () => {
             formData.append('guestName', guestName);
             formData.append('guestMobile', guestMobile);
         }
+
+        formData.append('shippingAddress', JSON.stringify({
+            ...shippingDetails,
+            phone: deliveryPhone
+        }));
 
         setLoading(true);
         try {
@@ -465,7 +522,15 @@ const OrderMedicine = () => {
         setSelectedPrescription(prescription);
         setCheckoutSuccess(false);
         setCheckoutError(null);
-        fetchSavedAddresses();
+        
+        // Pre-fill shipping address from prescription's pendingShippingAddress if present
+        if (prescription.pendingShippingAddress && prescription.pendingShippingAddress.street) {
+            setShippingDetails(prescription.pendingShippingAddress);
+            setIsAddingNewAddress(false);
+        } else {
+            fetchSavedAddresses();
+        }
+        
         setCheckoutModalOpen(true);
     };
 
@@ -554,10 +619,193 @@ const OrderMedicine = () => {
                                     <Zap size={20} color="#f6ad55" />
                                 </div>
                                 <form onSubmit={handleSubmit}>
-                                    <div
-                                        className={`drop-area ${preview ? 'preview-active' : ''}`}
-                                        onClick={() => document.getElementById('presc-upload').click()}
-                                    >
+                                    {/* Step 1: Delivery Address */}
+                                    <div className="address-section-premium" style={{ marginBottom: '25px', paddingBottom: '20px', borderBottom: '1px solid #cbd5e1' }}>
+                                         <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '700', color: '#1e293b', marginBottom: '15px' }}>
+                                             <MapPin size={18} color="#e53e3e" />
+                                             1. {t('pharmacy.deliveryAddress') || "Delivery Address"}
+                                         </h4>
+
+                                         {savedAddresses.length > 0 && (
+                                             <div className="saved-addresses-selector-shared" style={{ marginBottom: '15px' }}>
+                                                 <div className="address-pills-row-shared" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
+                                                     {savedAddresses.map((addr, idx) => (
+                                                         <button
+                                                             key={idx}
+                                                             className={`addr-pill-shared ${shippingDetails.street === addr.street ? 'active' : ''}`}
+                                                             onClick={() => {
+                                                                 setShippingDetails(addr);
+                                                                 setIsAddingNewAddress(false);
+                                                             }}
+                                                             type="button"
+                                                             style={{
+                                                                 padding: '8px 12px',
+                                                                 borderRadius: '8px',
+                                                                 border: shippingDetails.street === addr.street ? '2px solid #3b82f6' : '1px solid #cbd5e1',
+                                                                 background: shippingDetails.street === addr.street ? '#eff6ff' : '#f8fafc',
+                                                                 cursor: 'pointer',
+                                                                 whiteSpace: 'nowrap',
+                                                                 fontSize: '12px'
+                                                             }}
+                                                         >
+                                                             <strong>{addr.city}</strong>: <span style={{ fontSize: '11px', color: '#64748b' }}>{addr.street.substring(0, 20)}...</span>
+                                                         </button>
+                                                     ))}
+                                                     <button
+                                                         className={`addr-pill-shared ${isAddingNewAddress ? 'active' : ''}`}
+                                                         onClick={() => {
+                                                             setShippingDetails({ _id: null, street: '', city: '', state: '', zip: '', phone: user?.mobile || '', altPhone: '' });
+                                                             setIsAddingNewAddress(true);
+                                                         }}
+                                                         type="button"
+                                                         style={{
+                                                             padding: '8px 12px',
+                                                             borderRadius: '8px',
+                                                             border: isAddingNewAddress ? '2px solid #3b82f6' : '1px solid #cbd5e1',
+                                                             background: isAddingNewAddress ? '#eff6ff' : '#f8fafc',
+                                                             cursor: 'pointer',
+                                                             whiteSpace: 'nowrap',
+                                                             fontSize: '12px',
+                                                             fontWeight: '600'
+                                                         }}
+                                                     >
+                                                         + {t('pharmacy.addNewAddress') || "New Address"}
+                                                     </button>
+                                                 </div>
+                                             </div>
+                                         )}
+
+                                         {(isAddingNewAddress || savedAddresses.length === 0) && (
+                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                                                 <div style={{ position: 'relative' }}>
+                                                     <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.streetAddress') || "Street Address"}</label>
+                                                     <input
+                                                         type="text"
+                                                         value={shippingDetails.street}
+                                                         onChange={(e) => setShippingDetails(prev => ({ ...prev, street: e.target.value }))}
+                                                         placeholder={isDetecting ? "Detecting location..." : "House/Plot No, Apartment, Street"}
+                                                         required
+                                                         style={{ width: '100%', padding: '10px 90px 10px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                                                     />
+                                                     <button
+                                                         type="button"
+                                                         onClick={handleDetectLocation}
+                                                         disabled={isDetecting}
+                                                         style={{
+                                                             position: 'absolute',
+                                                             right: '6px',
+                                                             bottom: '6px',
+                                                             padding: '5px 10px',
+                                                             borderRadius: '6px',
+                                                             background: '#3b82f6',
+                                                             color: '#fff',
+                                                             border: 'none',
+                                                             fontSize: '11px',
+                                                             fontWeight: '600',
+                                                             cursor: 'pointer',
+                                                             display: 'flex',
+                                                             alignItems: 'center',
+                                                             gap: '4px'
+                                                         }}
+                                                     >
+                                                         <MapPin size={11} />
+                                                         {isDetecting ? '...' : t('pharmacy.detect') || 'Detect'}
+                                                     </button>
+                                                 </div>
+
+                                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                                                     <div>
+                                                         <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.city') || "City"}</label>
+                                                         <input
+                                                             type="text"
+                                                             value={shippingDetails.city}
+                                                             onChange={(e) => setShippingDetails(prev => ({ ...prev, city: e.target.value }))}
+                                                             placeholder="e.g. Nagaur"
+                                                             required
+                                                             style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                                                         />
+                                                     </div>
+                                                     <div>
+                                                         <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.state') || "State"}</label>
+                                                         <input
+                                                             type="text"
+                                                             value={shippingDetails.state}
+                                                             onChange={(e) => setShippingDetails(prev => ({ ...prev, state: e.target.value }))}
+                                                             placeholder="e.g. Rajasthan"
+                                                             required
+                                                             style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                                                         />
+                                                     </div>
+                                                     <div>
+                                                         <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.pinCode') || "Pin Code"}</label>
+                                                         <input
+                                                             type="text"
+                                                             value={shippingDetails.zip}
+                                                             onChange={(e) => setShippingDetails(prev => ({ ...prev, zip: e.target.value }))}
+                                                             placeholder="341001"
+                                                             required
+                                                             style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                                                         />
+                                                     </div>
+                                                 </div>
+
+                                                 {user && (
+                                                     <div style={{ marginTop: '5px' }}>
+                                                         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#475569', cursor: 'pointer' }}>
+                                                             <input
+                                                                 type="checkbox"
+                                                                 checked={isOrderingForSomeoneElse}
+                                                                 onChange={(e) => {
+                                                                     setIsOrderingForSomeoneElse(e.target.checked);
+                                                                     if (!e.target.checked) {
+                                                                         setShippingDetails(prev => ({ ...prev, phone: user.mobile }));
+                                                                     }
+                                                                 }}
+                                                             />
+                                                             {t('pharmacy.someoneElse') || "Ordering for someone else?"}
+                                                         </label>
+                                                     </div>
+                                                 )}
+
+                                                 {(isOrderingForSomeoneElse || !user) && (
+                                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '5px' }}>
+                                                         <div>
+                                                             <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.receiverPhone') || "Receiver's Phone Number"}</label>
+                                                             <input
+                                                                 type="tel"
+                                                                 value={shippingDetails.phone}
+                                                                 onChange={(e) => setShippingDetails(prev => ({ ...prev, phone: e.target.value }))}
+                                                                 placeholder="10-digit number"
+                                                                 required
+                                                                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                                                             />
+                                                         </div>
+                                                         <div>
+                                                             <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.altPhone') || "Alternate Phone"}</label>
+                                                             <input
+                                                                 type="tel"
+                                                                 value={shippingDetails.altPhone}
+                                                                 onChange={(e) => setShippingDetails(prev => ({ ...prev, altPhone: e.target.value }))}
+                                                                 placeholder="Optional"
+                                                                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                                                             />
+                                                         </div>
+                                                     </div>
+                                                 )}
+                                             </div>
+                                         )}
+                                     </div>
+
+                                     {/* Step 2: Upload Prescription */}
+                                     <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '700', color: '#1e293b', marginBottom: '15px' }}>
+                                         <FileText size={18} color="#3b82f6" />
+                                         2. {t('pharmacy.uploadPrescriptionStep') || "Upload Prescription"}
+                                     </h4>
+
+                                     <div
+                                         className={`drop-area ${preview ? 'preview-active' : ''}`}
+                                         onClick={() => document.getElementById('presc-upload').click()}
+                                     >
                                         {preview ? (
                                             <div className="preview-container">
                                                 <img src={preview} alt="Upload Preview" />
@@ -646,7 +894,13 @@ const OrderMedicine = () => {
                                 <button
                                     className="btn-action-secondary"
                                     style={{ width: '100%', padding: '15px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#f8fafc', border: '2px dashed #cbd5e1', color: '#475569', fontWeight: '700' }}
-                                    onClick={() => setShowRecentModal(true)}
+                                    onClick={() => {
+                                        if (!user) {
+                                            navigate('/login');
+                                        } else {
+                                            setShowRecentModal(true);
+                                        }
+                                    }}
                                 >
                                     <Clock size={18} />
                                     {t('pharmacy.selectPrevious')}
@@ -1326,9 +1580,9 @@ const OrderMedicine = () => {
                         </div>
                         <h2 style={{ fontSize: '1.8rem', color: '#2d3748', marginBottom: '16px' }}>{t('pharmacy.prescriptionSubmitted')}</h2>
                         <div style={{ color: '#718096', lineHeight: '1.6', fontSize: '1.05rem', marginBottom: '30px' }}>
-                            <p style={{ marginBottom: '15px' }}>{t('pharmacy.postUploadMsg1')}</p>
-                            <p style={{ marginBottom: '15px', fontWeight: '600', color: '#4a5568' }}>{t('pharmacy.postUploadMsg2')}</p>
-                            <p>{t('pharmacy.postUploadMsg3', { trackingNote: localStorage.getItem('user') ? t('pharmacy.postUploadTrackUser') : t('pharmacy.postUploadTrackGuest') })}</p>
+                            <p style={{ marginBottom: '15px' }}>{t('pharmacy.uploadedSuccess')}</p>
+                            <p style={{ marginBottom: '15px', fontWeight: '600', color: '#4a5568' }}>{t('pharmacy.verifyHours')}</p>
+                            <p>{localStorage.getItem('user') ? t('pharmacy.afterVerifyUser') : t('pharmacy.afterVerifyGuest')}</p>
                         </div>
                         <button
                             className="btn-submit-premium"
@@ -1352,7 +1606,7 @@ const OrderMedicine = () => {
                             </button>
                         </div>
                         <p style={{ color: '#718096', marginBottom: '24px', fontSize: '0.95rem' }}>
-                            {t('pharmacy.guestInfoMsg')}
+                            {t('pharmacy.guestPrompt')}
                         </p>
                         <form onSubmit={handleGuestSubmit}>
                             <div className="form-group" style={{ marginBottom: '20px' }}>
@@ -1362,7 +1616,7 @@ const OrderMedicine = () => {
                                     required 
                                     value={guestName} 
                                     onChange={e => setGuestName(e.target.value)} 
-                                    placeholder={t('pharmacy.placeholderFullName')} 
+                                    placeholder={t('pharmacy.fullNamePlaceholder')} 
                                     style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid #e2e8f0', outline: 'none' }}
                                   />
                             </div>
@@ -1374,7 +1628,7 @@ const OrderMedicine = () => {
                                     maxLength="10"
                                     value={guestMobile} 
                                     onChange={e => setGuestMobile(e.target.value.replace(/\D/g, ''))} 
-                                    placeholder={t('pharmacy.placeholderMobile10')} 
+                                    placeholder={t('pharmacy.mobilePlaceholder')} 
                                     style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid #e2e8f0', outline: 'none' }}
                                 />
                             </div>

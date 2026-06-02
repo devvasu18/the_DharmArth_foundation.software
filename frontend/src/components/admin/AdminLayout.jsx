@@ -160,6 +160,7 @@ const AdminLayout = () => {
         }
 
         if (location.pathname.includes('/admin/prescriptions') ||
+            location.pathname.includes('/admin/order-medicine') ||
             location.pathname.includes('/admin/delivery') ||
             location.pathname.includes('/admin/create-delivery-boy') ||
             location.pathname.includes('/admin/dispatch') ||
@@ -392,6 +393,7 @@ const AdminLayout = () => {
                     <div className="admin-link-dropdown-container">
                         <div
                             className={`admin-link ${location.pathname.includes('/admin/prescriptions') ||
+                                location.pathname.includes('/admin/order-medicine') ||
                                 location.pathname.includes('/admin/delivery') ||
                                 location.pathname.includes('/admin/create-delivery-boy') ||
                                 location.pathname.includes('/admin/dispatch') ||
@@ -421,6 +423,13 @@ const AdminLayout = () => {
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Prescription Queue
+                                </NavLink>
+                                <NavLink
+                                    to="/admin/order-medicine"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
+                                    Order Medicine
                                 </NavLink>
                                 <NavLink
                                     to="/admin/pharmacy-orders"

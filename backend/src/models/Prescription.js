@@ -10,12 +10,17 @@ const prescriptionSchema = new mongoose.Schema({
     guestMobile: String,
     image: {
         type: String,
-        required: true // Cloudinary URL
+        required: false // Cloudinary URL (Optional for admin orders)
     },
     status: {
         type: String,
         enum: ['Pending', 'Under Review', 'Verified', 'Rejected', 'Ordered'],
         default: 'Pending'
+    },
+    orderSource: {
+        type: String,
+        enum: ['Website', 'Created by Medical/Admin'],
+        default: 'Website'
     },
     notes: String,
     faqAnswers: [{

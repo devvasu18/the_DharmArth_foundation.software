@@ -45,7 +45,8 @@ exports.completeOrder = async (orderId, paymentId, io) => {
                 status: 'Completed'
             },
             status: 'Processing',
-            orderType: 'Medicine'
+            orderType: 'Medicine',
+            orderSource: prescription.orderSource || 'Website'
         });
 
         // 2. Update prescription state

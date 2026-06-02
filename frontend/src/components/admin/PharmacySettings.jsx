@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { toast } from 'react-hot-toast';
-import { Settings as SettingsIcon, Save, Info, Percent, Truck, HelpCircle, Trash2, Plus } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Info, Percent, Truck, HelpCircle, Trash2, Plus, MapPin } from 'lucide-react';
 import './PharmacySettings.css';
 
 const PharmacySettings = () => {
@@ -90,6 +90,26 @@ const PharmacySettings = () => {
                                 onChange={(e) => setConfig({...config, gstPercent: Number(e.target.value)})}
                             />
                             <small>Government taxes applied to medicines.</small>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Serviceable Area Settings */}
+                <div className="settings-card glass-card">
+                    <div className="card-header">
+                        <MapPin size={20} color="#e53e3e" />
+                        <h3>Serviceable Area Settings</h3>
+                    </div>
+                    <div className="card-body">
+                        <div className="input-group">
+                            <label>Accepted Pin Code(s)</label>
+                            <input 
+                                type="text" 
+                                value={config.acceptedPincodes || ''} 
+                                onChange={(e) => setConfig({...config, acceptedPincodes: e.target.value})}
+                                placeholder="e.g. 110001, 110002"
+                            />
+                            <small>Comma-separated list of pin codes to accept orders from. Leave blank to accept all.</small>
                         </div>
                     </div>
                 </div>

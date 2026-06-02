@@ -9,7 +9,9 @@ const {
     approveProvisionBill,
     getPublicPrescription,
     reSubmitPrescription,
-    getGuestHistory
+    getGuestHistory,
+    createAdminOrder,
+    adminLookupUser
 } = require('../controllers/prescriptionController');
 const { protect, optionalProtect, checkPermission } = require('../middlewares/authMiddleware');
 const { upload } = require('../config/cloudinary');
@@ -39,6 +41,8 @@ router.patch('/:id/verify',
     validate,
     verifyPrescription
 );
+router.post('/admin-create', protect, checkPermission('Prescription Management', 'edit'), createAdminOrder);
+router.get('/user-lookup/:mobile', protect, checkPermission('Prescription Management', 'view'), adminLookupUser);
 router.get('/:id/public', getPublicPrescription);
 router.get('/guest-history/:mobile', getGuestHistory);
 router.post('/:id/approve', (req, res, next) => {

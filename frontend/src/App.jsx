@@ -73,6 +73,7 @@ const PharmacySettings = lazy(() => import('./components/admin/PharmacySettings'
 const AdminCreateDeliveryBoy = lazy(() => import('./components/admin/AdminCreateDeliveryBoy'));
 
 const OrderHistory = lazy(() => import('./pages/OrderHistory'));
+const AdminOrderMedicine = lazy(() => import('./components/admin/AdminOrderMedicine'));
 
 import { AuthProvider } from './context/AuthContext';
 import AdminRoute from './components/auth/AdminRoute';
@@ -144,6 +145,7 @@ const router = createBrowserRouter(
         <Route path="doctors" element={<AdminDoctors />} />
         <Route path="availability" element={<AdminAvailability />} />
         <Route path="prescriptions" element={<AdminPrescriptions />} />
+        <Route path="order-medicine" element={<AdminOrderMedicine />} />
         <Route path="pharmacy-orders" element={<AdminPharmacyOrders />} />
         <Route path="delivery" element={<AdminDelivery />} />
         <Route path="dispatch" element={<AdminDispatch />} />

@@ -148,14 +148,33 @@ const OrderHistory = () => {
                             ) : (
                                 prescriptions.map(p => (
                                     <div key={p._id} className="order-card-premium history-item-card">
-                                        <div className="presc-thumb" onClick={() => setImageModalSrc(p.image)}>
-                                            <img src={p.image.startsWith('http') ? p.image : `${API_BASE_URL}${p.image.startsWith('/') ? '' : '/'}${p.image}`} alt="Presc" />
+                                        <div className="presc-thumb" onClick={() => p.image && setImageModalSrc(p.image)} style={{ cursor: p.image ? 'pointer' : 'default' }}>
+                                            {p.image ? (
+                                                <img src={p.image.startsWith('http') ? p.image : `${API_BASE_URL}${p.image.startsWith('/') ? '' : '/'}${p.image}`} alt="Presc" />
+                                            ) : (
+                                                <Package size={48} strokeWidth={1} style={{ opacity: 0.5 }} />
+                                            )}
                                         </div>
                                         <div className="order-meta">
                                             <div className="meta-row">
                                                 <div className="meta-info">
                                                     <span className="order-date">{new Date(p.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                                                     <span className="order-id">ID: #{p._id.slice(-8)}</span>
+                                                    {p.orderSource === 'Created by Medical/Admin' && (
+                                                        <span style={{
+                                                            fontSize: '11px',
+                                                            backgroundColor: '#eff6ff',
+                                                            color: '#1d4ed8',
+                                                            padding: '2px 8px',
+                                                            borderRadius: '12px',
+                                                            fontWeight: '600',
+                                                            display: 'inline-block',
+                                                            marginTop: '4px',
+                                                            width: 'fit-content'
+                                                        }}>
+                                                            Created by Medical/Admin
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 {getStatusBadge(p.status)}
                                             </div>
@@ -217,6 +236,21 @@ const OrderHistory = () => {
                                                 <div className="meta-info">
                                                     <span className="order-date">Order #{order._id.slice(-8)}</span>
                                                     <span className="order-id">{new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} • ₹{order.totalAmount}</span>
+                                                    {order.orderSource === 'Created by Medical/Admin' && (
+                                                        <span style={{
+                                                            fontSize: '11px',
+                                                            backgroundColor: '#eff6ff',
+                                                            color: '#1d4ed8',
+                                                            padding: '2px 8px',
+                                                            borderRadius: '12px',
+                                                            fontWeight: '600',
+                                                            display: 'inline-block',
+                                                            marginTop: '4px',
+                                                            width: 'fit-content'
+                                                        }}>
+                                                            Created by Medical/Admin
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 {getOrderStatusBadge(order.status)}
                                             </div>

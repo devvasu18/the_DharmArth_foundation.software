@@ -217,10 +217,30 @@ const AdminPrescriptions = () => {
                             prescriptions.map(p => (
                                 <div key={p._id} className={`queue-card ${selected?._id === p._id ? 'active' : ''}`} onClick={() => setSelected(p)}>
                                     <div className="thumb">
-                                        <img src={p.image} alt="Presc" />
+                                        {p.image ? (
+                                            <img src={p.image} alt="Presc" />
+                                        ) : (
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: '#eff6ff' }}>
+                                                <Package size={20} color="#2563eb" />
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="meta">
-                                        <h4>{p.user?.name || 'Guest User'}</h4>
+                                        <h4>{p.user?.name || p.guestName || 'Guest User'}</h4>
+                                        {p.orderSource === 'Created by Medical/Admin' && (
+                                            <div style={{
+                                                fontSize: '10px',
+                                                color: '#1d4ed8',
+                                                backgroundColor: '#eff6ff',
+                                                padding: '1px 6px',
+                                                borderRadius: '8px',
+                                                fontWeight: '600',
+                                                width: 'fit-content',
+                                                marginBottom: '3px'
+                                            }}>
+                                                Created by Medical/Admin
+                                            </div>
+                                        )}
                                         <span>{new Date(p.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span>
                                         <div style={{fontSize: '0.75rem', marginTop:'4px', color: p.status==='Pending'?'#eab308' : '#10b981'}}>
                                             {p.status}
@@ -255,11 +275,25 @@ const AdminPrescriptions = () => {
                                         <User size={20} />
                                     </div>
                                     <div>
-                                        <h3>{selected.user?.name}</h3>
+                                        <h3>{selected.user?.name || selected.guestName || 'Guest User'}</h3>
                                         <div className="user-sub">
-                                            <span><Phone size={12} /> {selected.user?.mobile}</span>
+                                            <span><Phone size={12} /> {selected.user?.mobile || selected.guestMobile}</span>
                                             <span className="sep">•</span>
                                             <span><Calendar size={12} /> {new Date(selected.createdAt).toLocaleString()}</span>
+                                            {selected.orderSource === 'Created by Medical/Admin' && (
+                                                <span style={{
+                                                    fontSize: '11px',
+                                                    color: '#1d4ed8',
+                                                    backgroundColor: '#eff6ff',
+                                                    padding: '2px 8px',
+                                                    borderRadius: '12px',
+                                                    fontWeight: '600',
+                                                    marginLeft: '10px',
+                                                    display: 'inline-block'
+                                                }}>
+                                                    Created by Medical/Admin
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -272,15 +306,22 @@ const AdminPrescriptions = () => {
                                 {/* Right: Verification Form */}
                                 <div className="form-view-pane">
                                     {/* Prescription Image at Top */}
-                                    <div className="image-view-pane" style={{ padding: '0 0 30px 0', background: 'none' }}>
-                                        <div className="img-wrapper" onClick={() => setImageModalSrc(selected.image)} style={{ maxWidth: '400px', margin: '0 auto' }}>
-                                            <img src={selected.image} alt="Full Prescription" />
-                                            <div className="zoom-overlay">
-                                                <Search size={24} />
-                                                <span>Click to Zoom</span>
+                                    {selected.image ? (
+                                        <div className="image-view-pane" style={{ padding: '0 0 30px 0', background: 'none' }}>
+                                            <div className="img-wrapper" onClick={() => setImageModalSrc(selected.image)} style={{ maxWidth: '400px', margin: '0 auto' }}>
+                                                <img src={selected.image} alt="Full Prescription" />
+                                                <div className="zoom-overlay">
+                                                    <Search size={24} />
+                                                    <span>Click to Zoom</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    ) : (
+                                        <div style={{ textAlign: 'center', padding: '30px 0', color: '#64748b' }}>
+                                            <Package size={48} style={{ opacity: 0.3, margin: '0 auto 10px' }} />
+                                            <p>No prescription image uploaded. Manually generated order.</p>
+                                        </div>
+                                    )}
 
                                     {(selected.notes || (selected.faqAnswers && selected.faqAnswers.length > 0)) && (
                                         <section className="form-section" style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
