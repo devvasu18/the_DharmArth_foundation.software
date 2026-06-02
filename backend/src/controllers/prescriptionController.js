@@ -449,13 +449,6 @@ exports.getGuestHistory = async (req, res) => {
             return res.json([]);
         }
 
-        // Security Check: If user has a password, they must login
-        if (user.password) {
-            return res.status(401).json({ 
-                message: 'This account is registered. Please login to view history.',
-                loginRequired: true 
-            });
-        }
 
         const prescriptions = await Prescription.find({ user: user._id })
             .sort({ createdAt: -1 });

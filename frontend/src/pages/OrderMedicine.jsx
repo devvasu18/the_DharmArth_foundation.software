@@ -69,6 +69,7 @@ const OrderMedicine = () => {
     const [error, setError] = useState(null);
     const [myPrescriptions, setMyPrescriptions] = useState([]);
     const [myOrders, setMyOrders] = useState([]);
+    const [guestHistoryError, setGuestHistoryError] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState('Online');
     const [isSyncing, setIsSyncing] = useState(false);
     const [historyTab, setHistoryTab] = useState('prescriptions'); // 'prescriptions' or 'orders'
@@ -151,11 +152,20 @@ const OrderMedicine = () => {
             if (isUserLoggedIn) {
                 res = await api.get('/orders/my');
             } else if (gMobile) {
-                res = await api.get(`/orders/guest-history/${gMobile}`);
-                if (res.status === 401) return; // Login required for this mobile
+                try {
+                    res = await api.get(`/orders/guest-history/${gMobile}`);
+                } catch (err) {
+                    if (err.response?.status === 401) {
+                        setGuestHistoryError(err.response.data?.message || t('pharmacy.loginRequired') || 'This mobile number is registered. Please login to view history.');
+                        setMyOrders([]);
+                        return;
+                    }
+                    throw err;
+                }
             } else {
                 return;
             }
+            setGuestHistoryError(null);
             setMyOrders(res.data);
         } catch (err) {
             console.error('Failed to fetch orders', err);
@@ -171,11 +181,20 @@ const OrderMedicine = () => {
             if (isUserLoggedIn) {
                 res = await api.get('/prescriptions/my');
             } else if (gMobile) {
-                res = await api.get(`/prescriptions/guest-history/${gMobile}`);
-                if (res.status === 401) return; // Login required for this mobile
+                try {
+                    res = await api.get(`/prescriptions/guest-history/${gMobile}`);
+                } catch (err) {
+                    if (err.response?.status === 401) {
+                        setGuestHistoryError(err.response.data?.message || t('pharmacy.loginRequired') || 'This mobile number is registered. Please login to view history.');
+                        setMyPrescriptions([]);
+                        return;
+                    }
+                    throw err;
+                }
             } else {
                 return;
             }
+            setGuestHistoryError(null);
             setMyPrescriptions(res.data);
         } catch (err) {
             console.error(err);
@@ -956,7 +975,20 @@ const OrderMedicine = () => {
                                 </div>
 
                                 <div className="order-list-premium">
-                                    {historyTab === 'prescriptions' ? (
+                                    {guestHistoryError ? (
+                                        <div className="empty-state-cool" style={{ padding: '30px 20px', textAlign: 'center' }}>
+                                            <AlertCircle size={48} color="#e53e3e" strokeWidth={1.5} style={{ margin: '0 auto 15px' }} />
+                                            <h4 style={{ margin: '0 0 8px 0', color: '#e53e3e', fontWeight: '700', fontSize: '15px' }}>{t('pharmacy.loginRequired') || 'Login Required'}</h4>
+                                            <p style={{ fontSize: '13px', color: '#4a5568', maxWidth: '280px', margin: '0 auto 15px auto', lineHeight: '1.5' }}>{guestHistoryError}</p>
+                                            <button 
+                                                type="button"
+                                                onClick={() => navigate('/login')}
+                                                style={{ width: '100%', maxWidth: '200px', padding: '10px', background: '#3182ce', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'background 0.2s' }}
+                                            >
+                                                {t('pharmacy.loginNow') || 'Login Now'}
+                                            </button>
+                                        </div>
+                                    ) : historyTab === 'prescriptions' ? (
                                         filteredPrescriptions.length === 0 ? (
                                             <div className="empty-state-cool">
                                                 <FileText size={48} strokeWidth={1} />
@@ -1060,13 +1092,14 @@ const OrderMedicine = () => {
                                         )
                                     )}
                                 </div>
-                                {!localStorage.getItem('user') && localStorage.getItem('guestMobile') && (
+                                {!localStorage.getItem('user') && localStorage.getItem('guestMobile') && !guestHistoryError && (
                                     <div style={{ marginTop: '15px', padding: '12px', background: '#eff6ff', borderRadius: '10px', border: '1px solid #bfdbfe', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <div style={{ fontSize: '12px', color: '#1e40af', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                             <Info size={14} /> {t('pharmacy.syncedViaGuest')}
                                         </div>
                                         <p style={{ fontSize: '11px', color: '#3b82f6', margin: 0 }}>{t('pharmacy.syncMsg')}</p>
                                         <button 
+                                            type="button"
                                             onClick={() => navigate('/login')}
                                             style={{ width: '100%', padding: '8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', transition: 'background 0.2s' }}
                                         >
