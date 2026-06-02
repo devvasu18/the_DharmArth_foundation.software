@@ -18,6 +18,13 @@ const Navbar = () => {
     const [isLangModalOpen, setIsLangModalOpen] = useState(false);
     const dropdownRef = React.useRef(null);
 
+    React.useEffect(() => {
+        const hasSeenPrompt = localStorage.getItem('hasSeenLanguagePrompt');
+        if (!hasSeenPrompt) {
+            setIsLangModalOpen(true);
+        }
+    }, []);
+
     const renderNotificationDropdown = () => (
         <AnimatePresence>
             {isNotificationsOpen && (
@@ -378,7 +385,10 @@ const Navbar = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={() => setIsLangModalOpen(false)}
+                        onClick={() => {
+                            localStorage.setItem('hasSeenLanguagePrompt', 'true');
+                            setIsLangModalOpen(false);
+                        }}
                         style={{
                             position: 'fixed',
                             top: 0,
@@ -421,6 +431,7 @@ const Navbar = () => {
                                             setUser({ ...user, language: 'hi' });
                                             api.put('/users/language', { language: 'hi' }).catch(console.error);
                                         }
+                                        localStorage.setItem('hasSeenLanguagePrompt', 'true');
                                         setIsLangModalOpen(false);
                                     }}
                                     style={{
@@ -447,6 +458,7 @@ const Navbar = () => {
                                             setUser({ ...user, language: 'en' });
                                             api.put('/users/language', { language: 'en' }).catch(console.error);
                                         }
+                                        localStorage.setItem('hasSeenLanguagePrompt', 'true');
                                         setIsLangModalOpen(false);
                                     }}
                                     style={{
@@ -468,7 +480,10 @@ const Navbar = () => {
                             </div>
 
                             <button
-                                onClick={() => setIsLangModalOpen(false)}
+                                onClick={() => {
+                                    localStorage.setItem('hasSeenLanguagePrompt', 'true');
+                                    setIsLangModalOpen(false);
+                                }}
                                 style={{ marginTop: '20px', color: '#718096', fontWeight: '500', cursor: 'pointer', background: 'none', border: 'none' }}
                             >
                                 {i18n.language.startsWith('hi') ? 'बंद करें' : 'Close'}

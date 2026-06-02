@@ -19,6 +19,7 @@ import { io } from "socket.io-client";
 import { Audio } from 'expo-av';
 import api, { API_BASE_URL } from '../../src/services/api';
 import { useTranslation } from '../../src/context/LanguageContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -33,6 +34,20 @@ export default function TabLayout() {
   const [exitTargetRoute, setExitTargetRoute] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const socketRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const checkLanguagePrompt = async () => {
+      try {
+        const hasSeenPrompt = await AsyncStorage.getItem('hasSeenLanguagePrompt');
+        if (!hasSeenPrompt) {
+          setLangModalVisible(true);
+        }
+      } catch (err) {
+        console.error("Failed to check language prompt in mobile", err);
+      }
+    };
+    checkLanguagePrompt();
+  }, []);
 
   const playNotificationSound = async () => {
     try {
@@ -326,7 +341,14 @@ export default function TabLayout() {
         <View style={[StyleSheet.absoluteFill, { zIndex: 10000, elevation: 10000 }]}>
           <Pressable
             style={styles.langOverlay}
-            onPress={() => setLangModalVisible(false)}
+            onPress={async () => {
+              try {
+                await AsyncStorage.setItem('hasSeenLanguagePrompt', 'true');
+              } catch (err) {
+                console.error(err);
+              }
+              setLangModalVisible(false);
+            }}
           >
             <View style={styles.langModalContainer}>
               <Text style={styles.langModalTitle}>{t('navbar.changeLanguage')}</Text>
@@ -338,6 +360,11 @@ export default function TabLayout() {
                 ]}
                 onPress={async () => {
                   await changeLanguage('en');
+                  try {
+                    await AsyncStorage.setItem('hasSeenLanguagePrompt', 'true');
+                  } catch (err) {
+                    console.error(err);
+                  }
                   setLangModalVisible(false);
                 }}
               >
@@ -357,6 +384,11 @@ export default function TabLayout() {
                 ]}
                 onPress={async () => {
                   await changeLanguage('hi');
+                  try {
+                    await AsyncStorage.setItem('hasSeenLanguagePrompt', 'true');
+                  } catch (err) {
+                    console.error(err);
+                  }
                   setLangModalVisible(false);
                 }}
               >
@@ -371,7 +403,14 @@ export default function TabLayout() {
 
               <TouchableOpacity
                 style={styles.langCancelBtn}
-                onPress={() => setLangModalVisible(false)}
+                onPress={async () => {
+                  try {
+                    await AsyncStorage.setItem('hasSeenLanguagePrompt', 'true');
+                  } catch (err) {
+                    console.error(err);
+                  }
+                  setLangModalVisible(false);
+                }}
               >
                 <Text style={styles.langCancelBtnText}>{locale === 'en' ? 'Cancel' : 'रद्द करें'}</Text>
               </TouchableOpacity>
