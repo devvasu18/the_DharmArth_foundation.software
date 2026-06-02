@@ -22,7 +22,7 @@ export default function ShareEarn() {
   const router = useRouter();
 
   const referralCode = user?.referralCode || user?.mobile || 'DF0000';
-  const shareUrl = `https://the-dharm-arth-foundation-software.vercel.app/v/${referralCode}`;
+  const shareUrl = `https://thedharmarth.com/v/${referralCode}`;
 
   const name = user?.name || 'Your Name';
   const mobilePhone = user?.mobile || '0000000000';

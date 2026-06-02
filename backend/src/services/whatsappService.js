@@ -7,7 +7,7 @@ const NotificationQueue = require('../models/NotificationQueue');
  */
 class WhatsappService {
     constructor() {
-        this.baseUrl = process.env.WHATSAPP_SERVICE_URL || 'http://localhost:3000';
+        this.baseUrl = process.env.WHATSAPP_SERVICE_URL || 'http://http://44.203.78.96/:10000';
         this.isProcessing = false;
         this.workerInterval = null;
     }
@@ -225,9 +225,9 @@ class WhatsappService {
      * Specialized: Send Donation Thank You email
      */
     async sendDonationEmail(to, donorName, amount, donationId) {
-        const subjectTemplate = await this._getTemplate('email_donation_subject', 'en') 
+        const subjectTemplate = await this._getTemplate('email_donation_subject', 'en')
             || "Thank you for your generous donation!";
-        const htmlTemplate = await this._getTemplate('email_donation_template', 'en') 
+        const htmlTemplate = await this._getTemplate('email_donation_template', 'en')
             || `
             <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
                 <h2 style="color: #2c3e50; text-align: center;">🙏 Thank You, {name}!</h2>
@@ -249,11 +249,11 @@ class WhatsappService {
      */
     async sendDonationNotification(donorMobile, donorName, amount, donationId) {
         const lang = await this._getRecipientLanguage(donorMobile);
-        const template = await this._getTemplate('whatsapp_donation_template', lang) 
-            || (lang === 'hi' 
-                ? "नमस्ते {name}, The DharmArth Foundation को ₹{amount} का उदार दान देने के लिए धन्यवाद। आपका समर्थन हमें बड़ा बदलाव लाने में मदद करता है! 🙏" 
+        const template = await this._getTemplate('whatsapp_donation_template', lang)
+            || (lang === 'hi'
+                ? "नमस्ते {name}, The DharmArth Foundation को ₹{amount} का उदार दान देने के लिए धन्यवाद। आपका समर्थन हमें बड़ा बदलाव लाने में मदद करता है! 🙏"
                 : "Dear {name}, thank you for your generous donation of ₹{amount} to The DharmArth Foundation. Your support helps us make a big difference! 🙏");
-        
+
         const message = this._replacePlaceholders(template, { name: donorName, amount, donation_id: donationId });
         return this.sendMessage(donorMobile, message, { donationId });
     }
@@ -263,11 +263,11 @@ class WhatsappService {
      */
     async sendWalletDonationNotification(donorMobile, donorName, amount, donationId) {
         const lang = await this._getRecipientLanguage(donorMobile);
-        const template = await this._getTemplate('whatsapp_wallet_donation_template', lang) 
-            || (lang === 'hi' 
-                ? "नमस्ते {name}, आपके वॉलेट से ₹{amount} के दान के लिए धन्यवाद।" 
+        const template = await this._getTemplate('whatsapp_wallet_donation_template', lang)
+            || (lang === 'hi'
+                ? "नमस्ते {name}, आपके वॉलेट से ₹{amount} के दान के लिए धन्यवाद।"
                 : "Dear {name}, thank you for your donation of ₹{amount} from your wallet.");
-        
+
         const message = this._replacePlaceholders(template, { name: donorName, amount, donation_id: donationId });
         return this.sendMessage(donorMobile, message, { donationId });
     }
@@ -279,7 +279,7 @@ class WhatsappService {
         const lang = await this._getRecipientLanguage(mobile);
         const template = await this._getTemplate('whatsapp_withdrawal_template', lang)
             || (lang === 'hi' ? "नमस्ते {name}, आपका भुगतान ₹{amount} सफल रहा।" : "Dear {name}, your payout of ₹{amount} was successful.");
-            
+
         const message = this._replacePlaceholders(template, { name, amount });
         return this.sendMessage(mobile, message);
     }
@@ -290,10 +290,10 @@ class WhatsappService {
     async sendWithdrawalFailedNotification(mobile, name, amount, reason) {
         const lang = await this._getRecipientLanguage(mobile);
         const template = await this._getTemplate('whatsapp_withdrawal_failed_template', lang)
-            || (lang === 'hi' 
-                ? "नमस्ते {name}, आपका ₹{amount} का भुगतान अनुरोध विफल रहा। कारण: {reason}। कृपया सुधार के लिए अपना डैशबोर्ड देखें। 🙏" 
+            || (lang === 'hi'
+                ? "नमस्ते {name}, आपका ₹{amount} का भुगतान अनुरोध विफल रहा। कारण: {reason}। कृपया सुधार के लिए अपना डैशबोर्ड देखें। 🙏"
                 : "Dear {name}, your payout request of ₹{amount} could not be processed due to: {reason}. Please check your dashboard to correct the details. 🙏");
-            
+
         const message = this._replacePlaceholders(template, { name, amount, reason: reason || 'Information mismatch' });
         return this.sendMessage(mobile, message);
     }
@@ -343,12 +343,12 @@ class WhatsappService {
      */
     async send80GCertificateNotification(mobile, name, certificateUrl) {
         const lang = await this._getRecipientLanguage(mobile);
-        const fullUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}${certificateUrl}`;
+        const fullUrl = `${process.env.FRONTEND_URL || 'https://thedharmarth.com'}${certificateUrl}`;
         const template = await this._getTemplate('whatsapp_80g_certificate_template', lang)
-            || (lang === 'hi' 
-                ? "नमस्ते {name}, आपका 80G प्रमाणपत्र तैयार है। 🙏\n\nआप इसे यहाँ डाउनलोड कर सकते हैं: {url}" 
+            || (lang === 'hi'
+                ? "नमस्ते {name}, आपका 80G प्रमाणपत्र तैयार है। 🙏\n\nआप इसे यहाँ डाउनलोड कर सकते हैं: {url}"
                 : "Dear {name}, your 80G certificate is ready. 🙏\n\nYou can download it here: {url}");
-            
+
         const message = this._replacePlaceholders(template, { name, url: fullUrl });
         return this.sendMessage(mobile, message, { type: '80g_certificate' });
     }
@@ -360,7 +360,7 @@ class WhatsappService {
         const lang = await this._getRecipientLanguage(mobile);
         const template = await this._getTemplate('whatsapp_payout_otp_template', lang)
             || "Your OTP for The DharmArth Foundation *Withdrawal Authorization* is: *{otp}*. Valid for 10 minutes. Please do not share this code with anyone.";
-            
+
         const message = this._replacePlaceholders(template, { otp });
         return this._sendWhatsAppNow(mobile, message); // Direct send for time-critical OTP
     }
@@ -372,9 +372,9 @@ class WhatsappService {
         const lang = await this._getRecipientLanguage(mobile);
         const template = await this._getTemplate('whatsapp_cancel_subscription_otp_template', lang)
             || "Your OTP to authorize *Cancellation* of your ₹{amount} monthly donation at The DharmArth Foundation is: *{otp}*. Valid for 10 minutes.";
-            
+
         const message = this._replacePlaceholders(template, { otp, amount });
-        return this._sendWhatsAppNow(mobile, message); 
+        return this._sendWhatsAppNow(mobile, message);
     }
 
     /**
@@ -384,7 +384,7 @@ class WhatsappService {
         const lang = await this._getRecipientLanguage(mobile);
         const template = await this._getTemplate('whatsapp_wallet_otp_template', lang)
             || (lang === 'hi' ? "The DharmArth Foundation वॉलेट दान के लिए आपका OTP है: *{otp}*। यह 10 मिनट के लिए मान्य है।" : "Your OTP for The DharmArth Foundation *Wallet Donation* is: *{otp}*. Valid for 10 minutes.");
-            
+
         const message = this._replacePlaceholders(template, { otp });
         return this._sendWhatsAppNow(mobile, message); // Direct send for time-critical OTP
     }
@@ -396,7 +396,7 @@ class WhatsappService {
         const lang = await this._getRecipientLanguage(mobile);
         const template = await this._getTemplate('whatsapp_login_otp_template', lang)
             || "Your OTP for The DharmArth Foundation login is: *{otp}*. Valid for 10 minutes";
-            
+
         const message = this._replacePlaceholders(template, { otp });
         return this._sendWhatsAppNow(mobile, message); // Direct send for time-critical OTP
     }
@@ -410,9 +410,9 @@ class WhatsappService {
             || (lang === 'hi'
                 ? "The DharmArth Foundation: यूजर सस्पेंड/एक्टिवेट करने के लिए आपका OTP है: *{otp}*। कृपया इसे किसी के साथ साझा न करें।"
                 : "The DharmArth Foundation: Your OTP for User Suspension/Activation is: *{otp}*. Please do not share this code with anyone.");
-            
+
         const message = this._replacePlaceholders(template, { otp });
-        return this._sendWhatsAppNow(mobile, message); 
+        return this._sendWhatsAppNow(mobile, message);
     }
 
     /**
@@ -420,8 +420,8 @@ class WhatsappService {
      */
     async sendEventNotification(mobile, name, event) {
         const lang = await this._getRecipientLanguage(mobile);
-        const eventUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/events/${event.slug}`;
-        
+        const eventUrl = `${process.env.FRONTEND_URL || 'https://thedharmarth.com'}/events/${event.slug}`;
+
         const template = await this._getTemplate('whatsapp_event_notification_template', lang)
             || (lang === 'hi'
                 ? "नमस्ते {name}! 🙏\n\nहमने एक नया कार्यक्रम आयोजित किया है: *{title}*\n📅 तिथि: {date}\n📍 स्थान: {location}\n\n{description}\n\nअधिक जानकारी के लिए यहाँ क्लिक करें: {url}"
@@ -435,7 +435,7 @@ class WhatsappService {
             description: event.shortDescription || '',
             url: eventUrl
         });
-        
+
         return this.sendMessage(mobile, message, { type: 'event_notification', eventId: event._id });
     }
 
@@ -445,10 +445,10 @@ class WhatsappService {
     async sendDeliveryAssignmentNotification(mobile, name, vehicleName, pickupStoppage) {
         const lang = await this._getRecipientLanguage(mobile);
         const template = await this._getTemplate('whatsapp_delivery_assignment_template', lang)
-            || (lang === 'hi' 
-                ? "नमस्ते {name}, आपको एक नया कूरियर सौंपा गया है। कृपया इसे {pickupStoppage} पर {vehicleName} बस को सौंपें। सुरक्षित यात्रा! 🚚" 
+            || (lang === 'hi'
+                ? "नमस्ते {name}, आपको एक नया कूरियर सौंपा गया है। कृपया इसे {pickupStoppage} पर {vehicleName} बस को सौंपें। सुरक्षित यात्रा! 🚚"
                 : "Hello {name}, a new courier has been assigned to you. Please deliver it to the bus {vehicleName} at {pickupStoppage}. Safe travels! 🚚");
-            
+
         const message = this._replacePlaceholders(template, { name, vehicleName, pickupStoppage });
         return this.sendMessage(mobile, message, { type: 'delivery_assignment' });
     }
@@ -457,9 +457,9 @@ class WhatsappService {
      * Specialized: Send OTP via Email
      */
     async sendOTPByEmail(email, otp, name = "User") {
-        const subjectTemplate = await this._getTemplate('email_otp_subject', 'en') 
+        const subjectTemplate = await this._getTemplate('email_otp_subject', 'en')
             || "{otp} is your verification code";
-        const htmlTemplate = await this._getTemplate('email_otp_template', 'en') 
+        const htmlTemplate = await this._getTemplate('email_otp_template', 'en')
             || `
             <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
                 <h2 style="color: #2c3e50; text-align: center;">Verification Code</h2>
@@ -485,14 +485,14 @@ class WhatsappService {
      */
     async sendOrderShippedToBusNotification(mobile, name, orderId, busName, busNumber) {
         const lang = await this._getRecipientLanguage(mobile);
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const frontendUrl = process.env.FRONTEND_URL || 'https://thedharmarth.com';
         const trackUrl = `${frontendUrl}/track/${orderId}`;
-        
+
         const template = await this._getTemplate('whatsapp_order_shipped_bus_template', lang)
-            || (lang === 'hi' 
-                ? "नमस्ते {name}, आपकी दवाएं {busName} ({busNumber}) बस में भेज दी गई हैं। 🚌\n\nआप अपने ऑर्डर को यहाँ ट्रैक कर सकते हैं: {url}\n\nधन्यवाद, The DharmArth Foundation" 
+            || (lang === 'hi'
+                ? "नमस्ते {name}, आपकी दवाएं {busName} ({busNumber}) बस में भेज दी गई हैं। 🚌\n\nआप अपने ऑर्डर को यहाँ ट्रैक कर सकते हैं: {url}\n\nधन्यवाद, The DharmArth Foundation"
                 : "Hello {name}, your medicine order has been shipped to the bus {busName} ({busNumber}). 🚌\n\nTrack your order here: {url}\n\nThank you, The DharmArth Foundation");
-            
+
         const message = this._replacePlaceholders(template, { name, busName, busNumber, url: trackUrl });
         return this.sendMessage(mobile, message, { type: 'order_shipped_bus', orderId });
     }

@@ -148,14 +148,14 @@ export default function DashboardScreen() {
   };
 
   const handleCopyLink = () => {
-    const link = `https://the-dharm-arth-foundation-software.vercel.app/donate?ref=${user.referralCode || user.mobile}`;
+    const link = `https://thedharmarth.com/donate?ref=${user.referralCode || user.mobile}`;
     Clipboard.setString(link);
     Alert.alert("Link Copied!", "Donation link copied to clipboard.");
   };
 
   const handleShare = async () => {
-    const donationLink = `https://the-dharm-arth-foundation-software.vercel.app/donate?ref=${user.referralCode || user.mobile}`;
-    const profileLink = `https://the-dharm-arth-foundation-software.vercel.app/v/${user.referralCode || user.mobile}`;
+    const donationLink = `https://thedharmarth.com/donate?ref=${user.referralCode || user.mobile}`;
+    const profileLink = `https://thedharmarth.com/v/${user.referralCode || user.mobile}`;
     const message = `Namaste! 🙏 Join me in making a difference with The DharmArth Foundation. 🕉️\n\n✨ Donate here: ${donationLink}\n📜 View my Volunteer Profile: ${profileLink}`;
 
     try {
@@ -277,7 +277,7 @@ export default function DashboardScreen() {
 
           <View style={styles.linkBox}>
             <Text style={styles.linkText} numberOfLines={1}>
-              {`https://the-dharm-arth-foundation-software.vercel.app/donate?ref=${user.referralCode || user.mobile}`}
+              {`https://thedharmarth.com/donate?ref=${user.referralCode || user.mobile}`}
             </Text>
             <TouchableOpacity style={styles.copyBtn} onPress={handleCopyLink}>
               <Text style={styles.copyBtnText}>Copy</Text>

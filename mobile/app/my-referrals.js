@@ -74,7 +74,7 @@ export default function MyReferrals() {
     const amount = ref.amount;
     const is80G = ref.donorUserId?.pan ? 'true' : 'false';
     
-    const donationUrl = `https://the-dharm-arth-foundation-software.vercel.app/donate?motivator=${user?.mobile}&name=${encodeURIComponent(donorName)}&mobile=${mobile}&amount=${amount}&is80G=${is80G}`;
+    const donationUrl = `https://thedharmarth.com/donate?motivator=${user?.mobile}&name=${encodeURIComponent(donorName)}&mobile=${mobile}&amount=${amount}&is80G=${is80G}`;
 
     const message = `Namaste ${donorName}, this is ${motivatorName} from The DharmArth Foundation. 🕉️\n\nYour monthly contribution of ₹${amount} has stopped. We invite you to continue your noble support for our mission. 🙏\n\nYou can restart your donation with just one click here: ${donationUrl}\n\nThank you for your kindness!`;
 

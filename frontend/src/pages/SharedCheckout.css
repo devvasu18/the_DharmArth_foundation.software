@@ -582,6 +582,21 @@
     text-transform: uppercase;
     margin-top: 2px;
 }
+/* Responsive Address Details & Contact Grids */
+.address-grid-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+}
+
+.address-contact-grid {
+    border-top: 1px dashed #cbd5e1;
+    padding-top: 15px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
 @media (max-width: 768px) {
     .checkout-banner {
         padding: 40px 0 60px 0;
@@ -603,11 +618,21 @@
         grid-column: span 1;
     }
     .patient-meta-shared {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+        align-items: stretch;
         gap: 15px;
+    }
+    .meta-info-shared {
+        gap: 20px;
     }
     .total-row-shared {
         font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .address-grid-details {
+        grid-template-columns: 1fr 1fr;
     }
 }
 
@@ -630,6 +655,16 @@
     }
     .addr-pill-shared {
         min-width: 150px;
+    }
+    .meta-info-shared {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    .address-grid-details {
+        grid-template-columns: 1fr;
+    }
+    .address-contact-grid {
+        grid-template-columns: 1fr;
     }
 }
 

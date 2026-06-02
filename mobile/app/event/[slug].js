@@ -97,7 +97,7 @@ const EventDetails = () => {
     if (!event) return;
     try {
       await Share.share({
-        message: `Check out this event: ${event.title}\nhttps://the-dharm-arth-foundation-software.vercel.app/events/${event.slug}`,
+        message: `Check out this event: ${event.title}\nhttps://thedharmarth.com/events/${event.slug}`,
       });
     } catch (error) {
       console.error('Error sharing event:', error);

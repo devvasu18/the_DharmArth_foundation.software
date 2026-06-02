@@ -4,7 +4,7 @@ import { MessageSquare, RefreshCw, Power, Loader2, CheckCircle2, AlertCircle } f
 import toast from 'react-hot-toast';
 import './AdminWhatsApp.css';
 
-const WHATSAPP_SERVICE_URL = import.meta.env.VITE_WHATSAPP_SERVICE_URL || 'http://localhost:10000';
+const WHATSAPP_SERVICE_URL = import.meta.env.VITE_WHATSAPP_SERVICE_URL || 'http://http://44.203.78.96/:10000';
 const WHATSAPP_SERVICE_API_KEY = import.meta.env.VITE_WHATSAPP_SERVICE_API_KEY || 'df_ws_auth_6f8b9e2c4a1d3c5b7e9f0a2b4c6d8e0f';
 const DEFAULT_SESSION_ID = 'admin';
 
@@ -51,7 +51,7 @@ const AdminWhatsApp = () => {
     const handleReconnect = async () => {
         setActionLoading(true);
         try {
-            await axios.post(`${WHATSAPP_SERVICE_URL}/reconnect`, 
+            await axios.post(`${WHATSAPP_SERVICE_URL}/reconnect`,
                 { sessionId: DEFAULT_SESSION_ID },
                 { headers: { 'x-api-key': WHATSAPP_SERVICE_API_KEY } }
             );
@@ -67,7 +67,7 @@ const AdminWhatsApp = () => {
 
     const handleDisconnect = async () => {
         if (!window.confirm("Are you sure you want to disconnect? Automated notifications will stop working.")) return;
-        
+
         setActionLoading(true);
         try {
             await axios.delete(`${WHATSAPP_SERVICE_URL}/session/${DEFAULT_SESSION_ID}`, {
@@ -166,7 +166,7 @@ const AdminWhatsApp = () => {
                                             </div>
                                         )}
                                     </div>
-                                    
+
                                     <div className="instructions">
                                         <h4>How to connect:</h4>
                                         <ol>
@@ -180,8 +180,8 @@ const AdminWhatsApp = () => {
                             )}
 
                             <div className="whatsapp-actions">
-                                <button 
-                                    className="btn-whatsapp btn-reconnect" 
+                                <button
+                                    className="btn-whatsapp btn-reconnect"
                                     onClick={handleReconnect}
                                     disabled={actionLoading}
                                 >
@@ -189,8 +189,8 @@ const AdminWhatsApp = () => {
                                     {statusData.status === 'connected' ? 'Force Reconnect' : 'Refresh QR'}
                                 </button>
                                 {statusData.status === 'connected' && (
-                                    <button 
-                                        className="btn-whatsapp btn-disconnect" 
+                                    <button
+                                        className="btn-whatsapp btn-disconnect"
                                         onClick={handleDisconnect}
                                         disabled={actionLoading}
                                     >

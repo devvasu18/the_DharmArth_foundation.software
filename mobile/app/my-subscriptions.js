@@ -181,7 +181,7 @@ export default function MySubscriptions() {
             </TouchableOpacity>
           )}
           {item.status === 'failed' && (
-            <TouchableOpacity style={styles.retryBtn} onPress={() => Linking.openURL(`https://the-dharm-arth-foundation-software.vercel.app/my-subscriptions`)}>
+            <TouchableOpacity style={styles.retryBtn} onPress={() => Linking.openURL(`https://thedharmarth.com/my-subscriptions`)}>
               <Ionicons name="refresh-outline" size={18} color="white" />
               <Text style={styles.retryBtnText}>Retry Payment</Text>
             </TouchableOpacity>

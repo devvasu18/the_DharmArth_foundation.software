@@ -258,7 +258,7 @@ export default function DonateScreen() {
 
       const options = {
         description: 'Monthly Donation',
-        image: 'https://the-dharm-arth-foundation-software.vercel.app/logo.png',
+        image: 'https://thedharmarth.com/logo.png',
         currency: data.currency || 'INR',
         key: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_SvdzLNA9hdG9PL',
         name: 'DharmArth Foundation',

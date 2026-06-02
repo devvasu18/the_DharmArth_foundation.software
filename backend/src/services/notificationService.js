@@ -190,7 +190,7 @@ class NotificationService {
      * Specialized: Prescription Verified Alert for User
      */
     async notifyPrescriptionVerifiedUser(prescription, user, io) {
-        const checkoutUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/checkout/${prescription._id}`;
+        const checkoutUrl = `${process.env.FRONTEND_URL || 'https://thedharmarth.com'}/checkout/${prescription._id}`;
         const msg = `✅ Your prescription has been verified! You can now proceed to checkout and order your medicines here: ${checkoutUrl}`;
 
         return await this.notify({

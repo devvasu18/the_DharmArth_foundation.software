@@ -162,7 +162,7 @@ export default function EventsScreen() {
                       {slide.ctaLink && (
                         <TouchableOpacity 
                           style={styles.headerCta} 
-                          onPress={() => Linking.openURL(`https://the-dharm-arth-foundation-software.vercel.app${slide.ctaLink}`)}
+                          onPress={() => Linking.openURL(`https://thedharmarth.com${slide.ctaLink}`)}
                         >
                           <Text style={styles.headerCtaText}>
                             {locale === 'hi' && slide.ctaText_hi ? slide.ctaText_hi : (slide.ctaText || 'Learn More')}

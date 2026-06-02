@@ -121,20 +121,24 @@ exports.verifyPayment = async (req, res) => {
                 { new: true }
             );
 
-            res.status(200).json({ success: true, message: 'Payment verified successfully', payment });
-
-            // Trigger post-payment logic based on type
+            // Trigger post-payment logic based on type and get generated orderId
+            let orderId = null;
             try {
                 const io = req.app.get('io');
                 if (payment.type === 'prescription') {
                     const prescriptionService = require('../services/prescriptionService');
-                    await prescriptionService.completeOrder(razorpay_order_id, razorpay_payment_id, io);
+                    const orderResult = await prescriptionService.completeOrder(razorpay_order_id, razorpay_payment_id, io);
+                    if (orderResult) {
+                        orderId = orderResult._id;
+                    }
                 } else {
                     await donationService.completeDonation(razorpay_order_id, razorpay_payment_id, io);
                 }
             } catch (err) {
                 console.error("Post-payment completion failed (verify):", err);
             }
+
+            res.status(200).json({ success: true, message: 'Payment verified successfully', payment, orderId });
         } else {
             await Payment.findOneAndUpdate({ order_id: razorpay_order_id }, { status: 'failed' });
             res.status(400).json({ success: false, message: 'Signature mismatch. Payment verification failed.' });

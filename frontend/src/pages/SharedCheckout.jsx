@@ -231,6 +231,11 @@ const SharedCheckout = () => {
 
                         if (verifyData.success) {
                             toast.success("Payment Successful!");
+                            setPrescription(prev => ({
+                                ...prev,
+                                status: 'Ordered',
+                                orderId: verifyData.orderId
+                            }));
                             setSuccess(true);
                         } else {
                             toast.error("Payment verification failed.");
@@ -402,7 +407,7 @@ const SharedCheckout = () => {
                                         </span>
                                     </div>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+                                    <div className="address-grid-details">
                                         <div>
                                             <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>City</span>
                                             <span style={{ fontSize: '14px', color: '#1e293b', fontWeight: '600' }}>{shippingDetails.city || 'N/A'}</span>
@@ -418,7 +423,7 @@ const SharedCheckout = () => {
                                     </div>
 
                                     {(shippingDetails.phone || prescription.user?.mobile) && (
-                                        <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: '15px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                        <div className="address-contact-grid">
                                             <div>
                                                 <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Contact Phone</span>
                                                 <span style={{ fontSize: '14px', color: '#1e293b', fontWeight: '600' }}>

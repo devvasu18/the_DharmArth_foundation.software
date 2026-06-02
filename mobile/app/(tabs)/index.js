@@ -224,9 +224,9 @@ const LandingScreen = () => {
                     } else {
                       let webLink = link;
                       if (link.startsWith('/')) {
-                        webLink = `https://the-dharm-arth-foundation-software.vercel.app${link}`;
+                        webLink = `https://thedharmarth.com${link}`;
                       } else if (!link.startsWith('http')) {
-                        webLink = `https://the-dharm-arth-foundation-software.vercel.app/${link}`;
+                        webLink = `https://thedharmarth.com/${link}`;
                       }
                       Linking.openURL(webLink).catch(err => console.log('Failed to open link:', err));
                     }
@@ -288,7 +288,7 @@ const LandingScreen = () => {
         {/* Monthly Giving Section */}
         <View style={styles.monthlyGivingSection}>
           <Image
-            source={{ uri: 'https://the-dharm-arth-foundation-software.vercel.app/assets/happy_kids_illustration-sgLu09hg.png' }}
+            source={{ uri: 'https://thedharmarth.com/assets/happy_kids_illustration-sgLu09hg.png' }}
             style={styles.monthlyGivingImg}
             resizeMode="cover"
           />

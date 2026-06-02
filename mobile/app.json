@@ -19,7 +19,7 @@
         "NSLocationWhenInUseUsageDescription": "We need your location to automatically fill your delivery address for donations."
       },
       "associatedDomains": [
-        "applinks:the-dharm-arth-foundation-software.vercel.app"
+        "applinks:thedharmarth.com"
       ]
     },
     "android": {
@@ -41,12 +41,12 @@
           "data": [
             {
               "scheme": "https",
-              "host": "the-dharm-arth-foundation-software.vercel.app",
+              "host": "thedharmarth.com",
               "pathPrefix": "/v"
             },
             {
               "scheme": "https",
-              "host": "the-dharm-arth-foundation-software.vercel.app",
+              "host": "thedharmarth.com",
               "pathPrefix": "/donate"
             }
           ],

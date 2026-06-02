@@ -15,10 +15,13 @@ exports.completeOrder = async (orderId, paymentId, io) => {
         }
 
         const prescription = await Prescription.findById(payment.prescriptionId).populate('user');
-        if (!prescription) return;
+        if (!prescription) return null;
 
         // Idempotency: only process if not already ordered
-        if (prescription.status === 'Ordered') return;
+        if (prescription.status === 'Ordered') {
+            const existingOrder = await Order.findOne({ prescription: prescription._id });
+            return existingOrder;
+        }
 
         // 1. Create the formal Order record
         const availableItems = prescription.verifiedItems.filter(item => item.isAvailable);
@@ -75,7 +78,9 @@ exports.completeOrder = async (orderId, paymentId, io) => {
         }
 
         console.log(`Prescription Order completed. Formal Order ID: ${newOrder._id}`);
+        return newOrder;
     } catch (error) {
         console.error("Error in prescriptionService.completeOrder:", error);
+        return null;
     }
 };
