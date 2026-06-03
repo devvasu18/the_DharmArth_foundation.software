@@ -1540,38 +1540,58 @@
 }
 
 /* Dynamic medical tests custom styling additions */
-.test-categories-filter {
+.test-categories-container {
     display: flex;
     justify-content: center;
-    gap: var(--spacing-3);
-    margin-bottom: var(--spacing-8);
-    flex-wrap: wrap;
-    padding: 0 var(--spacing-4);
+    width: 100%;
+    margin-bottom: 2.5rem;
+    overflow-x: auto;
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+}
+
+.test-categories-container::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome, Safari and Opera */
+}
+
+.test-categories-filter {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    background: #f1f5f9;
+    padding: 6px !important;
+    border-radius: 9999px !important;
+    gap: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.04) !important;
 }
 
 .test-category-chip {
-    padding: var(--spacing-2) var(--spacing-5);
-    border-radius: var(--radius-full);
-    border: 2px solid #e2e8f0;
-    background: white;
-    color: var(--text-main);
-    font-weight: 600;
-    font-size: var(--text-sm);
+    padding: 10px 24px !important;
+    border-radius: 9999px !important;
+    border: none !important;
+    background: transparent !important;
+    color: #64748b !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    white-space: nowrap !important;
+    width: auto !important;
+    height: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: none !important;
 }
 
 .test-category-chip:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    transform: translateY(-1px);
+    color: #0f172a !important;
+    background: rgba(0, 0, 0, 0.04) !important;
 }
 
 .test-category-chip.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: white;
-    box-shadow: 0 4px 12px rgba(0, 191, 165, 0.25);
+    background: var(--primary) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 191, 165, 0.2) !important;
 }
 
 .test-placeholder-image {

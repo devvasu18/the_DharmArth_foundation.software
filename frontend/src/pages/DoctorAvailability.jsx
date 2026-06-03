@@ -646,16 +646,18 @@ const DoctorAvailability = () => {
 
                         {/* Category filter tabs */}
                         {!loadingTests && bodyTests.length > 0 && (
-                            <div className="test-categories-filter">
-                                {['All', ...new Set(bodyTests.map(t => t.category))].map(cat => (
-                                    <button
-                                        key={cat}
-                                        className={`test-category-chip ${selectedTestCategory === cat ? 'active' : ''}`}
-                                        onClick={() => setSelectedTestCategory(cat)}
-                                    >
-                                        {cat}
-                                    </button>
-                                ))}
+                            <div className="test-categories-container">
+                                <div className="test-categories-filter">
+                                    {['All', ...new Set(bodyTests.map(t => t.category))].map(cat => (
+                                        <button
+                                            key={cat}
+                                            className={`test-category-chip ${selectedTestCategory === cat ? 'active' : ''}`}
+                                            onClick={() => setSelectedTestCategory(cat)}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         )}
 

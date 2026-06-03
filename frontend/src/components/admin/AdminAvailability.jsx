@@ -5,6 +5,15 @@ import './AdminAvailability.css';
 
 const API_URL = `${API_BASE_URL}/api`;
 
+const formatDateLocal = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 const AdminAvailability = () => {
     const [doctors, setDoctors] = useState([]);
     const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -87,8 +96,8 @@ const AdminAvailability = () => {
         if (!selectedDoctor || weekDates.length === 0) return;
 
         try {
-            const startDate = weekDates[0].toISOString().split('T')[0];
-            const endDate = weekDates[6].toISOString().split('T')[0];
+            const startDate = formatDateLocal(weekDates[0]);
+            const endDate = formatDateLocal(weekDates[6]);
 
             console.log('Fetching availability:', { doctorId: selectedDoctor._id, startDate, endDate });
 
@@ -115,7 +124,7 @@ const AdminAvailability = () => {
         return availability.find(a => {
             const availDate = new Date(a.date);
             const localDate = new Date(availDate.getFullYear(), availDate.getMonth(), availDate.getDate());
-            
+
             const matchesDate = localDate.getTime() === targetDate.getTime();
             const matchesType = !type || a.hospitalType === type;
 
@@ -175,8 +184,8 @@ const AdminAvailability = () => {
             const dateString = `${year}-${month}-${day}`;
 
             // If doctor works in both, use the selected hospital type from form, otherwise use doctor's type
-            const hospitalType = (selectedDoctor.type === 'both') 
-                ? scheduleForm.hospitalType 
+            const hospitalType = (selectedDoctor.type === 'both')
+                ? scheduleForm.hospitalType
                 : selectedDoctor.type;
 
             const payload = {
@@ -240,7 +249,7 @@ const AdminAvailability = () => {
             const updatedSlots = prev.timeSlots.map((slot, i) => {
                 if (i === index) {
                     const updatedSlot = { ...slot, [field]: value };
-                    
+
                     // Auto-select period if startTime changes
                     if (field === 'startTime') {
                         const hour = parseInt(value.split(':')[0]);
@@ -252,7 +261,7 @@ const AdminAvailability = () => {
                             updatedSlot.period = 'Evening';
                         }
                     }
-                    
+
                     return updatedSlot;
                 }
                 return slot;
@@ -272,30 +281,33 @@ const AdminAvailability = () => {
         try {
             const availabilities = [];
 
-            weekDates.forEach(date => {
-                const dateIso = date.toISOString();
+            weekDates.forEach((date, idx) => {
+                if (quickSetType === 'custom' && !selectedDays.includes(idx)) {
+                    return;
+                }
+                const dateString = formatDateLocal(date);
                 const dayName = getDayName(date);
 
                 // Add Government availability if applicable
                 if (selectedDoctor.type === 'government' || selectedDoctor.type === 'both') {
-                    const govSlotsFiltered = selectedDoctor.defaultTimeSlots 
+                    const govSlotsFiltered = selectedDoctor.defaultTimeSlots
                         ? selectedDoctor.defaultTimeSlots.filter(slot => slot.hospitalType === 'government' || !slot.hospitalType)
                         : [];
-                    
+
                     const govSlots = govSlotsFiltered.length > 0
                         ? govSlotsFiltered.map(slot => ({
                             period: slot.period,
                             startTime: slot.startTime,
                             endTime: slot.endTime,
                             status: 'Available'
-                          }))
+                        }))
                         : [
                             { period: 'Morning', startTime: '09:00', endTime: '12:00', status: 'Available' },
                             { period: 'Afternoon', startTime: '14:00', endTime: '17:00', status: 'Available' }
-                          ];
+                        ];
 
                     availabilities.push({
-                        date: dateIso,
+                        date: dateString,
                         dayName,
                         timeSlots: govSlots,
                         isEnabled: true,
@@ -307,7 +319,7 @@ const AdminAvailability = () => {
 
                 // Add Private Clinic availability if applicable
                 if (selectedDoctor.type === 'clinic' || selectedDoctor.type === 'both') {
-                    const clinicSlotsFiltered = selectedDoctor.defaultTimeSlots 
+                    const clinicSlotsFiltered = selectedDoctor.defaultTimeSlots
                         ? selectedDoctor.defaultTimeSlots.filter(slot => slot.hospitalType === 'clinic')
                         : [];
 
@@ -317,14 +329,14 @@ const AdminAvailability = () => {
                             startTime: slot.startTime,
                             endTime: slot.endTime,
                             status: 'Available'
-                          }))
+                        }))
                         : [
                             { period: 'Morning', startTime: '09:00', endTime: '12:00', status: 'Available' },
                             { period: 'Afternoon', startTime: '14:00', endTime: '17:00', status: 'Available' }
-                          ];
+                        ];
 
                     availabilities.push({
-                        date: dateIso,
+                        date: dateString,
                         dayName,
                         timeSlots: clinicSlots,
                         isEnabled: true,
@@ -362,7 +374,7 @@ const AdminAvailability = () => {
     return (
         <div className="admin-availability">
             <div className="admin-availability-header">
-                <h1>Doctor Availability Management</h1>
+                <h3>Doctor Availability Management</h3>
                 <button className="btn-quick-set" onClick={() => {
                     setQuickSetType('all');
                     setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
@@ -404,7 +416,7 @@ const AdminAvailability = () => {
                                 {doctors
                                     .filter(doctor => {
                                         return (doctor.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                               (doctor.title || '').toLowerCase().includes(searchTerm.toLowerCase());
+                                            (doctor.title || '').toLowerCase().includes(searchTerm.toLowerCase());
                                     })
                                     .map(doctor => (
                                         <div
@@ -424,7 +436,7 @@ const AdminAvailability = () => {
                                     ))}
                                 {doctors.filter(doctor => {
                                     return (doctor.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                          (doctor.title || '').toLowerCase().includes(searchTerm.toLowerCase());
+                                        (doctor.title || '').toLowerCase().includes(searchTerm.toLowerCase());
                                 }).length === 0 && (
                                         <div className="dropdown-no-results">No doctors found</div>
                                     )}
@@ -524,13 +536,13 @@ const AdminAvailability = () => {
                                 <div className="form-group hospital-type-selector">
                                     <label>Setting Schedule For:</label>
                                     <div className="type-toggle">
-                                        <button 
+                                        <button
                                             className={`toggle-btn ${scheduleForm.hospitalType === 'government' ? 'active' : ''}`}
                                             onClick={() => loadScheduleIntoForm(selectedDate, 'government')}
                                         >
                                             🏥 Government Hospital
                                         </button>
-                                        <button 
+                                        <button
                                             className={`toggle-btn ${scheduleForm.hospitalType === 'clinic' ? 'active' : ''}`}
                                             onClick={() => loadScheduleIntoForm(selectedDate, 'clinic')}
                                         >
@@ -670,25 +682,25 @@ const AdminAvailability = () => {
                             <p style={{ margin: '0 0 16px 0', color: '#475569', fontSize: '0.95rem', lineHeight: '1.6' }}>
                                 Apply this doctor's default weekly time slots to the calendar. Select the schedule scope below:
                             </p>
-                            
+
                             <div className="quickset-options" style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.95rem', color: '#1e293b', fontWeight: '500' }}>
-                                    <input 
-                                        type="radio" 
-                                        name="quickSetType" 
-                                        value="all" 
-                                        checked={quickSetType === 'all'} 
-                                        onChange={() => setQuickSetType('all')} 
+                                    <input
+                                        type="radio"
+                                        name="quickSetType"
+                                        value="all"
+                                        checked={quickSetType === 'all'}
+                                        onChange={() => setQuickSetType('all')}
                                     />
                                     <span>All 7 Days</span>
                                 </label>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.95rem', color: '#1e293b', fontWeight: '500' }}>
-                                    <input 
-                                        type="radio" 
-                                        name="quickSetType" 
-                                        value="custom" 
-                                        checked={quickSetType === 'custom'} 
-                                        onChange={() => setQuickSetType('custom')} 
+                                    <input
+                                        type="radio"
+                                        name="quickSetType"
+                                        value="custom"
+                                        checked={quickSetType === 'custom'}
+                                        onChange={() => setQuickSetType('custom')}
                                     />
                                     <span>Custom Days</span>
                                 </label>
@@ -700,12 +712,12 @@ const AdminAvailability = () => {
                                         const isChecked = selectedDays.includes(idx);
                                         const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
                                         const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                                        
+
                                         return (
                                             <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: '#334155' }}>
-                                                <input 
-                                                    type="checkbox" 
-                                                    checked={isChecked} 
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isChecked}
                                                     onChange={(e) => {
                                                         if (e.target.checked) {
                                                             setSelectedDays(prev => [...prev, idx]);
@@ -728,8 +740,8 @@ const AdminAvailability = () => {
                             <button className="btn-cancel" onClick={() => setShowConfirmModal(false)}>
                                 Cancel
                             </button>
-                            <button 
-                                className="btn-submit" 
+                            <button
+                                className="btn-submit"
                                 onClick={handleConfirmQuickSet}
                                 disabled={quickSetType === 'custom' && selectedDays.length === 0}
                                 style={{

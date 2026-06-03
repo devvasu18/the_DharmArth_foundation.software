@@ -1,6 +1,13 @@
 const DoctorAvailability = require('../models/DoctorAvailability');
 const Doctor = require('../models/Doctor');
 
+// Helper to normalize any incoming date string/object to UTC midnight
+const getUTCMidnight = (dateInput) => {
+    if (!dateInput) return null;
+    const dateStr = typeof dateInput === 'string' ? dateInput : new Date(dateInput).toISOString();
+    return new Date(dateStr.substring(0, 10) + 'T00:00:00.000Z');
+};
+
 // Helper to check for time overlaps between two sets of slots
 const hasTimeOverlap = (slots1, slots2) => {
     for (const s1 of slots1) {
@@ -67,11 +74,10 @@ exports.getAvailabilityByDate = async (req, res) => {
         const { date } = req.params;
         const { type } = req.query;
 
-        const targetDate = new Date(date);
-        targetDate.setHours(0, 0, 0, 0);
+        const targetDate = getUTCMidnight(date);
 
         const nextDay = new Date(targetDate);
-        nextDay.setDate(nextDay.getDate() + 1);
+        nextDay.setUTCDate(nextDay.getUTCDate() + 1);
 
         const query = {
             date: {
@@ -117,8 +123,7 @@ exports.upsertAvailability = async (req, res) => {
         const doctor = await Doctor.findById(doctorId);
         if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
 
-        const targetDate = new Date(date);
-        targetDate.setHours(0, 0, 0, 0);
+        const targetDate = getUTCMidnight(date);
 
         // CONFLICT PREVENTION: Check if doctor has overlapping shifts in OTHER hospital types on the same day
         const otherHospitalsAvail = await DoctorAvailability.find({
@@ -240,8 +245,7 @@ exports.bulkCreateAvailability = async (req, res) => {
         const created = [];
 
         for (const avail of availabilities) {
-            const targetDate = new Date(avail.date);
-            targetDate.setHours(0, 0, 0, 0);
+            const targetDate = getUTCMidnight(avail.date);
             const hospitalType = avail.hospitalType || doctor.type; // Default to doctor's primary type if not specified
 
             // Check if already exists for this hospital

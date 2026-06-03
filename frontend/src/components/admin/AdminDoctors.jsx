@@ -234,7 +234,7 @@ const AdminDoctors = () => {
     return (
         <div className="admin-doctors">
             <div className="admin-doctors-header">
-                <h5>Doctor Management</h5>
+                <h3>Doctor Management</h3>
                 <button className="btn-add-doctor" onClick={() => openModal()}>
                     <span>+</span> Add New Doctor
                 </button>
