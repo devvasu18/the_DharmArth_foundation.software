@@ -95,14 +95,14 @@ const AdminLayout = () => {
             setNotifications(prev => [newNotification, ...prev]);
             setUnreadCount(prev => prev + 1);
         });
-        
+
         socketRef.current.on('new_prescription_request', (newNotification) => {
             playAlert();
             const isPayment = newNotification.type === 'ORDER_PAID';
-            
+
             toast.success(
-                <div onClick={() => { 
-                    setIsNotificationsOpen(true); 
+                <div onClick={() => {
+                    setIsNotificationsOpen(true);
                     stopRingtone();
                     if (isPayment) navigate('/admin/pharmacy-orders');
                     else navigate('/admin/prescriptions');
@@ -345,8 +345,8 @@ const AdminLayout = () => {
                         )}
                     </div>
 
-                    {/* Doctors Dropdown commented for now */}
-                    {/* <div className="admin-link-dropdown-container">
+
+                    <div className="admin-link-dropdown-container">
                         <div
                             className={`admin-link ${location.pathname.includes('/admin/doctors') ||
                                 location.pathname.includes('/admin/availability')
@@ -387,7 +387,7 @@ const AdminLayout = () => {
                                 </NavLink>
                             </div>
                         )}
-                    </div> */}
+                    </div>
 
                     {/* Medical & Delivery Dropdown commented for now */}
                     <div className="admin-link-dropdown-container">
@@ -554,15 +554,15 @@ const AdminLayout = () => {
 
                         {/* Looping Alert Stopper */}
                         {isRinging && (
-                            <button 
-                                className="ring-stop-btn" 
+                            <button
+                                className="ring-stop-btn"
                                 onClick={stopRingtone}
-                                style={{ 
-                                    background: '#ef4444', 
-                                    color: 'white', 
-                                    border: 'none', 
-                                    padding: '6px 12px', 
-                                    borderRadius: '8px', 
+                                style={{
+                                    background: '#ef4444',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '6px 12px',
+                                    borderRadius: '8px',
                                     marginRight: '10px',
                                     fontSize: '12px',
                                     fontWeight: '700',
