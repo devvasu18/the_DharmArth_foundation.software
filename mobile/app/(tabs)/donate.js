@@ -43,6 +43,7 @@ export default function DonateScreen() {
   const [need80G, setNeed80G] = useState(false);
   const [pan, setPan] = useState('');
   const [aadhaar, setAadhaar] = useState('');
+  const [referralSource, setReferralSource] = useState('');
 
   // Config & Loading State
   const [config, setConfig] = useState({ plans: [600, 1000, 5000], popularAmount: 1000 });
@@ -249,6 +250,7 @@ export default function DonateScreen() {
         donorEmail: email,
         address: address,
         motivatorMobile: motivatorMobile || null,
+        referralSource: referralSource || null,
         panNumber: need80G ? pan : null,
         aadhaarNumber: need80G ? aadhaar : null,
         donationType: 'monthly'
@@ -641,6 +643,33 @@ export default function DonateScreen() {
                 ) : null}
               </>
             )}
+          </View>
+
+          <View style={[styles.inputGroup, { marginTop: 16 }]}>
+            <Text style={styles.label}>
+              {locale === 'hi' ? 'आपने हमारे बारे में कहाँ से सुना? (वैकल्पिक)' : 'How did you hear about us? (Optional)'}
+            </Text>
+            <View style={styles.referralChipsContainer}>
+              {['Instagram', 'Facebook', 'WhatsApp', 'Website', 'Friend', 'Other'].map((source) => (
+                <TouchableOpacity
+                  key={source}
+                  style={[
+                    styles.referralChip,
+                    referralSource === source && styles.referralChipActive
+                  ]}
+                  onPress={() => setReferralSource(referralSource === source ? '' : source)}
+                >
+                  <Text
+                    style={[
+                      styles.referralChipText,
+                      referralSource === source && styles.referralChipTextActive
+                    ]}
+                  >
+                    {source}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </View>
 
@@ -1190,5 +1219,33 @@ const styles = StyleSheet.create({
   },
   motivatorLockIcon: {
     padding: 4,
+  },
+  referralChipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  referralChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
+    marginBottom: 4,
+  },
+  referralChipActive: {
+    borderColor: '#00bfa5',
+    backgroundColor: '#e6fffa',
+  },
+  referralChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  referralChipTextActive: {
+    color: '#00bfa5',
+    fontWeight: '700',
   },
 });

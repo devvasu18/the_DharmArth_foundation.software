@@ -15,6 +15,7 @@ const subscriptionSchema = new mongoose.Schema({
     level1UserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     level2UserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     donorUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    referralSource: { type: String },
 
     // Metadata
     planId: { type: String }, // From Gateway (e.g. Razorpay Plan ID)

@@ -54,7 +54,8 @@ const handleSubscriptionCharged = async (subscriptionId, paymentId, payload, io)
             aadhaarNumber: subscription.aadhaarNumber,
             address: subscription.address,
             city: subscription.city,
-            state: subscription.state
+            state: subscription.state,
+            referralSource: subscription.referralSource
         });
 
         // 5. Update Subscription Metadata

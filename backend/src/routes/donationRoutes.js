@@ -198,7 +198,8 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
                 planId: planId,
                 subscriptionId: razorpaySubscription.id,
                 totalCycles: 60,
-                donorUserId: req.user ? req.user._id : null
+                donorUserId: req.user ? req.user._id : null,
+                referralSource
             });
 
             // Check if user is already registered to return to frontend
