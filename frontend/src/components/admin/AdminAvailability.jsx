@@ -14,6 +14,8 @@ const AdminAvailability = () => {
     const [loading, setLoading] = useState(true);
     const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [quickSetType, setQuickSetType] = useState('all'); // 'all' or 'custom'
+    const [selectedDays, setSelectedDays] = useState([0, 1, 2, 3, 4, 5, 6]); // indices of weekDates
 
     // Custom Dropdown State
     const [searchTerm, setSearchTerm] = useState('');
@@ -361,7 +363,11 @@ const AdminAvailability = () => {
         <div className="admin-availability">
             <div className="admin-availability-header">
                 <h1>Doctor Availability Management</h1>
-                <button className="btn-quick-set" onClick={() => setShowConfirmModal(true)}>
+                <button className="btn-quick-set" onClick={() => {
+                    setQuickSetType('all');
+                    setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
+                    setShowConfirmModal(true);
+                }}>
                     ⚡ Quick Set Week
                 </button>
             </div>
@@ -655,22 +661,83 @@ const AdminAvailability = () => {
 
             {showConfirmModal && (
                 <div className="modal-overlay" onClick={() => setShowConfirmModal(false)}>
-                    <div className="modal-content confirm-modal" style={{ maxWidth: '450px' }} onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-content confirm-modal" style={{ maxWidth: '500px' }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>Confirm Action</h2>
+                            <h2>⚡ Quick Set Availability</h2>
                             <button className="modal-close" onClick={() => setShowConfirmModal(false)}>×</button>
                         </div>
-                        <div className="confirm-modal-body">
-                            <p style={{ margin: 0, padding: '20px 24px', color: '#475569', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                                Are you sure you want to set the default availability (Morning & Afternoon slots) for all 7 days for this doctor?
+                        <div className="confirm-modal-body" style={{ padding: '20px 24px' }}>
+                            <p style={{ margin: '0 0 16px 0', color: '#475569', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                                Apply this doctor's default weekly time slots to the calendar. Select the schedule scope below:
                             </p>
+                            
+                            <div className="quickset-options" style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.95rem', color: '#1e293b', fontWeight: '500' }}>
+                                    <input 
+                                        type="radio" 
+                                        name="quickSetType" 
+                                        value="all" 
+                                        checked={quickSetType === 'all'} 
+                                        onChange={() => setQuickSetType('all')} 
+                                    />
+                                    <span>All 7 Days</span>
+                                </label>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.95rem', color: '#1e293b', fontWeight: '500' }}>
+                                    <input 
+                                        type="radio" 
+                                        name="quickSetType" 
+                                        value="custom" 
+                                        checked={quickSetType === 'custom'} 
+                                        onChange={() => setQuickSetType('custom')} 
+                                    />
+                                    <span>Custom Days</span>
+                                </label>
+                            </div>
+
+                            {quickSetType === 'custom' && (
+                                <div className="custom-days-selector" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '10px' }}>
+                                    {weekDates.map((date, idx) => {
+                                        const isChecked = selectedDays.includes(idx);
+                                        const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+                                        const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                        
+                                        return (
+                                            <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: '#334155' }}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={isChecked} 
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedDays(prev => [...prev, idx]);
+                                                        } else {
+                                                            setSelectedDays(prev => prev.filter(i => i !== idx));
+                                                        }
+                                                    }}
+                                                />
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <span style={{ fontWeight: '600' }}>{dayName.slice(0, 3)}</span>
+                                                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{formattedDate}</span>
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                         <div className="form-actions" style={{ padding: '16px 24px', borderTop: '1px solid #f1f5f9' }}>
                             <button className="btn-cancel" onClick={() => setShowConfirmModal(false)}>
                                 Cancel
                             </button>
-                            <button className="btn-submit" onClick={handleConfirmQuickSet}>
-                                Yes, Set Schedule
+                            <button 
+                                className="btn-submit" 
+                                onClick={handleConfirmQuickSet}
+                                disabled={quickSetType === 'custom' && selectedDays.length === 0}
+                                style={{
+                                    opacity: (quickSetType === 'custom' && selectedDays.length === 0) ? 0.5 : 1,
+                                    cursor: (quickSetType === 'custom' && selectedDays.length === 0) ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                Set Schedule
                             </button>
                         </div>
                     </div>
