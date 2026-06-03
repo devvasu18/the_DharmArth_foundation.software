@@ -10,12 +10,13 @@ import './AdminLeads.css';
 
 // Source tag configuration
 const SOURCE_CONFIG = {
-    mobile_app:       { label: '📱 Mobile App',      color: '#6366f1', bg: '#ede9fe' },
-    web_contact_page: { label: '🌐 Web Contact Page', color: '#0d9488', bg: '#ccfbf1' },
-    cms_contact_form: { label: '📝 CMS Form',         color: '#0284c7', bg: '#e0f2fe' },
-    contact_form:     { label: '📝 Contact Form',     color: '#0284c7', bg: '#e0f2fe' },
-    donation_exit:    { label: '💛 Donate Reminder',  color: '#d97706', bg: '#fef3c7' },
-    chat:             { label: '🤖 AI Chatbot',       color: '#64748b', bg: '#f1f5f9' },
+    mobile_app:        { label: '📱 Mobile App',       color: '#6366f1', bg: '#ede9fe' },
+    web_contact_page:  { label: '🌐 Web Contact Page',  color: '#0d9488', bg: '#ccfbf1' },
+    cms_contact_form:  { label: '📝 CMS Form',          color: '#0284c7', bg: '#e0f2fe' },
+    contact_form:      { label: '📝 Contact Form',      color: '#0284c7', bg: '#e0f2fe' },
+    donation_exit:     { label: '💛 Donate Reminder',   color: '#d97706', bg: '#fef3c7' },
+    chat:              { label: '🤖 AI Chatbot',        color: '#64748b', bg: '#f1f5f9' },
+    body_test_booking: { label: '🔬 Body Test Booking', color: '#8b5cf6', bg: '#f5f3ff' },
 };
 
 const TYPE_CONFIG = {

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { API_BASE_URL } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 import './DoctorAvailability.css';
 
 const API_URL = `${API_BASE_URL}/api`;
@@ -24,6 +26,16 @@ const DoctorAvailability = () => {
     const [doctorFaqs, setDoctorFaqs] = useState([]);
     const [loadingFaqs, setLoadingFaqs] = useState(true);
 
+    // Admin Settings State (for mobile dialer)
+    const [adminMobile, setAdminMobile] = useState('918306305569');
+
+    // Booking Modal & Form State
+    const { user: authUser } = useAuth();
+    const [bookingModalOpen, setBookingModalOpen] = useState(false);
+    const [selectedTestForBooking, setSelectedTestForBooking] = useState(null);
+    const [bookingForm, setBookingForm] = useState({ name: '', mobile: '' });
+    const [bookingSubmitLoading, setBookingSubmitLoading] = useState(false);
+
     useEffect(() => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -32,7 +44,71 @@ const DoctorAvailability = () => {
         fetchEmergencyDoctors();
         fetchBodyTests();
         fetchDoctorFaqs();
+        fetchSettings();
     }, []);
+
+    const fetchSettings = async () => {
+        try {
+            const response = await fetch(`${API_URL}/content/settings`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.admin_suspension_mobile) {
+                    setAdminMobile(data.admin_suspension_mobile);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to fetch settings", error);
+        }
+    };
+
+    useEffect(() => {
+        if (bookingModalOpen && authUser) {
+            setBookingForm({
+                name: authUser.name || '',
+                mobile: authUser.mobile || ''
+            });
+        }
+    }, [bookingModalOpen, authUser]);
+
+    const handleBookingSubmit = async (e) => {
+        e.preventDefault();
+        if (!bookingForm.name.trim() || bookingForm.mobile.length !== 10) {
+            toast.error("Please fill in all details with a valid 10-digit mobile number");
+            return;
+        }
+
+        setBookingSubmitLoading(true);
+        try {
+            const response = await fetch(`${API_URL}/leads`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: bookingForm.name.trim(),
+                    mobile: bookingForm.mobile,
+                    type: 'contact',
+                    source: 'body_test_booking',
+                    notes: `Requested Booking for Test: "${selectedTestForBooking.name}"\nCategory: ${selectedTestForBooking.category}\nPrice: ${selectedTestForBooking.price.startsWith('₹') ? selectedTestForBooking.price : `₹${selectedTestForBooking.price}`}\n\nWe will contact you soon.`,
+                    language: localStorage.getItem('i18nextLng') || 'en'
+                })
+            });
+
+            if (response.ok) {
+                toast.success("Booking request submitted! We will contact you soon.");
+                setBookingModalOpen(false);
+                setBookingForm({ name: '', mobile: '' });
+            } else {
+                const errData = await response.json();
+                toast.error(errData.message || "Failed to submit booking. Please try again.");
+            }
+        } catch (error) {
+            console.error("Booking submit error:", error);
+            toast.error("Failed to submit booking. Please try again.");
+        } finally {
+            setBookingSubmitLoading(false);
+        }
+    };
 
     // Removed fetchWeekAvailability useEffect as we default to category view with today selected
 
@@ -708,8 +784,12 @@ const DoctorAvailability = () => {
                                                 <button 
                                                     className="btn-book-test"
                                                     onClick={() => {
-                                                        const message = `Hello Dharmarth Foundation, I would like to book the "${test.name}" package (${test.category}) priced at ${test.price.startsWith('₹') ? test.price : `₹${test.price}`}. Please guide me with the scheduling.`;
-                                                        window.open(`https://wa.me/918306305569?text=${encodeURIComponent(message)}`, '_blank');
+                                                        if (window.innerWidth < 1024) {
+                                                            window.location.href = `tel:${adminMobile}`;
+                                                        } else {
+                                                            setSelectedTestForBooking(test);
+                                                            setBookingModalOpen(true);
+                                                        }
                                                     }}
                                                 >
                                                     Book This Test
@@ -760,6 +840,60 @@ const DoctorAvailability = () => {
                     </div>
                 </div>
             </div>
+
+            {bookingModalOpen && selectedTestForBooking && (
+                <div className="test-booking-modal-overlay" onClick={() => setBookingModalOpen(false)}>
+                    <div className="test-booking-modal-card" onClick={(e) => e.stopPropagation()}>
+                        <button className="test-booking-modal-close" onClick={() => setBookingModalOpen(false)}>
+                            ✕
+                        </button>
+                        <div className="test-booking-modal-header">
+                            <h2>Book Diagnostic Test</h2>
+                            <p>Please enter your details. We will contact you soon to schedule your checkup.</p>
+                        </div>
+                        
+                        <div className="selected-test-summary">
+                            <div className="summary-icon">🔬</div>
+                            <div className="summary-info">
+                                <h4>{selectedTestForBooking.name}</h4>
+                                <p className="summary-desc">{selectedTestForBooking.description}</p>
+                                <div className="summary-price-tag">
+                                    <span>Price:</span>
+                                    <strong>{selectedTestForBooking.price.startsWith('₹') ? selectedTestForBooking.price : `₹${selectedTestForBooking.price}`}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleBookingSubmit} className="test-booking-modal-form">
+                            <div className="form-group-custom">
+                                <label>Your Name</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="Enter your full name" 
+                                    value={bookingForm.name}
+                                    onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group-custom">
+                                <label>Mobile Number</label>
+                                <input 
+                                    type="tel" 
+                                    placeholder="Enter 10-digit mobile number" 
+                                    value={bookingForm.mobile}
+                                    onChange={(e) => setBookingForm({ ...bookingForm, mobile: e.target.value })}
+                                    maxLength={10}
+                                    required
+                                />
+                            </div>
+                            <button type="submit" className="btn-booking-submit" disabled={bookingSubmitLoading}>
+                                {bookingSubmitLoading ? 'Submitting...' : 'Confirm Booking'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             <Footer />
         </>
     );
