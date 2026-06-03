@@ -41,6 +41,27 @@ const doctorSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    defaultTimeSlots: {
+        type: [{
+            period: {
+                type: String,
+                enum: ['Morning', 'Afternoon', 'Evening'],
+                required: true
+            },
+            startTime: {
+                type: String,
+                required: true
+            },
+            endTime: {
+                type: String,
+                required: true
+            }
+        }],
+        default: [
+            { period: 'Morning', startTime: '09:00', endTime: '12:00' },
+            { period: 'Afternoon', startTime: '14:00', endTime: '17:00' }
+        ]
+    },
     createdAt: {
         type: Date,
         default: Date.now

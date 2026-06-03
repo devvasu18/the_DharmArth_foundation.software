@@ -13,6 +13,7 @@ const AdminAvailability = () => {
     const [availability, setAvailability] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showScheduleModal, setShowScheduleModal] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     // Custom Dropdown State
     const [searchTerm, setSearchTerm] = useState('');
@@ -262,14 +263,21 @@ const AdminAvailability = () => {
         });
     };
 
-    const quickSetWeek = async () => {
+    const handleConfirmQuickSet = async () => {
+        setShowConfirmModal(false);
         if (!selectedDoctor) return;
-        if (!confirm('Set default availability for all 7 days?')) return;
 
-        const defaultSlots = [
-            { period: 'Morning', startTime: '09:00', endTime: '12:00', status: 'Available' },
-            { period: 'Afternoon', startTime: '14:00', endTime: '17:00', status: 'Available' }
-        ];
+        const defaultSlots = selectedDoctor.defaultTimeSlots && selectedDoctor.defaultTimeSlots.length > 0
+            ? selectedDoctor.defaultTimeSlots.map(slot => ({
+                period: slot.period,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+                status: 'Available'
+              }))
+            : [
+                { period: 'Morning', startTime: '09:00', endTime: '12:00', status: 'Available' },
+                { period: 'Afternoon', startTime: '14:00', endTime: '17:00', status: 'Available' }
+              ];
 
         try {
             const availabilities = weekDates.map(date => ({
@@ -310,7 +318,7 @@ const AdminAvailability = () => {
         <div className="admin-availability">
             <div className="admin-availability-header">
                 <h1>Doctor Availability Management</h1>
-                <button className="btn-quick-set" onClick={quickSetWeek}>
+                <button className="btn-quick-set" onClick={() => setShowConfirmModal(true)}>
                     ⚡ Quick Set Week
                 </button>
             </div>
@@ -597,6 +605,30 @@ const AdminAvailability = () => {
                                     Save Schedule
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showConfirmModal && (
+                <div className="modal-overlay" onClick={() => setShowConfirmModal(false)}>
+                    <div className="modal-content confirm-modal" style={{ maxWidth: '450px' }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Confirm Action</h2>
+                            <button className="modal-close" onClick={() => setShowConfirmModal(false)}>×</button>
+                        </div>
+                        <div className="confirm-modal-body">
+                            <p style={{ margin: 0, padding: '20px 24px', color: '#475569', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                                Are you sure you want to set the default availability (Morning & Afternoon slots) for all 7 days for this doctor?
+                            </p>
+                        </div>
+                        <div className="form-actions" style={{ padding: '16px 24px', borderTop: '1px solid #f1f5f9' }}>
+                            <button className="btn-cancel" onClick={() => setShowConfirmModal(false)}>
+                                Cancel
+                            </button>
+                            <button className="btn-submit" onClick={handleConfirmQuickSet}>
+                                Yes, Set Schedule
+                            </button>
                         </div>
                     </div>
                 </div>
