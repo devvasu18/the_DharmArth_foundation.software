@@ -57,6 +57,8 @@ const GalleryDetail = lazy(() => import('./pages/GalleryDetail'));
 const AdminLeads = lazy(() => import('./components/admin/AdminLeads'));
 const AdminDoctors = lazy(() => import('./components/admin/AdminDoctors'));
 const AdminAvailability = lazy(() => import('./components/admin/AdminAvailability'));
+const AdminBodyTests = lazy(() => import('./components/admin/AdminBodyTests'));
+const AdminDoctorFaq = lazy(() => import('./components/admin/AdminDoctorFaq'));
 const DoctorAvailability = lazy(() => import('./pages/DoctorAvailability'));
 const OrderMedicine = lazy(() => import('./pages/OrderMedicine'));
 const AdminPrescriptions = lazy(() => import('./components/admin/AdminPrescriptions'));
@@ -144,6 +146,8 @@ const router = createBrowserRouter(
         <Route path="leads" element={<AdminLeads />} />
         <Route path="doctors" element={<AdminDoctors />} />
         <Route path="availability" element={<AdminAvailability />} />
+        <Route path="body-tests" element={<AdminBodyTests />} />
+        <Route path="doctor-faq" element={<AdminDoctorFaq />} />
         <Route path="prescriptions" element={<AdminPrescriptions />} />
         <Route path="order-medicine" element={<AdminOrderMedicine />} />
         <Route path="pharmacy-orders" element={<AdminPharmacyOrders />} />

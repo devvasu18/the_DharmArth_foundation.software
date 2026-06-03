@@ -105,6 +105,8 @@ app.use('/api/payouts', require('./routes/payoutRoutes'));
 app.use('/api/cms', require('./routes/cmsRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
 app.use('/api/marg', margRoutes);
+app.use('/api/body-tests', require('./routes/bodyTestRoutes'));
+app.use('/api/doctor-faqs', require('./routes/doctorFaqRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

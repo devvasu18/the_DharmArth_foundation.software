@@ -18,6 +18,11 @@ const DoctorAvailability = () => {
     const [loading, setLoading] = useState(true);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [openFaqIndex, setOpenFaqIndex] = useState(null);
+    const [bodyTests, setBodyTests] = useState([]);
+    const [loadingTests, setLoadingTests] = useState(true);
+    const [selectedTestCategory, setSelectedTestCategory] = useState('All');
+    const [doctorFaqs, setDoctorFaqs] = useState([]);
+    const [loadingFaqs, setLoadingFaqs] = useState(true);
 
     useEffect(() => {
         const today = new Date();
@@ -25,6 +30,8 @@ const DoctorAvailability = () => {
         setSelectedDate(today);
         generateWeekDates();
         fetchEmergencyDoctors();
+        fetchBodyTests();
+        fetchDoctorFaqs();
     }, []);
 
     // Removed fetchWeekAvailability useEffect as we default to category view with today selected
@@ -93,6 +100,34 @@ const DoctorAvailability = () => {
             setEmergencyDoctors(data);
         } catch (error) {
             console.error('Failed to fetch emergency doctors');
+        }
+    };
+
+    const fetchBodyTests = async () => {
+        try {
+            setLoadingTests(true);
+            const response = await fetch(`${API_URL}/body-tests?isActive=true`);
+            if (!response.ok) throw new Error('Failed to fetch');
+            const data = await response.json();
+            setBodyTests(data);
+        } catch (error) {
+            console.error('Failed to fetch body tests:', error);
+        } finally {
+            setLoadingTests(false);
+        }
+    };
+
+    const fetchDoctorFaqs = async () => {
+        try {
+            setLoadingFaqs(true);
+            const response = await fetch(`${API_URL}/doctor-faqs?isVisible=true`);
+            if (!response.ok) throw new Error('Failed to fetch');
+            const data = await response.json();
+            setDoctorFaqs(data);
+        } catch (error) {
+            console.error('Failed to fetch doctor FAQs:', error);
+        } finally {
+            setLoadingFaqs(false);
         }
     };
 
@@ -608,57 +643,80 @@ const DoctorAvailability = () => {
                             <h2>Available Medical Tests</h2>
                             <p>Comprehensive diagnostic services at affordable prices</p>
                         </div>
-                        <div className="tests-grid">
-                            {[
-                                {
-                                    id: 1,
-                                    name: "Full Body Checkup",
-                                    price: "₹1999",
-                                    image: "https://placehold.co/600x400/2c3e50/ffffff?text=Body+Checkup",
-                                    category: "General Health",
-                                    time: "45 mins"
-                                },
-                                {
-                                    id: 2,
-                                    name: "Complete Blood Count",
-                                    price: "₹350",
-                                    image: "https://placehold.co/600x400/e74c3c/ffffff?text=Blood+Test",
-                                    category: "Pathology",
-                                    time: "10 mins"
-                                },
-                                {
-                                    id: 3,
-                                    name: "Digital X-Ray",
-                                    price: "₹500",
-                                    image: "https://placehold.co/600x400/3498db/ffffff?text=X-Ray",
-                                    category: "Radiology",
-                                    time: "15 mins"
-                                },
-                                {
-                                    id: 4,
-                                    name: "MRI Scan",
-                                    price: "₹4500",
-                                    image: "https://placehold.co/600x400/9b59b6/ffffff?text=MRI",
-                                    category: "Radiology",
-                                    time: "30 mins"
-                                }
-                            ].map(test => (
-                                <div key={test.id} className="test-card">
-                                    <div className="test-image">
-                                        <img src={test.image} alt={test.name} />
-                                        <div className="test-category">{test.category}</div>
-                                    </div>
-                                    <div className="test-content">
-                                        <h3>{test.name}</h3>
-                                        <div className="test-meta">
-                                            <span>⏱️ {test.time}</span>
-                                            <span className="test-price">{test.price}</span>
+
+                        {/* Category filter tabs */}
+                        {!loadingTests && bodyTests.length > 0 && (
+                            <div className="test-categories-filter">
+                                {['All', ...new Set(bodyTests.map(t => t.category))].map(cat => (
+                                    <button
+                                        key={cat}
+                                        className={`test-category-chip ${selectedTestCategory === cat ? 'active' : ''}`}
+                                        onClick={() => setSelectedTestCategory(cat)}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {loadingTests ? (
+                            <div className="tests-grid">
+                                {[1, 2, 3, 4].map(n => (
+                                    <div key={n} className="test-card skeleton">
+                                        <div className="test-image skeleton-pulse"></div>
+                                        <div className="test-content">
+                                            <div className="skeleton-line skeleton-title skeleton-pulse"></div>
+                                            <div className="skeleton-line skeleton-text skeleton-pulse"></div>
+                                            <div className="skeleton-line skeleton-meta skeleton-pulse"></div>
+                                            <div className="skeleton-button skeleton-pulse"></div>
                                         </div>
-                                        <button className="btn-book-test">Book This Test</button>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        ) : bodyTests.length === 0 ? (
+                            <div className="no-tests-premium">
+                                <div className="no-tests-emoji">🔬</div>
+                                <h3>No Medical Tests Listed</h3>
+                                <p>We are currently updating our checkup packages. Please check back soon or call our helpline.</p>
+                            </div>
+                        ) : (
+                            <div className="tests-grid">
+                                {bodyTests
+                                    .filter(t => selectedTestCategory === 'All' || t.category === selectedTestCategory)
+                                    .map(test => (
+                                        <div key={test._id} className="test-card">
+                                            <div className="test-image">
+                                                {test.image ? (
+                                                    <img 
+                                                        src={test.image.startsWith('http') ? test.image : `${API_BASE_URL}${test.image.startsWith('/') ? '' : '/'}${test.image}`} 
+                                                        alt={test.name} 
+                                                    />
+                                                ) : (
+                                                    <div className="test-placeholder-image">🔬</div>
+                                                )}
+                                                <div className="test-category">{test.category}</div>
+                                            </div>
+                                            <div className="test-content">
+                                                <h3>{test.name}</h3>
+                                                <p className="test-description">{test.description || 'Professional diagnostic checkup package.'}</p>
+                                                <div className="test-meta">
+                                                    <span>⏱️ {test.time}</span>
+                                                    <span className="test-price">{test.price.startsWith('₹') ? test.price : `₹${test.price}`}</span>
+                                                </div>
+                                                <button 
+                                                    className="btn-book-test"
+                                                    onClick={() => {
+                                                        const message = `Hello Dharmarth Foundation, I would like to book the "${test.name}" package (${test.category}) priced at ${test.price.startsWith('₹') ? test.price : `₹${test.price}`}. Please guide me with the scheduling.`;
+                                                        window.open(`https://wa.me/918306305569?text=${encodeURIComponent(message)}`, '_blank');
+                                                    }}
+                                                >
+                                                    Book This Test
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* FAQ Section */}
@@ -670,38 +728,31 @@ const DoctorAvailability = () => {
                             </div>
 
                             <div className="faq-grid">
-                                {[
-                                    {
-                                        question: "Do I need an appointment for the Government Hospital?",
-                                        answer: "For general visits, appointments are on a first-come, first-served basis. However, specialized consultations may require prior booking."
-                                    },
-                                    {
-                                        question: "What documents do I need to carry?",
-                                        answer: "Please carry a valid government ID (Aadhar Card/Voter ID) and any previous medical records or prescriptions for a better diagnosis."
-                                    },
-                                    {
-                                        question: "Can I book medical tests online?",
-                                        answer: "Yes, you can browse available tests in the section above and book them directly. You will receive a confirmation time via SMS."
-                                    },
-                                    {
-                                        question: "Is emergency care available 24/7?",
-                                        answer: "Yes, our emergency doctors are available 24/7. Look for the 'Emergency Available' badge on doctor cards or visit the Emergency section immediately."
-                                    }
-                                ].map((faq, index) => (
-                                    <div
-                                        key={index}
-                                        className={`faq-item ${openFaqIndex === index ? 'open' : ''}`}
-                                        onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
-                                    >
-                                        <div className="faq-question">
-                                            <h3>{faq.question}</h3>
-                                            <span className="faq-toggle">{openFaqIndex === index ? '−' : '+'}</span>
-                                        </div>
-                                        <div className="faq-answer">
-                                            <p>{faq.answer}</p>
-                                        </div>
+                                {loadingFaqs ? (
+                                    <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
+                                        Loading questions...
                                     </div>
-                                ))}
+                                ) : doctorFaqs.length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
+                                        No FAQs available currently.
+                                    </div>
+                                ) : (
+                                    doctorFaqs.map((faq, index) => (
+                                        <div
+                                            key={faq._id}
+                                            className={`faq-item ${openFaqIndex === index ? 'open' : ''}`}
+                                            onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
+                                        >
+                                            <div className="faq-question">
+                                                <h3>{faq.question}</h3>
+                                                <span className="faq-toggle">{openFaqIndex === index ? '−' : '+'}</span>
+                                            </div>
+                                            <div className="faq-answer">
+                                                <p>{faq.answer}</p>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>

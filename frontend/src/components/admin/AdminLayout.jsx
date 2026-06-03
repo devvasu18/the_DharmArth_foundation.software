@@ -155,7 +155,9 @@ const AdminLayout = () => {
         }
 
         if (location.pathname.includes('/admin/doctors') ||
-            location.pathname.includes('/admin/availability')) {
+            location.pathname.includes('/admin/availability') ||
+            location.pathname.includes('/admin/body-tests') ||
+            location.pathname.includes('/admin/doctor-faq')) {
             setDoctorsDropdownOpen(true);
         }
 
@@ -384,6 +386,22 @@ const AdminLayout = () => {
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Availability Management
+                                </NavLink>
+                                <NavLink
+                                    to="/admin/body-tests"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
+                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
+                                    Body Tests
+                                </NavLink>
+                                <NavLink
+                                    to="/admin/doctor-faq"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
+                                    style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.9rem', padding: '5px 0' }}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
+                                    Doctor FAQs
                                 </NavLink>
                             </div>
                         )}
