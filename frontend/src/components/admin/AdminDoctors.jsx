@@ -234,7 +234,7 @@ const AdminDoctors = () => {
     return (
         <div className="admin-doctors">
             <div className="admin-doctors-header">
-                <h1>Doctor Management</h1>
+                <h5>Doctor Management</h5>
                 <button className="btn-add-doctor" onClick={() => openModal()}>
                     <span>+</span> Add New Doctor
                 </button>
@@ -491,7 +491,7 @@ const AdminDoctors = () => {
                             {(() => {
                                 const renderSlotsSection = (hospitalType, label) => {
                                     const slots = (formData.defaultTimeSlots || []).map((slot, index) => ({ ...slot, originalIndex: index })).filter(s => s.hospitalType === hospitalType);
-                                    
+
                                     return (
                                         <div className="default-slots-section" style={{ margin: '20px 0', borderTop: '1px solid #f1f5f9', paddingTop: '15px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
