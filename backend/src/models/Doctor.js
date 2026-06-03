@@ -55,11 +55,19 @@ const doctorSchema = new mongoose.Schema({
             endTime: {
                 type: String,
                 required: true
+            },
+            hospitalType: {
+                type: String,
+                enum: ['government', 'clinic'],
+                required: true,
+                default: 'government'
             }
         }],
         default: [
-            { period: 'Morning', startTime: '09:00', endTime: '12:00' },
-            { period: 'Afternoon', startTime: '14:00', endTime: '17:00' }
+            { period: 'Morning', startTime: '09:00', endTime: '12:00', hospitalType: 'government' },
+            { period: 'Afternoon', startTime: '14:00', endTime: '17:00', hospitalType: 'government' },
+            { period: 'Morning', startTime: '09:00', endTime: '12:00', hospitalType: 'clinic' },
+            { period: 'Afternoon', startTime: '14:00', endTime: '17:00', hospitalType: 'clinic' }
         ]
     },
     createdAt: {

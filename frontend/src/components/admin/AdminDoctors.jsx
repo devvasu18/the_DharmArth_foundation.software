@@ -23,8 +23,10 @@ const AdminDoctors = () => {
         isActive: true,
         isEmergencyAvailable: false,
         defaultTimeSlots: [
-            { period: 'Morning', startTime: '09:00', endTime: '12:00' },
-            { period: 'Afternoon', startTime: '14:00', endTime: '17:00' }
+            { period: 'Morning', startTime: '09:00', endTime: '12:00', hospitalType: 'government' },
+            { period: 'Afternoon', startTime: '14:00', endTime: '17:00', hospitalType: 'government' },
+            { period: 'Morning', startTime: '09:00', endTime: '12:00', hospitalType: 'clinic' },
+            { period: 'Afternoon', startTime: '14:00', endTime: '17:00', hospitalType: 'clinic' }
         ]
     });
 
@@ -120,8 +122,10 @@ const AdminDoctors = () => {
             setFormData({
                 ...doctor,
                 defaultTimeSlots: doctor.defaultTimeSlots || [
-                    { period: 'Morning', startTime: '09:00', endTime: '12:00' },
-                    { period: 'Afternoon', startTime: '14:00', endTime: '17:00' }
+                    { period: 'Morning', startTime: '09:00', endTime: '12:00', hospitalType: 'government' },
+                    { period: 'Afternoon', startTime: '14:00', endTime: '17:00', hospitalType: 'government' },
+                    { period: 'Morning', startTime: '09:00', endTime: '12:00', hospitalType: 'clinic' },
+                    { period: 'Afternoon', startTime: '14:00', endTime: '17:00', hospitalType: 'clinic' }
                 ]
             });
         } else {
@@ -137,20 +141,22 @@ const AdminDoctors = () => {
                 isActive: true,
                 isEmergencyAvailable: false,
                 defaultTimeSlots: [
-                    { period: 'Morning', startTime: '09:00', endTime: '12:00' },
-                    { period: 'Afternoon', startTime: '14:00', endTime: '17:00' }
+                    { period: 'Morning', startTime: '09:00', endTime: '12:00', hospitalType: 'government' },
+                    { period: 'Afternoon', startTime: '14:00', endTime: '17:00', hospitalType: 'government' },
+                    { period: 'Morning', startTime: '09:00', endTime: '12:00', hospitalType: 'clinic' },
+                    { period: 'Afternoon', startTime: '14:00', endTime: '17:00', hospitalType: 'clinic' }
                 ]
             });
         }
         setShowModal(true);
     };
 
-    const addDefaultSlot = () => {
+    const addDefaultSlot = (hospitalType) => {
         setFormData(prev => ({
             ...prev,
             defaultTimeSlots: [
                 ...(prev.defaultTimeSlots || []),
-                { period: 'Morning', startTime: '09:00', endTime: '12:00' }
+                { period: 'Morning', startTime: '09:00', endTime: '12:00', hospitalType }
             ]
         }));
     };
@@ -481,58 +487,75 @@ const AdminDoctors = () => {
                                 </div>
                             </div>
 
-                            <div className="default-slots-section" style={{ margin: '20px 0', borderTop: '1px solid #f1f5f9', paddingTop: '15px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                                    <h3 style={{ fontSize: '1rem', color: '#1e293b', margin: 0 }}>Default Weekly Time Slots</h3>
-                                    <button type="button" onClick={addDefaultSlot} style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', borderRadius: '4px', padding: '4px 8px', fontSize: '0.8rem', cursor: 'pointer' }}>
-                                        + Add Slot
-                                    </button>
-                                </div>
-                                {(formData.defaultTimeSlots || []).length === 0 ? (
-                                    <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '5px 0' }}>No default slots configured. Hardcoded defaults will be used.</p>
-                                ) : (
-                                    (formData.defaultTimeSlots || []).map((slot, index) => (
-                                        <div key={index} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
-                                            <div>
-                                                <select
-                                                    value={slot.period}
-                                                    onChange={(e) => updateDefaultSlot(index, 'period', e.target.value)}
-                                                    style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.85rem' }}
-                                                >
-                                                    <option value="Morning">Morning</option>
-                                                    <option value="Afternoon">Afternoon</option>
-                                                    <option value="Evening">Evening</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <input
-                                                    type="time"
-                                                    value={slot.startTime}
-                                                    onChange={(e) => updateDefaultSlot(index, 'startTime', e.target.value)}
-                                                    style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.85rem' }}
-                                                />
-                                            </div>
-                                            <div>
-                                                <input
-                                                    type="time"
-                                                    value={slot.endTime}
-                                                    onChange={(e) => updateDefaultSlot(index, 'endTime', e.target.value)}
-                                                    style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.85rem' }}
-                                                />
-                                            </div>
-                                            <div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeDefaultSlot(index)}
-                                                    style={{ background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                >
-                                                    ×
+                            {/* Custom helper section to render slots by type */}
+                            {(() => {
+                                const renderSlotsSection = (hospitalType, label) => {
+                                    const slots = (formData.defaultTimeSlots || []).map((slot, index) => ({ ...slot, originalIndex: index })).filter(s => s.hospitalType === hospitalType);
+                                    
+                                    return (
+                                        <div className="default-slots-section" style={{ margin: '20px 0', borderTop: '1px solid #f1f5f9', paddingTop: '15px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                                <h4 style={{ fontSize: '0.95rem', color: '#1e293b', margin: 0 }}>{label}</h4>
+                                                <button type="button" onClick={() => addDefaultSlot(hospitalType)} style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', borderRadius: '4px', padding: '4px 8px', fontSize: '0.8rem', cursor: 'pointer' }}>
+                                                    + Add Slot
                                                 </button>
                                             </div>
+                                            {slots.length === 0 ? (
+                                                <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '5px 0' }}>No default slots configured. Click Add Slot to add custom hours.</p>
+                                            ) : (
+                                                slots.map((slot) => (
+                                                    <div key={slot.originalIndex} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
+                                                        <div>
+                                                            <select
+                                                                value={slot.period}
+                                                                onChange={(e) => updateDefaultSlot(slot.originalIndex, 'period', e.target.value)}
+                                                                style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.85rem' }}
+                                                            >
+                                                                <option value="Morning">Morning</option>
+                                                                <option value="Afternoon">Afternoon</option>
+                                                                <option value="Evening">Evening</option>
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <input
+                                                                type="time"
+                                                                value={slot.startTime}
+                                                                onChange={(e) => updateDefaultSlot(slot.originalIndex, 'startTime', e.target.value)}
+                                                                style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.85rem' }}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <input
+                                                                type="time"
+                                                                value={slot.endTime}
+                                                                onChange={(e) => updateDefaultSlot(slot.originalIndex, 'endTime', e.target.value)}
+                                                                style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.85rem' }}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeDefaultSlot(slot.originalIndex)}
+                                                                style={{ background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                            >
+                                                                ×
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
                                         </div>
-                                    ))
-                                )}
-                            </div>
+                                    );
+                                };
+
+                                return (
+                                    <>
+                                        <h3 style={{ fontSize: '1rem', color: '#0f172a', margin: '20px 0 0', fontWeight: 'bold' }}>Default Weekly Time Slots</h3>
+                                        {(formData.type === 'government' || formData.type === 'both') && renderSlotsSection('government', '🏥 Government Hospital Slots')}
+                                        {(formData.type === 'clinic' || formData.type === 'both') && renderSlotsSection('clinic', '🏨 Private Clinic Slots')}
+                                    </>
+                                );
+                            })()}
 
                             <div className="form-actions">
                                 <button type="button" className="btn-cancel" onClick={closeModal}>

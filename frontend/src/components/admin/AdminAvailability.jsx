@@ -267,28 +267,71 @@ const AdminAvailability = () => {
         setShowConfirmModal(false);
         if (!selectedDoctor) return;
 
-        const defaultSlots = selectedDoctor.defaultTimeSlots && selectedDoctor.defaultTimeSlots.length > 0
-            ? selectedDoctor.defaultTimeSlots.map(slot => ({
-                period: slot.period,
-                startTime: slot.startTime,
-                endTime: slot.endTime,
-                status: 'Available'
-              }))
-            : [
-                { period: 'Morning', startTime: '09:00', endTime: '12:00', status: 'Available' },
-                { period: 'Afternoon', startTime: '14:00', endTime: '17:00', status: 'Available' }
-              ];
-
         try {
-            const availabilities = weekDates.map(date => ({
-                date: date.toISOString(),
-                dayName: getDayName(date),
-                timeSlots: defaultSlots,
-                isEnabled: true,
-                hospitalType: selectedDoctor.type === 'both' ? 'government' : selectedDoctor.type,
-                emergencyAvailable: false,
-                notes: ''
-            }));
+            const availabilities = [];
+
+            weekDates.forEach(date => {
+                const dateIso = date.toISOString();
+                const dayName = getDayName(date);
+
+                // Add Government availability if applicable
+                if (selectedDoctor.type === 'government' || selectedDoctor.type === 'both') {
+                    const govSlotsFiltered = selectedDoctor.defaultTimeSlots 
+                        ? selectedDoctor.defaultTimeSlots.filter(slot => slot.hospitalType === 'government' || !slot.hospitalType)
+                        : [];
+                    
+                    const govSlots = govSlotsFiltered.length > 0
+                        ? govSlotsFiltered.map(slot => ({
+                            period: slot.period,
+                            startTime: slot.startTime,
+                            endTime: slot.endTime,
+                            status: 'Available'
+                          }))
+                        : [
+                            { period: 'Morning', startTime: '09:00', endTime: '12:00', status: 'Available' },
+                            { period: 'Afternoon', startTime: '14:00', endTime: '17:00', status: 'Available' }
+                          ];
+
+                    availabilities.push({
+                        date: dateIso,
+                        dayName,
+                        timeSlots: govSlots,
+                        isEnabled: true,
+                        hospitalType: 'government',
+                        emergencyAvailable: false,
+                        notes: ''
+                    });
+                }
+
+                // Add Private Clinic availability if applicable
+                if (selectedDoctor.type === 'clinic' || selectedDoctor.type === 'both') {
+                    const clinicSlotsFiltered = selectedDoctor.defaultTimeSlots 
+                        ? selectedDoctor.defaultTimeSlots.filter(slot => slot.hospitalType === 'clinic')
+                        : [];
+
+                    const clinicSlots = clinicSlotsFiltered.length > 0
+                        ? clinicSlotsFiltered.map(slot => ({
+                            period: slot.period,
+                            startTime: slot.startTime,
+                            endTime: slot.endTime,
+                            status: 'Available'
+                          }))
+                        : [
+                            { period: 'Morning', startTime: '09:00', endTime: '12:00', status: 'Available' },
+                            { period: 'Afternoon', startTime: '14:00', endTime: '17:00', status: 'Available' }
+                          ];
+
+                    availabilities.push({
+                        date: dateIso,
+                        dayName,
+                        timeSlots: clinicSlots,
+                        isEnabled: true,
+                        hospitalType: 'clinic',
+                        emergencyAvailable: false,
+                        notes: ''
+                    });
+                }
+            });
 
             const response = await fetch(`${API_URL}/availability/bulk`, {
                 method: 'POST',
