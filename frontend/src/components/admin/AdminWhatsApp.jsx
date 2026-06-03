@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import { MessageSquare, RefreshCw, Power, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './AdminWhatsApp.css';
 
-const WHATSAPP_SERVICE_URL = import.meta.env.VITE_WHATSAPP_SERVICE_URL || 'http://http://44.203.78.96/:10000';
-const WHATSAPP_SERVICE_API_KEY = import.meta.env.VITE_WHATSAPP_SERVICE_API_KEY || 'df_ws_auth_6f8b9e2c4a1d3c5b7e9f0a2b4c6d8e0f';
 const DEFAULT_SESSION_ID = 'admin';
 
 const AdminWhatsApp = () => {
@@ -20,9 +18,7 @@ const AdminWhatsApp = () => {
     const fetchStatus = useCallback(async (showLoading = false) => {
         if (showLoading) setLoading(true);
         try {
-            const { data } = await axios.get(`${WHATSAPP_SERVICE_URL}/status/${DEFAULT_SESSION_ID}`, {
-                headers: { 'x-api-key': WHATSAPP_SERVICE_API_KEY }
-            });
+            const { data } = await api.get(`/whatsapp/status/${DEFAULT_SESSION_ID}`);
             setStatusData(data);
         } catch (error) {
             console.error("Failed to fetch WhatsApp status", error);
@@ -51,10 +47,7 @@ const AdminWhatsApp = () => {
     const handleReconnect = async () => {
         setActionLoading(true);
         try {
-            await axios.post(`${WHATSAPP_SERVICE_URL}/reconnect`,
-                { sessionId: DEFAULT_SESSION_ID },
-                { headers: { 'x-api-key': WHATSAPP_SERVICE_API_KEY } }
-            );
+            await api.post('/whatsapp/reconnect', { sessionId: DEFAULT_SESSION_ID });
             toast.success("Reconnecting session...");
             // Immediately fetch status to show initializing state
             setTimeout(() => fetchStatus(false), 1000);
@@ -70,9 +63,7 @@ const AdminWhatsApp = () => {
 
         setActionLoading(true);
         try {
-            await axios.delete(`${WHATSAPP_SERVICE_URL}/session/${DEFAULT_SESSION_ID}`, {
-                headers: { 'x-api-key': WHATSAPP_SERVICE_API_KEY }
-            });
+            await api.delete(`/whatsapp/session/${DEFAULT_SESSION_ID}`);
             toast.success("Session stopped");
             fetchStatus(false);
         } catch (error) {

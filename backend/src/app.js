@@ -87,6 +87,7 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/whatsapp', require('./routes/whatsappRoutes'));
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/subscriptions', require('./routes/subscriptionRoutes'));
