@@ -43,6 +43,10 @@ const loginUser = async (req, res) => {
     const { identifier, mobile, password } = req.body;
     const searchId = identifier || mobile;
 
+    if (!password || typeof password !== 'string') {
+        return res.status(401).json({ message: 'Invalid credentials or password' });
+    }
+
     try {
         const user = await User.findOne({
             $or: [
