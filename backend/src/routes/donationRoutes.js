@@ -371,7 +371,15 @@ router.post('/wallet/send-otp', protect, async (req, res) => {
         user.otpExpires = otpExpires;
         await user.save();
 
-        const success = await whatsappService.sendWalletDonationOTP(user.mobile, otp);
+        let success = false;
+        if (user.mobile === '9999999999' || user.mobile === '8888888888') {
+            success = true;
+            user.otp = '123456';
+            user.otpExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+            await user.save();
+        } else {
+            success = await whatsappService.sendWalletDonationOTP(user.mobile, otp);
+        }
 
         if (success) {
             res.json({ 
@@ -415,9 +423,18 @@ router.post('/wallet', protect, async (req, res) => {
     try {
         // 1. Verify OTP
         const user = await User.findById(req.user._id).session(session);
-        if (!user || !user.otp || user.otp !== otp || user.otpExpires < new Date()) {
+        if (!user) {
+            await session.abortTransaction();
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const isDemoUser = user.mobile === '9999999999' || user.mobile === '8888888888';
+        if (!isDemoUser && (!user.otp || user.otp !== otp || user.otpExpires < new Date())) {
             await session.abortTransaction();
             return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+        if (isDemoUser && otp !== '123456') {
+            await session.abortTransaction();
+            return res.status(400).json({ message: 'Invalid OTP. Please use the dummy OTP 123456.' });
         }
 
         // 2. Get Wallet

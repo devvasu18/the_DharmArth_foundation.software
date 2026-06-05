@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Linking
 } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
 import api from '../src/services/api';
@@ -104,75 +105,98 @@ export default function BankDetailsScreen() {
     >
       <Stack.Screen options={{ title: 'Bank Details', headerTitleAlign: 'center' }} />
       
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <View style={styles.headerIcon}>
-            <Ionicons name="business" size={32} color="#00bfa5" />
-          </View>
-          <Text style={styles.title}>Payout Profile</Text>
-          <Text style={styles.subtitle}>Provide your bank details to receive commissions.</Text>
-        </View>
-
-        <View style={styles.form}>
-          <Text style={styles.label}>Bank Name</Text>
-          <TouchableOpacity 
-            style={styles.pickerTrigger}
-            onPress={() => setShowBankPicker(true)}
-          >
-            <Text style={bankForm.bankName ? styles.pickerText : styles.placeholderText}>
-              {bankForm.bankName || "Select Bank"}
+      {Platform.OS === 'ios' ? (
+        <ScrollView contentContainerStyle={[styles.scrollContent, { flex: 1, justifyContent: 'center' }]}>
+          <View style={[styles.form, { alignItems: 'center', padding: 24 }]}>
+            <Ionicons name="business" size={48} color="#00bfa5" style={{ marginBottom: 12 }} />
+            <Text style={[styles.title, { fontSize: 18, marginTop: 12, textAlign: 'center', color: '#1e293b' }]}>
+              Web Payout Setup
             </Text>
-            <Ionicons name="chevron-down" size={20} color="#64748b" />
-          </TouchableOpacity>
-
-          <Text style={styles.label}>Account Holder Name</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="person-outline" size={18} color="#64748b" style={styles.fieldIcon} />
-            <TextInput
-              style={styles.input}
-              value={bankForm.accountHolder}
-              onChangeText={(text) => setBankForm({...bankForm, accountHolder: text})}
-              placeholder="Name as per Bank"
-            />
+            <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20, marginTop: 8 }}>
+              To comply with App Store guidelines, bank details and payout options cannot be configured within the iOS application.
+            </Text>
+            <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20, marginTop: 12, fontWeight: '600' }}>
+              Please log in to your account at thedharmarth.com on a web browser to complete your payout profile.
+            </Text>
+            <TouchableOpacity 
+              style={[styles.saveButton, { width: '100%', marginTop: 24 }]}
+              onPress={() => Linking.openURL(`https://thedharmarth.com/profile?authToken=${encodeURIComponent(user?.token || '')}`)}
+            >
+              <Text style={styles.saveButtonText}>Go to Website</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <View style={styles.headerIcon}>
+              <Ionicons name="business" size={32} color="#00bfa5" />
+            </View>
+            <Text style={styles.title}>Payout Profile</Text>
+            <Text style={styles.subtitle}>Provide your bank details to receive commissions.</Text>
           </View>
 
-          <Text style={styles.label}>Account Number</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="card-outline" size={18} color="#64748b" style={styles.fieldIcon} />
-            <TextInput
-              style={styles.input}
-              value={bankForm.accountNumber}
-              onChangeText={(text) => setBankForm({...bankForm, accountNumber: text.replace(/\D/g, '')})}
-              placeholder="9-18 Digits"
-              keyboardType="number-pad"
-            />
-          </View>
+          <View style={styles.form}>
+            <Text style={styles.label}>Bank Name</Text>
+            <TouchableOpacity 
+              style={styles.pickerTrigger}
+              onPress={() => setShowBankPicker(true)}
+            >
+              <Text style={bankForm.bankName ? styles.pickerText : styles.placeholderText}>
+                {bankForm.bankName || "Select Bank"}
+              </Text>
+              <Ionicons name="chevron-down" size={20} color="#64748b" />
+            </TouchableOpacity>
 
-          <Text style={styles.label}>IFSC Code</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="shield-checkmark-outline" size={18} color="#64748b" style={styles.fieldIcon} />
-            <TextInput
-              style={styles.input}
-              value={bankForm.ifscCode}
-              onChangeText={(text) => setBankForm({...bankForm, ifscCode: text.toUpperCase().replace(/[^A-Z0-9]/g, '')})}
-              placeholder="e.g. HDFC0001234"
-              autoCapitalize="characters"
-            />
-          </View>
+            <Text style={styles.label}>Account Holder Name</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="person-outline" size={18} color="#64748b" style={styles.fieldIcon} />
+              <TextInput
+                style={styles.input}
+                value={bankForm.accountHolder}
+                onChangeText={(text) => setBankForm({...bankForm, accountHolder: text})}
+                placeholder="Name as per Bank"
+              />
+            </View>
 
-          <TouchableOpacity 
-            style={[styles.saveButton, loading && styles.disabledButton]}
-            onPress={handleSave}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.saveButtonText}>Save & Enable Payouts</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+            <Text style={styles.label}>Account Number</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="card-outline" size={18} color="#64748b" style={styles.fieldIcon} />
+              <TextInput
+                style={styles.input}
+                value={bankForm.accountNumber}
+                onChangeText={(text) => setBankForm({...bankForm, accountNumber: text.replace(/\D/g, '')})}
+                placeholder="9-18 Digits"
+                keyboardType="number-pad"
+              />
+            </View>
+
+            <Text style={styles.label}>IFSC Code</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="shield-checkmark-outline" size={18} color="#64748b" style={styles.fieldIcon} />
+              <TextInput
+                style={styles.input}
+                value={bankForm.ifscCode}
+                onChangeText={(text) => setBankForm({...bankForm, ifscCode: text.toUpperCase().replace(/[^A-Z0-9]/g, '')})}
+                placeholder="e.g. HDFC0001234"
+                autoCapitalize="characters"
+              />
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.saveButton, loading && styles.disabledButton]}
+              onPress={handleSave}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.saveButtonText}>Save & Enable Payouts</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      )}
 
       {/* Bank Picker Modal Replacement (Simple List) */}
       {showBankPicker && (

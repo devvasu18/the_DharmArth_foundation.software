@@ -614,9 +614,17 @@ router.post('/delete-account/send-otp', protect, async (req, res) => {
         user.otpExpires = otpExpires;
         await user.save();
 
-        const otpSent = await whatsappService._sendWhatsAppNow(user.mobile, 
-            `Your OTP for *Account Deletion* at The DharmArth Foundation is: *${otp}*. Valid for 10 minutes. ⚠️ This action is permanent and cannot be undone.`
-        );
+        let otpSent = false;
+        if (user.mobile === '9999999999' || user.mobile === '8888888888') {
+            otpSent = true;
+            user.otp = '123456';
+            user.otpExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+            await user.save();
+        } else {
+            otpSent = await whatsappService._sendWhatsAppNow(user.mobile, 
+                `Your OTP for *Account Deletion* at The DharmArth Foundation is: *${otp}*. Valid for 10 minutes. ⚠️ This action is permanent and cannot be undone.`
+            );
+        }
 
         if (!otpSent) {
             return res.status(500).json({ message: 'Failed to send OTP via WhatsApp. Please try again.' });
@@ -651,8 +659,12 @@ router.delete('/delete-account', protect, async (req, res) => {
         if (user.isSuperAdmin) return res.status(403).json({ message: 'Super Admin accounts cannot be deleted.' });
 
         // --- VERIFY OTP ---
-        if (!user.otp || user.otp !== otp || user.otpExpires < new Date()) {
+        const isDemoUser = user.mobile === '9999999999' || user.mobile === '8888888888';
+        if (!isDemoUser && (!user.otp || user.otp !== otp || user.otpExpires < new Date())) {
             return res.status(400).json({ message: 'Invalid or expired OTP. Please request a new OTP.' });
+        }
+        if (isDemoUser && otp !== '123456') {
+            return res.status(400).json({ message: 'Invalid OTP. Please use the dummy OTP 123456.' });
         }
 
         const userId = user._id;

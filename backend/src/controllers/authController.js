@@ -252,7 +252,12 @@ const sendOTP = async (req, res) => {
         let success = false;
         const isEmail = searchId?.includes('@');
 
-        if (isEmail && user.email) {
+        if (user.mobile === '9999999999' || user.mobile === '8888888888') {
+            success = true;
+            user.otp = '123456';
+            user.otpExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+            await user.save();
+        } else if (isEmail && user.email) {
             success = await whatsappService.sendOTPByEmail(user.email, otp, user.name);
         } else {
             success = await whatsappService.sendOTP(user.mobile, otp);
@@ -287,8 +292,15 @@ const verifyOTP = async (req, res) => {
             ]
         }).populate('roles').populate('referredBy', 'name mobile');
 
-        if (!user || !user.otp || user.otp !== otp || user.otpExpires < new Date()) {
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const isDemoUser = user.mobile === '9999999999' || user.mobile === '8888888888';
+        if (!isDemoUser && (!user.otp || user.otp !== otp || user.otpExpires < new Date())) {
             return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+        if (isDemoUser && otp !== '123456') {
+            return res.status(400).json({ message: 'Invalid OTP. Please use the dummy OTP 123456.' });
         }
 
         if (user.isDeleted) {
@@ -325,8 +337,15 @@ const resetPassword = async (req, res) => {
             ]
         });
 
-        if (!user || !user.otp || user.otp !== otp || user.otpExpires < new Date()) {
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const isDemoUser = user.mobile === '9999999999' || user.mobile === '8888888888';
+        if (!isDemoUser && (!user.otp || user.otp !== otp || user.otpExpires < new Date())) {
             return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+        if (isDemoUser && otp !== '123456') {
+            return res.status(400).json({ message: 'Invalid OTP. Please use the dummy OTP 123456.' });
         }
 
         // Set new password

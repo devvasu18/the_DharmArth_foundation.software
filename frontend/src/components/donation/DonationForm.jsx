@@ -205,6 +205,8 @@ const DonationForm = ({ onSuccess }) => {
         if (panParam) setPan(panParam);
         if (aadhaarParam) setAadhaar(aadhaarParam);
         if (g80 === 'true') setNeed80G(true);
+        const emailParam = params.get('email');
+        if (emailParam) setEmail(emailParam);
 
     }, [location.search]);
 

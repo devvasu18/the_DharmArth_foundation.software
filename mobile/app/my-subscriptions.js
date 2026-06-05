@@ -181,7 +181,7 @@ export default function MySubscriptions() {
             </TouchableOpacity>
           )}
           {item.status === 'failed' && (
-            <TouchableOpacity style={styles.retryBtn} onPress={() => Linking.openURL(`https://thedharmarth.com/my-subscriptions`)}>
+            <TouchableOpacity style={styles.retryBtn} onPress={() => Linking.openURL(`https://thedharmarth.com/my-subscriptions?authToken=${encodeURIComponent(user?.token || '')}`)}>
               <Ionicons name="refresh-outline" size={18} color="white" />
               <Text style={styles.retryBtnText}>Retry Payment</Text>
             </TouchableOpacity>

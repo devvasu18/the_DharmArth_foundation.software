@@ -33,6 +33,21 @@ export const AuthProvider = ({ children }) => {
     };
 
     useEffect(() => {
+        // Check if there is an auth token in the URL query string (Magic Link/Auto-Login)
+        const urlParams = new URLSearchParams(window.location.search);
+        const authToken = urlParams.get('authToken');
+        
+        if (authToken) {
+            // Save token to localStorage to trigger auto-login
+            localStorage.setItem('user', JSON.stringify({ token: authToken }));
+            
+            // Clean up the authToken from the URL query string to keep the URL clean & secure
+            urlParams.delete('authToken');
+            const newSearch = urlParams.toString();
+            const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '') + window.location.hash;
+            window.history.replaceState({}, document.title, newUrl);
+        }
+
         // Initial load: check localStorage for optimistic UI, then verify with server
         const storedUser = localStorage.getItem('user');
         if (storedUser && storedUser !== "undefined" && storedUser !== "null") {

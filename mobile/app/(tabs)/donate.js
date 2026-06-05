@@ -241,6 +241,27 @@ export default function DonateScreen() {
   const submitDonation = async () => {
     const finalAmount = parseInt(customAmount) || amount;
     setSubmitting(true);
+
+    if (Platform.OS === 'ios') {
+      const webDonationUrl = `https://thedharmarth.com/donate?name=${encodeURIComponent(fullName)}&mobile=${encodeURIComponent(mobile)}&email=${encodeURIComponent(email)}&amount=${finalAmount}&is80G=${need80G}&pan=${encodeURIComponent(pan)}&aadhaar=${encodeURIComponent(aadhaar)}&ref=${encodeURIComponent(motivatorMobile)}&authToken=${encodeURIComponent(authUser?.token || '')}`;
+      
+      Alert.alert(
+        'Redirecting to Web Checkout',
+        'To comply with App Store guidelines, donations are processed securely on our website. You will be redirected to complete your payment.',
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => setSubmitting(false) },
+          { 
+            text: 'Proceed', 
+            onPress: () => {
+              Linking.openURL(webDonationUrl);
+              setSubmitting(false);
+            } 
+          }
+        ]
+      );
+      return;
+    }
+
     try {
       // Create the donation intent on backend
       const payload = {

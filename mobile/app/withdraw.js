@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Linking
 } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
 import api from '../src/services/api';
@@ -183,7 +184,28 @@ export default function WithdrawScreen() {
       <Stack.Screen options={{ title: step === 1 ? 'Withdrawal' : 'Verify OTP' }} />
       
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {step === 1 ? (
+        {Platform.OS === 'ios' ? (
+          <View style={styles.card}>
+            <View style={{ alignItems: 'center', marginBottom: 20 }}>
+              <Ionicons name="information-circle-outline" size={48} color="#00bfa5" style={{ marginBottom: 12 }} />
+              <Text style={[styles.label, { fontSize: 18, marginTop: 12, textAlign: 'center', color: '#1e293b' }]}>
+                Web Dashboard Payouts
+              </Text>
+              <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20, marginTop: 8 }}>
+                To comply with App Store guidelines, wallet withdrawals and bank transfers cannot be processed directly within the iOS application.
+              </Text>
+              <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20, marginTop: 12, fontWeight: '600' }}>
+                Please log in to your account at thedharmarth.com on a web browser to manage your bank payouts.
+              </Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.primaryButton}
+              onPress={() => Linking.openURL(`https://thedharmarth.com/dashboard?authToken=${encodeURIComponent(user?.token || '')}`)}
+            >
+              <Text style={styles.primaryButtonText}>Go to Website</Text>
+            </TouchableOpacity>
+          </View>
+        ) : step === 1 ? (
           <>
             <View style={styles.walletCard}>
               <Text style={styles.walletLabel}>Available Balance</Text>
