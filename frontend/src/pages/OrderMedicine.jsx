@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, FileText, CheckCircle, Clock, AlertCircle, Camera, ShieldCheck, Zap, Truck, ArrowRight, X, Info, MapPin, Plus, Edit2, Phone, User, Share2, ShoppingBag } from 'lucide-react';
 import api, { API_BASE_URL } from '../services/api';
@@ -112,6 +112,159 @@ const OrderMedicine = () => {
 
     const [notes, setNotes] = useState('');
     const [faqAnswers, setFaqAnswers] = useState({});
+    const [pincodeError, setPincodeError] = useState('');
+    const zipTimeoutRef = useRef(null);
+
+    const validatePincode = (pincodeValue) => {
+        const pin = (pincodeValue || '').trim();
+        if (!pin) {
+            setPincodeError('');
+            return true;
+        }
+        if (pharmacyConfig?.acceptedPincodes && pharmacyConfig.acceptedPincodes.trim() !== '') {
+            const allowedPincodes = pharmacyConfig.acceptedPincodes.split(',').map(p => p.trim());
+            if (!allowedPincodes.includes(pin)) {
+                const errMsg = `${t('pharmacy.unserviceablePin') || "Sorry, we do not deliver to this pin code. Serviceable pin codes are"}: ${allowedPincodes.join(', ')}`;
+                setPincodeError(errMsg);
+                return false;
+            }
+        }
+        setPincodeError('');
+        return true;
+    };
+
+    const handleManualZipChange = (newZip) => {
+        setShippingDetails(prev => ({ ...prev, zip: newZip }));
+        if (zipTimeoutRef.current) {
+            clearTimeout(zipTimeoutRef.current);
+        }
+        if (newZip.trim().length < 4) {
+            setPincodeError('');
+            return;
+        }
+        zipTimeoutRef.current = setTimeout(() => {
+            validatePincode(newZip);
+        }, 2000);
+    };
+
+    const [suggestions, setSuggestions] = useState([]);
+    const [activeInputContext, setActiveInputContext] = useState(''); // 'main' or 'modal'
+    const autocompleteServiceRef = useRef(null);
+    const sessionTokenRef = useRef(null);
+
+    // Dynamically load Google Maps Javascript API with places library
+    useEffect(() => {
+        if (window.google?.maps?.places) return;
+        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+        if (!apiKey) return;
+
+        // Check if there is already a script with maps.googleapis.com
+        const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+        if (existingScript) return;
+
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+    }, []);
+
+    // Global listener to close suggestions when clicking outside
+    useEffect(() => {
+        const handleClickOutside = () => {
+            setSuggestions([]);
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, []);
+
+    const fetchSuggestions = (query) => {
+        if (!query.trim()) {
+            setSuggestions([]);
+            return;
+        }
+        if (!window.google?.maps?.places) return;
+
+        if (!autocompleteServiceRef.current) {
+            autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+        }
+        if (!sessionTokenRef.current) {
+            sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
+        }
+
+        autocompleteServiceRef.current.getPlacePredictions(
+            {
+                input: query,
+                sessionToken: sessionTokenRef.current,
+                componentRestrictions: { country: 'in' }
+            },
+            (predictions, status) => {
+                if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+                    setSuggestions(predictions);
+                } else {
+                    setSuggestions([]);
+                }
+            }
+        );
+    };
+
+    const handleSelectSuggestion = (placeId) => {
+        if (!window.google?.maps?.places) return;
+
+        const dummyDiv = document.createElement('div');
+        const service = new window.google.maps.places.PlacesService(dummyDiv);
+
+        service.getDetails(
+            {
+                placeId: placeId,
+                fields: ['address_components', 'formatted_address'],
+                sessionToken: sessionTokenRef.current
+            },
+            (place, status) => {
+                if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+                    const components = place.address_components;
+                    let street = place.formatted_address || '';
+                    let city = '';
+                    let state = '';
+                    let zip = '';
+
+                    components.forEach(c => {
+                        if (c.types.includes('locality')) {
+                            city = c.long_name;
+                        } else if (c.types.includes('administrative_area_level_1')) {
+                            state = c.long_name;
+                        } else if (c.types.includes('postal_code')) {
+                            zip = c.long_name;
+                        }
+                    });
+
+                    setShippingDetails(prev => ({
+                        ...prev,
+                        street: street,
+                        city: city || prev.city,
+                        state: state || prev.state,
+                        zip: zip || prev.zip
+                    }));
+
+                    if (zip) {
+                        validatePincode(zip);
+                    }
+
+                    // Reset suggestions and session token
+                    sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
+                    setSuggestions([]);
+                }
+            }
+        );
+    };
+
+    const handleStreetChange = (val, context) => {
+        setShippingDetails(prev => ({ ...prev, street: val }));
+        setActiveInputContext(context);
+        fetchSuggestions(val);
+    };
 
     const getContactTiming = () => {
         const hour = new Date().getHours();
@@ -252,6 +405,9 @@ const OrderMedicine = () => {
                             state: state || prev.state,
                             zip: zip || prev.zip
                         }));
+                        if (zip) {
+                            validatePincode(zip);
+                        }
                         toast.success(t('pharmacy.locationDetected') || "Location detected!", { id: 'detect-location' });
                     } else {
                         toast.error("Failed to fetch address. Please enter manually.", { id: 'detect-location' });
@@ -352,6 +508,7 @@ const OrderMedicine = () => {
                 const errMsg = `${t('pharmacy.unserviceablePin') || "Sorry, we do not deliver to this pin code. Serviceable pin codes are"}: ${allowedPincodes.join(', ')}`;
                 toast.error(errMsg);
                 setError(errMsg);
+                setPincodeError(errMsg);
                 return;
             }
         }
@@ -469,6 +626,7 @@ const OrderMedicine = () => {
                 if (sorted.length > 0) {
                     setShippingDetails(sorted[0]);
                     setIsAddingNewAddress(false);
+                    validatePincode(sorted[0].zip);
                 } else {
                     setIsAddingNewAddress(true);
                 }
@@ -546,6 +704,9 @@ const OrderMedicine = () => {
         if (prescription.pendingShippingAddress && prescription.pendingShippingAddress.street) {
             setShippingDetails(prescription.pendingShippingAddress);
             setIsAddingNewAddress(false);
+            if (prescription.pendingShippingAddress.zip) {
+                validatePincode(prescription.pendingShippingAddress.zip);
+            }
         } else {
             fetchSavedAddresses();
         }
@@ -559,6 +720,20 @@ const OrderMedicine = () => {
 
     const handleCheckoutSubmit = async (e) => {
         e.preventDefault();
+        
+        // Validate Pincode serviceability
+        const userPincode = shippingDetails.zip.trim();
+        if (pharmacyConfig?.acceptedPincodes && pharmacyConfig.acceptedPincodes.trim() !== '') {
+            const allowedPincodes = pharmacyConfig.acceptedPincodes.split(',').map(pin => pin.trim());
+            if (!allowedPincodes.includes(userPincode)) {
+                const errMsg = `${t('pharmacy.unserviceablePin') || "Sorry, we do not deliver to this pin code. Serviceable pin codes are"}: ${allowedPincodes.join(', ')}`;
+                toast.error(errMsg);
+                setCheckoutError(errMsg);
+                setPincodeError(errMsg);
+                return;
+            }
+        }
+
         setCheckoutLoading(true);
         setCheckoutError(null);
         try {
@@ -656,6 +831,7 @@ const OrderMedicine = () => {
                                                              onClick={() => {
                                                                  setShippingDetails(addr);
                                                                  setIsAddingNewAddress(false);
+                                                                 validatePincode(addr.zip);
                                                              }}
                                                              type="button"
                                                              style={{
@@ -676,6 +852,7 @@ const OrderMedicine = () => {
                                                          onClick={() => {
                                                              setShippingDetails({ _id: null, street: '', city: '', state: '', zip: '', phone: user?.mobile || '', altPhone: '' });
                                                              setIsAddingNewAddress(true);
+                                                             setPincodeError('');
                                                          }}
                                                          type="button"
                                                          style={{
@@ -702,11 +879,50 @@ const OrderMedicine = () => {
                                                      <input
                                                          type="text"
                                                          value={shippingDetails.street}
-                                                         onChange={(e) => setShippingDetails(prev => ({ ...prev, street: e.target.value }))}
+                                                         onChange={(e) => handleStreetChange(e.target.value, 'main')}
                                                          placeholder={isDetecting ? "Detecting location..." : "House/Plot No, Apartment, Street"}
                                                          required
                                                          style={{ width: '100%', padding: '10px 90px 10px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                                                      />
+                                                     {activeInputContext === 'main' && suggestions.length > 0 && (
+                                                         <ul style={{
+                                                             position: 'absolute',
+                                                             top: '100%',
+                                                             left: 0,
+                                                             right: 0,
+                                                             zIndex: 99,
+                                                             background: '#ffffff',
+                                                             border: '1px solid #cbd5e1',
+                                                             borderRadius: '8px',
+                                                             boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                                             marginTop: '4px',
+                                                             listStyle: 'none',
+                                                             padding: '4px 0',
+                                                             maxHeight: '200px',
+                                                             overflowY: 'auto',
+                                                             textAlign: 'left'
+                                                         }}>
+                                                             {suggestions.map((sug) => (
+                                                                 <li
+                                                                     key={sug.place_id}
+                                                                     onClick={() => handleSelectSuggestion(sug.place_id)}
+                                                                     style={{
+                                                                         padding: '10px 12px',
+                                                                         fontSize: '13px',
+                                                                         color: '#334155',
+                                                                         cursor: 'pointer',
+                                                                         transition: 'background-color 0.2s',
+                                                                         borderBottom: '1px solid #f1f5f9'
+                                                                     }}
+                                                                     onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                                                                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                                                 >
+                                                                     <div style={{ fontWeight: '600', color: '#1e293b' }}>{sug.structured_formatting?.main_text || sug.description}</div>
+                                                                     <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{sug.structured_formatting?.secondary_text}</div>
+                                                                 </li>
+                                                             ))}
+                                                         </ul>
+                                                     )}
                                                      <button
                                                          type="button"
                                                          onClick={handleDetectLocation}
@@ -761,11 +977,16 @@ const OrderMedicine = () => {
                                                          <input
                                                              type="text"
                                                              value={shippingDetails.zip}
-                                                             onChange={(e) => setShippingDetails(prev => ({ ...prev, zip: e.target.value }))}
+                                                             onChange={(e) => handleManualZipChange(e.target.value)}
                                                              placeholder="341001"
                                                              required
                                                              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                                                          />
+                                                         {pincodeError && (
+                                                             <div style={{ color: '#e53e3e', fontSize: '12px', marginTop: '4px', fontWeight: '600' }}>
+                                                                 {pincodeError}
+                                                             </div>
+                                                         )}
                                                      </div>
                                                  </div>
 
@@ -1168,6 +1389,7 @@ const OrderMedicine = () => {
                                                         setIsAddingNewAddress(true);
                                                         setIsOrderingForSomeoneElse(false);
                                                         setShippingDetails({ _id: null, street: '', city: '', state: '', zip: '', phone: '', altPhone: '' });
+                                                        setPincodeError('');
                                                     }}
                                                     style={{ fontSize: '12px', background: '#f7fafc', border: '1px solid #e2e8f0', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                                                 >
@@ -1183,7 +1405,10 @@ const OrderMedicine = () => {
                                                 <div
                                                     key={addr._id}
                                                     className={`saved-addr-card ${shippingDetails._id === addr._id ? 'active' : ''}`}
-                                                    onClick={() => setShippingDetails(addr)}
+                                                    onClick={() => {
+                                                        setShippingDetails(addr);
+                                                        validatePincode(addr.zip);
+                                                    }}
                                                     style={{
                                                         padding: '12px', borderRadius: '8px', border: shippingDetails._id === addr._id ? '2px solid #3182ce' : '1px solid #e2e8f0',
                                                         cursor: 'pointer', backgroundColor: shippingDetails._id === addr._id ? '#ebf8ff' : '#fff',
@@ -1202,7 +1427,12 @@ const OrderMedicine = () => {
                                                         <button
                                                             type="button"
                                                             title="Edit"
-                                                            onClick={(e) => { e.stopPropagation(); setIsAddingNewAddress(true); setShippingDetails(addr); }}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setIsAddingNewAddress(true);
+                                                                setShippingDetails(addr);
+                                                                validatePincode(addr.zip);
+                                                            }}
                                                             style={{ background: 'none', border: 'none', color: '#a0aec0', cursor: 'pointer', padding: '4px' }}
                                                         >
                                                             <Edit2 size={14} />
@@ -1213,9 +1443,48 @@ const OrderMedicine = () => {
                                         </div>
                                     ) : (
                                         <div className="new-address-form" style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '3px solid #cbd5e1' }}>
-                                            <div className="form-group" style={{ marginBottom: '15px' }}>
+                                            <div className="form-group" style={{ marginBottom: '15px', position: 'relative' }}>
                                                 <label>{t('pharmacy.streetAddress')}</label>
-                                                <input type="text" required value={shippingDetails.street} onChange={e => setShippingDetails({ ...shippingDetails, street: e.target.value })} placeholder={t('pharmacy.placeholderStreet')} />
+                                                <input type="text" required value={shippingDetails.street} onChange={e => handleStreetChange(e.target.value, 'modal')} placeholder={t('pharmacy.placeholderStreet')} />
+                                                {activeInputContext === 'modal' && suggestions.length > 0 && (
+                                                    <ul style={{
+                                                        position: 'absolute',
+                                                        top: '100%',
+                                                        left: 0,
+                                                        right: 0,
+                                                        zIndex: 99,
+                                                        background: '#ffffff',
+                                                        border: '1px solid #cbd5e1',
+                                                        borderRadius: '8px',
+                                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                                        marginTop: '4px',
+                                                        listStyle: 'none',
+                                                        padding: '4px 0',
+                                                        maxHeight: '200px',
+                                                        overflowY: 'auto',
+                                                        textAlign: 'left'
+                                                    }}>
+                                                        {suggestions.map((sug) => (
+                                                            <li
+                                                                key={sug.place_id}
+                                                                onClick={() => handleSelectSuggestion(sug.place_id)}
+                                                                style={{
+                                                                    padding: '10px 12px',
+                                                                    fontSize: '13px',
+                                                                    color: '#334155',
+                                                                    cursor: 'pointer',
+                                                                    transition: 'background-color 0.2s',
+                                                                    borderBottom: '1px solid #f1f5f9'
+                                                                }}
+                                                                onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                                                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                                            >
+                                                                <div style={{ fontWeight: '600', color: '#1e293b' }}>{sug.structured_formatting?.main_text || sug.description}</div>
+                                                                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{sug.structured_formatting?.secondary_text}</div>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
                                             </div>
                                             <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
                                                 <div className="form-group" style={{ flex: 1 }}>
@@ -1224,7 +1493,12 @@ const OrderMedicine = () => {
                                                 </div>
                                                 <div className="form-group" style={{ flex: 1 }}>
                                                     <label>{t('pharmacy.pinCode')}</label>
-                                                    <input type="text" required value={shippingDetails.zip} onChange={e => setShippingDetails({ ...shippingDetails, zip: e.target.value })} placeholder={t('pharmacy.placeholderPin')} />
+                                                    <input type="text" required value={shippingDetails.zip} onChange={e => handleManualZipChange(e.target.value)} placeholder={t('pharmacy.placeholderPin')} />
+                                                    {pincodeError && (
+                                                        <div style={{ color: '#e53e3e', fontSize: '12px', marginTop: '4px', fontWeight: '600' }}>
+                                                            {pincodeError}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="form-group" style={{ marginBottom: '15px' }}>
@@ -1262,7 +1536,10 @@ const OrderMedicine = () => {
                                                     type="button"
                                                     onClick={() => {
                                                         setIsAddingNewAddress(false);
-                                                        if (savedAddresses.length > 0) setShippingDetails(savedAddresses[0]);
+                                                        if (savedAddresses.length > 0) {
+                                                            setShippingDetails(savedAddresses[0]);
+                                                            validatePincode(savedAddresses[0].zip);
+                                                        }
                                                     }}
                                                     style={{ width: '100%', padding: '8px', background: 'none', border: '1px solid #cbd5e0', borderRadius: '6px', color: '#4a5568', fontSize: '13px', cursor: 'pointer' }}
                                                 >
