@@ -978,14 +978,9 @@ const OrderMedicine = () => {
                                                              required
                                                              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                                                          />
-                                                         {false && (
-                                                             <div style={{ color: '#e53e3e', fontSize: '12px', marginTop: '4px', fontWeight: '600' }}>
-                                                                 {pincodeError}
-                                                             </div>
-                                                         )}
-                                                     </div>
+                                                      </div>
                                                   {pincodeError && (
-                                                      <div style={{ color: '#e53e3e', fontSize: '12px', marginTop: '6px', fontWeight: '600', width: '100%', textAlign: 'left' }}>
+                                                      <div style={{ color: '#e53e3e', fontSize: '12px', marginTop: '6px', fontWeight: '600', width: '100%', textAlign: 'left', gridColumn: 'span 3' }}>
                                                           {pincodeError}
                                                       </div>
                                                   )}
