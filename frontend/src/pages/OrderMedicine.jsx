@@ -506,8 +506,6 @@ const OrderMedicine = () => {
             const allowedPincodes = pharmacyConfig.acceptedPincodes.split(',').map(pin => pin.trim());
             if (!allowedPincodes.includes(userPincode)) {
                 const errMsg = `${t('pharmacy.unserviceablePin') || "Sorry, we do not deliver to this pin code. Serviceable pin codes are"}: ${allowedPincodes.join(', ')}`;
-                toast.error(errMsg);
-                setError(errMsg);
                 setPincodeError(errMsg);
                 return;
             }
@@ -727,8 +725,6 @@ const OrderMedicine = () => {
             const allowedPincodes = pharmacyConfig.acceptedPincodes.split(',').map(pin => pin.trim());
             if (!allowedPincodes.includes(userPincode)) {
                 const errMsg = `${t('pharmacy.unserviceablePin') || "Sorry, we do not deliver to this pin code. Serviceable pin codes are"}: ${allowedPincodes.join(', ')}`;
-                toast.error(errMsg);
-                setCheckoutError(errMsg);
                 setPincodeError(errMsg);
                 return;
             }
@@ -982,12 +978,17 @@ const OrderMedicine = () => {
                                                              required
                                                              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                                                          />
-                                                         {pincodeError && (
+                                                         {false && (
                                                              <div style={{ color: '#e53e3e', fontSize: '12px', marginTop: '4px', fontWeight: '600' }}>
                                                                  {pincodeError}
                                                              </div>
                                                          )}
                                                      </div>
+                                                  {pincodeError && (
+                                                      <div style={{ color: '#e53e3e', fontSize: '12px', marginTop: '6px', fontWeight: '600', width: '100%', textAlign: 'left' }}>
+                                                          {pincodeError}
+                                                      </div>
+                                                  )}
                                                  </div>
 
                                                  {user && (
@@ -1494,13 +1495,18 @@ const OrderMedicine = () => {
                                                 <div className="form-group" style={{ flex: 1 }}>
                                                     <label>{t('pharmacy.pinCode')}</label>
                                                     <input type="text" required value={shippingDetails.zip} onChange={e => handleManualZipChange(e.target.value)} placeholder={t('pharmacy.placeholderPin')} />
-                                                    {pincodeError && (
+                                                    {false && (
                                                         <div style={{ color: '#e53e3e', fontSize: '12px', marginTop: '4px', fontWeight: '600' }}>
                                                             {pincodeError}
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
+                                            {pincodeError && (
+                                                <div style={{ color: '#e53e3e', fontSize: '12px', marginTop: '-10px', marginBottom: '15px', fontWeight: '600', width: '100%', textAlign: 'left' }}>
+                                                    {pincodeError}
+                                                </div>
+                                            )}
                                             <div className="form-group" style={{ marginBottom: '15px' }}>
                                                 <label>{t('pharmacy.state')}</label>
                                                 <input type="text" required value={shippingDetails.state} onChange={e => setShippingDetails({ ...shippingDetails, state: e.target.value })} placeholder={t('pharmacy.state')} />
