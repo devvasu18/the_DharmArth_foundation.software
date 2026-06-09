@@ -4,6 +4,7 @@ import { Upload, FileText, CheckCircle, Clock, AlertCircle, Camera, ShieldCheck,
 import api, { API_BASE_URL } from '../services/api';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
+import SEO from '../components/common/SEO';
 import SimplifyDosage from '../components/SimplifyDosage';
 import { useConfirm } from '../context/ConfirmContext';
 import { useAuth } from '../context/AuthContext';
@@ -96,6 +97,7 @@ const OrderMedicine = () => {
     const [selectedTrackOrder, setSelectedTrackOrder] = useState(null);
     const [isReorderFlow, setIsReorderFlow] = useState(false);
     const [pharmacyConfig, setPharmacyConfig] = useState(null);
+    const [contactPhone, setContactPhone] = useState('8306305569');
 
     const [shippingDetails, setShippingDetails] = useState({
         _id: null,
@@ -439,6 +441,16 @@ const OrderMedicine = () => {
         if (localStorage.getItem('user')) {
             fetchSavedAddresses();
         }
+
+        const fetchSettings = async () => {
+            try {
+                const { data } = await api.get('/content/settings');
+                setContactPhone((data && data.contact_phone) || '8306305569');
+            } catch (err) {
+                console.error("Failed to fetch settings in OrderMedicine", err);
+            }
+        };
+        fetchSettings();
     }, []);
 
     useEffect(() => {
@@ -753,15 +765,39 @@ const OrderMedicine = () => {
 
     const filteredPrescriptions = myPrescriptions.filter(p => p.status !== 'Ordered');
 
+    const pharmacySchema = {
+        "@context": "https://schema.org",
+        "@type": "Pharmacy",
+        "name": "The DharmArth Foundation Free Medicine Ordering & Express Delivery",
+        "description": "Order medicines online for delivery in Rajasthan and across India. Benefit from our NGO's free medicine service and emergency medical support.",
+        "url": "https://thedharmarth.com/order-medicine",
+        "image": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778822813/the_dharmarth_foundation/logo.jpg",
+        "telephone": contactPhone,
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Jadaw Marg, Duliya Bypass",
+            "addressLocality": "Sujangarh",
+            "addressRegion": "Rajasthan",
+            "postalCode": "331507",
+            "addressCountry": "IN"
+        }
+    };
+
     return (
         <div className="order-medicine-container">
+            <SEO 
+                title="Free Medicine Service & Online Ordering | Rajasthan & India"
+                description="Upload your doctor's prescription and order medicines online via The DharmArth Foundation's free medicine service. Fast medicine delivery across Sujangarh, Rajasthan, and India."
+                keywords="Free Medicine Service, Medicine Delivery India, Medicine Ordering Rajasthan, Emergency Medical Support, Healthcare NGO, Online Pharmacy, Sujangarh NGO"
+                jsonLd={pharmacySchema}
+            />
             <Navbar />
 
             <main className="order-medicine-main">
                 {/* Hero Header */}
                 <div className="hero-head">
                     <div className="badge-pill">{t('pharmacy.premiumService')}</div>
-                    <h1>{t('pharmacy.orderMedicine')}</h1>
+                    <h1>{t('pharmacy.orderMedicine')} & Free Medicine Service</h1>
                     <p>{t('pharmacy.heroSubtitle')}</p>
                     <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'center', gap: '15px' }}>
                         <button 
@@ -1045,7 +1081,7 @@ const OrderMedicine = () => {
                                      >
                                         {preview ? (
                                             <div className="preview-container">
-                                                <img src={preview} alt="Upload Preview" />
+                                                <img src={preview} alt="Doctor Prescription Receipt Preview for Free Medicine Delivery" />
                                                 <div className="change-btn">{t('pharmacy.changePhoto', { defaultValue: 'Change Photo' })}</div>
                                             </div>
                                         ) : (
@@ -1223,7 +1259,7 @@ const OrderMedicine = () => {
                                             filteredPrescriptions.map(p => (
                                                 <div key={p._id} className="order-card-premium">
                                                     <div className="presc-thumb" onClick={() => setImageModalSrc(p.image)} style={{ cursor: 'pointer' }}>
-                                                        <img src={p.image.startsWith('http') ? p.image : `${API_BASE_URL}${p.image.startsWith('/') ? '' : '/'}${p.image}`} alt="Presc" />
+                                                        <img src={p.image.startsWith('http') ? p.image : `${API_BASE_URL}${p.image.startsWith('/') ? '' : '/'}${p.image}`} alt="Uploaded Prescription Receipt - The DharmArth Foundation" />
                                                     </div>
                                                     <div className="order-meta">
                                                         <div className="meta-row">
@@ -1623,7 +1659,7 @@ const OrderMedicine = () => {
                                             <div style={{ width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
                                                 <img
                                                     src={p.image.startsWith('http') ? p.image : `${API_BASE_URL}${p.image.startsWith('/') ? '' : '/'}${p.image}`}
-                                                    alt="Presc"
+                                                    alt="Verified Medicine Order Prescription Thumbnail - The DharmArth Foundation"
                                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                 />
                                             </div>
@@ -1767,7 +1803,7 @@ const OrderMedicine = () => {
                                                     const resolvedUrl = finalImage.startsWith('http')
                                                         ? finalImage
                                                         : `${API_BASE_URL}${finalImage.startsWith('/') ? '' : '/'}${finalImage}`;
-                                                    return <img src={resolvedUrl} alt="Bus" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />;
+                                                    return <img src={resolvedUrl} alt="Express Medicine Delivery Vehicle - The DharmArth Foundation Logistics" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />;
                                                 })()}
                                             </div>
                                         </div>
@@ -1879,7 +1915,7 @@ const OrderMedicine = () => {
                                 ? imageModalSrc
                                 : `${API_BASE_URL}${imageModalSrc.startsWith('/') ? '' : '/'}${imageModalSrc}`
                             }
-                            alt="Full View"
+                            alt="Uploaded Doctor Prescription Receipt Full View - The DharmArth Foundation"
                         />
                     </div>
                 </div>

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import './Events.css';
+import SEO from '../components/common/SEO';
 
 const Events = () => {
     const { t, i18n } = useTranslation();
@@ -94,8 +95,22 @@ const Events = () => {
         return matchesSearch && matchesFilter;
     });
 
+    const eventsSchema = {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "The DharmArth Foundation Events & Campaigns",
+        "description": "Browse active donation campaigns, healthcare checkup drives, and community welfare events by The DharmArth Foundation.",
+        "url": "https://thedharmarth.com/events"
+    };
+
     return (
         <div className="events-page-container">
+            <SEO 
+                title="Donation Campaigns & Healthcare Events"
+                description="Browse active donation campaigns, healthcare checkup camps, and community welfare drives by The DharmArth Foundation. Support medical crowdfunding in India."
+                keywords="Healthcare events, Diagnostic checkup camps, Donation campaigns, NGO events Sujangarh, Medical Crowdfunding, Support Charity"
+                jsonLd={eventsSchema}
+            />
             <Navbar />
 
             <header className="events-header-slider">

@@ -1,0 +1,24 @@
+# Crawl rules for search engines
+User-agent: *
+Allow: /
+Allow: /events/
+Allow: /gallery/
+Allow: /p/
+
+# Disallow indexing of private dashboards and management paths to optimize crawl budget
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /my-subscriptions/
+Disallow: /my-referrals/
+Disallow: /my-network/
+Disallow: /delivery-boy/
+Disallow: /checkout/
+Disallow: /track/
+Disallow: /login
+Disallow: /signup
+Disallow: /delete-account
+
+# Host and Sitemap
+Host: https://thedharmarth.com
+Sitemap: https://thedharmarth.com/sitemap.xml

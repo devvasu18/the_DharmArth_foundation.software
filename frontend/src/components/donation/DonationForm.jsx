@@ -621,10 +621,10 @@ const DonationForm = ({ onSuccess }) => {
     return (
         <React.Fragment>
             <div className="donation-container">
-                <h2 className="donation-title">
+                <h1 className="donation-title">
                     <CreditCard size={28} className="text-primary" />
                     {t('donatePage.title')}
-                </h2>
+                </h1>
 
                 {(i18n.language === 'hi' ? donationLabelHi : donationLabel) && (
                     <p className="donation-subtitle" style={{

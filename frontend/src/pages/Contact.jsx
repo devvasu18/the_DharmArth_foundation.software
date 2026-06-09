@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Mail, Phone, MapPin, Send, MessageSquare, Clock, ShieldCheck, Heart } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
@@ -6,9 +6,31 @@ import Footer from '../components/layout/Footer';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import './Contact.css';
+import SEO from '../components/common/SEO';
 
 export default function Contact() {
     const { t, i18n } = useTranslation();
+    const [contactInfo, setContactInfo] = useState({
+        email: 'thedharmarth@gmail.com',
+        phone: '8306305569'
+    });
+
+    useEffect(() => {
+        const fetchContactInfo = async () => {
+            try {
+                const { data } = await api.get('/content/settings');
+                if (data) {
+                    setContactInfo({
+                        email: data.contact_email || 'thedharmarth@gmail.com',
+                        phone: data.contact_phone || '8306305569'
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to load contact info in Contact page", error);
+            }
+        };
+        fetchContactInfo();
+    }, []);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -58,8 +80,36 @@ export default function Contact() {
         }
     };
 
+    const contactSchema = {
+        "@context": "https://schema.org",
+        "@type": "NGO",
+        "name": "The DharmArth Foundation",
+        "url": "https://thedharmarth.com",
+        "logo": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778822813/the_dharmarth_foundation/logo.jpg",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": contactInfo.phone,
+            "contactType": "support",
+            "email": contactInfo.email
+        },
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Jadaw Marg, Duliya Bypass",
+            "addressLocality": "Sujangarh",
+            "addressRegion": "Rajasthan",
+            "postalCode": "331507",
+            "addressCountry": "IN"
+        }
+    };
+
     return (
         <div className="contact-page-wrapper">
+            <SEO 
+                title="Contact The Dharmarth Foundation | NGO Office in Sujangarh, Rajasthan"
+                description="Get in touch with The DharmArth Foundation head office in Sujangarh. Contact us for 80G tax saving donation queries, free medicine service, blood donation, and emergency support."
+                keywords="NGO Contact, Sujangarh NGO office, The DharmArth Foundation address, Blood donation support Sujangarh, Contact NGO Rajasthan"
+                jsonLd={contactSchema}
+            />
             <Navbar />
             
             {/* Header Banner */}
@@ -96,7 +146,7 @@ export default function Contact() {
                         </div>
                         <div className="details">
                             <h3>{i18n.language === 'hi' ? 'हेल्पलाइन नंबर' : 'Helpline Support'}</h3>
-                            <p className="primary-text">+91 94139 41300</p>
+                            <p className="primary-text">{contactInfo.phone}</p>
                             <p className="secondary-text">{i18n.language === 'hi' ? 'सुबह 9 बजे से शाम 6 बजे तक उपलब्ध' : 'Available 9 AM - 6 PM'}</p>
                         </div>
                     </div>
@@ -107,7 +157,7 @@ export default function Contact() {
                         </div>
                         <div className="details">
                             <h3>{i18n.language === 'hi' ? 'ईमेल एड्रेस' : 'Email Address'}</h3>
-                            <p className="primary-text">support@dharmarth.org</p>
+                            <p className="primary-text">{contactInfo.email}</p>
                             <p className="secondary-text">{i18n.language === 'hi' ? '24 घंटे के भीतर त्वरित प्रतिक्रिया' : 'Quick response within 24 hours'}</p>
                         </div>
                     </div>
@@ -119,10 +169,10 @@ export default function Contact() {
                         <div className="details">
                             <h3>{i18n.language === 'hi' ? 'मुख्य कार्यालय' : 'Headquarters Office'}</h3>
                             <p className="primary-text">TDMF Online Ventures Pvt Ltd</p>
-                            <p className="secondary-text">
+                            <p className="secondary-text" style={{ fontSize: '0.9rem', lineHeight: '1.4' }}>
                                 {i18n.language === 'hi'
-                                    ? 'जयपुर, राजस्थान, भारत'
-                                    : 'Jaipur, Rajasthan, India'}
+                                    ? 'जादव मार्ग, डुलिया बाईपास, सुजानगढ़, चूरू जिला, राजस्थान, भारत - 331507'
+                                    : 'Jadaw Marg, Duliya Bypass, Sujangarh, Churu District, Rajasthan, India - 331507'}
                             </p>
                         </div>
                     </div>

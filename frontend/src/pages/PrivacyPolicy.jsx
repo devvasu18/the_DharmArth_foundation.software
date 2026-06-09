@@ -3,11 +3,17 @@ import { Link } from 'react-router-dom';
 import { Shield, Mail, Phone, ChevronRight } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
+import SEO from '../components/common/SEO';
 import './PrivacyPolicy.css';
 
 const PrivacyPolicy = () => {
     return (
         <div className="privacy-page">
+            <SEO 
+                title="Privacy Policy"
+                description="Read the Privacy Policy of The DharmArth Foundation regarding online donations, user registration, 80G tax exemptions, and pharmacy/medicine ordering safety."
+                keywords="Privacy Policy NGO, donation privacy, The DharmArth Foundation terms, medical data security, 80G tax exemption records"
+            />
             <Navbar />
             {/* Hero Section */}
             <div className="privacy-hero">

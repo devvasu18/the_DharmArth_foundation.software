@@ -1,11 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Facebook, Twitter, Linkedin, Youtube, Instagram, Phone, Mail } from 'lucide-react';
+import api from '../../services/api';
 import './Footer.css';
 
 const Footer = ({ variant = 'default' }) => {
     const { t } = useTranslation();
+    const [contactInfo, setContactInfo] = useState({
+        email: 'thedharmarth@gmail.com',
+        phone: '8306305569'
+    });
+
+    useEffect(() => {
+        const fetchContactInfo = async () => {
+            try {
+                const { data } = await api.get('/content/settings');
+                if (data) {
+                    setContactInfo({
+                        email: data.contact_email || 'thedharmarth@gmail.com',
+                        phone: data.contact_phone || '8306305569'
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to load contact info in Footer", error);
+            }
+        };
+        fetchContactInfo();
+    }, []);
 
     if (variant === 'small') {
         return (
@@ -47,60 +69,63 @@ const Footer = ({ variant = 'default' }) => {
 
                         <div style={{ marginTop: '2rem' }}>
                             <p>{t('footer.queries')}</p>
-                            <p><strong>Email: info@Dharmarth.org</strong></p>
-                            <p><strong>Contact No: +91 9900000000</strong></p>
+                            <p><strong>Email: {contactInfo.email}</strong></p>
+                            <p><strong>Contact No: {contactInfo.phone}</strong></p>
                         </div>
+                        <p style={{ fontSize: '0.85rem', color: '#888', marginTop: '1.5rem', lineHeight: '1.6', maxWidth: '300px' }}>
+                            The DharmArth Foundation is a government-approved NGO offering online donation options with 80G tax exemption benefits. We specialize in healthcare assistance, doctor availability updates in Sujangarh, blood donation support, and free medicine ordering and delivery across Rajasthan and India.
+                        </p>
                     </div>
 
                     <div className="footer-col">
                         <h3>{t('footer.causes')}</h3>
                         <ul className="footer-links">
-                            <li><a href="#">{t('footer.c1')}</a></li>
-                            <li><a href="#">{t('footer.c2')}</a></li>
-                            <li><a href="#">{t('footer.c3')}</a></li>
-                            <li><a href="#">{t('footer.c4')}</a></li>
-                            <li><a href="#">{t('footer.c5')}</a></li>
-                            <li><a href="#">{t('footer.c6')}</a></li>
-                            <li><a href="#">{t('footer.c7')}</a></li>
+                            <li><Link to="/events">{t('footer.c1')}</Link></li>
+                            <li><Link to="/events">{t('footer.c2')}</Link></li>
+                            <li><Link to="/events">{t('footer.c3')}</Link></li>
+                            <li><Link to="/events">{t('footer.c4')}</Link></li>
+                            <li><Link to="/events">{t('footer.c5')}</Link></li>
+                            <li><Link to="/events">{t('footer.c6')}</Link></li>
+                            <li><Link to="/events">{t('footer.c7')}</Link></li>
                         </ul>
                     </div>
 
                     <div className="footer-col">
                         <h3>{t('footer.howItWorks')}</h3>
                         <ul className="footer-links">
-                            <li><a href="#">{t('footer.h1')}</a></li>
-                            <li><a href="#">{t('footer.h2')}</a></li>
-                            <li><a href="#">{t('footer.h3')}</a></li>
-                            <li><a href="#">{t('footer.h4')}</a></li>
-                            <li><a href="#">{t('footer.h5')}</a></li>
-                            <li><a href="#">{t('footer.h6')}</a></li>
-                            <li><a href="#">{t('footer.h7')}</a></li>
+                            <li><Link to="/start-fundraiser">{t('footer.h1')}</Link></li>
+                            <li><Link to="/donate">{t('footer.h2')}</Link></li>
+                            <li><Link to="/start-fundraiser">{t('footer.h3')}</Link></li>
+                            <li><Link to="/events">{t('footer.h4')}</Link></li>
+                            <li><Link to="/p/join-and-earn">{t('footer.h5')}</Link></li>
+                            <li><Link to="/dashboard">{t('footer.h6')}</Link></li>
+                            <li><Link to="/donate">{t('footer.h7')}</Link></li>
                         </ul>
                     </div>
 
                     <div className="footer-col">
                         <h3>{t('footer.aboutUs')}</h3>
                         <ul className="footer-links">
-                            <li><a href="#">{t('footer.a1')}</a></li>
-                            <li><a href="#">{t('footer.a2')}</a></li>
-                            <li><a href="#">{t('footer.a3')}</a></li>
-                            <li><a href="#">{t('footer.a4')}</a></li>
-                            <li><a href="#">{t('footer.a5')}</a></li>
-                            <li><a href="#">{t('footer.a6')}</a></li>
-                            <li><a href="#">{t('footer.a7')}</a></li>
+                            <li><Link to="/p/about-us">{t('footer.a1')}</Link></li>
+                            <li><Link to="/p/about-us">{t('footer.a2')}</Link></li>
+                            <li><Link to="/p/about-us">{t('footer.a3')}</Link></li>
+                            <li><Link to="/p/about-us">{t('footer.a4')}</Link></li>
+                            <li><Link to="/p/about-us">{t('footer.a5')}</Link></li>
+                            <li><Link to="/p/about-us">{t('footer.a6')}</Link></li>
+                            <li><Link to="/p/about-us">{t('footer.a7')}</Link></li>
                         </ul>
                     </div>
 
                     <div className="footer-col">
                         <h3>{t('footer.support')}</h3>
                         <ul className="footer-links">
-                            <li><a href="#">{t('footer.s1')}</a></li>
-                            <li><a href="#">{t('footer.s2')}</a></li>
-                            <li><a href="#">{t('footer.s3')}</a></li>
-                            <li><a href="#">{t('footer.s4')}</a></li>
-                            <li><a href="#">{t('footer.s5')}</a></li>
-                            <li><a href="#">{t('footer.s6')}</a></li>
-                            <li><a href="#">{t('footer.s7')}</a></li>
+                            <li><Link to="/order-medicine">{t('footer.s1')}</Link></li>
+                            <li><Link to="/doctors">{t('footer.s2')}</Link></li>
+                            <li><Link to="/p/about-us">{t('footer.s3')}</Link></li>
+                            <li><Link to="/events">{t('footer.s4')}</Link></li>
+                            <li><Link to="/privacy-policy">{t('footer.s5')}</Link></li>
+                            <li><Link to="/p/join-and-earn">{t('footer.s6')}</Link></li>
+                            <li><Link to="/contact">{t('footer.s7')}</Link></li>
                         </ul>
                     </div>
                 </div>

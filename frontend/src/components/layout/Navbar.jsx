@@ -216,7 +216,7 @@ const Navbar = () => {
         <nav className="navbar">
             <div className="container navbar-container">
                 <Link to="/" className="navbar-logo" onClick={() => setIsOpen(false)}>
-                    <img src="https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778822813/the_dharmarth_foundation/logo.jpg" alt="TDMF Logo" className="logo-img" />
+                    <img src="https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778822813/the_dharmarth_foundation/logo.jpg" alt="The DharmArth Foundation Logo - Healthcare NGO & Donation Platform in Rajasthan, India" className="logo-img" />
                     <span className="logo-text">{t('navbar.brand')}</span>
                 </Link>
 

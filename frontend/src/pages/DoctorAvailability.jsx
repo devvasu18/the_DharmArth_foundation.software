@@ -6,6 +6,7 @@ import { API_BASE_URL } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import './DoctorAvailability.css';
+import SEO from '../components/common/SEO';
 
 const API_URL = `${API_BASE_URL}/api`;
 
@@ -28,6 +29,7 @@ const DoctorAvailability = () => {
 
     // Admin Settings State (for mobile dialer)
     const [adminMobile, setAdminMobile] = useState('918306305569');
+    const [contactPhone, setContactPhone] = useState('8306305569');
 
     // Booking Modal & Form State
     const { user: authUser } = useAuth();
@@ -55,6 +57,7 @@ const DoctorAvailability = () => {
                 if (data.admin_suspension_mobile) {
                     setAdminMobile(data.admin_suspension_mobile);
                 }
+                setContactPhone(data.contact_phone || '8306305569');
             }
         } catch (error) {
             console.error("Failed to fetch settings", error);
@@ -412,15 +415,39 @@ const DoctorAvailability = () => {
         ? emergencyDoctors.filter(doc => doc.type === selectedType)
         : emergencyDoctors;
 
+    const medicalBusinessSchema = {
+        "@context": "https://schema.org",
+        "@type": "MedicalBusiness",
+        "name": "The DharmArth Foundation Sujangarh Healthcare Services",
+        "description": "Check real-time doctor availability and government hospital service updates in Sujangarh, Churu District, Rajasthan. Get healthcare assistance and diagnostic test guides.",
+        "url": "https://thedharmarth.com/doctors",
+        "image": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778822813/the_dharmarth_foundation/logo.jpg",
+        "telephone": contactPhone,
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Jadaw Marg, Duliya Bypass",
+            "addressLocality": "Sujangarh",
+            "addressRegion": "Rajasthan",
+            "postalCode": "331507",
+            "addressCountry": "IN"
+        }
+    };
+
     return (
         <>
+            <SEO 
+                title="Doctor Availability & Government Hospital Services in Sujangarh"
+                description="Check live doctor availability and updates on government hospital services in Sujangarh, Churu District, Rajasthan. Get healthcare assistance and diagnostic test guides from The DharmArth Foundation."
+                keywords="Doctor Availability, Government Hospital Services, Sujangarh Hospital, Rajasthan Doctor Booking, Diagnostic Tests, Sujangarh doctors, Healthcare assistance Rajasthan"
+                jsonLd={medicalBusinessSchema}
+            />
             <Navbar />
             <div className="doctor-availability-page">
                 {/* Hero Section */}
                 <div className="availability-hero">
                     <div className="container">
-                        <h1>Doctor Availability</h1>
-                        <p>Find the right doctor at the right time</p>
+                        <h1>Doctor Availability & Government Hospital Services in Sujangarh</h1>
+                        <p>Check doctor schedules, clinics, and hospital updates in Sujangarh, Churu District, Rajasthan</p>
                     </div>
                 </div>
 
@@ -552,7 +579,7 @@ const DoctorAvailability = () => {
                                                             {avail.doctorId.photo ? (
                                                                 <img 
                                                                     src={avail.doctorId.photo.startsWith('http') ? avail.doctorId.photo : `${API_BASE_URL}${avail.doctorId.photo.startsWith('/') ? '' : '/'}${avail.doctorId.photo}`} 
-                                                                    alt={avail.doctorId.name} 
+                                                                    alt={`Dr. ${avail.doctorId.name} - Doctor Availability in Sujangarh, Churu, Rajasthan`} 
                                                                 />
                                                             ) : (
                                                                 <div className="photo-placeholder">👨‍⚕️</div>
@@ -679,7 +706,7 @@ const DoctorAvailability = () => {
                                             {doctor.photo ? (
                                                 <img 
                                                     src={doctor.photo.startsWith('http') ? doctor.photo : `${API_BASE_URL}${doctor.photo.startsWith('/') ? '' : '/'}${doctor.photo}`} 
-                                                    alt={doctor.name} 
+                                                    alt={`Dr. ${doctor.name} - Emergency Doctor at The DharmArth Foundation`} 
                                                 />
                                             ) : (
                                                 <div className="photo-placeholder">👨‍⚕️</div>
@@ -767,7 +794,7 @@ const DoctorAvailability = () => {
                                                 {test.image ? (
                                                     <img 
                                                         src={test.image.startsWith('http') ? test.image : `${API_BASE_URL}${test.image.startsWith('/') ? '' : '/'}${test.image}`} 
-                                                        alt={test.name} 
+                                                        alt={`${test.name} Diagnostic Test Package - The DharmArth Foundation Sujangarh`} 
                                                     />
                                                 ) : (
                                                     <div className="test-placeholder-image">🔬</div>

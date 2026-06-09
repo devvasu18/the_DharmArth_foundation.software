@@ -3,11 +3,17 @@ import { Link } from 'react-router-dom';
 import { Shield, Mail, Phone, ChevronRight, AlertTriangle } from 'lucide-react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
+import SEO from '../components/common/SEO';
 import './PrivacyPolicy.css'; // Reuses the premium styles of policy layouts
 
 const ChildSafety = () => {
     return (
         <div className="privacy-page">
+            <SEO 
+                title="Child Safety Standards & CSAE Policy"
+                description="The DharmArth Foundation's child safety standards, CSAE zero-tolerance policy, and safety response rules to protect children and minors across our donation and medicine platforms."
+                keywords="Child Safety, CSAE Policy, Zero Tolerance Policy, NGO Safety Standards, The DharmArth Foundation compliance"
+            />
             <Navbar />
             {/* Hero Section */}
             <div className="privacy-hero" style={{ background: 'linear-gradient(135deg, #7c1a2e 0%, #a62639 50%, #db3a34 100%)' }}>

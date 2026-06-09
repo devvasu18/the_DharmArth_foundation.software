@@ -58,7 +58,7 @@ export default function ContactScreen() {
   };
 
   const handlePhoneCall = () => {
-    Linking.openURL('tel:+919413941300');
+    Linking.openURL('tel:+918306305569');
   };
 
   const handleEmail = () => {
@@ -108,7 +108,7 @@ export default function ContactScreen() {
               </View>
               <View style={styles.infoDetails}>
                 <Text style={styles.infoLabel}>{locale === 'hi' ? 'हेल्पलाइन नंबर' : 'Helpline Support'}</Text>
-                <Text style={styles.infoValue}>+91 94139 41300</Text>
+                <Text style={styles.infoValue}>+91 8306305569</Text>
                 <Text style={styles.infoSubtext}>{locale === 'hi' ? 'कॉल करने के लिए टैप करें' : 'Tap to call us'}</Text>
               </View>
             </TouchableOpacity>

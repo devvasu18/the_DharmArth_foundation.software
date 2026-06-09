@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Navbar from '../components/layout/Navbar';
 import HeroSlider from '../components/layout/HeroSlider';
@@ -8,11 +8,68 @@ import WhyUsSection from '../components/layout/WhyUsSection';
 import FAQSection from '../components/layout/FAQSection';
 import MonthlyGivingSection from '../components/layout/MonthlyGivingSection';
 import Footer from '../components/layout/Footer';
+import SEO from '../components/common/SEO';
+import api from '../services/api';
 
 const Home = () => {
     const { t } = useTranslation();
+    const [contactInfo, setContactInfo] = useState({
+        email: 'thedharmarth@gmail.com',
+        phone: '8306305569'
+    });
+
+    useEffect(() => {
+        const fetchContactInfo = async () => {
+            try {
+                const { data } = await api.get('/content/settings');
+                if (data) {
+                    setContactInfo({
+                        email: data.contact_email || 'thedharmarth@gmail.com',
+                        phone: data.contact_phone || '8306305569'
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to load contact info in Home page", error);
+            }
+        };
+        fetchContactInfo();
+    }, []);
+    
+    const organizationSchema = {
+        "@context": "https://schema.org",
+        "@type": "NGO",
+        "name": "The DharmArth Foundation",
+        "alternateName": "TDMF",
+        "url": "https://thedharmarth.com",
+        "logo": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778822813/the_dharmarth_foundation/logo.jpg",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": contactInfo.phone,
+            "contactType": "customer support",
+            "email": contactInfo.email,
+            "areaServed": "IN",
+            "availableLanguage": ["Hindi", "English"]
+        },
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Jadaw Marg, Duliya Bypass",
+            "addressLocality": "Sujangarh",
+            "addressRegion": "Rajasthan",
+            "postalCode": "331507",
+            "addressCountry": "IN"
+        },
+        "taxID": "80G Tax Exempted NGO",
+        "description": "The DharmArth Foundation is a government-approved charity organization offering 80G tax saving donation options, community healthcare assistance, free medicine service, and doctor availability in Sujangarh, Rajasthan, India."
+    };
+
     return (
         <div>
+            <SEO 
+                title="The DharmArth Foundation | Government Approved 80G Donation & NGO in India"
+                description="Donate online to The DharmArth Foundation, a government-approved NGO providing free medicine services, healthcare assistance, and blood donation support in Sujangarh, Churu District, Rajasthan, and across India. Claim tax exemption with our 80G tax saving donation options."
+                keywords="NGO, Donation, Online Donation, Donate in India, Government Approved Donation, 80G Donation, Tax Saving Donation, Charity Organization India, Medical Donation, Medicine Donation, Blood Donation, Healthcare NGO, Free Medicine Service, Medicine Delivery India, Medicine Ordering Rajasthan, Government Hospital Services, Doctor Availability, Health Checkup, Diagnostic Tests, Social Welfare, Community Healthcare, Emergency Medical Support, Sujangarh, Rajasthan, India"
+                jsonLd={organizationSchema}
+            />
             <Navbar />
             <HeroSlider />
             <section className="home-welcome" style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>

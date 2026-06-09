@@ -73,6 +73,13 @@ const AdminSettings = () => {
         adminSuspensionMobile: ''
     });
 
+    // Contact Config State
+    const [contactModalOpen, setContactModalOpen] = useState(false);
+    const [contactConfig, setContactConfig] = useState({
+        email: 'thedharmarth@gmail.com',
+        phone: '8306305569'
+    });
+
     useEffect(() => {
         fetchSettings();
     }, []);
@@ -128,6 +135,11 @@ const AdminSettings = () => {
             // Security Config
             setSecurityConfig({
                 adminSuspensionMobile: data.admin_suspension_mobile || ''
+            });
+
+            setContactConfig({
+                email: data.contact_email || 'thedharmarth@gmail.com',
+                phone: data.contact_phone || '8306305569'
             });
         } catch (error) {
             console.error("Failed to fetch settings", error);
@@ -354,6 +366,22 @@ const AdminSettings = () => {
         }
     };
 
+    const handleSaveContactConfig = async () => {
+        try {
+            const updates = {
+                contact_email: contactConfig.email,
+                contact_phone: contactConfig.phone
+            };
+            await api.put('/content/settings', updates);
+            setSettings({ ...settings, ...updates });
+            setContactModalOpen(false);
+            toast.success("Contact Configuration Saved!");
+        } catch (error) {
+            console.error("Save failed", error);
+            toast.error("Failed to save contact configuration");
+        }
+    };
+
     if (loading) return <div>Loading settings...</div>;
 
     return (
@@ -505,6 +533,22 @@ const AdminSettings = () => {
                             <button
                                 className="btn btn-outline"
                                 onClick={() => setSecurityModalOpen(true)}
+                            >
+                                Configure
+                            </button>
+                        </td>
+                    </tr>
+
+                    {/* Contact Config Row */}
+                    <tr>
+                        <td><strong>Contact Information</strong> (Email & Phone Number)</td>
+                        <td>
+                            Email: {settings.contact_email || 'thedharmarth@gmail.com'} | Phone: {settings.contact_phone || '8306305569'}
+                        </td>
+                        <td>
+                            <button
+                                className="btn btn-outline"
+                                onClick={() => setContactModalOpen(true)}
                             >
                                 Configure
                             </button>
@@ -1374,6 +1418,65 @@ const AdminSettings = () => {
                                 className="btn bg-primary text-white" 
                                 onClick={handleSaveSecurityConfig}
                                 style={{ background: '#00bfa5', display: 'flex', alignItems: 'center', gap: '8px' }}
+                            >
+                                <Save size={18} />
+                                Save Configuration
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Contact Config Modal */}
+            {contactModalOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 2000
+                }}>
+                    <div style={{ background: 'white', padding: '2rem', borderRadius: '24px', minWidth: '400px', maxWidth: '90%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h4 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>Contact Configuration</h4>
+                            <button onClick={() => setContactModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>
+                                    Contact Email
+                                </label>
+                                <input
+                                    type="email"
+                                    className="form-input"
+                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                                    value={contactConfig.email}
+                                    onChange={(e) => setContactConfig({ ...contactConfig, email: e.target.value })}
+                                    placeholder="e.g. info@dharmarth.org"
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>
+                                    Contact Phone Number
+                                </label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                                    value={contactConfig.phone}
+                                    onChange={(e) => setContactConfig({ ...contactConfig, phone: e.target.value })}
+                                    placeholder="e.g. +91 94139 41300"
+                                />
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                            <button className="btn btn-outline" onClick={() => setContactModalOpen(false)} style={{ borderRadius: '10px' }}>Cancel</button>
+                            <button 
+                                className="btn bg-primary text-white" 
+                                onClick={handleSaveContactConfig}
+                                style={{ borderRadius: '10px', background: '#00bfa5', display: 'flex', alignItems: 'center', gap: '8px', color: 'white', border: 'none', cursor: 'pointer' }}
                             >
                                 <Save size={18} />
                                 Save Configuration

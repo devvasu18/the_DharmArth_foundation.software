@@ -4,6 +4,7 @@ import api from '../services/api';
 import ComponentRenderer from '../components/cms/ComponentRenderer';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
+import SEO from '../components/common/SEO';
 
 const DynamicPage = () => {
     const { slug } = useParams();
@@ -17,13 +18,6 @@ const DynamicPage = () => {
                 setLoading(true);
                 const { data } = await api.get(`/cms/pages/public/${slug}`);
                 setPageData(data);
-                
-                // Update SEO
-                if (data.seo) {
-                    document.title = data.seo.metaTitle || data.title;
-                    const metaDesc = document.querySelector('meta[name="description"]');
-                    if (metaDesc) metaDesc.setAttribute('content', data.seo.metaDescription || '');
-                }
             } catch (err) {
                 console.error("Page fetch error:", err);
                 setError(err.response?.data?.message || "Page not found");
@@ -41,6 +35,11 @@ const DynamicPage = () => {
 
     return (
         <div className="dynamic-page min-h-screen bg-white">
+            <SEO 
+                title={pageData.seo?.metaTitle || pageData.title}
+                description={pageData.seo?.metaDescription}
+                keywords={pageData.seo?.metaKeywords || pageData.seo?.keywords}
+            />
             <Navbar />
             <main className="w-full pb-32">
                 {pageData.components.map((item, index) => (
