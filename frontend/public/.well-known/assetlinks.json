@@ -5,9 +5,9 @@
     ],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.dharmarth.foundation",
+      "package_name": "com.thedharmarth.foundation",
       "sha256_cert_fingerprints": [
-        "14:6D:E9:83:C5:EC:D2:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12:12"
+        "47:00:3D:F3:A8:2F:A9:CE:BE:76:6F:80:B0:72:B4:2D:28:D5:80:46:EE:60:F8:86:80:E8:18:51:E1:E7:B1:02"
       ]
     }
   }

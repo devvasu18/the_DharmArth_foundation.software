@@ -3,7 +3,7 @@
     "apps": [],
     "details": [
       {
-        "appID": "YOUR_APPLE_TEAM_ID.com.dharmarth.foundation",
+        "appID": "YOUR_APPLE_TEAM_ID.com.thedharmarth.foundation",
         "paths": [
           "/v/*",
           "/donate*"
