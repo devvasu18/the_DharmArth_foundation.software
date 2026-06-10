@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "860174611549",
-    "project_id": "hardware-marketplace-4fbdc",
-    "storage_bucket": "hardware-marketplace-4fbdc.firebasestorage.app"
+    "project_number": "1088154574515",
+    "project_id": "the-dharmarth",
+    "storage_bucket": "the-dharmarth.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:860174611549:android:af5ac1c32a9277a153c9b4",
+        "mobilesdk_app_id": "1:1088154574515:android:f21459c3f314e045cc5ac6",
         "android_client_info": {
-          "package_name": "com.hardware.marketplace"
+          "package_name": "com.thedharmarth.foundation"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBKl7MrulosKiFtfPXUfYSI5xyZk7IUCGE"
+          "current_key": "AIzaSyB3G1m1xHFEh33_nYQFvjVQ5tT6i0McFCE"
         }
       ],
       "services": {
