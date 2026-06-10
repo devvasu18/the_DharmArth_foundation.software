@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "860174611549",
+    "project_id": "hardware-marketplace-4fbdc",
+    "storage_bucket": "hardware-marketplace-4fbdc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:860174611549:android:af5ac1c32a9277a153c9b4",
+        "android_client_info": {
+          "package_name": "com.hardware.marketplace"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKl7MrulosKiFtfPXUfYSI5xyZk7IUCGE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

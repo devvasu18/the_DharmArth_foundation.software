@@ -3,7 +3,7 @@
     "name": "DharmArth Foundation",
     "slug": "dharmarth-mobile",
     "scheme": "dharmarth",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -26,12 +26,13 @@
       ]
     },
     "android": {
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.thedharmarth.foundation",
-      "versionCode": 4,
+      "versionCode": 5,
       "edgeToEdgeEnabled": true,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
