@@ -23,8 +23,8 @@ import api from '../../src/services/api';
 import { useLocationFlow } from '../../src/hooks/useLocationFlow';
 import RazorpayCheckout from 'react-native-razorpay';
 import DonationExitModal from '../../src/components/DonationExitModal';
-import { validatePAN, validateAadhaar } from '../../src/utils/validators';
 import { Modal } from 'react-native';
+import axios from 'axios';
 
 export default function DonateScreen() {
   const { t, locale } = useTranslation();
@@ -69,6 +69,10 @@ export default function DonateScreen() {
   const [confirmPan, setConfirmPan] = useState('');
   const [showPanModal, setShowPanModal] = useState(false);
   const [confirmError, setConfirmError] = useState('');
+  
+  // Suggestions states
+  const [suggestions, setSuggestions] = useState([]);
+  const [sessionToken, setSessionToken] = useState('');
 
   const { requestLocation, loading: isDetecting } = useLocationFlow();
 
@@ -128,6 +132,50 @@ export default function DonateScreen() {
     const result = await requestLocation();
     if (result && result.address) {
       setAddress(result.address);
+    }
+  };
+
+  // Generate session token on mount or reset
+  const resetSessionToken = () => {
+    setSessionToken(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
+  };
+
+  useEffect(() => {
+    resetSessionToken();
+  }, []);
+
+  const fetchSuggestions = async (query) => {
+    if (!query.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyD76FyTslTaAvL2xNbjf3xHeFFSXrhLd0M';
+    try {
+      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${apiKey}&components=country:in&sessiontoken=${sessionToken}`;
+      const response = await axios.get(url);
+      if (response.data.status === 'OK' && response.data.predictions) {
+        setSuggestions(response.data.predictions);
+      } else {
+        setSuggestions([]);
+      }
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+      setSuggestions([]);
+    }
+  };
+
+  const handleSelectSuggestion = async (placeId) => {
+    const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyD76FyTslTaAvL2xNbjf3xHeFFSXrhLd0M';
+    try {
+      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=formatted_address&key=${apiKey}&sessiontoken=${sessionToken}`;
+      const response = await axios.get(url);
+      if (response.data.status === 'OK' && response.data.result) {
+        setAddress(response.data.result.formatted_address || '');
+        setSuggestions([]);
+        resetSessionToken();
+      }
+    } catch (error) {
+      console.error('Error getting place details:', error);
     }
   };
 
@@ -321,7 +369,52 @@ export default function DonateScreen() {
         }
       }).catch((error) => {
         // Handle cancel or failure
-        Alert.alert('Payment Cancelled', error.description || 'Payment was not completed.');
+        let errorMessage = locale === 'hi' ? 'भुगतान पूरा नहीं हुआ था।' : 'Payment was not completed.';
+        if (error) {
+          if (typeof error === 'object') {
+            const desc = error.description;
+            if (desc) {
+              if (typeof desc === 'string' && desc.trim().startsWith('{')) {
+                try {
+                  const parsed = JSON.parse(desc);
+                  if (parsed && parsed.error) {
+                    const innerError = parsed.error;
+                    if (innerError.code === 'BAD_REQUEST_ERROR' && (innerError.description === 'undefined' || !innerError.description)) {
+                      errorMessage = locale === 'hi' ? 'भुगतान रद्द कर दिया गया था।' : 'Payment was cancelled.';
+                    } else if (innerError.description && innerError.description !== 'undefined') {
+                      errorMessage = innerError.description;
+                    } else if (innerError.reason) {
+                      errorMessage = locale === 'hi'
+                        ? `भुगतान विफल रहा: ${innerError.reason.replace(/_/g, ' ')}`
+                        : `Payment failed: ${innerError.reason.replace(/_/g, ' ')}`;
+                    }
+                  }
+                } catch (e) {
+                  errorMessage = desc;
+                }
+              } else if (desc !== 'undefined') {
+                errorMessage = desc;
+              }
+            } else if (error.message) {
+              errorMessage = error.message;
+            }
+          } else if (typeof error === 'string') {
+            if (error.trim().startsWith('{')) {
+              try {
+                const parsed = JSON.parse(error);
+                if (parsed && parsed.description) {
+                  errorMessage = parsed.description;
+                }
+              } catch (e) {
+                errorMessage = error;
+              }
+            } else {
+              errorMessage = error;
+            }
+          }
+        }
+        const alertTitle = locale === 'hi' ? 'भुगतान रद्द किया गया' : 'Payment Cancelled';
+        Alert.alert(alertTitle, errorMessage);
       });
 
     } catch (error) {
@@ -594,8 +687,28 @@ export default function DonateScreen() {
               multiline
               numberOfLines={3}
               value={address}
-              onChangeText={setAddress}
+              onChangeText={(text) => {
+                setAddress(text);
+                fetchSuggestions(text);
+              }}
             />
+            {suggestions.length > 0 && (
+              <View style={styles.suggestionsContainer}>
+                {suggestions.map((sug) => (
+                  <TouchableOpacity
+                    key={sug.place_id}
+                    style={styles.suggestionItem}
+                    onPress={() => handleSelectSuggestion(sug.place_id)}
+                  >
+                    <Ionicons name="location-outline" size={16} color="#64748b" style={{ marginRight: 8, marginTop: 2 }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.suggestionMainText}>{sug.structured_formatting?.main_text || sug.description}</Text>
+                      <Text style={styles.suggestionSubText}>{sug.structured_formatting?.secondary_text}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         </View>
 
@@ -1268,5 +1381,36 @@ const styles = StyleSheet.create({
   referralChipTextActive: {
     color: '#00bfa5',
     fontWeight: '700',
+  },
+  suggestionsContainer: {
+    backgroundColor: 'white',
+    borderColor: '#cbd5e1',
+    borderWidth: 1,
+    borderRadius: 12,
+    marginTop: 6,
+    maxHeight: 220,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  suggestionItem: {
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  suggestionMainText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  suggestionSubText: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 2,
   },
 });

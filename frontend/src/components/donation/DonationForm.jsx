@@ -43,6 +43,11 @@ const DonationForm = ({ onSuccess }) => {
     const [pan, setPan] = useState('');
     const [aadhaar, setAadhaar] = useState('');
     const [errors, setErrors] = useState({});
+    
+    // Address suggestions states & refs
+    const [suggestions, setSuggestions] = useState([]);
+    const autocompleteServiceRef = useRef(null);
+    const sessionTokenRef = useRef(null);
 
     const [loading, setLoading] = useState(false);
 
@@ -296,6 +301,87 @@ const DonationForm = ({ onSuccess }) => {
                     setShowLocationModal(true);
                 } else {
                     toast.error("Location access failed. Please enter address manually.");
+                }
+            }
+        );
+    };
+
+    // Dynamically load Google Maps Javascript API with places library
+    useEffect(() => {
+        if (window.google?.maps?.places) return;
+        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+        if (!apiKey) return;
+
+        // Check if there is already a script with maps.googleapis.com
+        const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+        if (existingScript) return;
+
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+    }, []);
+
+    // Global listener to close suggestions when clicking outside
+    useEffect(() => {
+        const handleClickOutside = () => {
+            setSuggestions([]);
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, []);
+
+    const fetchSuggestions = (query) => {
+        if (!query.trim()) {
+            setSuggestions([]);
+            return;
+        }
+        if (!window.google?.maps?.places) return;
+
+        if (!autocompleteServiceRef.current) {
+            autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+        }
+        if (!sessionTokenRef.current) {
+            sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
+        }
+
+        autocompleteServiceRef.current.getPlacePredictions(
+            {
+                input: query,
+                sessionToken: sessionTokenRef.current,
+                componentRestrictions: { country: 'in' }
+            },
+            (predictions, status) => {
+                if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+                    setSuggestions(predictions);
+                } else {
+                    setSuggestions([]);
+                }
+            }
+        );
+    };
+
+    const handleSelectSuggestion = (placeId) => {
+        if (!window.google?.maps?.places) return;
+
+        const dummyDiv = document.createElement('div');
+        const service = new window.google.maps.places.PlacesService(dummyDiv);
+
+        service.getDetails(
+            {
+                placeId: placeId,
+                fields: ['formatted_address'],
+                sessionToken: sessionTokenRef.current
+            },
+            (place, status) => {
+                if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+                    setAddress(place.formatted_address || '');
+                    // Reset suggestions and session token
+                    sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
+                    setSuggestions([]);
                 }
             }
         );
@@ -775,9 +861,51 @@ const DonationForm = ({ onSuccess }) => {
                                 className="form-control"
                                 placeholder={isDetecting ? "Detecting address..." : "Ex. H.No 123, Sector 4, New Delhi"}
                                 value={address}
-                                onChange={(e) => setAddress(e.target.value)}
+                                onChange={(e) => {
+                                    setAddress(e.target.value);
+                                    fetchSuggestions(e.target.value);
+                                }}
                                 style={{ minHeight: '80px', paddingTop: '12px', paddingRight: '100px' }}
                             />
+                            {suggestions.length > 0 && (
+                                <ul style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: 0,
+                                    right: 0,
+                                    zIndex: 99,
+                                    background: '#ffffff',
+                                    border: '1px solid #cbd5e1',
+                                    borderRadius: '8px',
+                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                    marginTop: '4px',
+                                    listStyle: 'none',
+                                    padding: '4px 0',
+                                    maxHeight: '200px',
+                                    overflowY: 'auto',
+                                    textAlign: 'left'
+                                }}>
+                                    {suggestions.map((sug) => (
+                                        <li
+                                            key={sug.place_id}
+                                            onClick={() => handleSelectSuggestion(sug.place_id)}
+                                            style={{
+                                                padding: '10px 12px',
+                                                fontSize: '13px',
+                                                color: '#334155',
+                                                cursor: 'pointer',
+                                                transition: 'background-color 0.2s',
+                                                borderBottom: '1px solid #f1f5f9'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                        >
+                                            <div style={{ fontWeight: '600', color: '#1e293b' }}>{sug.structured_formatting?.main_text || sug.description}</div>
+                                            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{sug.structured_formatting?.secondary_text}</div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                             <button
                                 type="button"
                                 className="detect-location-btn"
