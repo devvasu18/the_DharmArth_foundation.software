@@ -15,7 +15,7 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
     });
 
     const { user: authUser } = useAuth();
-    
+
     useEffect(() => {
         if (isOpen) {
             // Check for logged-in user to auto-fill
@@ -61,7 +61,7 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
 
     return (
         <div className="exit-modal-overlay">
-            <motion.div 
+            <motion.div
                 className="exit-modal-container"
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -73,7 +73,7 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
 
                 <AnimatePresence mode="wait">
                     {phase === 1 ? (
-                        <motion.div 
+                        <motion.div
                             key="phase1"
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -85,7 +85,7 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
                             </div>
                             <h2>Please Don't Give Up!</h2>
                             <p>Every small contribution makes a huge difference in someone's life. Are you sure you want to leave?</p>
-                            
+
                             <div className="exit-modal-actions">
                                 <button className="btn-stay" onClick={onClose}>
                                     Contribute Now
@@ -96,7 +96,7 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
                             </div>
                         </motion.div>
                     ) : (
-                        <motion.div 
+                        <motion.div
                             key="phase2"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -108,16 +108,16 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
                             </div>
                             <h3>We'll remind you!</h3>
                             <p>Leave your details and we'll send you a gentle reminder when you're ready.</p>
-                            
+
                             <form onSubmit={handleSubmit} className="exit-modal-form">
                                 <div className="exit-form-group">
                                     <div className="exit-input-wrapper">
                                         <User size={18} className="exit-input-icon" />
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             placeholder="Your Name"
                                             value={formData.name}
-                                            onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                             required
                                         />
                                     </div>
@@ -125,11 +125,11 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
                                 <div className="exit-form-group">
                                     <div className="exit-input-wrapper">
                                         <Phone size={18} className="exit-input-icon" />
-                                        <input 
-                                            type="tel" 
+                                        <input
+                                            type="tel"
                                             placeholder="Mobile Number"
                                             value={formData.mobile}
-                                            onChange={(e) => setFormData({...formData, mobile: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
                                             maxLength={10}
                                             required
                                         />
@@ -139,7 +139,7 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
                                     {loading ? 'Saving...' : 'Remind Later'} <Send size={16} />
                                 </button>
                                 <button type="button" className="btn-cancel-navigation" onClick={onConfirmNavigation}>
-                                    Just let me leave
+                                    back to dashboard
                                 </button>
                             </form>
                         </motion.div>

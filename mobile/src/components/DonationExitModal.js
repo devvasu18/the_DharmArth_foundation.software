@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Modal, 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  TextInput, 
-  Animated, 
-  KeyboardAvoidingView, 
+import {
+  Modal,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+  Animated,
+  KeyboardAvoidingView,
   Platform,
   Alert
 } from 'react-native';
@@ -80,7 +80,7 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <KeyboardAvoidingView 
+        <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.container}
         >
@@ -153,7 +153,7 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.btnLeave} onPress={onConfirmNavigation}>
-                  <Text style={styles.btnLeaveText}>Just let me leave</Text>
+                  <Text style={styles.btnLeaveText}>back to dashboard</Text>
                 </TouchableOpacity>
               </View>
             )}
