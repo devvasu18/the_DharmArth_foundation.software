@@ -12,6 +12,12 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import './OrderMedicine.css';
 
+const getStatusIndex = (status) => {
+    if (status === 'Awaiting Approval') return 0;
+    const order = ['Payment Pending', 'Processing', 'Ready for Packing', 'Ready for Dispatch', 'Out for Delivery', 'Delivered'];
+    return order.indexOf(status);
+};
+
 const VerifiedItemRow = ({ item }) => {
     const { t } = useTranslation();
     const [showDosage, setShowDosage] = useState(false);
@@ -608,6 +614,8 @@ const OrderMedicine = () => {
         switch (status) {
             case 'Payment Pending': return <span className="status-badge pending" style={{ background: '#fff3cd', color: '#856404' }}>{t('pharmacy.badges.pendingPayment')}</span>;
             case 'Processing': return <span className="status-badge review" style={{ background: '#d1ecf1', color: '#0c5460' }}>{t('pharmacy.badges.processing')}</span>;
+            case 'Ready for Packing': return <span className="status-badge review" style={{ background: '#fef3c7', color: '#d97706' }}>{t('pharmacy.badges.readyForPacking')}</span>;
+            case 'Ready for Dispatch': return <span className="status-badge review" style={{ background: '#ecfdf5', color: '#059669' }}>{t('pharmacy.badges.readyForDispatch')}</span>;
             case 'Out for Delivery': return <span className="status-badge verified" style={{ background: '#d4edda', color: '#155724' }}>{t('pharmacy.badges.outForDelivery')}</span>;
             case 'Delivered': return <span className="status-badge verified"><CheckCircle size={14} /> {t('pharmacy.badges.delivered')}</span>;
             case 'Cancelled': return <span className="status-badge rejected"><X size={14} /> {t('pharmacy.badges.cancelled')}</span>;
@@ -1724,29 +1732,33 @@ const OrderMedicine = () => {
                                     position: 'absolute',
                                     top: '8px',
                                     left: '10px',
-                                    width: `${(['Pending', 'Processing', 'Out for Delivery', 'Delivered'].indexOf(selectedTrackOrder.status) / 3) * 100}%`,
+                                    width: `${(() => {
+                                        const idx = getStatusIndex(selectedTrackOrder.status);
+                                        return idx >= 0 ? (idx / 5) * 100 : 0;
+                                    })()}%`,
                                     height: '2px',
                                     background: '#38a169',
                                     zIndex: 1,
                                     transition: 'width 0.4s ease'
                                 }}></div>
 
-                                <div className={`progress-step ${['Pending', 'Processing', 'Out for Delivery', 'Delivered'].indexOf(selectedTrackOrder.status) >= 0 ? 'active' : ''}`}>
-                                    <div className="step-point"></div>
-                                    <span>{t('pharmacy.badges.pending')}</span>
-                                </div>
-                                <div className={`progress-step ${['Processing', 'Out for Delivery', 'Delivered'].indexOf(selectedTrackOrder.status) >= 0 ? 'active' : ''}`}>
-                                    <div className="step-point"></div>
-                                    <span>{t('pharmacy.badges.processing')}</span>
-                                </div>
-                                <div className={`progress-step ${['Out for Delivery', 'Delivered'].indexOf(selectedTrackOrder.status) >= 0 ? 'active' : ''}`}>
-                                    <div className="step-point"></div>
-                                    <span>{t('pharmacy.shipping')}</span>
-                                </div>
-                                <div className={`progress-step ${selectedTrackOrder.status === 'Delivered' ? 'active' : ''}`}>
-                                    <div className="step-point"></div>
-                                    <span>{t('pharmacy.badges.delivered')}</span>
-                                </div>
+                                {(() => {
+                                    const currentIdx = getStatusIndex(selectedTrackOrder.status);
+                                    const steps = [
+                                        { label: t('pharmacy.progress.pending'), idx: 0 },
+                                        { label: t('pharmacy.progress.processing'), idx: 1 },
+                                        { label: t('pharmacy.progress.readyForPacking'), idx: 2 },
+                                        { label: t('pharmacy.progress.readyForDispatch'), idx: 3 },
+                                        { label: t('pharmacy.progress.shipping'), idx: 4 },
+                                        { label: t('pharmacy.progress.delivered'), idx: 5 }
+                                    ];
+                                    return steps.map(step => (
+                                        <div key={step.idx} className={`progress-step ${currentIdx >= step.idx ? 'active' : ''}`}>
+                                            <div className="step-point"></div>
+                                            <span>{step.label}</span>
+                                        </div>
+                                    ));
+                                })()}
                             </div>
 
                             <div className="premium-grid" style={{

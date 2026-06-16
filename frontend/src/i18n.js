@@ -398,6 +398,8 @@ i18n
                         "progress": {
                             "pending": "Pending",
                             "processing": "Processing",
+                            "readyForPacking": "Packed",
+                            "readyForDispatch": "Ready to Ship",
                             "shipping": "Shipping",
                             "delivered": "Delivered"
                         },
@@ -433,6 +435,8 @@ i18n
                         "badges": {
                             "pendingPayment": "Pending Payment",
                             "processing": "Processing",
+                            "readyForPacking": "Ready for Packing",
+                            "readyForDispatch": "Ready for Dispatch",
                             "outForDelivery": "Out for Delivery",
                             "delivered": "Delivered",
                             "cancelled": "Cancelled",
@@ -817,6 +821,8 @@ i18n
                         "progress": {
                             "pending": "लंबित",
                             "processing": "प्रसंस्करण",
+                            "readyForPacking": "पैक किया गया",
+                            "readyForDispatch": "प्रेषण के लिए तैयार",
                             "shipping": "शिपिंग",
                             "delivered": "वितरित"
                         },
@@ -852,6 +858,8 @@ i18n
                         "badges": {
                             "pendingPayment": "भुगतान लंबित",
                             "processing": "प्रसंस्करण",
+                            "readyForPacking": "पैकिंग के लिए तैयार",
+                            "readyForDispatch": "प्रेषण के लिए तैयार",
                             "outForDelivery": "वितरण के लिए बाहर",
                             "delivered": "वितरित",
                             "cancelled": "रद्द",

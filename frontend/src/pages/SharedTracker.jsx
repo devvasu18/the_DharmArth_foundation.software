@@ -16,6 +16,12 @@ import {
 } from 'lucide-react';
 import './OrderMedicine.css'; // Reuse styles
 
+const getStatusIndex = (status) => {
+    if (status === 'Awaiting Approval') return 0;
+    const order = ['Payment Pending', 'Processing', 'Ready for Packing', 'Ready for Dispatch', 'Out for Delivery', 'Delivered'];
+    return order.indexOf(status);
+};
+
 const SharedTracker = () => {
     const { orderId } = useParams();
     const [order, setOrder] = useState(null);
@@ -77,29 +83,33 @@ const SharedTracker = () => {
                             position: 'absolute',
                             top: '8px',
                             left: '10px',
-                            width: `${(['Pending', 'Processing', 'Out for Delivery', 'Delivered'].indexOf(order.status) / 3) * 100}%`,
+                            width: `${(() => {
+                                const idx = getStatusIndex(order.status);
+                                return idx >= 0 ? (idx / 5) * 100 : 0;
+                            })()}%`,
                             height: '2px',
                             background: '#38a169',
                             zIndex: 1,
                             transition: 'width 0.4s ease'
                         }}></div>
 
-                        <div className={`progress-step ${['Pending', 'Processing', 'Out for Delivery', 'Delivered'].indexOf(order.status) >= 0 ? 'active' : ''}`}>
-                            <div className="step-point"></div>
-                            <span>Pending</span>
-                        </div>
-                        <div className={`progress-step ${['Processing', 'Out for Delivery', 'Delivered'].indexOf(order.status) >= 0 ? 'active' : ''}`}>
-                            <div className="step-point"></div>
-                            <span>Processing</span>
-                        </div>
-                        <div className={`progress-step ${['Out for Delivery', 'Delivered'].indexOf(order.status) >= 0 ? 'active' : ''}`}>
-                            <div className="step-point"></div>
-                            <span>Shipping</span>
-                        </div>
-                        <div className={`progress-step ${order.status === 'Delivered' ? 'active' : ''}`}>
-                            <div className="step-point"></div>
-                            <span>Delivered</span>
-                        </div>
+                        {(() => {
+                            const currentIdx = getStatusIndex(order.status);
+                            const steps = [
+                                { label: 'Pending', idx: 0 },
+                                { label: 'Processing', idx: 1 },
+                                { label: 'Packed', idx: 2 },
+                                { label: 'Ready to Ship', idx: 3 },
+                                { label: 'Shipping', idx: 4 },
+                                { label: 'Delivered', idx: 5 }
+                            ];
+                            return steps.map(step => (
+                                <div key={step.idx} className={`progress-step ${currentIdx >= step.idx ? 'active' : ''}`}>
+                                    <div className="step-point"></div>
+                                    <span>{step.label}</span>
+                                </div>
+                            ));
+                        })()}
                     </div>
 
                     <div className="premium-grid" style={{

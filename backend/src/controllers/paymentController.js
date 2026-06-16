@@ -33,9 +33,28 @@ exports.createOrder = async (req, res) => {
                 return res.status(404).json({ success: false, message: 'Prescription not found' });
             }
             
-            const calculatedAmount = prescription.verifiedItems
+            const subtotal = prescription.verifiedItems
                 .filter(item => item.isAvailable)
                 .reduce((acc, item) => acc + (item.price || 0), 0);
+            
+            const { getPharmacyConfig } = require('./settingsController');
+            const config = await getPharmacyConfig();
+            
+            const gst = subtotal * (config.gstPercent / 100);
+            const platformFee = subtotal * (config.platformFeePercent / 100);
+            
+            let deliveryCharge = 0;
+            if (config.deliveryChargeType === 'flat') {
+                deliveryCharge = config.flatDeliveryCharge;
+            } else {
+                if (subtotal < config.percentDeliveryThreshold) {
+                    deliveryCharge = subtotal * (config.percentDeliveryBelowThreshold / 100);
+                } else {
+                    deliveryCharge = subtotal * (config.percentDeliveryAboveThreshold / 100);
+                }
+            }
+            
+            const calculatedAmount = subtotal + gst + platformFee + deliveryCharge;
             
             // If frontend amount is significantly different, we might want to log it, 
             // but we'll use the calculated one for security.

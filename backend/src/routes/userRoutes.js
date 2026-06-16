@@ -561,7 +561,7 @@ router.post('/delete-account/send-otp', protect, async (req, res) => {
         // --- PRE-FLIGHT CHECK 1: Active Orders ---
         const activeOrders = await Order.countDocuments({
             user: user._id,
-            status: { $in: ['Awaiting Approval', 'Payment Pending', 'Processing', 'Out for Delivery'] }
+            status: { $in: ['Awaiting Approval', 'Payment Pending', 'Processing', 'Ready for Packing', 'Ready for Dispatch', 'Out for Delivery'] }
         });
         if (activeOrders > 0) {
             return res.status(400).json({
@@ -684,7 +684,7 @@ router.delete('/delete-account', protect, async (req, res) => {
 
         const activeOrders = await Order.countDocuments({
             user: userId,
-            status: { $in: ['Awaiting Approval', 'Payment Pending', 'Processing', 'Out for Delivery'] }
+            status: { $in: ['Awaiting Approval', 'Payment Pending', 'Processing', 'Ready for Packing', 'Ready for Dispatch', 'Out for Delivery'] }
         });
         if (activeOrders > 0) {
             return res.status(400).json({ message: `Cannot delete: ${activeOrders} active order(s) exist.` });

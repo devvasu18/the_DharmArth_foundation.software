@@ -36,11 +36,36 @@ exports.completeOrder = async (orderId, paymentId, io) => {
             intakeMethod: item.intakeMethod
         }));
 
+        const subtotal = availableItems.reduce((acc, item) => acc + (item.price || 0), 0);
+        
+        const { getPharmacyConfig } = require('../controllers/settingsController');
+        const config = await getPharmacyConfig();
+        
+        const gst = subtotal * (config.gstPercent / 100);
+        const platformFee = subtotal * (config.platformFeePercent / 100);
+        
+        let deliveryCharge = 0;
+        if (config.deliveryChargeType === 'flat') {
+            deliveryCharge = config.flatDeliveryCharge;
+        } else {
+            if (subtotal < config.percentDeliveryThreshold) {
+                deliveryCharge = subtotal * (config.percentDeliveryBelowThreshold / 100);
+            } else {
+                deliveryCharge = subtotal * (config.percentDeliveryAboveThreshold / 100);
+            }
+        }
+
         const newOrder = await Order.create({
             user: prescription.user?._id || payment.userId,
             prescription: prescription._id,
             items: orderItems,
             totalAmount: payment.amount,
+            financials: {
+                subtotal,
+                gst,
+                platformFee,
+                deliveryCharge
+            },
             shippingAddress: prescription.pendingShippingAddress || {},
             paymentDetails: {
                 method: 'Online',

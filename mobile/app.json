@@ -16,7 +16,9 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.thedharmarth.foundation",
+      "buildNumber": "3",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "We use your location to accurately fill in your address for donation receipts, billing details, and local community registration.",
         "NSPhotoLibraryUsageDescription": "We use your photo library to allow you to upload and set a profile picture.",
         "NSCameraUsageDescription": "We use your camera to allow you to take and upload a profile picture."

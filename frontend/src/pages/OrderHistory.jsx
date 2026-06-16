@@ -86,6 +86,8 @@ const OrderHistory = () => {
         switch (status) {
             case 'Payment Pending': return <span className="status-badge pending" style={{ background: '#fffbeb', color: '#d97706' }}>Payment Pending</span>;
             case 'Processing': return <span className="status-badge verified" style={{ background: '#eff6ff', color: '#2563eb' }}>Processing</span>;
+            case 'Ready for Packing': return <span className="status-badge verified" style={{ background: '#fef3c7', color: '#d97706' }}>Ready for Packing</span>;
+            case 'Ready for Dispatch': return <span className="status-badge verified" style={{ background: '#ecfdf5', color: '#059669' }}>Ready for Dispatch</span>;
             case 'Out for Delivery': return <span className="status-badge verified" style={{ background: '#fdf2f8', color: '#db2777' }}>Out for Delivery</span>;
             case 'Delivered': return <span className="status-badge verified" style={{ background: '#f0fdf4', color: '#16a34a' }}>Delivered</span>;
             case 'Cancelled': return <span className="status-badge rejected">Cancelled</span>;
@@ -96,7 +98,9 @@ const OrderHistory = () => {
     const getTrackingSteps = (order) => {
         const steps = [
             { id: 'placed', label: 'Order Placed', icon: <Clipboard size={20} />, active: true, done: true },
-            { id: 'processing', label: 'Processing', icon: <Package size={20} />, active: order.status === 'Processing', done: ['Processing', 'Out for Delivery', 'Delivered'].includes(order.status) },
+            { id: 'processing', label: 'Processing', icon: <Package size={20} />, active: order.status === 'Processing', done: ['Processing', 'Ready for Packing', 'Ready for Dispatch', 'Out for Delivery', 'Delivered'].includes(order.status) },
+            { id: 'packing', label: 'Ready for Packing', icon: <Package size={20} />, active: order.status === 'Ready for Packing', done: ['Ready for Packing', 'Ready for Dispatch', 'Out for Delivery', 'Delivered'].includes(order.status) },
+            { id: 'dispatch', label: 'Ready for Dispatch', icon: <Truck size={20} />, active: order.status === 'Ready for Dispatch', done: ['Ready for Dispatch', 'Out for Delivery', 'Delivered'].includes(order.status) },
             { id: 'out', label: 'Out for Delivery', icon: <Truck size={20} />, active: order.status === 'Out for Delivery', done: ['Out for Delivery', 'Delivered'].includes(order.status) },
             { id: 'delivered', label: 'Delivered', icon: <CheckCircle size={20} />, active: order.status === 'Delivered', done: order.status === 'Delivered' }
         ];

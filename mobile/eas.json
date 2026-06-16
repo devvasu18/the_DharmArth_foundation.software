@@ -11,12 +11,20 @@
       "distribution": "internal"
     },
     "production": {
+      "ios": {
+        "distribution": "store"
+      },
       "android": {
         "buildType": "app-bundle"
       }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "tdmfmedical@gmail.com",
+        "ascAppId": "6780563745"
+      }
+    }
   }
 }

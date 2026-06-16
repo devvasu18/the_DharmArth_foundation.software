@@ -100,16 +100,27 @@ const SharedCheckout = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [showDosageMap, setShowDosageMap] = useState({});
     const [isOrderingForOther, setIsOrderingForOther] = useState(false);
+    const [pharmacyConfig, setPharmacyConfig] = useState(null);
 
     const { user: authUser } = useAuth();
 
     useEffect(() => {
         fetchPrescription();
+        fetchPharmacyConfig();
         if (authUser) {
             setIsLoggedIn(true);
             fetchSavedAddresses();
         }
     }, [id, authUser]);
+
+    const fetchPharmacyConfig = async () => {
+        try {
+            const res = await api.get('/settings/pharmacy/public');
+            setPharmacyConfig(res.data);
+        } catch (err) {
+            console.error("Failed to fetch pharmacy config", err);
+        }
+    };
 
     const fetchSavedAddresses = async () => {
         try {
@@ -271,10 +282,42 @@ const SharedCheckout = () => {
         }
     };
 
-    const calculateTotal = () => {
+    const calculateSubtotal = () => {
         if (!prescription) return 0;
         return prescription.verifiedItems
+            .filter(i => i.isAvailable)
             .reduce((acc, item) => acc + (item.price || 0), 0);
+    };
+
+    const calculateGst = (subtotal) => {
+        if (!pharmacyConfig) return 0;
+        return subtotal * (pharmacyConfig.gstPercent / 100);
+    };
+
+    const calculatePlatformFee = (subtotal) => {
+        if (!pharmacyConfig) return 0;
+        return subtotal * (pharmacyConfig.platformFeePercent / 100);
+    };
+
+    const calculateDeliveryCharge = (subtotal) => {
+        if (!pharmacyConfig) return 0;
+        if (pharmacyConfig.deliveryChargeType === 'flat') {
+            return pharmacyConfig.flatDeliveryCharge;
+        } else {
+            if (subtotal < pharmacyConfig.percentDeliveryThreshold) {
+                return subtotal * (pharmacyConfig.percentDeliveryBelowThreshold / 100);
+            } else {
+                return subtotal * (pharmacyConfig.percentDeliveryAboveThreshold / 100);
+            }
+        }
+    };
+
+    const calculateTotal = () => {
+        const subtotal = calculateSubtotal();
+        const gst = calculateGst(subtotal);
+        const platformFee = calculatePlatformFee(subtotal);
+        const deliveryCharge = calculateDeliveryCharge(subtotal);
+        return subtotal + gst + platformFee + deliveryCharge;
     };
 
     if (loading) return <div className="loading-state-shared"><div className="spinner"></div><p>Fetching your verified invoice...</p></div>;
@@ -495,11 +538,23 @@ const SharedCheckout = () => {
                                      <div className="order-summary-footer">
                                          <div className="summary-row">
                                              <span>Subtotal</span>
-                                             <span>₹{calculateTotal().toFixed(2)}</span>
+                                             <span>₹{calculateSubtotal().toFixed(2)}</span>
+                                         </div>
+                                         <div className="summary-row">
+                                             <span>GST ({pharmacyConfig?.gstPercent || 0}%)</span>
+                                             <span>₹{calculateGst(calculateSubtotal()).toFixed(2)}</span>
+                                         </div>
+                                         <div className="summary-row">
+                                             <span>Platform Fee ({pharmacyConfig?.platformFeePercent || 0}%)</span>
+                                             <span>₹{calculatePlatformFee(calculateSubtotal()).toFixed(2)}</span>
                                          </div>
                                          <div className="summary-row">
                                              <span>Delivery Fee</span>
-                                             <span className="free">FREE</span>
+                                             {calculateDeliveryCharge(calculateSubtotal()) === 0 ? (
+                                                 <span className="free">FREE</span>
+                                             ) : (
+                                                 <span>₹{calculateDeliveryCharge(calculateSubtotal()).toFixed(2)}</span>
+                                             )}
                                          </div>
                                          <div className="total-row-shared">
                                              <span>Total</span>

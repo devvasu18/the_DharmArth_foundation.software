@@ -20,6 +20,12 @@ import './AdminPharmacyOrders.css';
 import { useConfirm } from '../../context/ConfirmContext';
 import toast from 'react-hot-toast';
 
+const getStatusIndex = (status) => {
+    if (status === 'Awaiting Approval') return 0;
+    const order = ['Payment Pending', 'Processing', 'Ready for Packing', 'Ready for Dispatch', 'Out for Delivery', 'Delivered'];
+    return order.indexOf(status);
+};
+
 const AdminPharmacyOrders = () => {
     const handleCopyTrackLink = (orderId) => {
         const url = `${window.location.origin}/track/${orderId}`;
@@ -108,6 +114,8 @@ const AdminPharmacyOrders = () => {
         switch(status) {
             case 'Payment Pending': return { bg: '#fffaf0', text: '#d69e2e', icon: <CreditCard size={14}/> };
             case 'Processing': return { bg: '#ebf8ff', text: '#3182ce', icon: <Package size={14}/> };
+            case 'Ready for Packing': return { bg: '#fef3c7', text: '#d97706', icon: <Package size={14}/> };
+            case 'Ready for Dispatch': return { bg: '#ecfdf5', text: '#059669', icon: <Truck size={14}/> };
             case 'Out for Delivery': return { bg: '#faf5ff', text: '#805ad5', icon: <Truck size={14}/> };
             case 'Delivered': return { bg: '#f0fff4', text: '#38a169', icon: <CheckCircle size={14}/> };
             case 'Cancelled': return { bg: '#fff5f5', text: '#e53e3e', icon: <XCircle size={14}/> };
@@ -146,6 +154,8 @@ const AdminPharmacyOrders = () => {
                         <option value="All">All Statuses</option>
                         <option value="Payment Pending">Payment Pending</option>
                         <option value="Processing">Processing</option>
+                        <option value="Ready for Packing">Ready for Packing</option>
+                        <option value="Ready for Dispatch">Ready for Dispatch</option>
                         <option value="Out for Delivery">Out for Delivery</option>
                         <option value="Delivered">Delivered</option>
                         <option value="Cancelled">Cancelled</option>
@@ -242,7 +252,27 @@ const AdminPharmacyOrders = () => {
                                                     </button>
                                                 )}
                                                 {order.status === 'Processing' && (
-                                                    <span className="ready-tag">Awaiting Dispatch</span>
+                                                    <button 
+                                                        className="btn-verify" 
+                                                        title="Mark Ready for Packing"
+                                                        style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' }}
+                                                        onClick={() => handleUpdateStatus(order._id, 'Ready for Packing', 'Marked as Ready for Packing')}
+                                                    >
+                                                        <Package size={16} />
+                                                    </button>
+                                                )}
+                                                {order.status === 'Ready for Packing' && (
+                                                    <button 
+                                                        className="btn-verify" 
+                                                        title="Mark Ready for Dispatch"
+                                                        style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #d1fae5' }}
+                                                        onClick={() => handleUpdateStatus(order._id, 'Ready for Dispatch', 'Marked as Ready for Dispatch')}
+                                                    >
+                                                        <Truck size={16} />
+                                                    </button>
+                                                )}
+                                                {order.status === 'Ready for Dispatch' && (
+                                                    <span className="ready-tag" style={{ background: '#eff6ff', color: '#1d4ed8' }}>Awaiting Dispatch</span>
                                                 )}
                                                 <button 
                                                     className="btn-view" 
@@ -301,22 +331,23 @@ const AdminPharmacyOrders = () => {
                         
                         <div className="modal-body-premium">
                             <div className="status-progress-bar">
-                                <div className={`progress-step ${['Payment Pending', 'Processing', 'Out for Delivery', 'Delivered'].indexOf(selectedOrder.status) >= 0 ? 'active' : ''}`}>
-                                    <div className="step-point"></div>
-                                    <span>Pending</span>
-                                </div>
-                                <div className={`progress-step ${['Processing', 'Out for Delivery', 'Delivered'].indexOf(selectedOrder.status) >= 0 ? 'active' : ''}`}>
-                                    <div className="step-point"></div>
-                                    <span>Processing</span>
-                                </div>
-                                <div className={`progress-step ${['Out for Delivery', 'Delivered'].indexOf(selectedOrder.status) >= 0 ? 'active' : ''}`}>
-                                    <div className="step-point"></div>
-                                    <span>Shipping</span>
-                                </div>
-                                <div className={`progress-step ${selectedOrder.status === 'Delivered' ? 'active' : ''}`}>
-                                    <div className="step-point"></div>
-                                    <span>Delivered</span>
-                                </div>
+                                {(() => {
+                                    const currentIdx = getStatusIndex(selectedOrder.status);
+                                    const steps = [
+                                        { label: 'Pending', idx: 0 },
+                                        { label: 'Processing', idx: 1 },
+                                        { label: 'Packed', idx: 2 },
+                                        { label: 'Ready to Ship', idx: 3 },
+                                        { label: 'In Transit', idx: 4 },
+                                        { label: 'Delivered', idx: 5 }
+                                    ];
+                                    return steps.map(step => (
+                                        <div key={step.idx} className={`progress-step ${currentIdx >= step.idx ? 'active' : ''}`}>
+                                            <div className="step-point"></div>
+                                            <span>{step.label}</span>
+                                        </div>
+                                    ));
+                                })()}
                             </div>
 
                             <div className="premium-grid">
@@ -491,6 +522,22 @@ const AdminPharmacyOrders = () => {
                                     setIsModalOpen(false);
                                 }}>
                                     <CheckCircle size={18} /> Confirm Payment
+                                </button>
+                            )}
+                            {selectedOrder.status === 'Processing' && (
+                                <button className="btn-glass-primary" style={{ background: '#3b82f6', color: '#ffffff' }} onClick={() => {
+                                    handleUpdateStatus(selectedOrder._id, 'Ready for Packing', 'Marked as Ready for Packing from details modal');
+                                    setIsModalOpen(false);
+                                }}>
+                                    <Package size={18} /> Mark Packed
+                                </button>
+                            )}
+                            {selectedOrder.status === 'Ready for Packing' && (
+                                <button className="btn-glass-primary" style={{ background: '#10b981', color: '#ffffff' }} onClick={() => {
+                                    handleUpdateStatus(selectedOrder._id, 'Ready for Dispatch', 'Marked as Ready for Dispatch from details modal');
+                                    setIsModalOpen(false);
+                                }}>
+                                    <Truck size={18} /> Mark Ready for Dispatch
                                 </button>
                             )}
                         </div>

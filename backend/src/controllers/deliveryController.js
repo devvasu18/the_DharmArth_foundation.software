@@ -251,9 +251,9 @@ const processAssignment = async (data, sendNotification = true) => {
 
 exports.getUnassignedOrders = async (req, res) => {
     try {
-        // Fetch orders that are not delivered/cancelled, and are either PAID or COD
+        // Fetch orders that are not delivered/cancelled, and are in 'Ready for Dispatch' status, and are either PAID or COD
         const orders = await Order.find({
-            status: { $nin: ['Delivered', 'Cancelled'] },
+            status: 'Ready for Dispatch',
             $or: [
                 { 'paymentDetails.status': 'Completed' },
                 { 'paymentDetails.method': 'COD' }
