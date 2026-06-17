@@ -36,6 +36,16 @@ export const checkAndRunUpdates = async (setUpdateInfo) => {
         });
         return; // Native UI is now managing the update sequence
       }
+
+      if (Platform.OS === 'ios') {
+        await inAppUpdates.startUpdate({
+          title: "New Update Available",
+          message: "Please update to the latest version to enjoy the new features.",
+          buttonUpgradeText: "Update Now",
+          buttonCancelText: "Cancel",
+        });
+        return;
+      }
     } else {
       console.log("[UpdateHandler] Native check: App is up-to-date natively.");
     }
@@ -57,9 +67,16 @@ export const checkAndRunUpdates = async (setUpdateInfo) => {
       return;
     }
 
-    // Read the current local version code from expoConfig (android)
-    const currentVersionCode = Constants.expoConfig?.android?.versionCode || 1;
-    const remoteVersionCode = remoteConfig.latestVersionCode || 1;
+    // Read the current local version code and remote expectations based on platform
+    let currentVersionCode = Constants.expoConfig?.android?.versionCode || 1;
+    let remoteVersionCode = remoteConfig.latestVersionCode || 1;
+    let storeUrl = remoteConfig.playStoreUrl || 'https://play.google.com/store/apps/details?id=com.thedharmarth.foundation';
+
+    if (Platform.OS === 'ios') {
+      currentVersionCode = parseInt(Constants.expoConfig?.ios?.buildNumber || '1', 10);
+      remoteVersionCode = remoteConfig.latestVersionCodeIos || remoteConfig.latestVersionCode || 1;
+      storeUrl = remoteConfig.appStoreUrl || 'https://apps.apple.com/app/id6780563745';
+    }
     
     console.log(`[UpdateHandler] Fallback check comparisons: Local Code [${currentVersionCode}], Remote Code [${remoteVersionCode}]`);
 
@@ -68,7 +85,7 @@ export const checkAndRunUpdates = async (setUpdateInfo) => {
       setUpdateInfo({
         show: true,
         forceUpdate: remoteConfig.forceUpdate || false,
-        playStoreUrl: remoteConfig.playStoreUrl || 'https://play.google.com/store/apps/details?id=com.thedharmarth.foundation'
+        playStoreUrl: storeUrl
       });
     } else {
       console.log("[UpdateHandler] Fallback check: Version is up-to-date.");
