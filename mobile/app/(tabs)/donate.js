@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  BackHandler
+  BackHandler,
+  findNodeHandle
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -21,6 +22,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useTranslation } from '../../src/context/LanguageContext';
 import api from '../../src/services/api';
 import { useLocationFlow } from '../../src/hooks/useLocationFlow';
+import { validatePAN, validateAadhaar } from '../../src/utils/validators';
 import RazorpayCheckout from 'react-native-razorpay';
 import DonationExitModal from '../../src/components/DonationExitModal';
 import { Modal } from 'react-native';
@@ -75,6 +77,42 @@ export default function DonateScreen() {
   const [sessionToken, setSessionToken] = useState('');
 
   const { requestLocation, loading: isDetecting } = useLocationFlow();
+
+  // Refs for scrolling & focusing
+  const scrollRef = useRef(null);
+  const customAmountInputRef = useRef(null);
+  const fullNameInputRef = useRef(null);
+  const mobileInputRef = useRef(null);
+  const panInputRef = useRef(null);
+  const aadhaarInputRef = useRef(null);
+
+  // Validation Errors State
+  const [errors, setErrors] = useState({
+    amount: false,
+    fullName: false,
+    mobile: false,
+    pan: false,
+    aadhaar: false
+  });
+
+  const scrollToRef = (ref) => {
+    if (scrollRef.current && ref.current) {
+      const scrollNode = findNodeHandle(scrollRef.current);
+      if (scrollNode) {
+        ref.current.measureLayout(
+          scrollNode,
+          (x, y) => {
+            scrollRef.current?.scrollTo({ y: Math.max(0, y - 40), animated: true });
+          },
+          (err) => {
+            ref.current?.focus();
+          }
+        );
+      } else {
+        ref.current?.focus();
+      }
+    }
+  };
 
   useFocusEffect(
     React.useCallback(() => {
@@ -250,24 +288,61 @@ export default function DonateScreen() {
   const handleDonate = async () => {
     const finalAmount = parseInt(customAmount) || amount;
 
-    if (!fullName || mobile.length !== 10 || !finalAmount) {
-      Alert.alert('Error', 'Please fill in all required fields.');
+    // Calculate validation errors
+    const isAmountInvalid = !finalAmount;
+    const isFullNameInvalid = !fullName.trim();
+    const isMobileInvalid = mobile.length !== 10;
+    const isPanInvalid = need80G ? (!pan || !validatePAN(pan)) : false;
+    const isAadhaarInvalid = need80G ? (!aadhaar || !validateAadhaar(aadhaar)) : false;
+
+    const newErrors = {
+      amount: isAmountInvalid,
+      fullName: isFullNameInvalid,
+      mobile: isMobileInvalid,
+      pan: isPanInvalid,
+      aadhaar: isAadhaarInvalid
+    };
+
+    setErrors(newErrors);
+
+    // Identify first error, scroll to it, focus it, and alert the user
+    if (isAmountInvalid) {
+      Alert.alert('Error', 'Please select or enter a donation amount.');
+      scrollToRef(customAmountInputRef);
+      setTimeout(() => customAmountInputRef.current?.focus(), 150);
+      return;
+    }
+
+    if (isFullNameInvalid) {
+      Alert.alert('Error', 'Please enter your full name.');
+      scrollToRef(fullNameInputRef);
+      setTimeout(() => fullNameInputRef.current?.focus(), 150);
+      return;
+    }
+
+    if (isMobileInvalid) {
+      Alert.alert('Error', 'Please enter a valid 10-digit mobile number.');
+      scrollToRef(mobileInputRef);
+      setTimeout(() => mobileInputRef.current?.focus(), 150);
       return;
     }
 
     if (need80G) {
-      if (!pan || !aadhaar) {
-        Alert.alert('Error', 'PAN and Aadhaar are required for 80G benefit.');
+      if (isPanInvalid) {
+        Alert.alert('Error', !pan ? 'PAN is required for 80G benefit.' : 'Invalid PAN Number format (e.g. ABCDE1234F)');
+        scrollToRef(panInputRef);
+        setTimeout(() => panInputRef.current?.focus(), 150);
         return;
       }
-      if (!validatePAN(pan)) {
-        Alert.alert('Error', 'Invalid PAN Number format (e.g. ABCDE1234F)');
+      if (isAadhaarInvalid) {
+        Alert.alert('Error', !aadhaar ? 'Aadhaar is required for 80G benefit.' : 'Invalid Aadhaar Number');
+        scrollToRef(aadhaarInputRef);
+        setTimeout(() => aadhaarInputRef.current?.focus(), 150);
         return;
       }
-      if (!validateAadhaar(aadhaar)) {
-        Alert.alert('Error', 'Invalid Aadhaar Number');
-        return;
-      }
+    }
+
+    if (need80G) {
       setConfirmPan('');
       setConfirmError('');
       setShowPanModal(true);
@@ -334,9 +409,9 @@ export default function DonateScreen() {
         key: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_SvdzLNA9hdG9PL',
         name: 'DharmArth Foundation',
         prefill: {
-          email: email,
           contact: mobile,
-          name: fullName
+          name: fullName,
+          ...(email ? { email: email } : {})
         },
         theme: { color: '#00bfa5' }
       };
@@ -573,7 +648,7 @@ export default function DonateScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
         {/* Amount Selection */}
         <Text style={styles.sectionTitle}>{locale === 'hi' ? 'दान राशि चुनें' : 'Select Donation Amount'}</Text>
@@ -598,7 +673,11 @@ export default function DonateScreen() {
             <TouchableOpacity
               key={`amount-${p}-${index}`}
               style={[styles.amountBtn, amount === p && styles.amountBtnActive]}
-              onPress={() => { setAmount(p); setCustomAmount(p.toString()); }}
+              onPress={() => {
+                setAmount(p);
+                setCustomAmount(p.toString());
+                if (errors.amount) setErrors(prev => ({ ...prev, amount: false }));
+              }}
             >
               <Text style={[styles.amountBtnText, amount === p && styles.amountBtnTextActive]}>₹{p.toLocaleString('en-IN')}</Text>
               {config.popularAmount === p && <View style={styles.popularBadge}><Text style={styles.popularText}>{locale === 'hi' ? 'लोकप्रिय' : 'POPULAR'}</Text></View>}
@@ -606,14 +685,19 @@ export default function DonateScreen() {
           ))}
         </View>
 
-        <View style={styles.customAmountContainer}>
+        <View style={[styles.customAmountContainer, errors.amount && styles.inputError]}>
           <Text style={styles.currencySymbol}>₹</Text>
           <TextInput
+            ref={customAmountInputRef}
             style={styles.customInput}
             placeholder={locale === 'hi' ? 'कस्टम राशि' : 'Custom Amount'}
             keyboardType="number-pad"
             value={customAmount}
-            onChangeText={(t) => { setCustomAmount(t); setAmount(0); }}
+            onChangeText={(t) => {
+              setCustomAmount(t);
+              setAmount(0);
+              if (errors.amount) setErrors(prev => ({ ...prev, amount: false }));
+            }}
           />
         </View>
 
@@ -632,10 +716,14 @@ export default function DonateScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>{locale === 'hi' ? 'पूरा नाम *' : 'Full Name *'}</Text>
             <TextInput
-              style={styles.input}
+              ref={fullNameInputRef}
+              style={[styles.input, errors.fullName && styles.inputError]}
               placeholder={locale === 'hi' ? 'जैसे: रघु कुमार' : "Ex. Raghu Kumar"}
               value={fullName}
-              onChangeText={setFullName}
+              onChangeText={(text) => {
+                setFullName(text);
+                if (errors.fullName) setErrors(prev => ({ ...prev, fullName: false }));
+              }}
             />
           </View>
 
@@ -644,12 +732,16 @@ export default function DonateScreen() {
             <View style={styles.phoneInputRow}>
               <View style={styles.flagAddon}><Text style={styles.flagText}>+91</Text></View>
               <TextInput
-                style={styles.phoneInput}
+                ref={mobileInputRef}
+                style={[styles.phoneInput, errors.mobile && styles.inputError]}
                 placeholder="9876543210"
                 keyboardType="phone-pad"
                 maxLength={10}
                 value={mobile}
-                onChangeText={setMobile}
+                onChangeText={(text) => {
+                  setMobile(text);
+                  if (errors.mobile) setErrors(prev => ({ ...prev, mobile: false }));
+                }}
               />
             </View>
           </View>
@@ -822,23 +914,31 @@ export default function DonateScreen() {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>{locale === 'hi' ? 'पैन नंबर *' : 'PAN Number *'}</Text>
                 <TextInput
-                  style={styles.input}
+                  ref={panInputRef}
+                  style={[styles.input, errors.pan && styles.inputError]}
                   placeholder="ABCDE1234F"
                   autoCapitalize="characters"
                   maxLength={10}
                   value={pan}
-                  onChangeText={setPan}
+                  onChangeText={(text) => {
+                    setPan(text);
+                    if (errors.pan) setErrors(prev => ({ ...prev, pan: false }));
+                  }}
                 />
               </View>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>{locale === 'hi' ? 'आधार नंबर *' : 'Aadhaar Number *'}</Text>
                 <TextInput
-                  style={styles.input}
+                  ref={aadhaarInputRef}
+                  style={[styles.input, errors.aadhaar && styles.inputError]}
                   placeholder={locale === 'hi' ? '12-अंकीय आधार' : "12-digit Aadhaar"}
                   keyboardType="number-pad"
                   maxLength={12}
                   value={aadhaar}
-                  onChangeText={setAadhaar}
+                  onChangeText={(text) => {
+                    setAadhaar(text);
+                    if (errors.aadhaar) setErrors(prev => ({ ...prev, aadhaar: false }));
+                  }}
                 />
               </View>
             </View>

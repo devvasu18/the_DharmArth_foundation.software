@@ -49,6 +49,20 @@ const DonationForm = ({ onSuccess }) => {
     const autocompleteServiceRef = useRef(null);
     const sessionTokenRef = useRef(null);
 
+    // Refs for scrolling & focusing
+    const nameInputRef = useRef(null);
+    const mobileInputRef = useRef(null);
+    const amountInputRef = useRef(null);
+    const panInputRef = useRef(null);
+    const aadhaarInputRef = useRef(null);
+
+    const scrollToRef = (ref) => {
+        if (ref && ref.current) {
+            ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => ref.current?.focus(), 100);
+        }
+    };
+
     const [loading, setLoading] = useState(false);
 
     const [showPanModal, setShowPanModal] = useState(false);
@@ -461,8 +475,8 @@ const DonationForm = ({ onSuccess }) => {
                 },
                 prefill: {
                     name: fullName,
-                    email: email,
-                    contact: mobile
+                    contact: mobile,
+                    ...(email ? { email: email } : {})
                 },
                 notes: {
                     donation_id: orderData.donationId
@@ -498,34 +512,54 @@ const DonationForm = ({ onSuccess }) => {
     const handleDonate = async () => {
         const finalAmount = customAmount ? Number(customAmount) : amount;
 
-        if (!fullName || !mobile || !finalAmount) {
-            toast.error("Please fill in required fields.");
-            return;
+        const newErrors = {};
+        if (!finalAmount || Number(finalAmount) <= 0) {
+            newErrors.amount = "Donation amount is required";
+        }
+        if (!fullName.trim()) {
+            newErrors.name = "Full Name is required";
+        } else if (fullName.trim().length < 4) {
+            newErrors.name = "Name must be at least 4 characters";
+        }
+        if (!mobile) {
+            newErrors.mobile = "Mobile Number is required";
+        } else if (mobile.length !== 10) {
+            newErrors.mobile = "Mobile Number must be 10 digits";
         }
 
-        const newErrors = {};
         if (need80G) {
-            if (!validatePAN(pan)) {
+            if (!pan) {
+                newErrors.pan = "PAN Number is required";
+            } else if (!validatePAN(pan)) {
                 newErrors.pan = "Invalid PAN Number format (e.g. ABCDE1234F)";
             }
-            if (!validateAadhaar(aadhaar)) {
+            if (!aadhaar) {
+                newErrors.aadhaar = "Aadhaar Number is required";
+            } else if (!validateAadhaar(aadhaar)) {
                 newErrors.aadhaar = "Invalid Aadhaar Number";
             }
         }
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
+            if (newErrors.amount) {
+                scrollToRef(amountInputRef);
+            } else if (newErrors.name) {
+                scrollToRef(nameInputRef);
+            } else if (newErrors.mobile) {
+                scrollToRef(mobileInputRef);
+            } else if (newErrors.pan) {
+                scrollToRef(panInputRef);
+            } else if (newErrors.aadhaar) {
+                scrollToRef(aadhaarInputRef);
+            }
+            toast.error("Please fill in required fields.");
             return;
         }
+
         setErrors({});
 
-        // Referral/Motivator Validation Logic - OPTIONAL now
-        // if (!referralSource && !motivatorMobile) {
-        //     await showAlert("Please let us know what motivated you to donate (Motivator Mobile or Referral Source).");
-        //     return;
-        // }
-
-        // Validate motivator if entered - independant check
+        // Validate motivator if entered - independent check
         if (motivatorMobile) {
             if (errors.motivator) {
                 toast.error(errors.motivator);
@@ -768,7 +802,11 @@ const DonationForm = ({ onSuccess }) => {
                         <button
                             key={planAmount}
                             className={`amount-btn ${amount === planAmount ? 'active' : ''}`}
-                            onClick={() => { setAmount(planAmount); setCustomAmount(planAmount); }}
+                            onClick={() => {
+                                setAmount(planAmount);
+                                setCustomAmount(planAmount);
+                                if (errors.amount) setErrors(prev => ({ ...prev, amount: null }));
+                            }}
                         >
                             {donationConfig.popularAmount === planAmount && (
                                 <span className="popular-tag">{t('donatePage.popular')}</span>
@@ -778,16 +816,22 @@ const DonationForm = ({ onSuccess }) => {
                     ))}
                 </div>
 
-                <div className="custom-amount">
+                <div className={`custom-amount ${errors.amount ? 'error-border' : ''}`}>
                     <span className="currency-symbol">₹</span>
                     <input
+                        ref={amountInputRef}
                         type="number"
                         placeholder={t('donatePage.customPlaceholder')}
                         value={customAmount}
-                        onChange={(e) => { setCustomAmount(e.target.value); setAmount(0); }}
+                        onChange={(e) => {
+                            setCustomAmount(e.target.value);
+                            setAmount(0);
+                            if (errors.amount) setErrors(prev => ({ ...prev, amount: null }));
+                        }}
                         onWheel={(e) => e.target.blur()}
                     />
                 </div>
+                {errors.amount && <small className="error-text" style={{ color: 'red', display: 'block', marginTop: '-1.5rem', marginBottom: '1.5rem' }}>{errors.amount}</small>}
 
                 <label className="checkbox-item">
                     <input type="checkbox" defaultChecked />
@@ -804,6 +848,7 @@ const DonationForm = ({ onSuccess }) => {
                     <div className="input-group-wrapper">
 
                         <input
+                            ref={nameInputRef}
                             type="text"
                             className={`form-control ${errors.name ? 'error-border' : ''}`}
                             placeholder="Ex. Raghu Kumar"
@@ -816,27 +861,32 @@ const DonationForm = ({ onSuccess }) => {
                                 } else {
                                     setErrors(prev => ({ ...prev, name: '' }));
                                 }
-                            }}
-                        />
+                             }}
+                         />
                     </div>
                     {errors.name && <small className="error-text" style={{ color: 'red', display: 'block', marginTop: '5px' }}>{errors.name}</small>}
 
                     <div className="donation-input-group">
                         <label className="input-label">{t('donatePage.mobile')}</label>
-                        <div className="phone-wrapper">
+                        <div className={`phone-wrapper ${errors.mobile ? 'error-border' : ''}`}>
                             <div className="flag-addon"> +91</div>
                             <input
+                                ref={mobileInputRef}
                                 type="tel"
                                 className="phone-field"
                                 placeholder="9876543210"
                                 value={mobile}
                                 onChange={(e) => {
                                     const val = e.target.value.replace(/\D/g, '');
-                                    if (val.length <= 10) setMobile(val);
+                                    if (val.length <= 10) {
+                                        setMobile(val);
+                                        if (errors.mobile) setErrors(prev => ({ ...prev, mobile: null }));
+                                    }
                                 }}
                                 maxLength={10}
                             />
                         </div>
+                        {errors.mobile && <small className="error-text" style={{ color: 'red', display: 'block', marginTop: '5px' }}>{errors.mobile}</small>}
                         <small className="mt-1 text-muted">{t('donatePage.whatsappNote')}</small>
                     </div>
 
@@ -1042,6 +1092,7 @@ const DonationForm = ({ onSuccess }) => {
                                         <CreditCard size={20} />
                                     </div>
                                     <input
+                                        ref={panInputRef}
                                         type="text"
                                         className={`form-control ${errors.pan ? 'error-border' : ''}`}
                                         placeholder="ABCDE1234F"
@@ -1066,6 +1117,7 @@ const DonationForm = ({ onSuccess }) => {
                                         <CreditCard size={20} />
                                     </div>
                                     <input
+                                        ref={aadhaarInputRef}
                                         type="text"
                                         className={`form-control ${errors.aadhaar ? 'error-border' : ''}`}
                                         placeholder="1234 5678 9012"
@@ -1090,7 +1142,7 @@ const DonationForm = ({ onSuccess }) => {
                         <button
                             className="donate-btn"
                             onClick={handleDonate}
-                            disabled={!isFormValid || loading}
+                            disabled={loading}
                         >
                             <span className="btn-content">
                                 {loading ? t('donatePage.processing') : `${t('donatePage.donateBtn')} ₹${(customAmount ? Number(customAmount) : amount).toLocaleString()}`}
