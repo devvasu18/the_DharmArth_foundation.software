@@ -404,7 +404,7 @@ export default function DonateScreen() {
 
       const options = {
         description: 'Monthly Donation',
-        image: 'https://thedharmarth.com/logo.png',
+        image: 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778822813/the_dharmarth_foundation/logo.jpg',
         currency: data.currency || 'INR',
         key: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_SvdzLNA9hdG9PL',
         name: 'DharmArth Foundation',
