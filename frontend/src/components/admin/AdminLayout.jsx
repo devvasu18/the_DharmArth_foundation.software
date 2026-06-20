@@ -336,13 +336,13 @@ const AdminLayout = () => {
                                 >
                                     YouTube Videos
                                 </NavLink>
-                                <NavLink
+                                {/* <NavLink
                                     to="/admin/galleries"
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
                                 >
                                     Galleries
-                                </NavLink>
+                                </NavLink> */}
                             </div>
                         )}
                     </div>

@@ -10,7 +10,7 @@ const app = express();
 
 // Middleware
 app.use(express.json({
-    limit: '10kb', // Prevent "Billion Laughs" / Large Payload DoS
+    limit: '1mb', // Prevent "Billion Laughs" / Large Payload DoS
     verify: (req, res, buf) => {
         req.rawBody = buf;
     }
@@ -98,6 +98,7 @@ app.use('/api/event-videos', require('../routes/eventVideoRoutes'));
 app.use('/api/galleries', require('../routes/galleryRoutes'));
 app.use('/api/leads', require('./routes/leadRoutes'));
 app.use('/api/doctors', require('./routes/doctorRoutes'));
+app.use('/api/doctor-categories', require('./routes/doctorCategoryRoutes'));
 app.use('/api/availability', require('./routes/availabilityRoutes'));
 app.use('/api/prescriptions', require('./routes/prescriptionRoutes'));
 app.use('/api/delivery', require('./routes/deliveryRoutes'));

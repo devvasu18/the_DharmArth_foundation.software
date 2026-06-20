@@ -231,7 +231,18 @@ const EventDetail = () => {
 
                     <div className="hero-text-content">
                         <div className="hero-tags">
-                            {event.status && <span className={`status-pill ${event.status}`}>{event.status === 'upcoming' ? (i18n.language === 'hi' ? 'आगामी' : 'Upcoming') : event.status === 'ongoing' ? (i18n.language === 'hi' ? 'अभी हो रहा है' : 'Happening Now') : (i18n.language === 'hi' ? 'पूर्ण' : 'Completed')}</span>}
+                            {(() => {
+                                const eventDate = new Date(event.date);
+                                const now = new Date();
+                                const eventStatus = event.status || (event.date && eventDate < now ? 'completed' : 'upcoming');
+                                return (
+                                    <span className={`status-pill ${eventStatus}`}>
+                                        {eventStatus === 'upcoming' ? (i18n.language === 'hi' ? 'आगामी' : 'Upcoming') :
+                                            eventStatus === 'ongoing' ? (i18n.language === 'hi' ? 'अभी हो रहा है' : 'Happening Now') :
+                                                (i18n.language === 'hi' ? 'पूर्ण' : 'Completed')}
+                                    </span>
+                                );
+                            })()}
                             {event.date && <span className="date-pill"><Calendar size={14} /> {new Date(event.date).toLocaleDateString(i18n.language === 'hi' ? 'hi-IN' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>}
                         </div>
                         <h1 className="hero-title">{(i18n.language === 'hi' && event.title_hi) ? event.title_hi : event.title}</h1>

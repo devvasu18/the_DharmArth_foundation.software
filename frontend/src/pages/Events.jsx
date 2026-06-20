@@ -69,7 +69,7 @@ const Events = () => {
     const fetchEvents = async () => {
         try {
             setLoading(true);
-            const statusParam = filter === 'all' ? '' : filter;
+            const statusParam = filter === 'all' ? '' : (filter === 'past' ? 'completed' : filter);
             const categoryParam = categoryFilter === 'all' ? '' : categoryFilter;
             const res = await api.get(`/events?status=${statusParam}&category=${categoryParam}`);
             setEvents(res.data.events || []);
@@ -84,12 +84,13 @@ const Events = () => {
         const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase());
         const eventDate = new Date(event.date);
         const now = new Date();
+        const eventStatus = event.status || (event.date && eventDate < now ? 'completed' : 'upcoming');
 
         let matchesFilter = true;
         if (filter === 'upcoming') {
-            matchesFilter = eventDate >= now || event.status === 'upcoming' || event.status === 'ongoing';
+            matchesFilter = eventStatus === 'upcoming' || eventStatus === 'ongoing';
         } else if (filter === 'past') {
-            matchesFilter = eventDate < now || event.status === 'completed';
+            matchesFilter = eventStatus === 'completed';
         }
 
         return matchesSearch && matchesFilter;
@@ -243,11 +244,18 @@ const Events = () => {
                                         </div>
                                     )}
                                     <div className="event-card-badges">
-                                        <span className={`event-status-tag ${event.status}`}>
-                                            {event.status === 'upcoming' ? (i18n.language === 'hi' ? 'आगामी' : 'Upcoming') :
-                                                event.status === 'ongoing' ? (i18n.language === 'hi' ? 'अभी हो रहा है' : 'Happening Now') :
-                                                    (i18n.language === 'hi' ? 'पूर्ण' : 'Completed')}
-                                        </span>
+                                        {(() => {
+                                            const eventDate = new Date(event.date);
+                                            const now = new Date();
+                                            const eventStatus = event.status || (event.date && eventDate < now ? 'completed' : 'upcoming');
+                                            return (
+                                                <span className={`event-status-tag ${eventStatus}`}>
+                                                    {eventStatus === 'upcoming' ? (i18n.language === 'hi' ? 'आगामी' : 'Upcoming') :
+                                                        eventStatus === 'ongoing' ? (i18n.language === 'hi' ? 'अभी हो रहा है' : 'Happening Now') :
+                                                            (i18n.language === 'hi' ? 'पूर्ण' : 'Completed')}
+                                                </span>
+                                            );
+                                        })()}
                                         {event.category && (
                                             <span className="event-category-badge">
                                                 {event.category}

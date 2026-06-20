@@ -11,9 +11,13 @@ const AdminDoctorFaq = () => {
     const [editingFaq, setEditingFaq] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
+    const [activeLang, setActiveLang] = useState('en');
+
     const [formData, setFormData] = useState({
         question: '',
+        question_hi: '',
         answer: '',
+        answer_hi: '',
         order: 0,
         isVisible: true
     });
@@ -87,7 +91,9 @@ const AdminDoctorFaq = () => {
             setEditingFaq(faq);
             setFormData({
                 question: faq.question || '',
+                question_hi: faq.question_hi || '',
                 answer: faq.answer || '',
+                answer_hi: faq.answer_hi || '',
                 order: faq.order !== undefined ? faq.order : 0,
                 isVisible: faq.isVisible !== undefined ? faq.isVisible : true
             });
@@ -97,7 +103,9 @@ const AdminDoctorFaq = () => {
             const nextOrder = faqs.length > 0 ? Math.max(...faqs.map(f => f.order || 0)) + 1 : 1;
             setFormData({
                 question: '',
+                question_hi: '',
                 answer: '',
+                answer_hi: '',
                 order: nextOrder,
                 isVisible: true
             });
@@ -108,6 +116,7 @@ const AdminDoctorFaq = () => {
     const closeModal = () => {
         setShowModal(false);
         setEditingFaq(null);
+        setActiveLang('en');
     };
 
     const handleChange = (e) => {
@@ -120,7 +129,9 @@ const AdminDoctorFaq = () => {
 
     const filteredFaqs = faqs.filter(faq => 
         faq.question.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        faq.answer.toLowerCase().includes(searchTerm.toLowerCase())
+        faq.answer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (faq.question_hi && faq.question_hi.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (faq.answer_hi && faq.answer_hi.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     if (loading) {
@@ -188,7 +199,9 @@ const AdminDoctorFaq = () => {
                             </div>
                             <div className="faq-card-body-admin">
                                 <h3>Q: {faq.question}</h3>
-                                <p>A: {faq.answer}</p>
+                                {faq.question_hi && <h4 style={{ fontSize: '0.95rem', color: '#475569', marginTop: '2px', fontWeight: 'normal' }}>Q (Hindi): {faq.question_hi}</h4>}
+                                <p style={{ marginTop: '8px' }}>A: {faq.answer}</p>
+                                {faq.answer_hi && <p style={{ fontSize: '0.9rem', color: '#475569', marginTop: '2px' }}>A (Hindi): {faq.answer_hi}</p>}
                             </div>
                         </div>
                     ))}
@@ -199,35 +212,97 @@ const AdminDoctorFaq = () => {
             {showModal && (
                 <div className="modal-overlay" onClick={closeModal}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>{editingFaq ? 'Edit Doctor FAQ' : 'Add New Doctor FAQ'}</h2>
-                            <button className="modal-close" onClick={closeModal}>&times;</button>
+                        <div className="modal-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '15px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                                <h2>{editingFaq ? 'Edit Doctor FAQ' : 'Add New Doctor FAQ'}</h2>
+                                <button className="modal-close" onClick={closeModal}>&times;</button>
+                            </div>
+                            
+                            {/* Language Toggle */}
+                            <div style={{ background: '#f1f5f9', borderRadius: '999px', padding: '4px', display: 'flex', border: '1px solid #cbd5e1' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveLang('en')}
+                                    style={{
+                                        padding: '6px 18px', borderRadius: '999px', border: 'none',
+                                        background: activeLang === 'en' ? 'white' : 'transparent',
+                                        color: activeLang === 'en' ? 'var(--primary)' : '#64748b',
+                                        fontWeight: activeLang === 'en' ? '700' : '500',
+                                        cursor: 'pointer', fontSize: '0.85rem',
+                                        boxShadow: activeLang === 'en' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                                    }}
+                                >
+                                    English
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveLang('hi')}
+                                    style={{
+                                        padding: '6px 18px', borderRadius: '999px', border: 'none',
+                                        background: activeLang === 'hi' ? 'white' : 'transparent',
+                                        color: activeLang === 'hi' ? 'var(--primary)' : '#64748b',
+                                        fontWeight: activeLang === 'hi' ? '700' : '500',
+                                        cursor: 'pointer', fontSize: '0.85rem',
+                                        boxShadow: activeLang === 'hi' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                                    }}
+                                >
+                                    Hindi
+                                </button>
+                            </div>
                         </div>
 
                         <form onSubmit={handleSubmit} className="faq-form">
-                            <div className="form-group">
-                                <label>Question *</label>
-                                <input
-                                    type="text"
-                                    name="question"
-                                    value={formData.question}
-                                    onChange={handleChange}
-                                    placeholder="e.g. Do I need an appointment for the Government Hospital?"
-                                    required
-                                />
-                            </div>
+                            {activeLang === 'en' ? (
+                                <>
+                                    <div className="form-group">
+                                        <label>Question * (English)</label>
+                                        <input
+                                            type="text"
+                                            name="question"
+                                            value={formData.question}
+                                            onChange={handleChange}
+                                            placeholder="e.g. Do I need an appointment for the Government Hospital?"
+                                            required
+                                        />
+                                    </div>
 
-                            <div className="form-group">
-                                <label>Answer *</label>
-                                <textarea
-                                    name="answer"
-                                    value={formData.answer}
-                                    onChange={handleChange}
-                                    placeholder="Enter the detailed answer..."
-                                    rows="5"
-                                    required
-                                />
-                            </div>
+                                    <div className="form-group">
+                                        <label>Answer * (English)</label>
+                                        <textarea
+                                            name="answer"
+                                            value={formData.answer}
+                                            onChange={handleChange}
+                                            placeholder="Enter the detailed answer in English..."
+                                            rows="5"
+                                            required
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="form-group">
+                                        <label>Question (Hindi)</label>
+                                        <input
+                                            type="text"
+                                            name="question_hi"
+                                            value={formData.question_hi || ''}
+                                            onChange={handleChange}
+                                            placeholder="e.g. क्या मुझे सरकारी अस्पताल के लिए अपॉइंटमेंट की आवश्यकता है?"
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Answer (Hindi)</label>
+                                        <textarea
+                                            name="answer_hi"
+                                            value={formData.answer_hi || ''}
+                                            onChange={handleChange}
+                                            placeholder="विवरण हिंदी में दर्ज करें..."
+                                            rows="5"
+                                        />
+                                    </div>
+                                </>
+                            )}
 
                             <div className="form-row-admin-faq">
                                 <div className="form-group">

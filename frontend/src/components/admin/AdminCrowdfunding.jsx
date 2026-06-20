@@ -192,6 +192,7 @@ const AdminCrowdfunding = () => {
                                             <label className="form-label">Text (English)</label>
                                             <div className="editor-wrapper">
                                                 <CKEditor
+                                                    key="editor-en"
                                                     editor={ClassicEditor}
                                                     data={formData.text}
                                                     onChange={(event, editor) => {
@@ -221,6 +222,7 @@ const AdminCrowdfunding = () => {
                                             <label className="form-label">Text (Hindi)</label>
                                             <div className="editor-wrapper">
                                                 <CKEditor
+                                                    key="editor-hi"
                                                     editor={ClassicEditor}
                                                     data={formData.text_hi}
                                                     onChange={(event, editor) => {

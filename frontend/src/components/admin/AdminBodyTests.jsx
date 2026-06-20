@@ -13,13 +13,19 @@ const AdminBodyTests = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('All');
     
+    const [activeLang, setActiveLang] = useState('en');
+    
     const [formData, setFormData] = useState({
         name: '',
+        name_hi: '',
         price: '',
+        originalPrice: '',
         time: '',
         category: 'General Health',
+        category_hi: '',
         image: '',
         description: '',
+        description_hi: '',
         isActive: true
     });
 
@@ -95,22 +101,30 @@ const AdminBodyTests = () => {
             setEditingTest(test);
             setFormData({
                 name: test.name || '',
+                name_hi: test.name_hi || '',
                 price: test.price || '',
+                originalPrice: test.originalPrice || '',
                 time: test.time || '',
                 category: test.category || 'General Health',
+                category_hi: test.category_hi || '',
                 image: test.image || '',
                 description: test.description || '',
+                description_hi: test.description_hi || '',
                 isActive: test.isActive !== undefined ? test.isActive : true
             });
         } else {
             setEditingTest(null);
             setFormData({
                 name: '',
+                name_hi: '',
                 price: '',
+                originalPrice: '',
                 time: '',
                 category: 'General Health',
+                category_hi: '',
                 image: '',
                 description: '',
+                description_hi: '',
                 isActive: true
             });
         }
@@ -120,6 +134,7 @@ const AdminBodyTests = () => {
     const closeModal = () => {
         setShowModal(false);
         setEditingTest(null);
+        setActiveLang('en');
     };
 
     const handleChange = (e) => {
@@ -167,7 +182,9 @@ const AdminBodyTests = () => {
 
     const filteredTests = tests.filter(test => {
         const matchesSearch = test.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                              test.category.toLowerCase().includes(searchTerm.toLowerCase());
+                              test.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              (test.name_hi && test.name_hi.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                              (test.category_hi && test.category_hi.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchesCategory = selectedCategoryFilter === 'All' || test.category === selectedCategoryFilter;
         return matchesSearch && matchesCategory;
     });
@@ -266,20 +283,32 @@ const AdminBodyTests = () => {
                                 ) : (
                                     <div className="placeholder-image-admin">🔬</div>
                                 )}
-                                <span className="test-category-admin">{test.category}</span>
+                                <span className="test-category-admin">
+                                    {test.category}
+                                    {test.category_hi && ` (${test.category_hi})`}
+                                </span>
                             </div>
 
                             <div className="test-info-admin">
                                 <h3>{test.name}</h3>
+                                {test.name_hi && <h4 style={{ fontSize: '0.9rem', color: '#475569', marginTop: '2px', fontWeight: 'normal' }}>Name (Hindi): {test.name_hi}</h4>}
                                 <p className="test-desc-admin">{test.description || 'No description provided.'}</p>
+                                {test.description_hi && <p style={{ fontSize: '0.85rem', color: '#475569', marginTop: '2px' }}>Desc (Hindi): {test.description_hi}</p>}
                                 
                                 <div className="test-details-admin">
                                     <div className="detail-item">
                                         <Clock size={16} />
                                         <span>{test.time}</span>
                                     </div>
-                                    <div className="detail-price">
-                                        {test.price.startsWith('₹') ? test.price : `₹${test.price}`}
+                                    <div className="detail-price" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        {test.originalPrice && (
+                                            <span style={{ textDecoration: 'line-through', color: '#ef4444', fontSize: '0.85rem', fontWeight: '500' }}>
+                                                {test.originalPrice.startsWith('₹') ? test.originalPrice : `₹${test.originalPrice}`}
+                                            </span>
+                                        )}
+                                        <span style={{ color: '#000000', fontWeight: '800' }}>
+                                            {test.price.startsWith('₹') ? test.price : `₹${test.price}`}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -315,27 +344,129 @@ const AdminBodyTests = () => {
             {showModal && (
                 <div className="modal-overlay" onClick={closeModal}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>{editingTest ? 'Edit Medical Test' : 'Add New Medical Test'}</h2>
-                            <button className="modal-close" onClick={closeModal}>&times;</button>
+                        <div className="modal-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '15px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                                <h2>{editingTest ? 'Edit Medical Test' : 'Add New Medical Test'}</h2>
+                                <button className="modal-close" onClick={closeModal}>&times;</button>
+                            </div>
+                            
+                            {/* Language Toggle */}
+                            <div style={{ background: '#f1f5f9', borderRadius: '999px', padding: '4px', display: 'flex', border: '1px solid #cbd5e1' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveLang('en')}
+                                    style={{
+                                        padding: '6px 18px', borderRadius: '999px', border: 'none',
+                                        background: activeLang === 'en' ? 'white' : 'transparent',
+                                        color: activeLang === 'en' ? 'var(--primary)' : '#64748b',
+                                        fontWeight: activeLang === 'en' ? '700' : '500',
+                                        cursor: 'pointer', fontSize: '0.85rem',
+                                        boxShadow: activeLang === 'en' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                                    }}
+                                >
+                                    English
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveLang('hi')}
+                                    style={{
+                                        padding: '6px 18px', borderRadius: '999px', border: 'none',
+                                        background: activeLang === 'hi' ? 'white' : 'transparent',
+                                        color: activeLang === 'hi' ? 'var(--primary)' : '#64748b',
+                                        fontWeight: activeLang === 'hi' ? '700' : '500',
+                                        cursor: 'pointer', fontSize: '0.85rem',
+                                        boxShadow: activeLang === 'hi' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                                    }}
+                                >
+                                    Hindi
+                                </button>
+                            </div>
                         </div>
 
                         <form onSubmit={handleSubmit} className="test-form">
-                            <div className="form-group">
-                                <label>Test Name *</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    placeholder="e.g. Complete Blood Count (CBC)"
-                                    required
-                                />
-                            </div>
+                            {activeLang === 'en' ? (
+                                <>
+                                    <div className="form-group">
+                                        <label>Test Name * (English)</label>
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            placeholder="e.g. Complete Blood Count (CBC)"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-row-admin">
+                                        <div className="form-group">
+                                            <label>Category * (English)</label>
+                                            <select
+                                                name="category"
+                                                value={formData.category}
+                                                onChange={handleChange}
+                                                required
+                                            >
+                                                {categories.map((cat, idx) => (
+                                                    <option key={idx} value={cat}>{cat}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Description (English)</label>
+                                        <textarea
+                                            name="description"
+                                            value={formData.description}
+                                            onChange={handleChange}
+                                            placeholder="Provide detailed description of test requirements in English (e.g., fasting required)"
+                                            rows="3"
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="form-group">
+                                        <label>Test Name (Hindi)</label>
+                                        <input
+                                            type="text"
+                                            name="name_hi"
+                                            value={formData.name_hi || ''}
+                                            onChange={handleChange}
+                                            placeholder="e.g. कम्प्लीट ब्लड काउंट (सीबीसी)"
+                                        />
+                                    </div>
+
+                                    <div className="form-row-admin">
+                                        <div className="form-group">
+                                            <label>Category (Hindi)</label>
+                                            <input
+                                                type="text"
+                                                name="category_hi"
+                                                value={formData.category_hi || ''}
+                                                onChange={handleChange}
+                                                placeholder="e.g. सामान्य स्वास्थ्य"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Description (Hindi)</label>
+                                        <textarea
+                                            name="description_hi"
+                                            value={formData.description_hi || ''}
+                                            onChange={handleChange}
+                                            placeholder="विवरण हिंदी में दर्ज करें..."
+                                            rows="3"
+                                        />
+                                    </div>
+                                </>
+                            )}
 
                             <div className="form-row-admin">
                                 <div className="form-group">
-                                    <label>Price (₹) *</label>
+                                    <label>Discounted Price (₹) *</label>
                                     <input
                                         type="text"
                                         name="price"
@@ -343,6 +474,17 @@ const AdminBodyTests = () => {
                                         onChange={handleChange}
                                         placeholder="e.g. 350 or ₹350"
                                         required
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Original Price (₹) (Optional)</label>
+                                    <input
+                                        type="text"
+                                        name="originalPrice"
+                                        value={formData.originalPrice || ''}
+                                        onChange={handleChange}
+                                        placeholder="e.g. 500 or ₹500"
                                     />
                                 </div>
 
@@ -360,20 +502,6 @@ const AdminBodyTests = () => {
                             </div>
 
                             <div className="form-row-admin">
-                                <div className="form-group">
-                                    <label>Category *</label>
-                                    <select
-                                        name="category"
-                                        value={formData.category}
-                                        onChange={handleChange}
-                                        required
-                                    >
-                                        {categories.map((cat, idx) => (
-                                            <option key={idx} value={cat}>{cat}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
                                 <div className="form-group checkbox-admin">
                                     <label className="checkbox-label-admin">
                                         <input
@@ -387,16 +515,6 @@ const AdminBodyTests = () => {
                                 </div>
                             </div>
 
-                            <div className="form-group">
-                                <label>Description</label>
-                                <textarea
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleChange}
-                                    placeholder="Provide detailed description of test requirements (e.g., fasting required)"
-                                    rows="3"
-                                />
-                            </div>
 
                             <div className="form-group">
                                 <label>Test Cover Image</label>

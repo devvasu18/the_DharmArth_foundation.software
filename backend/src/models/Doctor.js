@@ -70,6 +70,30 @@ const doctorSchema = new mongoose.Schema({
             { period: 'Afternoon', startTime: '14:00', endTime: '17:00', hospitalType: 'clinic' }
         ]
     },
+    dateSpecificTimeSlots: {
+        type: [{
+            dateNumber: { type: Number, required: true, min: 1, max: 31 },
+            timeSlots: [{
+                period: { type: String, enum: ['Morning', 'Afternoon', 'Evening'], required: true },
+                startTime: { type: String, required: true },
+                endTime: { type: String, required: true },
+                hospitalType: { type: String, enum: ['government', 'clinic'], required: true, default: 'government' }
+            }]
+        }],
+        default: []
+    },
+    categories: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'DoctorCategory'
+    }],
+    description: {
+        type: String,
+        default: ''
+    },
+    privateFee: {
+        type: Number,
+        default: 0
+    },
     createdAt: {
         type: Date,
         default: Date.now

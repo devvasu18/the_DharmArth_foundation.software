@@ -32,6 +32,138 @@ const hasTimeOverlap = (slots1, slots2) => {
     return { overlap: false };
 };
 
+const ensureAvailabilityRecordsForDateRange = async (startDate, endDate, doctorId) => {
+    const start = getUTCMidnight(startDate);
+    const end = getUTCMidnight(endDate);
+    if (!start || !end) return;
+
+    let doctors = [];
+    if (doctorId) {
+        const doc = await Doctor.findById(doctorId);
+        if (doc) doctors.push(doc);
+    } else {
+        doctors = await Doctor.find({ isActive: true });
+    }
+
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const newRecords = [];
+
+    for (const doc of doctors) {
+        let currentDate = new Date(start);
+        while (currentDate <= end) {
+            const targetDate = new Date(currentDate);
+            const dateNum = targetDate.getUTCDate();
+            const dayOfWeek = targetDate.getUTCDay();
+            const dayName = dayNames[dayOfWeek];
+
+            const hTypes = [];
+            if (doc.type === 'government' || doc.type === 'both') {
+                hTypes.push('government');
+            }
+            if (doc.type === 'clinic' || doc.type === 'both') {
+                hTypes.push('clinic');
+            }
+
+            for (const hType of hTypes) {
+                const existing = await DoctorAvailability.findOne({
+                    doctorId: doc._id,
+                    date: targetDate,
+                    hospitalType: hType
+                });
+
+                if (!existing) {
+                    let finalSlots = [];
+                    let isEnabled = true;
+                    let emergencyAvailable = false;
+                    let notes = '';
+
+                    // 1. Date-specific override
+                    const dateOverride = (doc.dateSpecificTimeSlots || []).find(slot => slot.dateNumber === dateNum);
+                    if (dateOverride) {
+                        const overriddenSlots = dateOverride.timeSlots.filter(s => s.hospitalType === hType);
+                        finalSlots = overriddenSlots.map(s => ({
+                            period: s.period,
+                            startTime: s.startTime,
+                            endTime: s.endTime,
+                            status: 'Available'
+                        }));
+                        isEnabled = true;
+                        emergencyAvailable = doc.isEmergencyAvailable || false;
+                    } else {
+                        // 2. Carry forward from previous month
+                        const targetYear = targetDate.getUTCFullYear();
+                        const targetMonth = targetDate.getUTCMonth();
+                        const prevMonthStart = new Date(Date.UTC(targetYear, targetMonth - 1, 1));
+                        const prevMonthEnd = new Date(Date.UTC(targetYear, targetMonth, 0));
+
+                        const prevRecords = await DoctorAvailability.find({
+                            doctorId: doc._id,
+                            date: { $gte: prevMonthStart, $lte: prevMonthEnd },
+                            hospitalType: hType
+                        }).sort({ date: 1 });
+
+                        const sameWeekdayRecords = prevRecords.filter(r => r.date.getUTCDay() === dayOfWeek);
+                        const targetOccurrenceIndex = Math.floor((dateNum - 1) / 7);
+
+                        let carryForwardRecord = sameWeekdayRecords.find(r => Math.floor((r.date.getUTCDate() - 1) / 7) === targetOccurrenceIndex);
+                        if (!carryForwardRecord && sameWeekdayRecords.length > 0) {
+                            carryForwardRecord = sameWeekdayRecords[sameWeekdayRecords.length - 1];
+                        }
+
+                        if (carryForwardRecord) {
+                            finalSlots = carryForwardRecord.timeSlots.map(s => ({
+                                period: s.period,
+                                startTime: s.startTime,
+                                endTime: s.endTime,
+                                status: s.status || 'Available'
+                            }));
+                            isEnabled = carryForwardRecord.isEnabled;
+                            emergencyAvailable = carryForwardRecord.emergencyAvailable;
+                            notes = carryForwardRecord.notes || '';
+                        } else {
+                            // 3. Fall back to default weekly slots
+                            const defaultSlots = (doc.defaultTimeSlots || []).filter(s => s.hospitalType === hType);
+                            finalSlots = defaultSlots.map(s => ({
+                                period: s.period,
+                                startTime: s.startTime,
+                                endTime: s.endTime,
+                                status: 'Available'
+                            }));
+                            isEnabled = true;
+                            emergencyAvailable = doc.isEmergencyAvailable || false;
+                        }
+                    }
+
+                    newRecords.push({
+                        doctorId: doc._id,
+                        date: targetDate,
+                        dayName,
+                        hospitalType: hType,
+                        timeSlots: finalSlots,
+                        isEnabled,
+                        emergencyAvailable,
+                        notes,
+                        isAutoGenerated: true
+                    });
+                }
+            }
+
+            currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+        }
+    }
+
+    if (newRecords.length > 0) {
+        try {
+            await DoctorAvailability.insertMany(newRecords, { ordered: false });
+        } catch (err) {
+            // Ignore duplicate key errors (code 11000)
+            if (err.code !== 11000 && !(err.writeErrors && err.writeErrors.some(e => e.code === 11000))) {
+                throw err;
+            }
+        }
+    }
+};
+
 // Get availability for a date range
 exports.getAvailability = async (req, res) => {
     try {
@@ -40,6 +172,7 @@ exports.getAvailability = async (req, res) => {
         const filter = {};
 
         if (startDate && endDate) {
+            await ensureAvailabilityRecordsForDateRange(startDate, endDate, doctorId);
             filter.date = {
                 $gte: new Date(startDate),
                 $lte: new Date(endDate)
@@ -75,6 +208,7 @@ exports.getAvailabilityByDate = async (req, res) => {
         const { type } = req.query;
 
         const targetDate = getUTCMidnight(date);
+        await ensureAvailabilityRecordsForDateRange(targetDate, targetDate);
 
         const nextDay = new Date(targetDate);
         nextDay.setUTCDate(nextDay.getUTCDate() + 1);
@@ -206,6 +340,8 @@ exports.getWeekAvailability = async (req, res) => {
         const nextWeek = new Date(today);
         nextWeek.setDate(nextWeek.getDate() + 7);
 
+        await ensureAvailabilityRecordsForDateRange(today, nextWeek);
+
         const query = {
             date: {
                 $gte: today,
@@ -286,3 +422,118 @@ exports.bulkCreateAvailability = async (req, res) => {
         res.status(400).json({ message: 'Error bulk creating availability', error: error.message });
     }
 };
+
+// Search availability by category and date, with auto-future fallback
+exports.getAvailabilitySearch = async (req, res) => {
+    try {
+        const { hospitalType, categoryId, date } = req.query;
+
+        if (!hospitalType || !categoryId || !date) {
+            return res.status(400).json({ message: 'hospitalType, categoryId, and date are required' });
+        }
+
+        const targetDate = getUTCMidnight(date);
+        if (!targetDate) {
+            return res.status(400).json({ message: 'Invalid date format' });
+        }
+
+        // 1. Find all active doctors matching the category and hospital setting
+        const doctorQuery = {
+            isActive: true,
+            type: { $in: [hospitalType, 'both'] }
+        };
+        if (categoryId !== 'all') {
+            doctorQuery.categories = categoryId;
+        }
+
+        const doctors = await Doctor.find(doctorQuery);
+        if (doctors.length === 0) {
+            return res.json({
+                available: false,
+                selectedDate: date,
+                nextAvailableDate: null,
+                doctors: [],
+                message: categoryId === 'all' 
+                    ? 'No doctors are registered in this hospital setting.'
+                    : 'No doctors of this category are registered in this hospital setting.'
+            });
+        }
+
+        const doctorIds = doctors.map(d => d._id);
+
+        // 2. Ensure availability records exist for selected date
+        await ensureAvailabilityRecordsForDateRange(targetDate, targetDate);
+
+        // 3. Query availabilities on selected date
+        let availabilities = await DoctorAvailability.find({
+            doctorId: { $in: doctorIds },
+            date: targetDate,
+            hospitalType: hospitalType,
+            isEnabled: true
+        }).populate({
+            path: 'doctorId',
+            populate: { path: 'categories' }
+        });
+
+        // Filter out records where at least one slot is "Available"
+        const activeAvailabilities = availabilities.filter(a => 
+            a.timeSlots && a.timeSlots.some(s => s.status === 'Available')
+        );
+
+        if (activeAvailabilities.length > 0) {
+            return res.json({
+                available: true,
+                selectedDate: date,
+                nextAvailableDate: null,
+                doctors: activeAvailabilities
+            });
+        }
+
+        // 4. Fallback: Search future dates up to 60 days
+        let futureDate = new Date(targetDate);
+        for (let i = 1; i <= 60; i++) {
+            futureDate.setUTCDate(futureDate.getUTCDate() + 1);
+
+            // Ensure availability records exist for this future date
+            await ensureAvailabilityRecordsForDateRange(futureDate, futureDate);
+
+            const futureAvailabilities = await DoctorAvailability.find({
+                doctorId: { $in: doctorIds },
+                date: futureDate,
+                hospitalType: hospitalType,
+                isEnabled: true
+            }).populate({
+                path: 'doctorId',
+                populate: { path: 'categories' }
+            });
+
+            const activeFutureAvailabilities = futureAvailabilities.filter(a => 
+                a.timeSlots && a.timeSlots.some(s => s.status === 'Available')
+            );
+
+            if (activeFutureAvailabilities.length > 0) {
+                const nextDateStr = futureDate.toISOString().split('T')[0];
+                return res.json({
+                    available: false,
+                    selectedDate: date,
+                    nextAvailableDate: nextDateStr,
+                    doctors: activeFutureAvailabilities
+                });
+            }
+        }
+
+        // 5. No upcoming availability found within 60 days
+        return res.json({
+            available: false,
+            selectedDate: date,
+            nextAvailableDate: null,
+            doctors: [],
+            message: 'No doctors of this category are available on the selected date or in the near future.'
+        });
+
+    } catch (error) {
+        console.error('Error in search:', error);
+        res.status(500).json({ message: 'Error searching availability', error: error.message });
+    }
+};
+

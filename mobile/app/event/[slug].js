@@ -143,9 +143,16 @@ const EventDetails = () => {
         
         <View style={styles.contentContainer}>
           <View style={styles.badgesContainer}>
-            <Text style={[styles.statusBadge, styles[event.status]]}>
-              {event.status?.toUpperCase() || 'UPCOMING'}
-            </Text>
+            {(() => {
+              const eventDate = new Date(event.date);
+              const now = new Date();
+              const eventStatus = event.status || (event.date && eventDate < now ? 'completed' : 'upcoming');
+              return (
+                <Text style={[styles.statusBadge, styles[eventStatus]]}>
+                  {eventStatus.toUpperCase()}
+                </Text>
+              );
+            })()}
             {event.category && (
               <Text style={styles.categoryBadge}>{event.category}</Text>
             )}

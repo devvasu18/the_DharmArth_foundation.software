@@ -493,6 +493,7 @@ const EventEditor = () => {
                                                 <div className="editor-wrapper">
                                                     <label className="modern-label">Content (English)</label>
                                                     <CKEditor
+                                                        key={`editor-en-${block.id}`}
                                                         editor={ClassicEditor}
                                                         data={block.content.html || ''}
                                                         onChange={(event, editor) => {
@@ -507,6 +508,7 @@ const EventEditor = () => {
                                                 <div className="editor-wrapper">
                                                     <label className="modern-label">Content (Hindi)</label>
                                                     <CKEditor
+                                                        key={`editor-hi-${block.id}`}
                                                         editor={ClassicEditor}
                                                         data={block.content.htmlHi || ''}
                                                         onChange={(event, editor) => {

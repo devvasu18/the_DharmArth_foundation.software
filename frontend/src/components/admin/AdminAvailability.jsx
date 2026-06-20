@@ -18,13 +18,17 @@ const AdminAvailability = () => {
     const [doctors, setDoctors] = useState([]);
     const [selectedDoctor, setSelectedDoctor] = useState(null);
     const [selectedDate, setSelectedDate] = useState(null);
-    const [weekDates, setWeekDates] = useState([]);
+    const [currentMonth, setCurrentMonth] = useState(() => {
+        const today = new Date();
+        return new Date(today.getFullYear(), today.getMonth(), 1);
+    });
+    const [monthDates, setMonthDates] = useState([]);
     const [availability, setAvailability] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [quickSetType, setQuickSetType] = useState('all'); // 'all' or 'custom'
-    const [selectedDays, setSelectedDays] = useState([0, 1, 2, 3, 4, 5, 6]); // indices of weekDates
+    const [selectedWeekdays, setSelectedWeekdays] = useState([0, 1, 2, 3, 4, 5, 6]);
 
     // Custom Dropdown State
     const [searchTerm, setSearchTerm] = useState('');
@@ -42,7 +46,6 @@ const AdminAvailability = () => {
 
     useEffect(() => {
         fetchDoctors();
-        generateWeekDates();
 
         // Click outside listener for dropdown
         const handleClickOutside = (event) => {
@@ -58,23 +61,27 @@ const AdminAvailability = () => {
     }, []);
 
     useEffect(() => {
-        if (selectedDoctor && weekDates.length > 0) {
+        generateMonthDates();
+    }, [currentMonth]);
+
+    useEffect(() => {
+        if (selectedDoctor && monthDates.length > 0) {
             fetchAvailability();
         }
-    }, [selectedDoctor, weekDates]);
+    }, [selectedDoctor, monthDates]);
 
-    const generateWeekDates = () => {
+    const generateMonthDates = () => {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth(); // 0-11
+        const lastDay = new Date(year, month + 1, 0).getDate();
+
         const dates = [];
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        for (let i = 0; i < 7; i++) {
-            const date = new Date(today);
-            date.setDate(today.getDate() + i);
+        for (let i = 1; i <= lastDay; i++) {
+            const date = new Date(year, month, i);
+            date.setHours(0, 0, 0, 0);
             dates.push(date);
         }
-
-        setWeekDates(dates);
+        setMonthDates(dates);
     };
 
     const fetchDoctors = async () => {
@@ -93,11 +100,11 @@ const AdminAvailability = () => {
     };
 
     const fetchAvailability = async () => {
-        if (!selectedDoctor || weekDates.length === 0) return;
+        if (!selectedDoctor || monthDates.length === 0) return;
 
         try {
-            const startDate = formatDateLocal(weekDates[0]);
-            const endDate = formatDateLocal(weekDates[6]);
+            const startDate = formatDateLocal(monthDates[0]);
+            const endDate = formatDateLocal(monthDates[monthDates.length - 1]);
 
             console.log('Fetching availability:', { doctorId: selectedDoctor._id, startDate, endDate });
 
@@ -281,8 +288,9 @@ const AdminAvailability = () => {
         try {
             const availabilities = [];
 
-            weekDates.forEach((date, idx) => {
-                if (quickSetType === 'custom' && !selectedDays.includes(idx)) {
+            monthDates.forEach((date) => {
+                const dayOfWeek = date.getDay(); // 0 = Sunday, etc.
+                if (quickSetType === 'custom' && !selectedWeekdays.includes(dayOfWeek)) {
                     return;
                 }
                 const dateString = formatDateLocal(date);
@@ -294,17 +302,12 @@ const AdminAvailability = () => {
                         ? selectedDoctor.defaultTimeSlots.filter(slot => slot.hospitalType === 'government' || !slot.hospitalType)
                         : [];
 
-                    const govSlots = govSlotsFiltered.length > 0
-                        ? govSlotsFiltered.map(slot => ({
-                            period: slot.period,
-                            startTime: slot.startTime,
-                            endTime: slot.endTime,
-                            status: 'Available'
-                        }))
-                        : [
-                            { period: 'Morning', startTime: '09:00', endTime: '12:00', status: 'Available' },
-                            { period: 'Afternoon', startTime: '14:00', endTime: '17:00', status: 'Available' }
-                        ];
+                    const govSlots = govSlotsFiltered.map(slot => ({
+                        period: slot.period,
+                        startTime: slot.startTime,
+                        endTime: slot.endTime,
+                        status: 'Available'
+                    }));
 
                     availabilities.push({
                         date: dateString,
@@ -323,17 +326,12 @@ const AdminAvailability = () => {
                         ? selectedDoctor.defaultTimeSlots.filter(slot => slot.hospitalType === 'clinic')
                         : [];
 
-                    const clinicSlots = clinicSlotsFiltered.length > 0
-                        ? clinicSlotsFiltered.map(slot => ({
-                            period: slot.period,
-                            startTime: slot.startTime,
-                            endTime: slot.endTime,
-                            status: 'Available'
-                        }))
-                        : [
-                            { period: 'Morning', startTime: '09:00', endTime: '12:00', status: 'Available' },
-                            { period: 'Afternoon', startTime: '14:00', endTime: '17:00', status: 'Available' }
-                        ];
+                    const clinicSlots = clinicSlotsFiltered.map(slot => ({
+                        period: slot.period,
+                        startTime: slot.startTime,
+                        endTime: slot.endTime,
+                        status: 'Available'
+                    }));
 
                     availabilities.push({
                         date: dateString,
@@ -357,13 +355,13 @@ const AdminAvailability = () => {
             });
 
             if (response.ok) {
-                toast.success('Week schedule set successfully!');
+                toast.success('Month schedule set successfully!');
                 fetchAvailability();
             } else {
-                toast.error('Failed to set week schedule');
+                toast.error('Failed to set month schedule');
             }
         } catch (error) {
-            toast.error('Error setting week schedule');
+            toast.error('Error setting month schedule');
         }
     };
 
@@ -377,10 +375,10 @@ const AdminAvailability = () => {
                 <h3>Doctor Availability Management</h3>
                 <button className="btn-quick-set" onClick={() => {
                     setQuickSetType('all');
-                    setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
+                    setSelectedWeekdays([0, 1, 2, 3, 4, 5, 6]);
                     setShowConfirmModal(true);
                 }}>
-                    ⚡ Quick Set Week
+                    ⚡ Quick Set Month
                 </button>
             </div>
 
@@ -468,16 +466,46 @@ const AdminAvailability = () => {
             )}
 
             <div className="week-calendar">
-                <h2>Next 7 Days Schedule</h2>
+                <div className="calendar-header-nav" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
+                    <h2 style={{ margin: 0 }}>
+                        Schedule for {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </h2>
+                    <div className="month-nav-btns" style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                            type="button"
+                            className="btn-month-nav"
+                            onClick={() => {
+                                const prev = new Date(currentMonth);
+                                prev.setMonth(currentMonth.getMonth() - 1);
+                                setCurrentMonth(prev);
+                            }}
+                            style={{ padding: '8px 12px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+                        >
+                            &larr; Previous Month
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-month-nav"
+                            onClick={() => {
+                                const next = new Date(currentMonth);
+                                next.setMonth(currentMonth.getMonth() + 1);
+                                setCurrentMonth(next);
+                            }}
+                            style={{ padding: '8px 12px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+                        >
+                            Next Month &rarr;
+                        </button>
+                    </div>
+                </div>
                 <div className="calendar-grid">
-                    {weekDates.map((date, index) => {
+                    {monthDates.map((date, index) => {
                         const dayAvailabilities = availability.filter(a => {
                             const availDate = new Date(a.date);
                             const localDate = new Date(availDate.getFullYear(), availDate.getMonth(), availDate.getDate());
                             const targetDate = new Date(date);
                             targetDate.setHours(0, 0, 0, 0);
                             return localDate.getTime() === targetDate.getTime();
-                        });
+                        }).filter(a => a.timeSlots && a.timeSlots.length > 0);
                         const isToday = date.toDateString() === new Date().toDateString();
 
                         return (
@@ -692,7 +720,7 @@ const AdminAvailability = () => {
                                         checked={quickSetType === 'all'}
                                         onChange={() => setQuickSetType('all')}
                                     />
-                                    <span>All 7 Days</span>
+                                    <span>All Days in Month</span>
                                 </label>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.95rem', color: '#1e293b', fontWeight: '500' }}>
                                     <input
@@ -702,34 +730,37 @@ const AdminAvailability = () => {
                                         checked={quickSetType === 'custom'}
                                         onChange={() => setQuickSetType('custom')}
                                     />
-                                    <span>Custom Days</span>
+                                    <span>Custom Weekdays</span>
                                 </label>
                             </div>
 
                             {quickSetType === 'custom' && (
                                 <div className="custom-days-selector" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '10px' }}>
-                                    {weekDates.map((date, idx) => {
-                                        const isChecked = selectedDays.includes(idx);
-                                        const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-                                        const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                    {[
+                                        { label: 'Sunday', value: 0 },
+                                        { label: 'Monday', value: 1 },
+                                        { label: 'Tuesday', value: 2 },
+                                        { label: 'Wednesday', value: 3 },
+                                        { label: 'Thursday', value: 4 },
+                                        { label: 'Friday', value: 5 },
+                                        { label: 'Saturday', value: 6 }
+                                    ].map((day) => {
+                                        const isChecked = selectedWeekdays.includes(day.value);
 
                                         return (
-                                            <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: '#334155' }}>
+                                            <label key={day.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', color: '#334155' }}>
                                                 <input
                                                     type="checkbox"
                                                     checked={isChecked}
                                                     onChange={(e) => {
                                                         if (e.target.checked) {
-                                                            setSelectedDays(prev => [...prev, idx]);
+                                                            setSelectedWeekdays(prev => [...prev, day.value]);
                                                         } else {
-                                                            setSelectedDays(prev => prev.filter(i => i !== idx));
+                                                            setSelectedWeekdays(prev => prev.filter(v => v !== day.value));
                                                         }
                                                     }}
                                                 />
-                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                    <span style={{ fontWeight: '600' }}>{dayName.slice(0, 3)}</span>
-                                                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{formattedDate}</span>
-                                                </div>
+                                                <span style={{ fontWeight: '600' }}>{day.label}</span>
                                             </label>
                                         );
                                     })}
@@ -743,10 +774,10 @@ const AdminAvailability = () => {
                             <button
                                 className="btn-submit"
                                 onClick={handleConfirmQuickSet}
-                                disabled={quickSetType === 'custom' && selectedDays.length === 0}
+                                disabled={quickSetType === 'custom' && selectedWeekdays.length === 0}
                                 style={{
-                                    opacity: (quickSetType === 'custom' && selectedDays.length === 0) ? 0.5 : 1,
-                                    cursor: (quickSetType === 'custom' && selectedDays.length === 0) ? 'not-allowed' : 'pointer'
+                                    opacity: (quickSetType === 'custom' && selectedWeekdays.length === 0) ? 0.5 : 1,
+                                    cursor: (quickSetType === 'custom' && selectedWeekdays.length === 0) ? 'not-allowed' : 'pointer'
                                 }}
                             >
                                 Set Schedule

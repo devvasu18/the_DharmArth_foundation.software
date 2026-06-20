@@ -61,6 +61,7 @@ const AdminBodyTests = lazy(() => import('./components/admin/AdminBodyTests'));
 const AdminDoctorFaq = lazy(() => import('./components/admin/AdminDoctorFaq'));
 const DoctorAvailability = lazy(() => import('./pages/DoctorAvailability'));
 const OrderMedicine = lazy(() => import('./pages/OrderMedicine'));
+const BodyTests = lazy(() => import('./pages/BodyTests'));
 const AdminPrescriptions = lazy(() => import('./components/admin/AdminPrescriptions'));
 const AdminDelivery = lazy(() => import('./components/admin/AdminDelivery'));
 const AdminDispatch = lazy(() => import('./components/admin/AdminDispatch'));
@@ -117,6 +118,7 @@ const router = createBrowserRouter(
       <Route path="/gallery/:id" element={<GalleryDetail />} />
       <Route path="/doctors" element={<DoctorAvailability />} />
       <Route path="/order-medicine" element={<OrderMedicine />} />
+      <Route path="/body-tests" element={<BodyTests />} />
       <Route path="/order-history" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
       
       {/* Protected Rider Route */}

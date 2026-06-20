@@ -2294,3 +2294,31 @@
     from { transform: scale(0.95); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
+
+/* Doctor Card Additions */
+.doctor-description-text {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: var(--spacing-2) 0;
+    padding: var(--spacing-2);
+    background: #f8fafc;
+    border-radius: var(--radius-sm);
+    border-left: 2px solid #94a3b8;
+    font-style: italic;
+}
+
+.doctor-fee-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: #0f766e;
+    margin: var(--spacing-2) 0;
+    background: #f0fdf4;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    border: 1.5px dashed #bbf7d0;
+    width: fit-content;
+}

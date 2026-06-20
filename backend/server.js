@@ -1,4 +1,5 @@
 require('dotenv').config(); // Load environment variables
+// Trigger restart to reload schema updates
 const app = require('./src/app');
 const connectDB = require('./src/config/db');
 

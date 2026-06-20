@@ -66,7 +66,7 @@ export default function EventsScreen() {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const statusParam = filter === 'all' ? '' : filter;
+      const statusParam = filter === 'all' ? '' : (filter === 'past' ? 'completed' : filter);
       const categoryParam = categoryFilter === 'all' ? '' : categoryFilter;
       const res = await api.get(`/events?status=${statusParam}&category=${categoryParam}`);
       setEvents(res.data.events || []);
@@ -82,7 +82,7 @@ export default function EventsScreen() {
     try {
       const [headersRes, eventsRes] = await Promise.all([
         api.get('/event-headers'),
-        api.get(`/events?status=${filter === 'all' ? '' : filter}&category=${categoryFilter === 'all' ? '' : categoryFilter}`)
+        api.get(`/events?status=${filter === 'all' ? '' : (filter === 'past' ? 'completed' : filter)}&category=${categoryFilter === 'all' ? '' : categoryFilter}`)
       ]);
       setHeaderSlides(headersRes.data);
       setEvents(eventsRes.data.events || []);
@@ -240,9 +240,17 @@ export default function EventsScreen() {
               >
                 <Image source={{ uri: event.coverImage }} style={styles.eventCardImage} />
                 <View style={styles.cardBadges}>
-                  <Text style={[styles.statusBadge, styles[event.status]]}>
-                    {event.status.toUpperCase()}
-                  </Text>
+                  {(() => {
+                    const eventDate = new Date(event.date);
+                    const now = new Date();
+                    const eventStatus = event.status || (event.date && eventDate < now ? 'completed' : 'upcoming');
+                    const displayStatus = eventStatus === 'completed' ? 'past' : eventStatus;
+                    return (
+                      <Text style={[styles.statusBadge, styles[displayStatus]]}>
+                        {displayStatus.toUpperCase()}
+                      </Text>
+                    );
+                  })()}
                   {event.category && (
                     <Text style={styles.categoryBadge}>{getCategoryLabel(event.category)}</Text>
                   )}

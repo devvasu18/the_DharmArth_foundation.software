@@ -77,9 +77,16 @@ const AdminEvents = () => {
                                     </div>
                                 </td>
                                 <td>
-                                    <span className={`status-badge ${event.status}`}>
-                                        {event.status}
-                                    </span>
+                                    {(() => {
+                                        const eventDate = new Date(event.date);
+                                        const now = new Date();
+                                        const eventStatus = event.status || (event.date && eventDate < now ? 'completed' : 'upcoming');
+                                        return (
+                                            <span className={`status-badge ${eventStatus}`}>
+                                                {eventStatus}
+                                            </span>
+                                        );
+                                    })()}
                                 </td>
                                 <td>{event.date ? new Date(event.date).toLocaleDateString() : 'N/A'}</td>
                                 <td className="actions-cell">

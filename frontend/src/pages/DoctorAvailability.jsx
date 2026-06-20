@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { API_BASE_URL } from '../services/api';
@@ -11,43 +12,52 @@ import SEO from '../components/common/SEO';
 const API_URL = `${API_BASE_URL}/api`;
 
 const DoctorAvailability = () => {
+    const { i18n } = useTranslation();
     const navigate = useNavigate();
     const [viewMode, setViewMode] = useState('category'); // Always 'category' now
     const [selectedType, setSelectedType] = useState(null); // 'government' or 'clinic'
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const [weekDates, setWeekDates] = useState([]);
-    const [availability, setAvailability] = useState([]);
     const [emergencyDoctors, setEmergencyDoctors] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showDatePicker, setShowDatePicker] = useState(false);
     const [openFaqIndex, setOpenFaqIndex] = useState(null);
-    const [bodyTests, setBodyTests] = useState([]);
-    const [loadingTests, setLoadingTests] = useState(true);
-    const [selectedTestCategory, setSelectedTestCategory] = useState('All');
     const [doctorFaqs, setDoctorFaqs] = useState([]);
     const [loadingFaqs, setLoadingFaqs] = useState(true);
+
+    // Doctor Category Search States
+    const [searchCategories, setSearchCategories] = useState([]);
+    const [showSearchModal, setShowSearchModal] = useState(false);
+    const [searchCategoryId, setSearchCategoryId] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchDate, setSearchDate] = useState(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return today;
+    });
+    const [searching, setSearching] = useState(false);
+    const [searchResult, setSearchResult] = useState(null);
+    const [searchPerformed, setSearchPerformed] = useState(false);
 
     // Admin Settings State (for mobile dialer)
     const [adminMobile, setAdminMobile] = useState('918306305569');
     const [contactPhone, setContactPhone] = useState('8306305569');
 
-    // Booking Modal & Form State
-    const { user: authUser } = useAuth();
-    const [bookingModalOpen, setBookingModalOpen] = useState(false);
-    const [selectedTestForBooking, setSelectedTestForBooking] = useState(null);
-    const [bookingForm, setBookingForm] = useState({ name: '', mobile: '' });
-    const [bookingSubmitLoading, setBookingSubmitLoading] = useState(false);
-
     useEffect(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        setSelectedDate(today);
-        generateWeekDates();
         fetchEmergencyDoctors();
-        fetchBodyTests();
         fetchDoctorFaqs();
         fetchSettings();
+        fetchSearchCategories();
     }, []);
+
+    const fetchSearchCategories = async () => {
+        try {
+            const response = await fetch(`${API_URL}/doctor-categories?isActive=true`);
+            if (response.ok) {
+                const data = await response.json();
+                setSearchCategories(data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch doctor categories', error);
+        }
+    };
 
     const fetchSettings = async () => {
         try {
@@ -64,114 +74,6 @@ const DoctorAvailability = () => {
         }
     };
 
-    useEffect(() => {
-        if (bookingModalOpen && authUser) {
-            setBookingForm({
-                name: authUser.name || '',
-                mobile: authUser.mobile || ''
-            });
-        }
-    }, [bookingModalOpen, authUser]);
-
-    const handleBookingSubmit = async (e) => {
-        e.preventDefault();
-        if (!bookingForm.name.trim() || bookingForm.mobile.length !== 10) {
-            toast.error("Please fill in all details with a valid 10-digit mobile number");
-            return;
-        }
-
-        setBookingSubmitLoading(true);
-        try {
-            const response = await fetch(`${API_URL}/leads`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: bookingForm.name.trim(),
-                    mobile: bookingForm.mobile,
-                    type: 'contact',
-                    source: 'body_test_booking',
-                    notes: `Requested Booking for Test: "${selectedTestForBooking.name}"\nCategory: ${selectedTestForBooking.category}\nPrice: ${selectedTestForBooking.price.startsWith('₹') ? selectedTestForBooking.price : `₹${selectedTestForBooking.price}`}\n\nWe will contact you soon.`,
-                    language: localStorage.getItem('i18nextLng') || 'en'
-                })
-            });
-
-            if (response.ok) {
-                toast.success("Booking request submitted! We will contact you soon.");
-                setBookingModalOpen(false);
-                setBookingForm({ name: '', mobile: '' });
-            } else {
-                const errData = await response.json();
-                toast.error(errData.message || "Failed to submit booking. Please try again.");
-            }
-        } catch (error) {
-            console.error("Booking submit error:", error);
-            toast.error("Failed to submit booking. Please try again.");
-        } finally {
-            setBookingSubmitLoading(false);
-        }
-    };
-
-    // Removed fetchWeekAvailability useEffect as we default to category view with today selected
-
-    useEffect(() => {
-        if (selectedDate && selectedType) {
-            fetchDateAvailability();
-        }
-    }, [selectedDate, selectedType]);
-
-    const generateWeekDates = () => {
-        const dates = [];
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        for (let i = 0; i < 7; i++) {
-            const date = new Date(today);
-            date.setDate(today.getDate() + i);
-            dates.push(date);
-        }
-
-        setWeekDates(dates);
-    };
-
-    const fetchWeekAvailability = async () => {
-        try {
-            const response = await fetch(`${API_URL}/availability/week`);
-            const data = await response.json();
-            setAvailability(data);
-        } catch (error) {
-            console.error('Failed to fetch availability');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchDateAvailability = async () => {
-        if (!selectedDate || !selectedType) return;
-
-        try {
-            setLoading(true);
-            // Adjust for timezone to ensure we send the correct local date string
-            const offset = selectedDate.getTimezoneOffset();
-            const localDate = new Date(selectedDate.getTime() - (offset * 60 * 1000));
-            const dateStr = localDate.toISOString().split('T')[0];
-            const response = await fetch(`${API_URL}/availability/date/${dateStr}?type=${selectedType}`);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            setAvailability(data);
-        } catch (error) {
-            console.error('Failed to fetch date availability:', error);
-            setAvailability([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const fetchEmergencyDoctors = async () => {
         try {
             const response = await fetch(`${API_URL}/doctors/emergency`);
@@ -179,20 +81,6 @@ const DoctorAvailability = () => {
             setEmergencyDoctors(data);
         } catch (error) {
             console.error('Failed to fetch emergency doctors');
-        }
-    };
-
-    const fetchBodyTests = async () => {
-        try {
-            setLoadingTests(true);
-            const response = await fetch(`${API_URL}/body-tests?isActive=true`);
-            if (!response.ok) throw new Error('Failed to fetch');
-            const data = await response.json();
-            setBodyTests(data);
-        } catch (error) {
-            console.error('Failed to fetch body tests:', error);
-        } finally {
-            setLoadingTests(false);
         }
     };
 
@@ -210,39 +98,53 @@ const DoctorAvailability = () => {
         }
     };
 
-    const getDayName = (date) => {
-        return date.toLocaleDateString('en-US', { weekday: 'short' });
-    };
-
-    const getAvailabilityCountForDate = (date) => {
-        return availability.filter(a => {
-            const availDate = new Date(a.date);
-            availDate.setHours(0, 0, 0, 0);
-            return availDate.getTime() === date.getTime();
-        }).length;
-    };
-
-    const handleDateClick = (date) => {
-        setSelectedDate(date);
-        setViewMode('category');
-        setSelectedType(null);
-    };
-
     const handleTypeSelect = (type) => {
         setSelectedType(type);
-        setLoading(true);
+        setSearchQuery('');
+        setShowSearchModal(true);
     };
 
-    const handleBackToCalendar = () => {
-        setViewMode('calendar');
-        setSelectedDate(null);
-        setSelectedType(null);
-        fetchWeekAvailability();
+    const handleSearchSubmit = async (e) => {
+        if (e) e.preventDefault();
+        if (!selectedType || !searchCategoryId) {
+            toast.error('Please select a specialist category');
+            return;
+        }
+
+        try {
+            setSearching(true);
+            setSearchPerformed(true);
+            setShowSearchModal(false);
+
+            // Format date to YYYY-MM-DD locally to avoid timezone shifts
+            const offset = searchDate.getTimezoneOffset();
+            const localDate = new Date(searchDate.getTime() - (offset * 60 * 1000));
+            const dateStr = localDate.toISOString().split('T')[0];
+
+            const response = await fetch(
+                `${API_URL}/availability/search?hospitalType=${selectedType}&categoryId=${searchCategoryId}&date=${dateStr}`
+            );
+
+            if (!response.ok) {
+                throw new Error('Search failed');
+            }
+
+            const data = await response.json();
+            setSearchResult(data);
+        } catch (error) {
+            console.error('Error during search:', error);
+            toast.error('Search failed. Please try again.');
+            setSearchResult(null);
+        } finally {
+            setSearching(false);
+        }
     };
 
     const handleBackToTypeSelection = () => {
         setSelectedType(null);
         setAvailability([]);
+        setSearchPerformed(false);
+        setSearchResult(null);
     };
 
     const handleCategoryView = () => {
@@ -390,12 +292,17 @@ const DoctorAvailability = () => {
         };
     };
 
-    const sortDoctorsByAvailability = (doctors) => {
+    const sortDoctorsByAvailability = (doctors, targetDate) => {
         return [...doctors].sort((a, b) => {
-            const availA = checkDoctorAvailability(a.timeSlots, selectedDate);
-            const availB = checkDoctorAvailability(b.timeSlots, selectedDate);
+            const availA = checkDoctorAvailability(a.timeSlots, targetDate);
+            const availB = checkDoctorAvailability(b.timeSlots, targetDate);
             return availA.sortOrder - availB.sortOrder;
         });
+    };
+
+    const getActiveSearchDate = () => {
+        if (!searchResult) return searchDate;
+        return searchResult.available ? searchDate : new Date(searchResult.nextAvailableDate);
     };
 
     if (loading && viewMode === 'calendar') {
@@ -483,23 +390,9 @@ const DoctorAvailability = () => {
                             {/* Category Selection View */}
                             {!selectedType && (
                                 <div className="category-view">
-                                    <div className="selected-date-header">
-                                        <div className="date-display-row">
-                                            <h2>
-                                                {selectedDate?.toLocaleDateString('en-US', {
-                                                    weekday: 'long',
-                                                    month: 'long',
-                                                    day: 'numeric'
-                                                })}
-                                            </h2>
-                                            <button
-                                                className="btn-change-date"
-                                                onClick={() => setShowDatePicker(true)}
-                                            >
-                                                📅 Change Date
-                                            </button>
-                                        </div>
-                                        <p>Select category to view available doctors</p>
+                                    <div className="category-view-header" style={{ textAlign: 'center', marginBottom: '40px', padding: '20px 0' }}>
+                                        <h2 style={{ fontSize: '2rem', fontWeight: '800', color: '#1e293b', margin: '0 0 10px 0' }}>Select Hospital Setting</h2>
+                                        <p style={{ fontSize: '1.1rem', color: '#64748b', margin: 0 }}>Choose a facility to find available doctors and schedules</p>
                                     </div>
 
                                     <div className="category-options">
@@ -535,151 +428,325 @@ const DoctorAvailability = () => {
                                                 <span className="back-arrow">←</span>
                                             </button>
                                             <div className="category-info-mini">
-                                                <span className="category-label">Category</span>
-                                                <h2 className="category-name-modern">
+                                                <span className="category-label">
                                                     {selectedType === 'government' ? '🏥 Government Hospital' : '🏨 Private Clinic'}
+                                                </span>
+                                                <h2 className="category-name-modern">
+                                                    {searchCategoryId === 'all'
+                                                        ? '🩺 All Specialists'
+                                                        : searchCategoryId && searchCategories.find(c => c._id === searchCategoryId)
+                                                            ? `${searchCategories.find(c => c._id === searchCategoryId).icon || '🩺'} ${searchCategories.find(c => c._id === searchCategoryId).name}`
+                                                            : 'Specialist Search'}
                                                 </h2>
                                             </div>
                                         </div>
 
                                         <div className="header-right">
-                                            <div className="date-selection-chip" onClick={() => setShowDatePicker(true)}>
-                                                <div className="chip-icon">📅</div>
+                                            <div className="date-selection-chip" onClick={() => setShowSearchModal(true)}>
+                                                <div className="chip-icon">🔍</div>
                                                 <div className="chip-content">
-
                                                     <span className="chip-value">
-                                                        {selectedDate?.toLocaleDateString('en-US', {
+                                                        {searchDate?.toLocaleDateString('en-US', {
                                                             weekday: 'long',
                                                             month: 'long',
                                                             day: 'numeric'
                                                         })}
                                                     </span>
                                                 </div>
-                                                <span className="chip-action">Change</span>
+                                                <span className="chip-action">Modify</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {loading ? (
+                                    {searching ? (
                                         <div className="loading-doctors">
                                             <div className="loading-spinner"></div>
-                                            <p>Loading doctors...</p>
+                                            <p>Searching for available doctors...</p>
                                         </div>
-                                    ) : availability.length > 0 ? (
-                                        <div className="doctors-grid">
-                                            {sortDoctorsByAvailability(availability).map(avail => {
-                                                const availabilityInfo = checkDoctorAvailability(avail.timeSlots, selectedDate);
-
-                                                return (
-                                                    <div
-                                                        key={avail._id}
-                                                        className={`doctor-availability-card ${avail.hospitalType} ${availabilityInfo.isAvailableNow ? 'available-now' : ''}`}
-                                                    >
-                                                        <div className="doctor-photo">
-                                                            {avail.doctorId.photo ? (
-                                                                <img 
-                                                                    src={avail.doctorId.photo.startsWith('http') ? avail.doctorId.photo : `${API_BASE_URL}${avail.doctorId.photo.startsWith('/') ? '' : '/'}${avail.doctorId.photo}`} 
-                                                                    alt={`Dr. ${avail.doctorId.name} - Doctor Availability in Sujangarh, Churu, Rajasthan`} 
-                                                                />
-                                                            ) : (
-                                                                <div className="photo-placeholder">👨‍⚕️</div>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="doctor-details">
-                                                            <h3>{avail.doctorId.name}</h3>
-                                                            <div className="doctor-meta-row">
-                                                                <span className="doctor-title">{avail.doctorId.title}</span>
-                                                                <span className="doctor-experience">- {avail.doctorId.experience}</span>
-                                                            </div>
-                                                            <div className="doctor-badges">
-                                                                <div className={`availability-status ${
-                                                                    availabilityInfo.isAvailableNow ? 'available' : 
-                                                                    (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available') ? 'closed' : 
-                                                                    'upcoming'
-                                                                }`}>
-                                                                    <span>
-                                                                        {availabilityInfo.isAvailableNow ? '●' : 
-                                                                         (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available') ? '✕' : 
-                                                                         '🕒'}
-                                                                    </span>
-                                                                    <span>{availabilityInfo.status}</span>
-                                                                </div>
-
-                                                                {avail.emergencyAvailable && (
-                                                                    <div className="emergency-available">
-                                                                        <span>🚨</span>
-                                                                        <span>Emergency Available</span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="time-slots">
-                                                            {avail.timeSlots.map((slot, idx) => (
-                                                                <div key={idx} className={`time-slot ${slot.status.toLowerCase().replace(' ', '-')}`}>
-                                                                    <div className="slot-info">
-                                                                        <span className="slot-period">{slot.period} :</span>
-                                                                        <span className="slot-time">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
-
-                                                                        <div className={`slot-status ${slot.status.toLowerCase().replace(' ', '-')}`}>
-                                                                            {slot.status === 'Available' && '✓ Available'}
-                                                                            {slot.status === 'Not Available' && '✗ Not Available'}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
+                                    ) : searchResult ? (
+                                        <>
+                                            {/* Fallback Message for Future Date */}
+                                            {!searchResult.available && searchResult.nextAvailableDate && (
+                                                <div className="fallback-notice-banner" style={{ background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '12px', padding: '16px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 2px 4px rgba(251, 191, 36, 0.05)' }}>
+                                                    <div style={{ fontSize: '1.8rem' }}>⚠️</div>
+                                                    <div>
+                                                        <h4 style={{ margin: '0 0 4px 0', color: '#b45309', fontWeight: '700', fontSize: '0.95rem' }}>No doctors are available on the selected date.</h4>
+                                                        <p style={{ margin: 0, color: '#d97706', fontSize: '0.85rem', fontWeight: '600' }}>
+                                                            Next available date for this category: {new Date(searchResult.nextAvailableDate).toLocaleDateString('en-GB')}
+                                                        </p>
                                                     </div>
-                                                );
-                                            })}
-                                        </div>
+                                                </div>
+                                            )}
+
+                                            {searchResult.doctors && searchResult.doctors.length > 0 ? (
+                                                <div className="doctors-grid">
+                                                    {sortDoctorsByAvailability(searchResult.doctors, getActiveSearchDate()).map(avail => {
+                                                        const activeDate = getActiveSearchDate();
+                                                        const availabilityInfo = checkDoctorAvailability(avail.timeSlots, activeDate);
+                                                        const isUpcoming = !availabilityInfo.isAvailableNow &&
+                                                            availabilityInfo.status !== 'Not Available Today' &&
+                                                            availabilityInfo.status !== 'Shift Ended' &&
+                                                            availabilityInfo.status !== 'Not Available';
+
+                                                        return (
+                                                            <div
+                                                                key={avail._id}
+                                                                className={`doctor-availability-card ${avail.hospitalType} ${availabilityInfo.isAvailableNow ? 'available-now' : ''}`}
+                                                            >
+                                                                <div className="doctor-photo">
+                                                                    {avail.doctorId.photo ? (
+                                                                        <img 
+                                                                            src={avail.doctorId.photo.startsWith('http') ? avail.doctorId.photo : `${API_BASE_URL}${avail.doctorId.photo.startsWith('/') ? '' : '/'}${avail.doctorId.photo}`} 
+                                                                            alt={`Dr. ${avail.doctorId.name} - Doctor Availability`} 
+                                                                        />
+                                                                    ) : (
+                                                                        <div className="photo-placeholder">👨‍⚕️</div>
+                                                                    )}
+                                                                </div>
+
+                                                                <div className="doctor-details">
+                                                                    <h3>{avail.doctorId.name}</h3>
+                                                                    <div className="doctor-meta-row">
+                                                                        <span className="doctor-title">{avail.doctorId.title}</span>
+                                                                        <span className="doctor-experience">- {avail.doctorId.experience}</span>
+                                                                    </div>
+
+                                                                    {avail.doctorId.description && (
+                                                                        <p className="doctor-description-text">
+                                                                            {avail.doctorId.description}
+                                                                        </p>
+                                                                    )}
+
+                                                                    {avail.hospitalType === 'clinic' && avail.doctorId.privateFee !== undefined && avail.doctorId.privateFee > 0 && (
+                                                                        <div className="doctor-fee-row">
+                                                                            <span>💵</span>
+                                                                            <span>Fee: ₹{avail.doctorId.privateFee}</span>
+                                                                        </div>
+                                                                    )}
+
+                                                                    <div className="doctor-badges">
+                                                                        {!isUpcoming && (
+                                                                            <div className={`availability-status ${
+                                                                                availabilityInfo.isAvailableNow ? 'available' : 
+                                                                                (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available') ? 'closed' : 
+                                                                                'upcoming'
+                                                                            }`}>
+                                                                                <span>
+                                                                                    {availabilityInfo.isAvailableNow ? '●' : 
+                                                                                     (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available') ? '✕' : 
+                                                                                     '🕒'}
+                                                                                </span>
+                                                                                <span>{availabilityInfo.status}</span>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {avail.emergencyAvailable && (
+                                                                            <div className="emergency-available">
+                                                                                <span>🚨</span>
+                                                                                <span>Emergency Available</span>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="time-slots">
+                                                                    {avail.timeSlots.map((slot, idx) => (
+                                                                        <div key={idx} className={`time-slot ${slot.status.toLowerCase().replace(' ', '-')}`}>
+                                                                            <div className="slot-info">
+                                                                                <span className="slot-period">{slot.period} :</span>
+                                                                                <span className="slot-time">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
+
+                                                                                <div className={`slot-status ${slot.status.toLowerCase().replace(' ', '-')}`}>
+                                                                                    {slot.status === 'Available' && '✓ Available'}
+                                                                                    {slot.status === 'Not Available' && '✗ Not Available'}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            ) : (
+                                                <div className="no-availability-premium">
+                                                    <div className="premium-blank-illustration">
+                                                        <span className="illustration-emoji">😔</span>
+                                                    </div>
+                                                    <h3>No Doctors Available</h3>
+                                                    <p>{searchResult.message || 'There are no doctors scheduled for this category in the near future. Please select a different category or change the hospital setting.'}</p>
+                                                    <div className="blank-actions">
+                                                        <button className="btn-primary-modern" onClick={() => setShowSearchModal(true)}>
+                                                            Modify Search
+                                                        </button>
+                                                        <button className="btn-secondary-modern" onClick={handleBackToTypeSelection}>
+                                                            Change Hospital
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
                                     ) : (
                                         <div className="no-availability-premium">
                                             <div className="premium-blank-illustration">
-                                                <span className="illustration-emoji">😔</span>
+                                                <span className="illustration-emoji">🔍</span>
                                             </div>
-                                            <h3>No Doctors Available</h3>
-                                            <p>There are no doctors scheduled for this specific date and category. Please try selecting a different date or a different hospital type.</p>
+                                            <h3>No Search Results</h3>
+                                            <p>Please click below to define your search parameters.</p>
                                             <div className="blank-actions">
-                                                <button className="btn-primary-modern" onClick={() => setShowDatePicker(true)}>
-                                                    Change Date
-                                                </button>
-                                                <button className="btn-secondary-modern" onClick={handleBackToTypeSelection}>
-                                                    Change Category
+                                                <button className="btn-primary-modern" onClick={() => setShowSearchModal(true)}>
+                                                    Search Doctors
                                                 </button>
                                             </div>
                                         </div>
                                     )}
                                 </div>
                             )}
-                            {/* Custom Date Picker Modal */}
-                            {showDatePicker && (
-                                <div className="date-picker-overlay" onClick={() => setShowDatePicker(false)}>
-                                    <div className="date-picker-modal" onClick={(e) => e.stopPropagation()}>
-                                        <div className="date-picker-header">
-                                            <h3>Select Date</h3>
-                                            <button className="close-btn" onClick={() => setShowDatePicker(false)}>×</button>
-                                        </div>
-                                        <div className="date-picker-grid-simple">
-                                            {weekDates.map((date, index) => {
-                                                const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
-                                                const isToday = date.toDateString() === new Date().toDateString();
 
-                                                return (
-                                                    <div
-                                                        key={index}
-                                                        className={`date-picker-card-simple ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`}
-                                                        onClick={() => handleDateChange(date)}
-                                                    >
-                                                        <div className="dp-day">{getDayName(date)}</div>
-                                                        <div className="dp-number">{date.getDate()}</div>
-                                                        <div className="dp-number">{date.toLocaleDateString('en-US', { month: 'short' })}</div>
-                                                        {isToday && <span className="dp-today-badge">Today</span>}
-                                                    </div>
-                                                );
-                                            })}
+                            {/* Find a Doctor - Category Search Modal */}
+                            {showSearchModal && (
+                                <div className="date-picker-overlay" onClick={() => setShowSearchModal(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                                    <div className="date-picker-modal search-modal-premium" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', width: '90%', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', border: '1px solid rgba(255, 255, 255, 0.8)', background: 'white' }}>
+                                        <div className="date-picker-header" style={{ padding: '20px 24px 15px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b', margin: 0 }}>Find a Doctor</h3>
+                                            <button className="close-btn" onClick={() => setShowSearchModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b' }}>×</button>
                                         </div>
+                                        <form onSubmit={handleSearchSubmit} style={{ padding: '24px' }}>
+                                            {/* Search/Filter dropdown */}
+                                            <div className="form-group" style={{ marginBottom: '20px' }}>
+                                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Select Specialist</label>
+                                                
+                                                <div style={{ position: 'relative' }}>
+                                                    <input
+                                                        type="text"
+                                                        value={searchQuery}
+                                                        onChange={(e) => {
+                                                            setSearchQuery(e.target.value);
+                                                            // Clear selected if they search something else
+                                                            const val = e.target.value.toLowerCase();
+                                                            const exactMatch = searchCategories.find(c => c.name.toLowerCase() === val);
+                                                            if (exactMatch) {
+                                                                setSearchCategoryId(exactMatch._id);
+                                                            } else if (val === 'all' || val === 'all specialists') {
+                                                                setSearchCategoryId('all');
+                                                            } else {
+                                                                setSearchCategoryId('');
+                                                            }
+                                                        }}
+                                                        placeholder="Which specialist are you looking for?"
+                                                        style={{ width: '100%', padding: '10px 12px 10px 36px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.95rem', background: '#f8fafc' }}
+                                                        required
+                                                    />
+                                                    <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', color: '#64748b' }}>🔍</span>
+                                                </div>
+
+                                                {/* Filtered Dropdown list */}
+                                                <div style={{
+                                                    maxHeight: '180px',
+                                                    overflowY: 'auto',
+                                                    border: '1px solid #e2e8f0',
+                                                    borderRadius: '8px',
+                                                    marginTop: '6px',
+                                                    background: 'white',
+                                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+                                                }}>
+                                                    {("all specialists".includes(searchQuery.toLowerCase()) || "all".includes(searchQuery.toLowerCase()) || searchQuery === '') && (
+                                                        <div
+                                                            onClick={() => {
+                                                                setSearchCategoryId('all');
+                                                                setSearchQuery('All Specialists');
+                                                            }}
+                                                            style={{
+                                                                padding: '10px 14px',
+                                                                cursor: 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '8px',
+                                                                fontSize: '0.9rem',
+                                                                fontWeight: searchCategoryId === 'all' ? '600' : '400',
+                                                                background: searchCategoryId === 'all' ? '#eff6ff' : 'transparent',
+                                                                color: searchCategoryId === 'all' ? '#1d4ed8' : '#334155',
+                                                                borderBottom: '1px solid #f1f5f9'
+                                                            }}
+                                                        >
+                                                            <span>🩺</span>
+                                                            <span>All Specialists</span>
+                                                        </div>
+                                                    )}
+                                                    {searchCategories
+                                                        .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                                                        .map(c => (
+                                                            <div
+                                                                key={c._id}
+                                                                onClick={() => {
+                                                                    setSearchCategoryId(c._id);
+                                                                    setSearchQuery(c.name);
+                                                                }}
+                                                                style={{
+                                                                    padding: '10px 14px',
+                                                                    cursor: 'pointer',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '8px',
+                                                                    fontSize: '0.9rem',
+                                                                    fontWeight: searchCategoryId === c._id ? '600' : '400',
+                                                                    background: searchCategoryId === c._id ? '#eff6ff' : 'transparent',
+                                                                    color: searchCategoryId === c._id ? '#1d4ed8' : '#334155',
+                                                                    borderBottom: '1px solid #f1f5f9'
+                                                                }}
+                                                            >
+                                                                <span>{c.icon || '🩺'}</span>
+                                                                <span>{c.name}</span>
+                                                            </div>
+                                                        ))}
+                                                    {searchCategories.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 &&
+                                                        !("all specialists".includes(searchQuery.toLowerCase()) || "all".includes(searchQuery.toLowerCase()) || searchQuery === '') && (
+                                                            <div style={{ padding: '12px', color: '#64748b', fontSize: '0.9rem', textAlign: 'center' }}>No specialist found</div>
+                                                        )}
+                                                </div>
+                                            </div>
+
+                                            {/* Date selection */}
+                                            <div className="form-group" style={{ marginBottom: '24px' }}>
+                                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Preferred Date</label>
+                                                <input
+                                                    type="date"
+                                                    value={searchDate.toISOString().split('T')[0]}
+                                                    min={new Date().toISOString().split('T')[0]}
+                                                    onChange={(e) => setSearchDate(new Date(e.target.value))}
+                                                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.95rem', background: '#f8fafc' }}
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                                                <button
+                                                    type="button"
+                                                    className="btn-secondary-modern"
+                                                    onClick={() => setShowSearchModal(false)}
+                                                    style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #cbd5e1', background: 'white', color: '#475569', cursor: 'pointer', fontWeight: '600' }}
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    type="submit"
+                                                    className="btn-primary-modern"
+                                                    disabled={!searchCategoryId}
+                                                    style={{
+                                                        padding: '10px 20px',
+                                                        borderRadius: '8px',
+                                                        border: 'none',
+                                                        background: !searchCategoryId ? '#94a3b8' : 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                                                        color: 'white',
+                                                        cursor: !searchCategoryId ? 'not-allowed' : 'pointer',
+                                                        fontWeight: '600',
+                                                        boxShadow: !searchCategoryId ? 'none' : '0 4px 6px -1px rgba(37, 99, 235, 0.2)'
+                                                    }}
+                                                >
+                                                    Find Availability
+                                                </button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             )}
@@ -715,6 +782,19 @@ const DoctorAvailability = () => {
                                         <h3>{doctor.name}</h3>
                                         <p className="doctor-title">{doctor.title}</p>
 
+                                        {doctor.description && (
+                                            <p className="doctor-description-text" style={{ textAlign: 'left' }}>
+                                                {doctor.description}
+                                            </p>
+                                        )}
+
+                                        {(doctor.type === 'clinic' || doctor.type === 'both') && doctor.privateFee !== undefined && doctor.privateFee > 0 && (
+                                            <div className="doctor-fee-row" style={{ margin: '8px auto' }}>
+                                                <span>💵</span>
+                                                <span>Fee: ₹{doctor.privateFee}</span>
+                                            </div>
+                                        )}
+
                                         <div className={`doctor-type-badge ${doctor.type}`}>
                                             {doctor.type === 'clinic' ? '🏨 Private Clinic' : doctor.type === 'government' ? '🏥 Government Hospital' : '🏥 Works in Both'}
                                         </div>
@@ -739,94 +819,7 @@ const DoctorAvailability = () => {
                     </div>
                 </div>
 
-                {/* Available Tests Section */}
-                <div className="tests-section">
-                    <div className="container">
-                        <div className="section-header center-text">
-                            <h2>Available Medical Tests</h2>
-                            <p>Comprehensive diagnostic services at affordable prices</p>
-                        </div>
 
-                        {/* Category filter tabs */}
-                        {!loadingTests && bodyTests.length > 0 && (
-                            <div className="test-categories-container">
-                                <div className="test-categories-filter">
-                                    {['All', ...new Set(bodyTests.map(t => t.category))].map(cat => (
-                                        <button
-                                            key={cat}
-                                            className={`test-category-chip ${selectedTestCategory === cat ? 'active' : ''}`}
-                                            onClick={() => setSelectedTestCategory(cat)}
-                                        >
-                                            {cat}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {loadingTests ? (
-                            <div className="tests-grid">
-                                {[1, 2, 3, 4].map(n => (
-                                    <div key={n} className="test-card skeleton">
-                                        <div className="test-image skeleton-pulse"></div>
-                                        <div className="test-content">
-                                            <div className="skeleton-line skeleton-title skeleton-pulse"></div>
-                                            <div className="skeleton-line skeleton-text skeleton-pulse"></div>
-                                            <div className="skeleton-line skeleton-meta skeleton-pulse"></div>
-                                            <div className="skeleton-button skeleton-pulse"></div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : bodyTests.length === 0 ? (
-                            <div className="no-tests-premium">
-                                <div className="no-tests-emoji">🔬</div>
-                                <h3>No Medical Tests Listed</h3>
-                                <p>We are currently updating our checkup packages. Please check back soon or call our helpline.</p>
-                            </div>
-                        ) : (
-                            <div className="tests-grid">
-                                {bodyTests
-                                    .filter(t => selectedTestCategory === 'All' || t.category === selectedTestCategory)
-                                    .map(test => (
-                                        <div key={test._id} className="test-card">
-                                            <div className="test-image">
-                                                {test.image ? (
-                                                    <img 
-                                                        src={test.image.startsWith('http') ? test.image : `${API_BASE_URL}${test.image.startsWith('/') ? '' : '/'}${test.image}`} 
-                                                        alt={`${test.name} Diagnostic Test Package - The DharmArth Foundation Sujangarh`} 
-                                                    />
-                                                ) : (
-                                                    <div className="test-placeholder-image">🔬</div>
-                                                )}
-                                                <div className="test-category">{test.category}</div>
-                                            </div>
-                                            <div className="test-content">
-                                                <h3>{test.name}</h3>
-                                                <p className="test-description">{test.description || 'Professional diagnostic checkup package.'}</p>
-                                                <div className="test-meta">
-                                                    <span>⏱️ {test.time}</span>
-                                                    <span className="test-price">{test.price.startsWith('₹') ? test.price : `₹${test.price}`}</span>
-                                                </div>
-                                                <button 
-                                                    className="btn-book-test"
-                                                    onClick={() => {
-                                                        if (window.innerWidth < 1024) {
-                                                            window.location.href = `tel:${adminMobile}`;
-                                                        } else {
-                                                            setSelectedTestForBooking(test);
-                                                            setBookingModalOpen(true);
-                                                        }
-                                                    }}
-                                                >
-                                                    Book This Test
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                            </div>
-                        )}
-                    </div>
 
                     {/* FAQ Section */}
                     <div className="faq-section">
@@ -853,73 +846,19 @@ const DoctorAvailability = () => {
                                             onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
                                         >
                                             <div className="faq-question">
-                                                <h3>{faq.question}</h3>
+                                                <h3>{(i18n.language?.startsWith('hi') && faq.question_hi) ? faq.question_hi : faq.question}</h3>
                                                 <span className="faq-toggle">{openFaqIndex === index ? '−' : '+'}</span>
                                             </div>
                                             <div className="faq-answer">
-                                                <p>{faq.answer}</p>
+                                                <p>{(i18n.language?.startsWith('hi') && faq.answer_hi) ? faq.answer_hi : faq.answer}</p>
                                             </div>
                                         </div>
                                     ))
                                 )}
                             </div>
                         </div>
-                    </div>
                 </div>
             </div>
-
-            {bookingModalOpen && selectedTestForBooking && (
-                <div className="test-booking-modal-overlay" onClick={() => setBookingModalOpen(false)}>
-                    <div className="test-booking-modal-card" onClick={(e) => e.stopPropagation()}>
-                        <button className="test-booking-modal-close" onClick={() => setBookingModalOpen(false)}>
-                            ✕
-                        </button>
-                        <div className="test-booking-modal-header">
-                            <h2>Book Diagnostic Test</h2>
-                            <p>Please enter your details. We will contact you soon to schedule your checkup.</p>
-                        </div>
-                        
-                        <div className="selected-test-summary">
-                            <div className="summary-icon">🔬</div>
-                            <div className="summary-info">
-                                <h4>{selectedTestForBooking.name}</h4>
-                                <p className="summary-desc">{selectedTestForBooking.description}</p>
-                                <div className="summary-price-tag">
-                                    <span>Price:</span>
-                                    <strong>{selectedTestForBooking.price.startsWith('₹') ? selectedTestForBooking.price : `₹${selectedTestForBooking.price}`}</strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        <form onSubmit={handleBookingSubmit} className="test-booking-modal-form">
-                            <div className="form-group-custom">
-                                <label>Your Name</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="Enter your full name" 
-                                    value={bookingForm.name}
-                                    onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group-custom">
-                                <label>Mobile Number</label>
-                                <input 
-                                    type="tel" 
-                                    placeholder="Enter 10-digit mobile number" 
-                                    value={bookingForm.mobile}
-                                    onChange={(e) => setBookingForm({ ...bookingForm, mobile: e.target.value })}
-                                    maxLength={10}
-                                    required
-                                />
-                            </div>
-                            <button type="submit" className="btn-booking-submit" disabled={bookingSubmitLoading}>
-                                {bookingSubmitLoading ? 'Submitting...' : 'Confirm Booking'}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
 
             <Footer />
         </>

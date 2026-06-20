@@ -3,6 +3,7 @@ const router = express.Router();
 const availabilityController = require('../controllers/availabilityController');
 
 // Public routes
+router.get('/search', availabilityController.getAvailabilitySearch);
 router.get('/week', availabilityController.getWeekAvailability);
 router.get('/date/:date', availabilityController.getAvailabilityByDate);
 router.get('/', availabilityController.getAvailability);

@@ -3,25 +3,33 @@ const DoctorFAQ = require('../models/DoctorFAQ');
 const initialFaqs = [
     {
         question: "Do I need an appointment for the Government Hospital?",
+        question_hi: "क्या मुझे सरकारी अस्पताल के लिए अपॉइंटमेंट की आवश्यकता है?",
         answer: "For general visits, appointments are on a first-come, first-served basis. However, specialized consultations may require prior booking.",
+        answer_hi: "सामान्य दौरों के लिए, अपॉइंटमेंट पहले आओ, पहले पाओ के आधार पर होते हैं। हालांकि, विशेष परामर्श के लिए पूर्व बुकिंग की आवश्यकता हो सकती है।",
         order: 1,
         isVisible: true
     },
     {
         question: "What documents do I need to carry?",
+        question_hi: "मुझे अपने साथ कौन से दस्तावेज़ ले जाने होंगे?",
         answer: "Please carry a valid government ID (Aadhar Card/Voter ID) and any previous medical records or prescriptions for a better diagnosis.",
+        answer_hi: "बेहतर निदान के लिए कृपया एक वैध सरकारी आईडी (आधार कार्ड/मतदाता पहचान पत्र) और कोई भी पिछला मेडिकल रिकॉर्ड या नुस्खा अपने साथ रखें।",
         order: 2,
         isVisible: true
     },
     {
         question: "Can I book medical tests online?",
+        question_hi: "क्या मैं मेडिकल टेस्ट ऑनलाइन बुक कर सकता हूँ?",
         answer: "Yes, you can browse available tests in the section above and book them directly. You will receive a confirmation time via SMS.",
+        answer_hi: "हाँ, आप ऊपर दिए गए अनुभाग में उपलब्ध परीक्षणों को ब्राउज़ कर सकते हैं और उन्हें सीधे बुक कर सकते हैं। आपको एसएमएस के माध्यम से पुष्टि का समय प्राप्त होगा।",
         order: 3,
         isVisible: true
     },
     {
         question: "Is emergency care available 24/7?",
+        question_hi: "क्या आपातकालीन देखभाल 24/7 उपलब्ध है?",
         answer: "Yes, our emergency doctors are available 24/7. Look for the 'Emergency Available' badge on doctor cards or visit the Emergency section immediately.",
+        answer_hi: "हाँ, हमारे आपातकालीन डॉक्टर 24/7 उपलब्ध हैं। डॉक्टर कार्डों पर 'आपातकालीन उपलब्ध' (Emergency Available) बैज देखें या तुरंत आपातकालीन अनुभाग पर जाएँ।",
         order: 4,
         isVisible: true
     }

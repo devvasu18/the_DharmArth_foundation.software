@@ -6,9 +6,17 @@ const doctorFaqSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    question_hi: {
+        type: String,
+        trim: true
+    },
     answer: {
         type: String,
         required: true,
+        trim: true
+    },
+    answer_hi: {
+        type: String,
         trim: true
     },
     order: {
