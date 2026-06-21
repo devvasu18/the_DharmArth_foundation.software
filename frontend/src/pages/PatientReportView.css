@@ -1,0 +1,239 @@
+.patient-report-container {
+    min-height: 100vh;
+    background-color: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+.patient-report-header {
+    background: white;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding: 16px 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.header-content-report {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand-logo-report {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.patient-report-body {
+    flex: 1;
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+    padding: var(--spacing-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-6);
+}
+
+.report-metadata-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1.5px solid #e2e8f0;
+    padding: var(--spacing-5) var(--spacing-6);
+    box-shadow: var(--shadow-sm);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-4);
+    align-items: center;
+}
+
+.metadata-item-report {
+    display: flex;
+    flex-direction: column;
+}
+
+.metadata-label-report {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.metadata-value-report {
+    font-size: 1.05rem;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.btn-download-pdf-report {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: var(--text-base);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+}
+
+.btn-download-pdf-report:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* PDF Viewer Container */
+.pdf-viewer-card-report {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1.5px solid #e2e8f0;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 600px;
+}
+
+.pdf-viewer-header-report {
+    background: #f8fafc;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.pdf-viewer-iframe-report {
+    width: 100%;
+    height: 100%;
+    border: none;
+    flex: 1;
+}
+
+/* Mobile Warning for PDF Viewer */
+.mobile-view-pdf-warning {
+    display: none;
+    background: #fff9db;
+    border: 1px solid #ffe3e3;
+    padding: var(--spacing-4);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-4);
+    align-items: center;
+    gap: 12px;
+}
+
+/* Expired/Error Screen styling */
+.error-screen-report-wrapper {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-8);
+}
+
+.error-screen-card-report {
+    max-width: 480px;
+    width: 100%;
+    background: white;
+    border-radius: var(--radius-xl);
+    border: 1.5px solid #e2e8f0;
+    padding: var(--spacing-8);
+    text-align: center;
+    box-shadow: var(--shadow-float);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-4);
+}
+
+.error-screen-icon-report {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #fee2e2;
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.error-screen-card-report.expired .error-screen-icon-report {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.error-screen-card-report h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.error-screen-card-report p {
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.btn-home-report {
+    background: #f1f5f9;
+    color: var(--text-main);
+    border: none;
+    padding: 12px 24px;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: var(--text-base);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    margin-top: var(--spacing-2);
+}
+
+.btn-home-report:hover {
+    background: #e2e8f0;
+}
+
+@media (max-width: 768px) {
+    .patient-report-body {
+        padding: var(--spacing-4);
+    }
+
+    .report-metadata-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: var(--spacing-3);
+    }
+
+    .report-metadata-card button,
+    .report-metadata-card a {
+        width: 100%;
+    }
+
+    .mobile-view-pdf-warning {
+        display: flex;
+    }
+
+    .pdf-viewer-card-report {
+        min-height: 400px;
+    }
+}

@@ -6,14 +6,25 @@ const doctorSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    name_hi: {
+        type: String,
+        trim: true
+    },
     title: {
         type: String,
         required: true,
         trim: true // e.g., "Cardiologist", "General Physician"
     },
+    title_hi: {
+        type: String,
+        trim: true
+    },
     experience: {
         type: String,
         required: true // e.g., "12+ Years Experience"
+    },
+    experience_hi: {
+        type: String
     },
     expertiseBadge: {
         type: String,
@@ -87,6 +98,10 @@ const doctorSchema = new mongoose.Schema({
         ref: 'DoctorCategory'
     }],
     description: {
+        type: String,
+        default: ''
+    },
+    description_hi: {
         type: String,
         default: ''
     },

@@ -6,10 +6,44 @@ import Footer from '../components/layout/Footer';
 import { API_BASE_URL } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import { ArrowLeft, Stethoscope, Search, Hospital, Building2, Calendar, Filter, RotateCw, ChevronDown, User, BadgeCheck } from 'lucide-react';
 import './DoctorAvailability.css';
 import SEO from '../components/common/SEO';
 
 const API_URL = `${API_BASE_URL}/api`;
+
+// Helper to format date to YYYY-MM-DD locally to avoid timezone shifts
+const getLocalDateString = (date) => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+// Helper to parse YYYY-MM-DD string into a local Date object set to 00:00:00
+const parseLocalDate = (dateStr) => {
+    if (!dateStr) return new Date();
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+};
+
+const categoryTranslations = {
+    'Cardiologist': 'हृदय रोग विशेषज्ञ (Cardiologist)',
+    'Dentist': 'दंत चिकित्सक (Dentist)',
+    'Dermatologist': 'त्वचा रोग विशेषज्ञ (Dermatologist)',
+    'ENT Specialist': 'नाक-कान-गला विशेषज्ञ (ENT Specialist)',
+    'General Physician': 'सामान्य चिकित्सक (General Physician)',
+    'Gynecologist': 'स्त्री रोग विशेषज्ञ (Gynecologist)',
+    'Orthopedic': 'हड्डी रोग विशेषज्ञ (Orthopedic)',
+    'Pediatrician': 'बाल रोग विशेषज्ञ (Pediatrician)',
+    'Ophthalmologist': 'नेत्र रोग विशेषज्ञ (Ophthalmologist)',
+    'Neurologist': 'नसों के रोग विशेषज्ञ (Neurologist)',
+    'Urologist': 'मूत्र रोग विशेषज्ञ (Urologist)',
+    'Oncologist': 'कैंसर रोग विशेषज्ञ (Oncologist)',
+    'Psychiatrist': 'मनोचिकित्सक (Psychiatrist)',
+    'Surgeon': 'सर्जन (Surgeon)'
+};
 
 const DoctorAvailability = () => {
     const { i18n } = useTranslation();
@@ -117,9 +151,7 @@ const DoctorAvailability = () => {
             setShowSearchModal(false);
 
             // Format date to YYYY-MM-DD locally to avoid timezone shifts
-            const offset = searchDate.getTimezoneOffset();
-            const localDate = new Date(searchDate.getTime() - (offset * 60 * 1000));
-            const dateStr = localDate.toISOString().split('T')[0];
+            const dateStr = getLocalDateString(searchDate);
 
             const response = await fetch(
                 `${API_URL}/availability/search?hospitalType=${selectedType}&categoryId=${searchCategoryId}&date=${dateStr}`
@@ -219,7 +251,7 @@ const DoctorAvailability = () => {
 
                 const startMinutes = timeToMinutes(slot.startTime);
                 const endMinutes = timeToMinutes(slot.endTime);
-                
+
                 // Handle cross-midnight shifts (e.g., 9 PM to 12 AM or 12 PM next day)
                 const adjustedEnd = (endMinutes <= startMinutes) ? endMinutes + 1440 : endMinutes;
 
@@ -342,7 +374,7 @@ const DoctorAvailability = () => {
 
     return (
         <>
-            <SEO 
+            <SEO
                 title="Doctor Availability & Government Hospital Services in Sujangarh"
                 description="Check live doctor availability and updates on government hospital services in Sujangarh, Churu District, Rajasthan. Get healthcare assistance and diagnostic test guides from The DharmArth Foundation."
                 keywords="Doctor Availability, Government Hospital Services, Sujangarh Hospital, Rajasthan Doctor Booking, Diagnostic Tests, Sujangarh doctors, Healthcare assistance Rajasthan"
@@ -353,24 +385,7 @@ const DoctorAvailability = () => {
                 {/* Hero Section */}
                 <div className="availability-hero">
                     <div className="container">
-                        <h1>Doctor Availability & Government Hospital Services in Sujangarh</h1>
                         <p>Check doctor schedules, clinics, and hospital updates in Sujangarh, Churu District, Rajasthan</p>
-                    </div>
-                </div>
-
-                {/* Medicine Order Promo */}
-                <div className="medicine-promo-banner">
-                    <div className="container">
-                        <div className="promo-card glassmorphism-modern">
-                            <div className="promo-content">
-                                <div className="promo-icon">💊</div>
-                                <div className="promo-text">
-                                    <h3>Need Medicines?</h3>
-                                    <p>Upload your doctor's prescription and get medicines delivered via our express express service.</p>
-                                </div>
-                                <button className="btn-primary-modern" onClick={() => navigate('/order-medicine')}>Order Now</button>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -391,8 +406,12 @@ const DoctorAvailability = () => {
                             {!selectedType && (
                                 <div className="category-view">
                                     <div className="category-view-header" style={{ textAlign: 'center', marginBottom: '40px', padding: '20px 0' }}>
-                                        <h2 style={{ fontSize: '2rem', fontWeight: '800', color: '#1e293b', margin: '0 0 10px 0' }}>Select Hospital Setting</h2>
-                                        <p style={{ fontSize: '1.1rem', color: '#64748b', margin: 0 }}>Choose a facility to find available doctors and schedules</p>
+                                        <h2 style={{ fontSize: '2rem', fontWeight: '800', color: '#1e293b', margin: '0 0 10px 0' }}>
+                                            {i18n.language === 'hi' ? 'अस्पताल सेटिंग चुनें' : 'Select Hospital Setting'}
+                                        </h2>
+                                        <p style={{ fontSize: '1.1rem', color: '#64748b', margin: 0 }}>
+                                            {i18n.language === 'hi' ? 'उपलब्ध डॉक्टरों और शेड्यूल को खोजने के लिए एक सुविधा चुनें' : 'Choose a facility to find available doctors and schedules'}
+                                        </p>
                                     </div>
 
                                     <div className="category-options">
@@ -401,9 +420,9 @@ const DoctorAvailability = () => {
                                             onClick={() => handleTypeSelect('government')}
                                         >
                                             <div className="category-icon">🏥</div>
-                                            <h3>Government Hospital</h3>
-                                            <p>Scheduled appointments</p>
-                                            <div className="category-badge">Scheduled</div>
+                                            <h3>{i18n.language === 'hi' ? 'सरकारी अस्पताल' : 'Government Hospital'}</h3>
+                                            <p>{i18n.language === 'hi' ? 'निर्धारित नियुक्तियां' : 'Scheduled appointments'}</p>
+                                            <div className="category-badge">{i18n.language === 'hi' ? 'निर्धारित' : 'Scheduled'}</div>
                                         </div>
 
                                         <div
@@ -411,9 +430,9 @@ const DoctorAvailability = () => {
                                             onClick={() => handleTypeSelect('clinic')}
                                         >
                                             <div className="category-icon">🏨</div>
-                                            <h3>Private Clinic</h3>
-                                            <p>High availability doctors</p>
-                                            <div className="category-badge priority">High Availability</div>
+                                            <h3>{i18n.language === 'hi' ? 'निजी क्लिनिक' : 'Private Clinic'}</h3>
+                                            <p>{i18n.language === 'hi' ? 'उच्च उपलब्धता वाले डॉक्टर' : 'High availability doctors'}</p>
+                                            <div className="category-badge priority">{i18n.language === 'hi' ? 'उच्च उपलब्धता' : 'High Availability'}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -424,44 +443,80 @@ const DoctorAvailability = () => {
                                 <div className="doctors-view">
                                     <div className="premium-header-card">
                                         <div className="header-left">
-                                            <button className="btn-back-circle" onClick={handleBackToTypeSelection}>
-                                                <span className="back-arrow">←</span>
+                                            <button className="btn-back-square" onClick={handleBackToTypeSelection}>
+                                                <ArrowLeft className="back-arrow-icon" size={20} />
                                             </button>
+                                            
+                                            <div className="header-divider-line"></div>
+                                            
+                                            <div className="category-avatar-bubble">
+                                                {selectedType === 'government' ? (
+                                                    <Hospital size={22} className="category-avatar-icon" />
+                                                ) : (
+                                                    <Building2 size={22} className="category-avatar-icon" />
+                                                )}
+                                            </div>
+
                                             <div className="category-info-mini">
-                                                <span className="category-label">
-                                                    {selectedType === 'government' ? '🏥 Government Hospital' : '🏨 Private Clinic'}
-                                                </span>
+                                                <div className="category-label-wrapper">
+                                                    <span className="category-label-text">
+                                                        {selectedType === 'government' ? (
+                                                            i18n.language === 'hi' ? 'सरकारी अस्पताल' : 'Government Hospital'
+                                                        ) : (
+                                                            i18n.language === 'hi' ? 'निजी क्लिनिक' : 'Private Clinic'
+                                                        )}
+                                                    </span>
+                                                    <BadgeCheck size={14} className="verified-badge-icon" />
+                                                </div>
+                                                
                                                 <h2 className="category-name-modern">
                                                     {searchCategoryId === 'all'
-                                                        ? '🩺 All Specialists'
+                                                        ? (i18n.language === 'hi' ? 'सभी विशेषज्ञ' : 'All Specialists')
                                                         : searchCategoryId && searchCategories.find(c => c._id === searchCategoryId)
-                                                            ? `${searchCategories.find(c => c._id === searchCategoryId).icon || '🩺'} ${searchCategories.find(c => c._id === searchCategoryId).name}`
-                                                            : 'Specialist Search'}
+                                                            ? (i18n.language === 'hi'
+                                                                ? (categoryTranslations[searchCategories.find(c => c._id === searchCategoryId).name] || searchCategories.find(c => c._id === searchCategoryId).name)
+                                                                : searchCategories.find(c => c._id === searchCategoryId).name)
+                                                            : (i18n.language === 'hi' ? 'विशेषज्ञ खोज' : 'Specialist Search')}
                                                 </h2>
                                             </div>
                                         </div>
 
-                                        <div className="header-right">
-                                            <div className="date-selection-chip" onClick={() => setShowSearchModal(true)}>
-                                                <div className="chip-icon">🔍</div>
-                                                <div className="chip-content">
-                                                    <span className="chip-value">
-                                                        {searchDate?.toLocaleDateString('en-US', {
-                                                            weekday: 'long',
-                                                            month: 'long',
-                                                            day: 'numeric'
-                                                        })}
-                                                    </span>
-                                                </div>
-                                                <span className="chip-action">Modify</span>
-                                            </div>
+                                        <div className="header-right-actions">
+                                            {/* Date Selector Button */}
+                                            <button className="action-btn-date" onClick={() => setShowSearchModal(true)}>
+                                                <Calendar size={15} className="action-icon-green" />
+                                                <span className="action-btn-text">
+                                                    {searchDate?.toLocaleDateString(i18n.language === 'hi' ? 'hi-IN' : 'en-US', {
+                                                        weekday: 'long',
+                                                        month: 'long',
+                                                        day: 'numeric'
+                                                    })}
+                                                </span>
+                                                <ChevronDown size={14} className="action-chevron" />
+                                            </button>
+
+                                            {/* Filter Button */}
+                                            <button className="action-btn-filter" onClick={() => setShowSearchModal(true)}>
+                                                <Filter size={15} className="action-icon-green" />
+                                                <span className="action-btn-text">
+                                                    {i18n.language === 'hi' ? 'फ़िल्टर' : 'Filter'}
+                                                </span>
+                                            </button>
+
+                                            {/* Change/Modify Button */}
+                                            <button className="action-btn-change" onClick={() => setShowSearchModal(true)}>
+                                                <RotateCw size={14} className="action-icon-white" />
+                                                <span className="action-btn-text">
+                                                    {i18n.language === 'hi' ? 'बदलें' : 'Modify'}
+                                                </span>
+                                            </button>
                                         </div>
                                     </div>
 
                                     {searching ? (
                                         <div className="loading-doctors">
                                             <div className="loading-spinner"></div>
-                                            <p>Searching for available doctors...</p>
+                                            <p>{i18n.language === 'hi' ? 'उपलब्ध डॉक्टरों की खोज की जा रही है...' : 'Searching for available doctors...'}</p>
                                         </div>
                                     ) : searchResult ? (
                                         <>
@@ -470,9 +525,12 @@ const DoctorAvailability = () => {
                                                 <div className="fallback-notice-banner" style={{ background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '12px', padding: '16px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 2px 4px rgba(251, 191, 36, 0.05)' }}>
                                                     <div style={{ fontSize: '1.8rem' }}>⚠️</div>
                                                     <div>
-                                                        <h4 style={{ margin: '0 0 4px 0', color: '#b45309', fontWeight: '700', fontSize: '0.95rem' }}>No doctors are available on the selected date.</h4>
+                                                        <h4 style={{ margin: '0 0 4px 0', color: '#b45309', fontWeight: '700', fontSize: '0.95rem' }}>
+                                                            {i18n.language === 'hi' ? 'चयनित तिथि पर कोई डॉक्टर उपलब्ध नहीं हैं।' : 'No doctors are available on the selected date.'}
+                                                        </h4>
                                                         <p style={{ margin: 0, color: '#d97706', fontSize: '0.85rem', fontWeight: '600' }}>
-                                                            Next available date for this category: {new Date(searchResult.nextAvailableDate).toLocaleDateString('en-GB')}
+                                                            {i18n.language === 'hi' ? 'इस श्रेणी के लिए अगली उपलब्ध तिथि: ' : 'Next available date for this category: '}
+                                                            {new Date(searchResult.nextAvailableDate).toLocaleDateString(i18n.language === 'hi' ? 'hi-IN' : 'en-GB')}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -495,9 +553,9 @@ const DoctorAvailability = () => {
                                                             >
                                                                 <div className="doctor-photo">
                                                                     {avail.doctorId.photo ? (
-                                                                        <img 
-                                                                            src={avail.doctorId.photo.startsWith('http') ? avail.doctorId.photo : `${API_BASE_URL}${avail.doctorId.photo.startsWith('/') ? '' : '/'}${avail.doctorId.photo}`} 
-                                                                            alt={`Dr. ${avail.doctorId.name} - Doctor Availability`} 
+                                                                        <img
+                                                                            src={avail.doctorId.photo.startsWith('http') ? avail.doctorId.photo : `${API_BASE_URL}${avail.doctorId.photo.startsWith('/') ? '' : '/'}${avail.doctorId.photo}`}
+                                                                            alt={`Dr. ${avail.doctorId.name} - Doctor Availability`}
                                                                         />
                                                                     ) : (
                                                                         <div className="photo-placeholder">👨‍⚕️</div>
@@ -505,49 +563,78 @@ const DoctorAvailability = () => {
                                                                 </div>
 
                                                                 <div className="doctor-details">
-                                                                    <h3>{avail.doctorId.name}</h3>
+                                                                    <h3>{i18n.language === 'hi' ? (avail.doctorId.name_hi || avail.doctorId.name) : avail.doctorId.name}</h3>
                                                                     <div className="doctor-meta-row">
-                                                                        <span className="doctor-title">{avail.doctorId.title}</span>
-                                                                        <span className="doctor-experience">- {avail.doctorId.experience}</span>
+                                                                        <span className="doctor-title">{i18n.language === 'hi' ? (avail.doctorId.title_hi || avail.doctorId.title) : avail.doctorId.title}</span>
+                                                                        <span className="doctor-experience">- {i18n.language === 'hi' ? (avail.doctorId.experience_hi || avail.doctorId.experience) : avail.doctorId.experience}</span>
                                                                     </div>
 
-                                                                    {avail.doctorId.description && (
+                                                                    {(i18n.language === 'hi' ? (avail.doctorId.description_hi || avail.doctorId.description) : avail.doctorId.description) && (
                                                                         <p className="doctor-description-text">
-                                                                            {avail.doctorId.description}
+                                                                            {i18n.language === 'hi' ? (avail.doctorId.description_hi || avail.doctorId.description) : avail.doctorId.description}
                                                                         </p>
                                                                     )}
 
                                                                     {avail.hospitalType === 'clinic' && avail.doctorId.privateFee !== undefined && avail.doctorId.privateFee > 0 && (
                                                                         <div className="doctor-fee-row">
                                                                             <span>💵</span>
-                                                                            <span>Fee: ₹{avail.doctorId.privateFee}</span>
+                                                                            <span>{i18n.language === 'hi' ? 'फीस' : 'Fee'}: ₹{avail.doctorId.privateFee}</span>
                                                                         </div>
                                                                     )}
 
                                                                     <div className="doctor-badges">
                                                                         {!isUpcoming && (
-                                                                            <div className={`availability-status ${
-                                                                                availabilityInfo.isAvailableNow ? 'available' : 
-                                                                                (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available') ? 'closed' : 
-                                                                                'upcoming'
-                                                                            }`}>
+                                                                            <div className={`availability-status ${availabilityInfo.isAvailableNow ? 'available' :
+                                                                                (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available') ? 'closed' :
+                                                                                    'upcoming'
+                                                                                }`}>
                                                                                 <span>
-                                                                                    {availabilityInfo.isAvailableNow ? '●' : 
-                                                                                     (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available') ? '✕' : 
-                                                                                     '🕒'}
+                                                                                    {availabilityInfo.isAvailableNow ? '●' :
+                                                                                        (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available') ? '✕' :
+                                                                                            '🕒'}
                                                                                 </span>
-                                                                                <span>{availabilityInfo.status}</span>
+                                                                                <span>
+                                                                                    {i18n.language === 'hi' ? (() => {
+                                                                                        const status = availabilityInfo.status;
+                                                                                        if (status === 'Available Now') return 'अभी उपलब्ध';
+                                                                                        if (status === 'Not Available Today') return 'आज उपलब्ध नहीं';
+                                                                                        if (status === 'Shift Ended') return 'शिफ्ट समाप्त';
+                                                                                        if (status === 'Not Available') return 'उपलब्ध नहीं';
+                                                                                        if (status === 'Scheduled') return 'निर्धारित';
+                                                                                        if (status.startsWith('Available in')) {
+                                                                                            return status.replace('Available in', '').replace('minutes', 'मिनट में उपलब्ध').replace('hours', 'घंटे में उपलब्ध').replace('hour', 'घंटे में उपलब्ध').trim();
+                                                                                        }
+                                                                                        if (status.startsWith('Available at')) {
+                                                                                            return status.replace('Available at', '').trim() + ' पर उपलब्ध';
+                                                                                        }
+                                                                                        return status;
+                                                                                    })() : availabilityInfo.status}
+                                                                                </span>
                                                                             </div>
                                                                         )}
 
                                                                         {avail.emergencyAvailable && (
                                                                             <div className="emergency-available">
                                                                                 <span>🚨</span>
-                                                                                <span>Emergency Available</span>
+                                                                                <span>{i18n.language === 'hi' ? 'आपातकालीन उपलब्ध' : 'Emergency Available'}</span>
                                                                             </div>
                                                                         )}
                                                                     </div>
                                                                 </div>
+
+                                                                {!searchResult.available && searchResult.nextAvailableDate && (
+                                                                    <div className="doctor-next-date-tag">
+                                                                        <Calendar size={13} className="tag-icon" />
+                                                                        <span>
+                                                                            {i18n.language === 'hi' ? 'अगली उपलब्धता: ' : 'Next Available: '}
+                                                                            {new Date(searchResult.nextAvailableDate).toLocaleDateString(i18n.language === 'hi' ? 'hi-IN' : 'en-US', {
+                                                                                weekday: 'short',
+                                                                                month: 'short',
+                                                                                day: 'numeric'
+                                                                            })}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
 
                                                                 <div className="time-slots">
                                                                     {avail.timeSlots.map((slot, idx) => (
@@ -557,8 +644,8 @@ const DoctorAvailability = () => {
                                                                                 <span className="slot-time">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
 
                                                                                 <div className={`slot-status ${slot.status.toLowerCase().replace(' ', '-')}`}>
-                                                                                    {slot.status === 'Available' && '✓ Available'}
-                                                                                    {slot.status === 'Not Available' && '✗ Not Available'}
+                                                                                    {slot.status === 'Available' && (i18n.language === 'hi' ? '✓ उपलब्ध' : '✓ Available')}
+                                                                                    {slot.status === 'Not Available' && (i18n.language === 'hi' ? '✗ उपलब्ध नहीं' : '✗ Not Available')}
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -573,14 +660,18 @@ const DoctorAvailability = () => {
                                                     <div className="premium-blank-illustration">
                                                         <span className="illustration-emoji">😔</span>
                                                     </div>
-                                                    <h3>No Doctors Available</h3>
-                                                    <p>{searchResult.message || 'There are no doctors scheduled for this category in the near future. Please select a different category or change the hospital setting.'}</p>
+                                                    <h3>{i18n.language === 'hi' ? 'कोई डॉक्टर उपलब्ध नहीं है' : 'No Doctors Available'}</h3>
+                                                    <p>
+                                                        {searchResult.message || (i18n.language === 'hi' 
+                                                            ? 'निकट भविष्य में इस श्रेणी के लिए कोई डॉक्टर निर्धारित नहीं हैं। कृपया एक अलग श्रेणी चुनें या अस्पताल सेटिंग बदलें।' 
+                                                            : 'There are no doctors scheduled for this category in the near future. Please select a different category or change the hospital setting.')}
+                                                    </p>
                                                     <div className="blank-actions">
                                                         <button className="btn-primary-modern" onClick={() => setShowSearchModal(true)}>
-                                                            Modify Search
+                                                            {i18n.language === 'hi' ? 'खोज बदलें' : 'Modify Search'}
                                                         </button>
                                                         <button className="btn-secondary-modern" onClick={handleBackToTypeSelection}>
-                                                            Change Hospital
+                                                            {i18n.language === 'hi' ? 'अस्पताल बदलें' : 'Change Hospital'}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -591,11 +682,11 @@ const DoctorAvailability = () => {
                                             <div className="premium-blank-illustration">
                                                 <span className="illustration-emoji">🔍</span>
                                             </div>
-                                            <h3>No Search Results</h3>
-                                            <p>Please click below to define your search parameters.</p>
+                                            <h3>{i18n.language === 'hi' ? 'कोई खोज परिणाम नहीं' : 'No Search Results'}</h3>
+                                            <p>{i18n.language === 'hi' ? 'कृपया अपने खोज मापदंडों को परिभाषित करने के लिए नीचे क्लिक करें।' : 'Please click below to define your search parameters.'}</p>
                                             <div className="blank-actions">
                                                 <button className="btn-primary-modern" onClick={() => setShowSearchModal(true)}>
-                                                    Search Doctors
+                                                    {i18n.language === 'hi' ? 'डॉक्टरों की खोज करें' : 'Search Doctors'}
                                                 </button>
                                             </div>
                                         </div>
@@ -608,32 +699,36 @@ const DoctorAvailability = () => {
                                 <div className="date-picker-overlay" onClick={() => setShowSearchModal(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
                                     <div className="date-picker-modal search-modal-premium" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', width: '90%', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', border: '1px solid rgba(255, 255, 255, 0.8)', background: 'white' }}>
                                         <div className="date-picker-header" style={{ padding: '20px 24px 15px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b', margin: 0 }}>Find a Doctor</h3>
+                                            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b', margin: 0 }}>{i18n.language === 'hi' ? 'डॉक्टर खोजें' : 'Find a Doctor'}</h3>
                                             <button className="close-btn" onClick={() => setShowSearchModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b' }}>×</button>
                                         </div>
                                         <form onSubmit={handleSearchSubmit} style={{ padding: '24px' }}>
                                             {/* Search/Filter dropdown */}
                                             <div className="form-group" style={{ marginBottom: '20px' }}>
-                                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Select Specialist</label>
-                                                
+                                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>{i18n.language === 'hi' ? 'विशेषज्ञ चुनें' : 'Select Specialist'}</label>
+
                                                 <div style={{ position: 'relative' }}>
                                                     <input
                                                         type="text"
                                                         value={searchQuery}
                                                         onChange={(e) => {
-                                                            setSearchQuery(e.target.value);
-                                                            // Clear selected if they search something else
-                                                            const val = e.target.value.toLowerCase();
-                                                            const exactMatch = searchCategories.find(c => c.name.toLowerCase() === val);
+                                                            const val = e.target.value;
+                                                            setSearchQuery(val);
+                                                            const lowerVal = val.toLowerCase().trim();
+                                                            const exactMatch = searchCategories.find(c => {
+                                                                const engName = c.name.toLowerCase();
+                                                                const hiName = (categoryTranslations[c.name] || '').toLowerCase();
+                                                                return engName === lowerVal || hiName === lowerVal;
+                                                            });
                                                             if (exactMatch) {
                                                                 setSearchCategoryId(exactMatch._id);
-                                                            } else if (val === 'all' || val === 'all specialists') {
+                                                            } else if (lowerVal === 'all' || lowerVal === 'all specialists' || lowerVal === 'सभी' || lowerVal === 'सभी विशेषज्ञ') {
                                                                 setSearchCategoryId('all');
                                                             } else {
                                                                 setSearchCategoryId('');
                                                             }
                                                         }}
-                                                        placeholder="Which specialist are you looking for?"
+                                                        placeholder={i18n.language === 'hi' ? 'आप किस विशेषज्ञ की तलाश कर रहे हैं?' : 'Which specialist are you looking for?'}
                                                         style={{ width: '100%', padding: '10px 12px 10px 36px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.95rem', background: '#f8fafc' }}
                                                         required
                                                     />
@@ -650,70 +745,91 @@ const DoctorAvailability = () => {
                                                     background: 'white',
                                                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
                                                 }}>
-                                                    {("all specialists".includes(searchQuery.toLowerCase()) || "all".includes(searchQuery.toLowerCase()) || searchQuery === '') && (
-                                                        <div
-                                                            onClick={() => {
-                                                                setSearchCategoryId('all');
-                                                                setSearchQuery('All Specialists');
-                                                            }}
-                                                            style={{
-                                                                padding: '10px 14px',
-                                                                cursor: 'pointer',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: '8px',
-                                                                fontSize: '0.9rem',
-                                                                fontWeight: searchCategoryId === 'all' ? '600' : '400',
-                                                                background: searchCategoryId === 'all' ? '#eff6ff' : 'transparent',
-                                                                color: searchCategoryId === 'all' ? '#1d4ed8' : '#334155',
-                                                                borderBottom: '1px solid #f1f5f9'
-                                                            }}
-                                                        >
-                                                            <span>🩺</span>
-                                                            <span>All Specialists</span>
-                                                        </div>
-                                                    )}
-                                                    {searchCategories
-                                                        .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                                                        .map(c => (
-                                                            <div
-                                                                key={c._id}
-                                                                onClick={() => {
-                                                                    setSearchCategoryId(c._id);
-                                                                    setSearchQuery(c.name);
-                                                                }}
-                                                                style={{
-                                                                    padding: '10px 14px',
-                                                                    cursor: 'pointer',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    gap: '8px',
-                                                                    fontSize: '0.9rem',
-                                                                    fontWeight: searchCategoryId === c._id ? '600' : '400',
-                                                                    background: searchCategoryId === c._id ? '#eff6ff' : 'transparent',
-                                                                    color: searchCategoryId === c._id ? '#1d4ed8' : '#334155',
-                                                                    borderBottom: '1px solid #f1f5f9'
-                                                                }}
-                                                            >
-                                                                <span>{c.icon || '🩺'}</span>
-                                                                <span>{c.name}</span>
-                                                            </div>
-                                                        ))}
-                                                    {searchCategories.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 &&
-                                                        !("all specialists".includes(searchQuery.toLowerCase()) || "all".includes(searchQuery.toLowerCase()) || searchQuery === '') && (
-                                                            <div style={{ padding: '12px', color: '#64748b', fontSize: '0.9rem', textAlign: 'center' }}>No specialist found</div>
-                                                        )}
+                                                    {(() => {
+                                                        const lowerQuery = searchQuery.toLowerCase().trim();
+                                                        const showAllSpecialists = 
+                                                            lowerQuery === '' || 
+                                                            'all specialists'.includes(lowerQuery) || 
+                                                            'all'.includes(lowerQuery) || 
+                                                            'सभी विशेषज्ञ'.includes(lowerQuery) || 
+                                                            'सभी'.includes(lowerQuery);
+
+                                                        const filteredCategories = searchCategories.filter(c => {
+                                                            const engName = c.name.toLowerCase();
+                                                            const hiName = (categoryTranslations[c.name] || '').toLowerCase();
+                                                            return engName.includes(lowerQuery) || hiName.includes(lowerQuery);
+                                                        });
+
+                                                        return (
+                                                            <>
+                                                                {showAllSpecialists && (
+                                                                    <div
+                                                                        onClick={() => {
+                                                                            setSearchCategoryId('all');
+                                                                            setSearchQuery(i18n.language === 'hi' ? 'सभी विशेषज्ञ' : 'All Specialists');
+                                                                        }}
+                                                                        style={{
+                                                                            padding: '10px 14px',
+                                                                            cursor: 'pointer',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '8px',
+                                                                            fontSize: '0.9rem',
+                                                                            fontWeight: searchCategoryId === 'all' ? '600' : '400',
+                                                                            background: searchCategoryId === 'all' ? '#e6faf5' : 'transparent',
+                                                                            color: searchCategoryId === 'all' ? '#00bf9a' : '#334155',
+                                                                            borderBottom: '1px solid #f1f5f9'
+                                                                        }}
+                                                                    >
+                                                                        <span>🩺</span>
+                                                                        <span>{i18n.language === 'hi' ? 'सभी विशेषज्ञ' : 'All Specialists'}</span>
+                                                                    </div>
+                                                                )}
+                                                                {filteredCategories.map(c => (
+                                                                    <div
+                                                                        key={c._id}
+                                                                        onClick={() => {
+                                                                            setSearchCategoryId(c._id);
+                                                                            setSearchQuery(i18n.language === 'hi' ? (categoryTranslations[c.name] || c.name) : c.name);
+                                                                        }}
+                                                                        style={{
+                                                                            padding: '10px 14px',
+                                                                            cursor: 'pointer',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '8px',
+                                                                            fontSize: '0.9rem',
+                                                                            fontWeight: searchCategoryId === c._id ? '600' : '400',
+                                                                            background: searchCategoryId === c._id ? '#e6faf5' : 'transparent',
+                                                                            color: searchCategoryId === c._id ? '#00bf9a' : '#334155',
+                                                                            borderBottom: '1px solid #f1f5f9'
+                                                                        }}
+                                                                    >
+                                                                        <span>{c.icon || '🩺'}</span>
+                                                                        <span>{i18n.language === 'hi' ? (categoryTranslations[c.name] || c.name) : c.name}</span>
+                                                                    </div>
+                                                                ))}
+                                                                {!showAllSpecialists && filteredCategories.length === 0 && (
+                                                                    <div style={{ padding: '12px', color: '#64748b', fontSize: '0.9rem', textAlign: 'center' }}>
+                                                                        {i18n.language === 'hi' ? 'कोई विशेषज्ञ नहीं मिला' : 'No specialist found'}
+                                                                    </div>
+                                                                )}
+                                                            </>
+                                                        );
+                                                    })()}
                                                 </div>
                                             </div>
 
                                             {/* Date selection */}
                                             <div className="form-group" style={{ marginBottom: '24px' }}>
-                                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>Preferred Date</label>
+                                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
+                                                    {i18n.language === 'hi' ? 'पसंदीदा तिथि' : 'Preferred Date'}
+                                                </label>
                                                 <input
                                                     type="date"
-                                                    value={searchDate.toISOString().split('T')[0]}
-                                                    min={new Date().toISOString().split('T')[0]}
-                                                    onChange={(e) => setSearchDate(new Date(e.target.value))}
+                                                    value={getLocalDateString(searchDate)}
+                                                    min={getLocalDateString(new Date())}
+                                                    onChange={(e) => setSearchDate(parseLocalDate(e.target.value))}
                                                     style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.95rem', background: '#f8fafc' }}
                                                     required
                                                 />
@@ -726,7 +842,7 @@ const DoctorAvailability = () => {
                                                     onClick={() => setShowSearchModal(false)}
                                                     style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #cbd5e1', background: 'white', color: '#475569', cursor: 'pointer', fontWeight: '600' }}
                                                 >
-                                                    Cancel
+                                                    {i18n.language === 'hi' ? 'रद्द करें' : 'Cancel'}
                                                 </button>
                                                 <button
                                                     type="submit"
@@ -736,14 +852,14 @@ const DoctorAvailability = () => {
                                                         padding: '10px 20px',
                                                         borderRadius: '8px',
                                                         border: 'none',
-                                                        background: !searchCategoryId ? '#94a3b8' : 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                                                        background: !searchCategoryId ? '#94a3b8' : 'linear-gradient(135deg, #00bf9a, #00bf9a)',
                                                         color: 'white',
                                                         cursor: !searchCategoryId ? 'not-allowed' : 'pointer',
                                                         fontWeight: '600',
-                                                        boxShadow: !searchCategoryId ? 'none' : '0 4px 6px -1px rgba(37, 99, 235, 0.2)'
+                                                        boxShadow: !searchCategoryId ? 'none' : '0 4px 6px -1px rgba(0, 191, 154, 0.2)'
                                                     }}
                                                 >
-                                                    Find Availability
+                                                    {i18n.language === 'hi' ? 'उपलब्धता खोजें' : 'Find Availability'}
                                                 </button>
                                             </div>
                                         </form>
@@ -768,35 +884,39 @@ const DoctorAvailability = () => {
                             <div className="emergency-doctors-grid">
                                 {filteredEmergencyDoctors.map(doctor => (
                                     <div key={doctor._id} className="emergency-doctor-card">
-                                        <div className="emergency-badge-float">Available Now</div>
+                                        <div className="emergency-badge-float">{i18n.language === 'hi' ? 'अभी उपलब्ध' : 'Available Now'}</div>
                                         <div className="doctor-photo">
                                             {doctor.photo ? (
-                                                <img 
-                                                    src={doctor.photo.startsWith('http') ? doctor.photo : `${API_BASE_URL}${doctor.photo.startsWith('/') ? '' : '/'}${doctor.photo}`} 
-                                                    alt={`Dr. ${doctor.name} - Emergency Doctor at The DharmArth Foundation`} 
+                                                <img
+                                                    src={doctor.photo.startsWith('http') ? doctor.photo : `${API_BASE_URL}${doctor.photo.startsWith('/') ? '' : '/'}${doctor.photo}`}
+                                                    alt={`Dr. ${doctor.name} - Emergency Doctor at The DharmArth Foundation`}
                                                 />
                                             ) : (
                                                 <div className="photo-placeholder">👨‍⚕️</div>
                                             )}
                                         </div>
-                                        <h3>{doctor.name}</h3>
-                                        <p className="doctor-title">{doctor.title}</p>
+                                        <h3>{i18n.language === 'hi' ? (doctor.name_hi || doctor.name) : doctor.name}</h3>
+                                        <p className="doctor-title">{i18n.language === 'hi' ? (doctor.title_hi || doctor.title) : doctor.title}</p>
 
-                                        {doctor.description && (
+                                        {(i18n.language === 'hi' ? (doctor.description_hi || doctor.description) : doctor.description) && (
                                             <p className="doctor-description-text" style={{ textAlign: 'left' }}>
-                                                {doctor.description}
+                                                {i18n.language === 'hi' ? (doctor.description_hi || doctor.description) : doctor.description}
                                             </p>
                                         )}
 
                                         {(doctor.type === 'clinic' || doctor.type === 'both') && doctor.privateFee !== undefined && doctor.privateFee > 0 && (
                                             <div className="doctor-fee-row" style={{ margin: '8px auto' }}>
                                                 <span>💵</span>
-                                                <span>Fee: ₹{doctor.privateFee}</span>
+                                                <span>{i18n.language === 'hi' ? 'फीस' : 'Fee'}: ₹{doctor.privateFee}</span>
                                             </div>
                                         )}
 
                                         <div className={`doctor-type-badge ${doctor.type}`}>
-                                            {doctor.type === 'clinic' ? '🏨 Private Clinic' : doctor.type === 'government' ? '🏥 Government Hospital' : '🏥 Works in Both'}
+                                            {i18n.language === 'hi' ? (
+                                                doctor.type === 'clinic' ? '🏨 निजी क्लिनिक' : doctor.type === 'government' ? '🏥 सरकारी अस्पताल' : '🏥 दोनों में कार्यरत'
+                                            ) : (
+                                                doctor.type === 'clinic' ? '🏨 Private Clinic' : doctor.type === 'government' ? '🏥 Government Hospital' : '🏥 Works in Both'
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -805,58 +925,45 @@ const DoctorAvailability = () => {
                     </div>
                 )}
 
-                {/* Helpline Banner */}
-                <div className="helpline-banner">
+
+
+
+                {/* FAQ Section */}
+                <div className="faq-section">
                     <div className="container">
-                        <div className="helpline-content">
-                            <div className="helpline-icon">📞</div>
-                            <div className="helpline-text">
-                                <h3>Need immediate assistance?</h3>
-                                <p>Can't find a doctor? Our support team is here to help you find the nearest available facility.</p>
-                            </div>
-                            <button className="btn-call-helpline" onClick={() => window.location.href = 'tel:108'}>Call Now</button>
+                        <div className="section-header center-text">
+                            <h2>Common Questions</h2>
+                            <p>Everything you need to know about our services</p>
+                        </div>
+
+                        <div className="faq-grid">
+                            {loadingFaqs ? (
+                                <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
+                                    Loading questions...
+                                </div>
+                            ) : doctorFaqs.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
+                                    No FAQs available currently.
+                                </div>
+                            ) : (
+                                doctorFaqs.map((faq, index) => (
+                                    <div
+                                        key={faq._id}
+                                        className={`faq-item ${openFaqIndex === index ? 'open' : ''}`}
+                                        onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
+                                    >
+                                        <div className="faq-question">
+                                            <h3>{(i18n.language?.startsWith('hi') && faq.question_hi) ? faq.question_hi : faq.question}</h3>
+                                            <span className="faq-toggle">{openFaqIndex === index ? '−' : '+'}</span>
+                                        </div>
+                                        <div className="faq-answer">
+                                            <p>{(i18n.language?.startsWith('hi') && faq.answer_hi) ? faq.answer_hi : faq.answer}</p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
-                </div>
-
-
-
-                    {/* FAQ Section */}
-                    <div className="faq-section">
-                        <div className="container">
-                            <div className="section-header center-text">
-                                <h2>Common Questions</h2>
-                                <p>Everything you need to know about our services</p>
-                            </div>
-
-                            <div className="faq-grid">
-                                {loadingFaqs ? (
-                                    <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
-                                        Loading questions...
-                                    </div>
-                                ) : doctorFaqs.length === 0 ? (
-                                    <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
-                                        No FAQs available currently.
-                                    </div>
-                                ) : (
-                                    doctorFaqs.map((faq, index) => (
-                                        <div
-                                            key={faq._id}
-                                            className={`faq-item ${openFaqIndex === index ? 'open' : ''}`}
-                                            onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
-                                        >
-                                            <div className="faq-question">
-                                                <h3>{(i18n.language?.startsWith('hi') && faq.question_hi) ? faq.question_hi : faq.question}</h3>
-                                                <span className="faq-toggle">{openFaqIndex === index ? '−' : '+'}</span>
-                                            </div>
-                                            <div className="faq-answer">
-                                                <p>{(i18n.language?.startsWith('hi') && faq.answer_hi) ? faq.answer_hi : faq.answer}</p>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
                 </div>
             </div>
 

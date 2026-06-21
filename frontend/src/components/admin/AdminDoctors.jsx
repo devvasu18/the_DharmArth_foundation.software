@@ -41,8 +41,11 @@ const AdminDoctors = () => {
 
     const [formData, setFormData] = useState({
         name: '',
+        name_hi: '',
         title: '',
+        title_hi: '',
         experience: '',
+        experience_hi: '',
         expertiseBadge: 'Professional Doctor',
         type: 'government',
         priority: 0,
@@ -58,6 +61,7 @@ const AdminDoctors = () => {
         dateSpecificTimeSlots: [],
         categories: [],
         description: '',
+        description_hi: '',
         privateFee: 0
     });
 
@@ -234,6 +238,9 @@ const AdminDoctors = () => {
             setEditingDoctor(doctor);
             setFormData({
                 ...doctor,
+                name_hi: doctor.name_hi || '',
+                title_hi: doctor.title_hi || '',
+                experience_hi: doctor.experience_hi || '',
                 defaultTimeSlots: doctor.defaultTimeSlots || [
                     { period: 'Morning', startTime: '09:00', endTime: '12:00', hospitalType: 'government' },
                     { period: 'Afternoon', startTime: '14:00', endTime: '17:00', hospitalType: 'government' },
@@ -243,14 +250,18 @@ const AdminDoctors = () => {
                 dateSpecificTimeSlots: doctor.dateSpecificTimeSlots || [],
                 categories: doctor.categories ? doctor.categories.map(c => typeof c === 'object' ? c._id : c) : [],
                 description: doctor.description || '',
+                description_hi: doctor.description_hi || '',
                 privateFee: doctor.privateFee || 0
             });
         } else {
             setEditingDoctor(null);
             setFormData({
                 name: '',
+                name_hi: '',
                 title: '',
+                title_hi: '',
                 experience: '',
+                experience_hi: '',
                 expertiseBadge: 'Professional Doctor',
                 type: 'government',
                 priority: 0,
@@ -266,6 +277,7 @@ const AdminDoctors = () => {
                 dateSpecificTimeSlots: [],
                 categories: [],
                 description: '',
+                description_hi: '',
                 privateFee: 0
             });
         }
@@ -543,6 +555,7 @@ const AdminDoctors = () => {
                         <form onSubmit={handleSubmit} className="doctor-form">
                             <div className="modal-tabs">
                                 <button type="button" className={`modal-tab-btn ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>Profile Details</button>
+                                <button type="button" className={`modal-tab-btn ${activeTab === 'hindi-profile' ? 'active' : ''}`} onClick={() => setActiveTab('hindi-profile')}>Hindi Translation</button>
                                 <button type="button" className={`modal-tab-btn ${activeTab === 'default-slots' ? 'active' : ''}`} onClick={() => setActiveTab('default-slots')}>Default Weekly Slots</button>
                                 <button type="button" className={`modal-tab-btn ${activeTab === 'date-slots' ? 'active' : ''}`} onClick={() => setActiveTab('date-slots')}>Date-Specific Slots (1-31)</button>
                             </div>
@@ -764,6 +777,62 @@ const AdminDoctors = () => {
                                                 <span>Emergency Available</span>
                                             </label>
                                         </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {activeTab === 'hindi-profile' && (
+                                <>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Doctor Name (Hindi)</label>
+                                            <input
+                                                type="text"
+                                                name="name_hi"
+                                                value={formData.name_hi || ''}
+                                                onChange={handleChange}
+                                                placeholder="जैसे: डॉ. जॉन डो"
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Professional Title (Hindi)</label>
+                                            <input
+                                                type="text"
+                                                name="title_hi"
+                                                value={formData.title_hi || ''}
+                                                onChange={handleChange}
+                                                placeholder="जैसे: हृदय रोग विशेषज्ञ"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Experience (Hindi)</label>
+                                            <input
+                                                type="text"
+                                                name="experience_hi"
+                                                value={formData.experience_hi || ''}
+                                                onChange={handleChange}
+                                                placeholder="जैसे: 12+ वर्षों का अनुभव"
+                                            />
+                                        </div>
+                                        <div className="form-group" style={{ visibility: 'hidden' }}>
+                                            {/* Spacer */}
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group" style={{ marginBottom: '15px' }}>
+                                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '0.9rem', color: '#1e293b' }}>Description (Hindi)</label>
+                                        <textarea
+                                            name="description_hi"
+                                            value={formData.description_hi || ''}
+                                            onChange={handleChange}
+                                            placeholder="जैसे: एसएमएस अस्पताल जयपुर में काम किया, वर्तमान में सुजानगढ़ क्लिनिक में सेवा दे रहे हैं..."
+                                            rows="3"
+                                            style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit' }}
+                                        />
                                     </div>
                                 </>
                             )}

@@ -59,6 +59,8 @@ const AdminDoctors = lazy(() => import('./components/admin/AdminDoctors'));
 const AdminAvailability = lazy(() => import('./components/admin/AdminAvailability'));
 const AdminBodyTests = lazy(() => import('./components/admin/AdminBodyTests'));
 const AdminDoctorFaq = lazy(() => import('./components/admin/AdminDoctorFaq'));
+const AdminDoctorReports = lazy(() => import('./components/admin/AdminDoctorReports'));
+const PatientReportView = lazy(() => import('./pages/PatientReportView'));
 const DoctorAvailability = lazy(() => import('./pages/DoctorAvailability'));
 const OrderMedicine = lazy(() => import('./pages/OrderMedicine'));
 const BodyTests = lazy(() => import('./pages/BodyTests'));
@@ -126,6 +128,7 @@ const router = createBrowserRouter(
       
       <Route path="/checkout/:id" element={<SharedCheckout />} />
       <Route path="/track/:orderId" element={<SharedTracker />} />
+      <Route path="/report/view/:token" element={<PatientReportView />} />
       <Route path="/p/:slug" element={<DynamicPage />} />
 
       {/* Admin Routes - Strictly Guarded */}
@@ -150,6 +153,7 @@ const router = createBrowserRouter(
         <Route path="availability" element={<AdminAvailability />} />
         <Route path="body-tests" element={<AdminBodyTests />} />
         <Route path="doctor-faq" element={<AdminDoctorFaq />} />
+        <Route path="doctors/reports" element={<AdminDoctorReports />} />
         <Route path="prescriptions" element={<AdminPrescriptions />} />
         <Route path="order-medicine" element={<AdminOrderMedicine />} />
         <Route path="pharmacy-orders" element={<AdminPharmacyOrders />} />
