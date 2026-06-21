@@ -50,8 +50,30 @@ const initReportCleanupJob = () => {
                 // 1. Delete from Cloudinary if there is a file stored
                 if (report.cloudinaryPublicId) {
                     try {
+                        // Determine which Cloudinary account the file was uploaded to
+                        const getCloudNameFromUrl = (url) => {
+                            if (!url) return null;
+                            const match = url.match(/res\.cloudinary\.com\/([^/]+)/);
+                            return match ? match[1] : null;
+                        };
+                        const cloudName = getCloudNameFromUrl(report.reportUrl);
+
+                        let apiKey = process.env.CLOUDINARY_API_KEY;
+                        let apiSecret = process.env.CLOUDINARY_API_SECRET;
+                        let targetCloud = process.env.CLOUDINARY_CLOUD_NAME;
+
+                        const reportsCloudName = process.env.CLOUDINARY_REPORTS_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME;
+                        if (cloudName === reportsCloudName) {
+                            apiKey = process.env.CLOUDINARY_REPORTS_API_KEY || process.env.CLOUDINARY_API_KEY;
+                            apiSecret = process.env.CLOUDINARY_REPORTS_API_SECRET || process.env.CLOUDINARY_API_SECRET;
+                            targetCloud = reportsCloudName;
+                        }
+
                         const result = await cloudinaryReports.uploader.destroy(report.cloudinaryPublicId, {
-                            resource_type: 'raw'
+                            resource_type: 'raw',
+                            cloud_name: targetCloud,
+                            api_key: apiKey,
+                            api_secret: apiSecret
                         });
                         if (result.result === 'ok' || result.result === 'not found') {
                             cloudinaryDeletedCount++;

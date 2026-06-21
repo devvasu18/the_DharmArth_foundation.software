@@ -124,7 +124,7 @@ class WhatsappService {
     /**
      * Internal: Direct HTTP call to WhatsApp Service for WhatsApp
      */
-    async _sendWhatsAppNow(number, message) {
+    async _sendWhatsAppNow(number, message, priority = 2) {
         const cleanNumber = String(number).replace(/\D/g, '');
         const response = await fetch(`${this.baseUrl}/send`, {
             method: 'POST',
@@ -134,7 +134,7 @@ class WhatsappService {
                 'bypass-tunnel-reminder': 'true',
                 'ngrok-skip-browser-warning': 'true'
             },
-            body: JSON.stringify({ number: cleanNumber, message })
+            body: JSON.stringify({ number: cleanNumber, message, priority })
         });
 
         if (!response.ok) {
@@ -364,7 +364,7 @@ class WhatsappService {
             || "Your OTP for The DharmArth Foundation *Withdrawal Authorization* is: *{otp}*. Valid for 10 minutes. Please do not share this code with anyone.";
 
         const message = this._replacePlaceholders(template, { otp });
-        return this._sendWhatsAppNow(mobile, message); // Direct send for time-critical OTP
+        return this._sendWhatsAppNow(mobile, message, 1); // Direct send for time-critical OTP (Priority 1)
     }
 
     /**
@@ -376,7 +376,7 @@ class WhatsappService {
             || "Your OTP to authorize *Cancellation* of your ₹{amount} monthly donation at The DharmArth Foundation is: *{otp}*. Valid for 10 minutes.";
 
         const message = this._replacePlaceholders(template, { otp, amount });
-        return this._sendWhatsAppNow(mobile, message);
+        return this._sendWhatsAppNow(mobile, message, 1); // Priority 1
     }
 
     /**
@@ -388,7 +388,7 @@ class WhatsappService {
             || (lang === 'hi' ? "The DharmArth Foundation वॉलेट दान के लिए आपका OTP है: *{otp}*। यह 10 मिनट के लिए मान्य है।" : "Your OTP for The DharmArth Foundation *Wallet Donation* is: *{otp}*. Valid for 10 minutes.");
 
         const message = this._replacePlaceholders(template, { otp });
-        return this._sendWhatsAppNow(mobile, message); // Direct send for time-critical OTP
+        return this._sendWhatsAppNow(mobile, message, 1); // Direct send for time-critical OTP (Priority 1)
     }
 
     /**
@@ -400,7 +400,7 @@ class WhatsappService {
             || "Your OTP for The DharmArth Foundation login is: *{otp}*. Valid for 10 minutes";
 
         const message = this._replacePlaceholders(template, { otp });
-        return this._sendWhatsAppNow(mobile, message); // Direct send for time-critical OTP
+        return this._sendWhatsAppNow(mobile, message, 1); // Direct send for time-critical OTP (Priority 1)
     }
 
     /**
@@ -414,7 +414,7 @@ class WhatsappService {
                 : "The DharmArth Foundation: Your OTP for User Suspension/Activation is: *{otp}*. Please do not share this code with anyone.");
 
         const message = this._replacePlaceholders(template, { otp });
-        return this._sendWhatsAppNow(mobile, message);
+        return this._sendWhatsAppNow(mobile, message, 1); // Priority 1
     }
 
     /**

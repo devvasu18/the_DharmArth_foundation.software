@@ -54,7 +54,7 @@ const sendWhatsAppWithRateLimitCheck = async (number, message) => {
                 'bypass-tunnel-reminder': 'true',
                 'ngrok-skip-browser-warning': 'true'
             },
-            body: JSON.stringify({ number: cleanNumber, message })
+            body: JSON.stringify({ number: cleanNumber, message, priority: 1 })
         });
         
         if (response.status === 429) {

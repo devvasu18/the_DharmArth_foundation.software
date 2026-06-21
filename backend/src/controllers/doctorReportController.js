@@ -11,6 +11,59 @@ const generateSecureToken = () => {
     return crypto.randomBytes(32).toString('hex');
 };
 
+// Helper to extract cloud name from a Cloudinary URL
+const getCloudNameFromUrl = (url) => {
+    if (!url) return null;
+    const match = url.match(/res\.cloudinary\.com\/([^/]+)/);
+    return match ? match[1] : null;
+};
+
+// Helper to extract version from a Cloudinary URL
+const getVersionFromUrl = (url) => {
+    if (!url) return null;
+    const match = url.match(/\/v(\d+)\//);
+    return match ? match[1] : null;
+};
+
+// Helper to generate a secure signed URL based on the cloud name in the report url
+const getSignedCloudinaryUrl = (report) => {
+    if (!report.reportUrl || !report.cloudinaryPublicId) {
+        return report.reportUrl;
+    }
+
+    const cloudName = getCloudNameFromUrl(report.reportUrl);
+    const version = getVersionFromUrl(report.reportUrl);
+    
+    let apiKey = process.env.CLOUDINARY_API_KEY;
+    let apiSecret = process.env.CLOUDINARY_API_SECRET;
+    let targetCloud = process.env.CLOUDINARY_CLOUD_NAME;
+
+    const reportsCloudName = process.env.CLOUDINARY_REPORTS_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME;
+    if (cloudName === reportsCloudName) {
+        apiKey = process.env.CLOUDINARY_REPORTS_API_KEY || process.env.CLOUDINARY_API_KEY;
+        apiSecret = process.env.CLOUDINARY_REPORTS_API_SECRET || process.env.CLOUDINARY_API_SECRET;
+        targetCloud = reportsCloudName;
+    }
+
+    // Strip .pdf extension from publicId if present to match the Cloudinary signature model
+    const cleanPublicId = report.cloudinaryPublicId.endsWith('.pdf') 
+        ? report.cloudinaryPublicId.slice(0, -4) 
+        : report.cloudinaryPublicId;
+
+    const cloudinary = require('cloudinary').v2;
+    return cloudinary.url(cleanPublicId, {
+        resource_type: 'raw',
+        format: 'pdf',
+        secure: true,
+        sign_url: true,
+        version: version,
+        cloud_name: targetCloud,
+        api_key: apiKey,
+        api_secret: apiSecret
+    });
+};
+
+
 // @desc    Create/Send Medical Reports
 // @route   POST /api/reports/send
 // @access  Private (Admin)
@@ -237,8 +290,16 @@ exports.streamSecureReport = async (req, res) => {
             return res.status(410).send('<h3>Sorry, we only show data of the last 3 months.</h3>');
         }
 
+        // Allow iframe embedding on the frontend domain by overriding default Helmet SAMEORIGIN header
+        const frontendUrl = process.env.FRONTEND_URL || 'https://thedharmarth.com';
+        res.removeHeader('X-Frame-Options');
+        res.setHeader('Content-Security-Policy', `frame-ancestors 'self' ${frontendUrl} https://www.thedharmarth.com http://localhost:5173 http://localhost:3000`);
+
+        // Generate signed URL dynamically based on cloud credentials
+        const signedDownloadUrl = getSignedCloudinaryUrl(report);
+
         // Fetch PDF file from Cloudinary and stream it back directly
-        const response = await axios.get(report.reportUrl, { responseType: 'stream' });
+        const response = await axios.get(signedDownloadUrl, { responseType: 'stream' });
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `inline; filename="${report.fileName || 'report.pdf'}"`);
