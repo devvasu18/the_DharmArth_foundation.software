@@ -76,13 +76,8 @@ const BodyTests = () => {
 
     // Admin Settings State (for mobile dialer fallback)
     const [adminMobile, setAdminMobile] = useState('918306305569');
+    const [bodyTestMobile, setBodyTestMobile] = useState('918306305569');
     const [contactPhone, setContactPhone] = useState('8306305569');
-
-    // Booking Modal & Form State
-    const [bookingModalOpen, setBookingModalOpen] = useState(false);
-    const [selectedTestForBooking, setSelectedTestForBooking] = useState(null);
-    const [bookingForm, setBookingForm] = useState({ name: '', mobile: '' });
-    const [bookingSubmitLoading, setBookingSubmitLoading] = useState(false);
 
     useEffect(() => {
         fetchBodyTests();
@@ -94,15 +89,6 @@ const BodyTests = () => {
         setSelectedTestCategory('All');
     }, [i18n.language]);
 
-    useEffect(() => {
-        if (bookingModalOpen && authUser) {
-            setBookingForm({
-                name: authUser.name || '',
-                mobile: authUser.mobile || ''
-            });
-        }
-    }, [bookingModalOpen, authUser]);
-
     const fetchSettings = async () => {
         try {
             const response = await fetch(`${API_URL}/content/settings`);
@@ -110,6 +96,9 @@ const BodyTests = () => {
                 const data = await response.json();
                 if (data.admin_suspension_mobile) {
                     setAdminMobile(data.admin_suspension_mobile);
+                }
+                if (data.body_test_mobile) {
+                    setBodyTestMobile(data.body_test_mobile);
                 }
                 setContactPhone(data.contact_phone || '8306305569');
             }
@@ -130,54 +119,6 @@ const BodyTests = () => {
             toast.error(i18n.language?.startsWith('hi') ? 'मेडिकल टेस्ट लोड करने में विफल' : 'Failed to fetch body tests');
         } finally {
             setLoadingTests(false);
-        }
-    };
-
-    const handleBookingSubmit = async (e) => {
-        e.preventDefault();
-        if (!bookingForm.name.trim() || bookingForm.mobile.length !== 10) {
-            toast.error(
-                i18n.language?.startsWith('hi')
-                    ? "कृपया 10-अंकीय वैध मोबाइल नंबर के साथ सभी विवरण भरें"
-                    : "Please fill in all details with a valid 10-digit mobile number"
-            );
-            return;
-        }
-
-        setBookingSubmitLoading(true);
-        try {
-            const response = await fetch(`${API_URL}/leads`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: bookingForm.name.trim(),
-                    mobile: bookingForm.mobile,
-                    type: 'contact',
-                    source: 'body_test_booking',
-                    notes: `Requested Booking for Test: "${selectedTestForBooking.name}"\nCategory: ${selectedTestForBooking.category}\nPrice: ${selectedTestForBooking.price.startsWith('₹') ? selectedTestForBooking.price : `₹${selectedTestForBooking.price}`}${selectedTestForBooking.originalPrice ? ` (Original Price: ${selectedTestForBooking.originalPrice.startsWith('₹') ? selectedTestForBooking.originalPrice : `₹${selectedTestForBooking.originalPrice}`})` : ''}\n\nWe will contact you soon.`,
-                    language: localStorage.getItem('i18nextLng') || 'en'
-                })
-            });
-
-            if (response.ok) {
-                toast.success(
-                    i18n.language?.startsWith('hi')
-                        ? "बुकिंग अनुरोध सबमिट हो गया! हम जल्द ही आपसे संपर्क करेंगे।"
-                        : "Booking request submitted! We will contact you soon."
-                );
-                setBookingModalOpen(false);
-                setBookingForm({ name: '', mobile: '' });
-            } else {
-                const errData = await response.json();
-                toast.error(errData.message || (i18n.language?.startsWith('hi') ? "बुकिंग विफल रही" : "Failed to submit booking. Please try again."));
-            }
-        } catch (error) {
-            console.error("Booking submit error:", error);
-            toast.error(i18n.language?.startsWith('hi') ? "बुकिंग विफल रही" : "Failed to submit booking. Please try again.");
-        } finally {
-            setBookingSubmitLoading(false);
         }
     };
 
@@ -374,15 +315,18 @@ const BodyTests = () => {
                                                 <button
                                                     className="btn-book-test"
                                                     onClick={() => {
-                                                        if (window.innerWidth < 1024) {
-                                                            window.location.href = `tel:${adminMobile}`;
+                                                        if (window.innerWidth >= 1024) {
+                                                            const testName = (isHindi && test.name_hi) ? test.name_hi : test.name;
+                                                            const message = isHindi 
+                                                                ? `नमस्ते, मैं "${testName}" टेस्ट बुक करना चाहता/चाहती हूँ।`
+                                                                : `Hello, I would like to book the "${testName}" test.`;
+                                                            window.open(`https://wa.me/${bodyTestMobile}?text=${encodeURIComponent(message)}`, '_blank');
                                                         } else {
-                                                            setSelectedTestForBooking(test);
-                                                            setBookingModalOpen(true);
+                                                            window.location.href = `tel:${bodyTestMobile}`;
                                                         }
                                                     }}
                                                 >
-                                                    {isHindi ? "इस टेस्ट को बुक करें" : "Book This Test"}
+                                                    {isHindi ? "कॉल और बुक करें" : "Call & Book"}
                                                 </button>
                                             </div>
                                         </div>
@@ -393,65 +337,6 @@ const BodyTests = () => {
                 </div>
             </div>
 
-            {bookingModalOpen && selectedTestForBooking && (
-                <div className="test-booking-modal-overlay" onClick={() => setBookingModalOpen(false)}>
-                    <div className="test-booking-modal-card" onClick={(e) => e.stopPropagation()}>
-                        <button className="test-booking-modal-close" onClick={() => setBookingModalOpen(false)}>
-                            ✕
-                        </button>
-                        <div className="test-booking-modal-header">
-                            <h2>{isHindi ? "डायग्नोस्टिक टेस्ट बुक करें" : "Book Diagnostic Test"}</h2>
-                            <p>{isHindi ? "कृपया अपना विवरण दर्ज करें। हम शेड्यूलिंग के लिए जल्द ही आपसे संपर्क करेंगे।" : "Please enter your details. We will contact you soon to schedule your checkup."}</p>
-                        </div>
-
-                        <div className="selected-test-summary">
-                            <div className="summary-icon">🔬</div>
-                            <div className="summary-info">
-                                <h4>{(isHindi && selectedTestForBooking.name_hi) ? selectedTestForBooking.name_hi : selectedTestForBooking.name}</h4>
-                                <p className="summary-desc">{(isHindi && selectedTestForBooking.description_hi) ? selectedTestForBooking.description_hi : selectedTestForBooking.description}</p>
-                                <div className="summary-price-tag" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                    <span>{isHindi ? "कीमत:" : "Price:"}</span>
-                                    {selectedTestForBooking.originalPrice && (
-                                        <span className="summary-price-original" style={{ textDecoration: 'line-through', color: '#ef4444', fontSize: '0.9rem', fontWeight: '500' }}>
-                                            {selectedTestForBooking.originalPrice.startsWith('₹') ? selectedTestForBooking.originalPrice : `₹${selectedTestForBooking.originalPrice}`}
-                                        </span>
-                                    )}
-                                    <strong className="summary-price-discounted" style={{ color: '#000000', fontSize: '1.1rem', fontWeight: '800' }}>
-                                        {selectedTestForBooking.price.startsWith('₹') ? selectedTestForBooking.price : `₹${selectedTestForBooking.price}`}
-                                    </strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        <form onSubmit={handleBookingSubmit} className="test-booking-modal-form">
-                            <div className="form-group-custom">
-                                <label>{isHindi ? "आपका नाम" : "Your Name"}</label>
-                                <input
-                                    type="text"
-                                    placeholder={isHindi ? "अपना पूरा नाम दर्ज करें" : "Enter your full name"}
-                                    value={bookingForm.name}
-                                    onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group-custom">
-                                <label>{isHindi ? "मोबाइल नंबर" : "Mobile Number"}</label>
-                                <input
-                                    type="tel"
-                                    placeholder={isHindi ? "10-अंकीय मोबाइल नंबर दर्ज करें" : "Enter 10-digit mobile number"}
-                                    value={bookingForm.mobile}
-                                    onChange={(e) => setBookingForm({ ...bookingForm, mobile: e.target.value })}
-                                    maxLength={10}
-                                    required
-                                />
-                            </div>
-                            <button type="submit" className="btn-booking-submit" disabled={bookingSubmitLoading}>
-                                {bookingSubmitLoading ? (isHindi ? 'सबमिट हो रहा है...' : 'Submitting...') : (isHindi ? 'बुकिंग की पुष्टि करें' : 'Confirm Booking')}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
 
             <Footer />
         </>

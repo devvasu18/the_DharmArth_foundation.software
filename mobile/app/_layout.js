@@ -57,8 +57,8 @@ function RootLayoutNav() {
         }
 
         const inAuthGroup = segments[0] === '(auth)';
-        const publicRoutes = ['index', 'donate', 'events', 'contact'];
-        const isPublicRoute = segments.length <= 1 || (segments[0] === '(tabs)' && publicRoutes.includes(segments[1])) || segments[0] === 'event' || segments[0] === 'contact';
+        const publicRoutes = ['index', 'donate', 'events', 'contact', 'body-tests', 'doctors'];
+        const isPublicRoute = segments.length <= 1 || (segments[0] === '(tabs)' && publicRoutes.includes(segments[1])) || segments[0] === 'event' || segments[0] === 'contact' || segments[0] === 'body-tests' || segments[0] === 'doctors';
 
         if (!user && !inAuthGroup && !isPublicRoute && !inOnboarding) {
           router.replace('/login');
@@ -93,6 +93,18 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)/login" options={{ title: 'Login', headerShown: false }} />
         <Stack.Screen name="(auth)/signup" options={{ title: 'Sign Up', headerShown: false }} />
+        <Stack.Screen 
+          name="body-tests" 
+          options={{ 
+            headerShown: false
+          }} 
+        />
+        <Stack.Screen 
+          name="doctors" 
+          options={{ 
+            headerShown: false
+          }} 
+        />
         <Stack.Screen 
           name="my-subscriptions" 
           options={{ 

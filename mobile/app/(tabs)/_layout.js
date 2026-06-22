@@ -90,6 +90,7 @@ export default function TabLayout() {
   }, [user?._id, pathname]); // Re-fetch on pathname change to catch mark-read updates
 
   const menuItems = [
+    { label: t('navbar.bodyTests'), icon: 'flask-outline', route: '/body-tests', public: true },
     { label: t('navbar.myEarnings'), icon: 'wallet-outline', route: '/dashboard' },
     { label: t('navbar.myProfile'), icon: 'person-outline', route: '/profile' },
     { label: t('navbar.mySubscriptions'), icon: 'card-outline', route: '/my-subscriptions' },
@@ -104,10 +105,10 @@ export default function TabLayout() {
     router.replace('/login');
   };
 
-  const navigateTo = (route) => {
+  const navigateTo = (route, isPublic = false) => {
     setMenuVisible(false);
 
-    if (!user) {
+    if (!user && !isPublic) {
       router.push('/login');
       return;
     }
@@ -282,7 +283,7 @@ export default function TabLayout() {
                     <TouchableOpacity
                       key={`menu-item-${index}`}
                       style={styles.menuItem}
-                      onPress={() => navigateTo(item.route)}
+                      onPress={() => navigateTo(item.route, item.public)}
                     >
                       <Ionicons name={item.icon} size={22} color="#475569" />
                       <Text style={styles.menuItemText}>{item.label}</Text>

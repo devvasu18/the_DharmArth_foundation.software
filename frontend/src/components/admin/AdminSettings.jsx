@@ -80,6 +80,10 @@ const AdminSettings = () => {
         phone: '8306305569'
     });
 
+    // Body Test Config State
+    const [bodyTestModalOpen, setBodyTestModalOpen] = useState(false);
+    const [bodyTestMobile, setBodyTestMobile] = useState('');
+
     useEffect(() => {
         fetchSettings();
     }, []);
@@ -137,10 +141,14 @@ const AdminSettings = () => {
                 adminSuspensionMobile: data.admin_suspension_mobile || ''
             });
 
+            // Contact Config
             setContactConfig({
                 email: data.contact_email || 'thedharmarth@gmail.com',
                 phone: data.contact_phone || '8306305569'
             });
+
+            // Body Test Mobile
+            setBodyTestMobile(data.body_test_mobile || '');
         } catch (error) {
             console.error("Failed to fetch settings", error);
         } finally {
@@ -382,6 +390,19 @@ const AdminSettings = () => {
         }
     };
 
+    const handleSaveBodyTestMobile = async () => {
+        try {
+            const updates = { body_test_mobile: bodyTestMobile };
+            await api.put('/content/settings', updates);
+            setSettings({ ...settings, ...updates });
+            setBodyTestModalOpen(false);
+            toast.success("Body Test Mobile Saved!");
+        } catch (error) {
+            console.error("Save failed", error);
+            toast.error("Failed to save body test mobile");
+        }
+    };
+
     if (loading) return <div>Loading settings...</div>;
 
     return (
@@ -549,6 +570,22 @@ const AdminSettings = () => {
                             <button
                                 className="btn btn-outline"
                                 onClick={() => setContactModalOpen(true)}
+                            >
+                                Configure
+                            </button>
+                        </td>
+                    </tr>
+
+                    {/* Body Test Config Row */}
+                    <tr>
+                        <td><strong>Body Test Booking Mobile</strong> (Dialed on Body Test click)</td>
+                        <td>
+                            Mobile: {settings.body_test_mobile || <span style={{ color: '#ef4444' }}>Not Configured</span>}
+                        </td>
+                        <td>
+                            <button
+                                className="btn btn-outline"
+                                onClick={() => setBodyTestModalOpen(true)}
                             >
                                 Configure
                             </button>
@@ -1480,6 +1517,55 @@ const AdminSettings = () => {
                             >
                                 <Save size={18} />
                                 Save Configuration
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Body Test Config Modal */}
+            {bodyTestModalOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 2000
+                }}>
+                    <div style={{ background: 'white', padding: '2rem', borderRadius: '24px', minWidth: '400px', maxWidth: '90%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h4 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>Body Test Mobile</h4>
+                            <button onClick={() => setBodyTestModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>
+                                    Body Test Mobile Number
+                                </label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                                    value={bodyTestMobile}
+                                    onChange={(e) => setBodyTestMobile(e.target.value)}
+                                    placeholder="e.g. 918306305569"
+                                />
+                                <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '6px' }}>
+                                    This number will be dialed when a user clicks the "Call & Book" button on the Body Tests page.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                            <button className="btn btn-outline" onClick={() => setBodyTestModalOpen(false)} style={{ borderRadius: '10px' }}>Cancel</button>
+                            <button 
+                                className="btn bg-primary text-white" 
+                                onClick={handleSaveBodyTestMobile}
+                                style={{ borderRadius: '10px', background: '#00bfa5', display: 'flex', alignItems: 'center', gap: '8px', color: 'white', border: 'none', cursor: 'pointer' }}
+                            >
+                                <Save size={18} />
+                                Save
                             </button>
                         </div>
                     </div>

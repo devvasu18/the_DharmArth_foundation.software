@@ -250,6 +250,51 @@ const LandingScreen = () => {
           <View style={styles.welcomeUnderline} />
         </View>
 
+        {/* Quick Links Grid */}
+        <View style={styles.quickLinksContainer}>
+          <View style={styles.quickLinksRow}>
+            <TouchableOpacity 
+              style={[styles.quickLinkBtn, { backgroundColor: '#16a34a' }]} 
+              onPress={() => router.push('/donate')}
+            >
+              <Text style={styles.quickLinkText}>{locale === 'hi' ? 'अभी दान\nकरें' : 'Donate\nNow'}</Text>
+              <Ionicons name="heart" size={38} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.quickLinkBtn, { backgroundColor: '#3b82f6' }]} 
+              onPress={() => router.push('/doctors')}
+            >
+              <Text style={styles.quickLinkText}>{locale === 'hi' ? 'डॉक्टर\nखोजें' : 'Find\nDoctors'}</Text>
+              <Ionicons name="medkit" size={38} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.quickLinksRow}>
+            <TouchableOpacity 
+              style={[styles.quickLinkBtn, { backgroundColor: '#f97316' }]} 
+              onPress={() => router.push('/body-tests')}
+            >
+              <Text style={styles.quickLinkText}>{locale === 'hi' ? 'मेडिकल\nटेस्ट' : 'Body\nTests'}</Text>
+              <Ionicons name="flask" size={38} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.quickLinkBtn, { backgroundColor: '#0d9488' }]} 
+              onPress={() => {
+                if (user) {
+                  router.push('/donate-wallet');
+                } else {
+                  router.push('/login');
+                }
+              }}
+            >
+              <Text style={styles.quickLinkText}>{locale === 'hi' ? 'मेरा\nवॉलेट' : 'My\nWallet'}</Text>
+              <Ionicons name="wallet" size={38} color="white" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Crowdfunding Sections */}
         {crowdfunding.map((section, index) => (
           <View key={`crowd-${section._id || ''}-${index}`} style={[styles.crowdSection, index % 2 !== 0 && styles.crowdSectionAlt]}>
@@ -498,6 +543,38 @@ const styles = StyleSheet.create({
     height: 5,
     backgroundColor: '#00bfa5',
     borderRadius: 5,
+  },
+
+  // Quick Links Grid
+  quickLinksContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+    backgroundColor: 'white',
+    gap: 12,
+  },
+  quickLinksRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  quickLinkBtn: {
+    flex: 1,
+    height: 90,
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+  },
+  quickLinkText: {
+    color: 'white',
+    fontSize: 17,
+    fontWeight: '800',
+    lineHeight: 22,
   },
 
   // Crowdfunding Sections
