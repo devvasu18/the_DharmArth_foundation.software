@@ -237,8 +237,8 @@ export default function BodyTestsScreen() {
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity 
-              onPress={() => Linking.openURL(`tel:${adminMobile}`)} 
+            <TouchableOpacity
+              onPress={() => Linking.openURL(`tel:${adminMobile}`)}
               style={{ marginRight: 8, padding: 4 }}
             >
               <Ionicons name="call" size={22} color="#00bfa5" />
@@ -247,19 +247,12 @@ export default function BodyTestsScreen() {
         }}
       />
 
-      <ScrollView 
-        style={styles.container} 
-        contentContainerStyle={styles.contentContainer} 
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Banner Section */}
-        <View style={styles.bannerCard}>
-          <View style={styles.bannerIconBox}>
-            <Ionicons name="flask" size={28} color="#00bfa5" />
-          </View>
-          <Text style={styles.bannerTitle}>{t('bodyTests.title')}</Text>
-          <Text style={styles.bannerSubtitle}>{t('bodyTests.subtitle')}</Text>
-        </View>
+
 
         {/* Search Box */}
         <View style={styles.searchBox}>
@@ -345,7 +338,7 @@ export default function BodyTestsScreen() {
                   <View style={styles.testInfo}>
                     <Text style={styles.testName}>{name}</Text>
                     <Text style={styles.testDesc} numberOfLines={3}>{desc}</Text>
-                    
+
                     <View style={styles.metaRow}>
                       <View style={styles.timeBadge}>
                         <Ionicons name="time-outline" size={14} color="#64748b" style={{ marginRight: 4 }} />
