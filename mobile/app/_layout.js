@@ -154,6 +154,8 @@ const oneSignalAppId = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID || '93331230-247
 OneSignal.Debug.setLogLevel(LogLevel.Verbose);
 OneSignal.initialize(oneSignalAppId);
 
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 export default function RootLayout() {
   useEffect(() => {
     if (oneSignalAppId) {
@@ -162,11 +164,13 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <AuthProvider>
-      <LanguageProvider>
-        <RootLayoutNav />
-      </LanguageProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <LanguageProvider>
+          <RootLayoutNav />
+        </LanguageProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 
