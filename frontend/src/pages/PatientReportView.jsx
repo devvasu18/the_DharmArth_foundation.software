@@ -179,6 +179,14 @@ const PatientReportView = () => {
                     </div>
                 </div>
 
+                {/* Download Warning Banner */}
+                <div className="report-download-warning">
+                    <AlertCircle size={18} style={{ color: '#d97706', flexShrink: 0 }} />
+                    <p className="report-download-warning-text">
+                        कृपया इस रिपोर्ट को डाउनलोड करें, यह 3 महीने के बाद वैध या डाउनलोड करने योग्य नहीं होगी। / Please download this report, it will not be valid or downloadable after 3 months.
+                    </p>
+                </div>
+
                 {/* Mobile Preview Tip */}
                 <div className="mobile-view-pdf-warning">
                     <Info size={20} style={{ color: '#f57c00', flexShrink: 0 }} />

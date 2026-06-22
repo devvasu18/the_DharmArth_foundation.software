@@ -145,22 +145,7 @@ const AdminDoctors = () => {
         }
     };
 
-    const toggleEmergency = async (id) => {
-        try {
-            const response = await fetch(`${API_URL}/doctors/${id}/emergency`, {
-                method: 'PATCH'
-            });
 
-            if (response.ok) {
-                toast.success('Emergency status updated');
-                fetchDoctors();
-            } else {
-                toast.error('Failed to update status');
-            }
-        } catch (error) {
-            toast.error('Error updating status');
-        }
-    };
 
     // Category CRUD Handlers
     const handleCategorySubmit = async (e) => {
@@ -433,6 +418,13 @@ const AdminDoctors = () => {
         return <div className="admin-doctors-loading">Loading doctors...</div>;
     }
 
+    let currentTab = activeTab;
+    if (formData.type === 'government' && activeTab === 'date-slots') {
+        currentTab = 'default-slots';
+    } else if (formData.type === 'clinic' && activeTab === 'default-slots') {
+        currentTab = 'date-slots';
+    }
+
     return (
         <div className="admin-doctors">
             <div className="admin-doctors-header">
@@ -469,13 +461,6 @@ const AdminDoctors = () => {
                         <p>In Private Clinic</p>
                     </div>
                 </div>
-                <div className="stat-card emergency">
-                    <div className="stat-icon">🚨</div>
-                    <div className="stat-info">
-                        <h3>{doctors.filter(d => d.isEmergencyAvailable).length}</h3>
-                        <p>Emergency Available</p>
-                    </div>
-                </div>
             </div>
 
             <div className="doctors-grid">
@@ -484,15 +469,6 @@ const AdminDoctors = () => {
                         <div className="doctor-card-header">
                             <div className="doctor-type-badge">
                                 {doctor.type === 'government' ? '🏥 Government' : doctor.type === 'clinic' ? '🏨 Clinic' : '🏥 Works in Both'}
-                            </div>
-                            <div className="doctor-actions">
-                                <button
-                                    className={`emergency-toggle ${doctor.isEmergencyAvailable ? 'active' : ''}`}
-                                    onClick={() => toggleEmergency(doctor._id)}
-                                    title="Toggle Emergency Availability"
-                                >
-                                    🚨
-                                </button>
                             </div>
                         </div>
 
@@ -526,13 +502,10 @@ const AdminDoctors = () => {
                                 <div className="priority-badge">⭐ Priority {doctor.priority}</div>
                             )}
 
-                            <div className="doctor-status">
+                             <div className="doctor-status">
                                 <span className={`status-indicator ${doctor.isActive ? 'active' : 'inactive'}`}>
                                     {doctor.isActive ? '✓ Active' : '✗ Inactive'}
                                 </span>
-                                {doctor.isEmergencyAvailable && (
-                                    <span className="emergency-badge">🚨 Emergency</span>
-                                )}
                             </div>
                         </div>
 
@@ -554,13 +527,19 @@ const AdminDoctors = () => {
 
                         <form onSubmit={handleSubmit} className="doctor-form">
                             <div className="modal-tabs">
-                                <button type="button" className={`modal-tab-btn ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>Profile Details</button>
-                                <button type="button" className={`modal-tab-btn ${activeTab === 'hindi-profile' ? 'active' : ''}`} onClick={() => setActiveTab('hindi-profile')}>Hindi Translation</button>
-                                <button type="button" className={`modal-tab-btn ${activeTab === 'default-slots' ? 'active' : ''}`} onClick={() => setActiveTab('default-slots')}>Default Weekly Slots</button>
-                                <button type="button" className={`modal-tab-btn ${activeTab === 'date-slots' ? 'active' : ''}`} onClick={() => setActiveTab('date-slots')}>Date-Specific Slots (1-31)</button>
+                                <button type="button" className={`modal-tab-btn ${currentTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>Profile Details</button>
+                                <button type="button" className={`modal-tab-btn ${currentTab === 'hindi-profile' ? 'active' : ''}`} onClick={() => setActiveTab('hindi-profile')}>Hindi Translation</button>
+                                {formData.type !== 'clinic' && (
+                                    <button type="button" className={`modal-tab-btn ${currentTab === 'default-slots' ? 'active' : ''}`} onClick={() => setActiveTab('default-slots')}>
+                                        {formData.type === 'government' ? 'Time Slots' : 'Time Slots (Govt)'}
+                                    </button>
+                                )}
+                                {formData.type !== 'government' && (
+                                    <button type="button" className={`modal-tab-btn ${currentTab === 'date-slots' ? 'active' : ''}`} onClick={() => setActiveTab('date-slots')}>Date-Specific Slots (1-31)</button>
+                                )}
                             </div>
 
-                            {activeTab === 'profile' && (
+                            {currentTab === 'profile' && (
                                 <>
                                     <div className="form-row">
                                         <div className="form-group">
@@ -765,23 +744,11 @@ const AdminDoctors = () => {
                                                 <span>Active</span>
                                             </label>
                                         </div>
-
-                                        <div className="form-group checkbox">
-                                            <label>
-                                                <input
-                                                    type="checkbox"
-                                                    name="isEmergencyAvailable"
-                                                    checked={formData.isEmergencyAvailable}
-                                                    onChange={handleChange}
-                                                />
-                                                <span>Emergency Available</span>
-                                            </label>
-                                        </div>
                                     </div>
                                 </>
                             )}
 
-                            {activeTab === 'hindi-profile' && (
+                            {currentTab === 'hindi-profile' && (
                                 <>
                                     <div className="form-row">
                                         <div className="form-group">
@@ -837,7 +804,7 @@ const AdminDoctors = () => {
                                 </>
                             )}
 
-                            {activeTab === 'default-slots' && (
+                            {currentTab === 'default-slots' && (
                                 <>
                                     {(() => {
                                         const renderSlotsSection = (hospitalType, label) => {
@@ -901,16 +868,17 @@ const AdminDoctors = () => {
 
                                         return (
                                             <>
-                                                <h3 style={{ fontSize: '1rem', color: '#0f172a', margin: '20px 0 0', fontWeight: 'bold' }}>Default Weekly Time Slots</h3>
-                                                {(formData.type === 'government' || formData.type === 'both') && renderSlotsSection('government', '🏥 Government Hospital Slots')}
-                                                {(formData.type === 'clinic' || formData.type === 'both') && renderSlotsSection('clinic', '🏨 Private Clinic Slots')}
+                                                <h3 style={{ fontSize: '1rem', color: '#0f172a', margin: '20px 0 0', fontWeight: 'bold' }}>
+                                                    {formData.type === 'government' ? '🏥 Government Hospital Time Slots' : '🏥 Government Hospital Time Slots (Weekly)'}
+                                                </h3>
+                                                {(formData.type === 'government' || formData.type === 'both') && renderSlotsSection('government', null)}
                                             </>
                                         );
                                     })()}
                                 </>
                             )}
 
-                            {activeTab === 'date-slots' && (
+                            {currentTab === 'date-slots' && (
                                 <div className="date-specific-section">
                                     <div className="date-grid-container">
                                         <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px', textAlign: 'center' }}>
@@ -1030,7 +998,6 @@ const AdminDoctors = () => {
 
                                                             return (
                                                                 <>
-                                                                    {(formData.type === 'government' || formData.type === 'both') && renderOverrideSlots('government', '🏥 Government Slots')}
                                                                     {(formData.type === 'clinic' || formData.type === 'both') && renderOverrideSlots('clinic', '🏨 Private Clinic Slots')}
                                                                 </>
                                                             );

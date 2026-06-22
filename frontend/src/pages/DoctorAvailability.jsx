@@ -6,7 +6,7 @@ import Footer from '../components/layout/Footer';
 import { API_BASE_URL } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Stethoscope, Search, Hospital, Building2, Calendar, Filter, RotateCw, ChevronDown, User, BadgeCheck } from 'lucide-react';
+import { ArrowLeft, Stethoscope, Search, Hospital, Building2, Calendar, Filter, RotateCw, ChevronDown, User, BadgeCheck, X } from 'lucide-react';
 import './DoctorAvailability.css';
 import SEO from '../components/common/SEO';
 
@@ -50,7 +50,6 @@ const DoctorAvailability = () => {
     const navigate = useNavigate();
     const [viewMode, setViewMode] = useState('category'); // Always 'category' now
     const [selectedType, setSelectedType] = useState(null); // 'government' or 'clinic'
-    const [emergencyDoctors, setEmergencyDoctors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [openFaqIndex, setOpenFaqIndex] = useState(null);
     const [doctorFaqs, setDoctorFaqs] = useState([]);
@@ -75,11 +74,21 @@ const DoctorAvailability = () => {
     const [contactPhone, setContactPhone] = useState('8306305569');
 
     useEffect(() => {
-        fetchEmergencyDoctors();
         fetchDoctorFaqs();
         fetchSettings();
         fetchSearchCategories();
     }, []);
+
+    useEffect(() => {
+        if (searchCategoryId === 'all') {
+            setSearchQuery(i18n.language === 'hi' ? 'सभी विशेषज्ञ' : 'All Specialists');
+        } else if (searchCategoryId) {
+            const cat = searchCategories.find(c => c._id === searchCategoryId);
+            if (cat) {
+                setSearchQuery(i18n.language === 'hi' ? (categoryTranslations[cat.name] || cat.name) : cat.name);
+            }
+        }
+    }, [i18n.language, searchCategoryId, searchCategories]);
 
     const fetchSearchCategories = async () => {
         try {
@@ -108,15 +117,7 @@ const DoctorAvailability = () => {
         }
     };
 
-    const fetchEmergencyDoctors = async () => {
-        try {
-            const response = await fetch(`${API_URL}/doctors/emergency`);
-            const data = await response.json();
-            setEmergencyDoctors(data);
-        } catch (error) {
-            console.error('Failed to fetch emergency doctors');
-        }
-    };
+
 
     const fetchDoctorFaqs = async () => {
         try {
@@ -134,8 +135,16 @@ const DoctorAvailability = () => {
 
     const handleTypeSelect = (type) => {
         setSelectedType(type);
-        setSearchQuery('');
+        setSearchCategoryId('all');
+        setSearchQuery(i18n.language === 'hi' ? 'सभी विशेषज्ञ' : 'All Specialists');
         setShowSearchModal(true);
+    };
+
+    const handleCloseSearchModal = () => {
+        setShowSearchModal(false);
+        if (!searchPerformed) {
+            setSelectedType(null);
+        }
     };
 
     const handleSearchSubmit = async (e) => {
@@ -150,12 +159,14 @@ const DoctorAvailability = () => {
             setSearchPerformed(true);
             setShowSearchModal(false);
 
-            // Format date to YYYY-MM-DD locally to avoid timezone shifts
-            const dateStr = getLocalDateString(searchDate);
+            let url = `${API_URL}/availability/search?hospitalType=${selectedType}&categoryId=${searchCategoryId}`;
+            if (selectedType !== 'clinic') {
+                // Format date to YYYY-MM-DD locally to avoid timezone shifts
+                const dateStr = getLocalDateString(searchDate);
+                url += `&date=${dateStr}`;
+            }
 
-            const response = await fetch(
-                `${API_URL}/availability/search?hospitalType=${selectedType}&categoryId=${searchCategoryId}&date=${dateStr}`
-            );
+            const response = await fetch(url);
 
             if (!response.ok) {
                 throw new Error('Search failed');
@@ -174,7 +185,6 @@ const DoctorAvailability = () => {
 
     const handleBackToTypeSelection = () => {
         setSelectedType(null);
-        setAvailability([]);
         setSearchPerformed(false);
         setSearchResult(null);
     };
@@ -350,9 +360,7 @@ const DoctorAvailability = () => {
         );
     }
 
-    const filteredEmergencyDoctors = selectedType
-        ? emergencyDoctors.filter(doc => doc.type === selectedType)
-        : emergencyDoctors;
+
 
     const medicalBusinessSchema = {
         "@context": "https://schema.org",
@@ -482,19 +490,6 @@ const DoctorAvailability = () => {
                                         </div>
 
                                         <div className="header-right-actions">
-                                            {/* Date Selector Button */}
-                                            <button className="action-btn-date" onClick={() => setShowSearchModal(true)}>
-                                                <Calendar size={15} className="action-icon-green" />
-                                                <span className="action-btn-text">
-                                                    {searchDate?.toLocaleDateString(i18n.language === 'hi' ? 'hi-IN' : 'en-US', {
-                                                        weekday: 'long',
-                                                        month: 'long',
-                                                        day: 'numeric'
-                                                    })}
-                                                </span>
-                                                <ChevronDown size={14} className="action-chevron" />
-                                            </button>
-
                                             {/* Filter Button */}
                                             <button className="action-btn-filter" onClick={() => setShowSearchModal(true)}>
                                                 <Filter size={15} className="action-icon-green" />
@@ -520,36 +515,20 @@ const DoctorAvailability = () => {
                                         </div>
                                     ) : searchResult ? (
                                         <>
-                                            {/* Fallback Message for Future Date */}
-                                            {!searchResult.available && searchResult.nextAvailableDate && (
-                                                <div className="fallback-notice-banner" style={{ background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '12px', padding: '16px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 2px 4px rgba(251, 191, 36, 0.05)' }}>
-                                                    <div style={{ fontSize: '1.8rem' }}>⚠️</div>
-                                                    <div>
-                                                        <h4 style={{ margin: '0 0 4px 0', color: '#b45309', fontWeight: '700', fontSize: '0.95rem' }}>
-                                                            {i18n.language === 'hi' ? 'चयनित तिथि पर कोई डॉक्टर उपलब्ध नहीं हैं।' : 'No doctors are available on the selected date.'}
-                                                        </h4>
-                                                        <p style={{ margin: 0, color: '#d97706', fontSize: '0.85rem', fontWeight: '600' }}>
-                                                            {i18n.language === 'hi' ? 'इस श्रेणी के लिए अगली उपलब्ध तिथि: ' : 'Next available date for this category: '}
-                                                            {new Date(searchResult.nextAvailableDate).toLocaleDateString(i18n.language === 'hi' ? 'hi-IN' : 'en-GB')}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            )}
-
                                             {searchResult.doctors && searchResult.doctors.length > 0 ? (
                                                 <div className="doctors-grid">
-                                                    {sortDoctorsByAvailability(searchResult.doctors, getActiveSearchDate()).map(avail => {
-                                                        const activeDate = getActiveSearchDate();
-                                                        const availabilityInfo = checkDoctorAvailability(avail.timeSlots, activeDate);
-                                                        const isUpcoming = !availabilityInfo.isAvailableNow &&
+                                                    {(selectedType === 'clinic' ? searchResult.doctors : sortDoctorsByAvailability(searchResult.doctors, getActiveSearchDate())).map(avail => {
+                                                        const activeDate = selectedType === 'clinic' ? null : getActiveSearchDate();
+                                                        const availabilityInfo = selectedType === 'clinic' ? null : checkDoctorAvailability(avail.timeSlots, activeDate);
+                                                        const isUpcoming = selectedType === 'clinic' ? false : (!availabilityInfo.isAvailableNow &&
                                                             availabilityInfo.status !== 'Not Available Today' &&
                                                             availabilityInfo.status !== 'Shift Ended' &&
-                                                            availabilityInfo.status !== 'Not Available';
+                                                            availabilityInfo.status !== 'Not Available');
 
                                                         return (
                                                             <div
                                                                 key={avail._id}
-                                                                className={`doctor-availability-card ${avail.hospitalType} ${availabilityInfo.isAvailableNow ? 'available-now' : ''}`}
+                                                                className={`doctor-availability-card ${avail.hospitalType} ${selectedType !== 'clinic' && availabilityInfo?.isAvailableNow ? 'available-now' : ''}`}
                                                             >
                                                                 <div className="doctor-photo">
                                                                     {avail.doctorId.photo ? (
@@ -583,7 +562,7 @@ const DoctorAvailability = () => {
                                                                     )}
 
                                                                     <div className="doctor-badges">
-                                                                        {!isUpcoming && (
+                                                                        {selectedType !== 'clinic' && !isUpcoming && (
                                                                             <div className={`availability-status ${availabilityInfo.isAvailableNow ? 'available' :
                                                                                 (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available') ? 'closed' :
                                                                                     'upcoming'
@@ -613,44 +592,71 @@ const DoctorAvailability = () => {
                                                                             </div>
                                                                         )}
 
-                                                                        {avail.emergencyAvailable && (
-                                                                            <div className="emergency-available">
-                                                                                <span>🚨</span>
-                                                                                <span>{i18n.language === 'hi' ? 'आपातकालीन उपलब्ध' : 'Emergency Available'}</span>
+
+                                                                    </div>
+                                                                </div>
+
+                                                                {selectedType === 'clinic' ? (
+                                                                    <>
+                                                                        {avail.timing && (
+                                                                            <div className="clinic-timing-row" style={{ padding: '0 20px', margin: '12px 0 0 0', display: 'flex', alignItems: 'center', gap: '8px', color: '#0f766e', fontSize: '0.9rem', fontWeight: '700' }}>
+                                                                                <span style={{ fontSize: '1rem' }}>🕒</span>
+                                                                                <span>
+                                                                                    {i18n.language === 'hi' ? 'समय: ' : 'Timing: '}
+                                                                                    {formatTime(avail.timing.startTime)} - {formatTime(avail.timing.endTime)}
+                                                                                </span>
                                                                             </div>
                                                                         )}
+                                                                        <div className="available-dates-container" style={{ marginTop: '15px', padding: '10px 20px 15px 20px', borderTop: '1px dashed #e2e8f0' }}>
+                                                                            <h4 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                                <Calendar size={14} style={{ color: '#00bf9a' }} />
+                                                                                {i18n.language === 'hi' 
+                                                                                    ? `उपलब्ध तिथियां (${new Date().toLocaleDateString('hi-IN', { month: 'long', year: 'numeric' })}):` 
+                                                                                    : `Available Dates (${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}):`}
+                                                                            </h4>
+                                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                                                            {avail.availableDates && avail.availableDates.length > 0 ? (
+                                                                                avail.availableDates.map(dayNum => (
+                                                                                    <span 
+                                                                                        key={dayNum} 
+                                                                                        style={{ 
+                                                                                            background: '#e6faf5', 
+                                                                                            color: '#00bf9a', 
+                                                                                            padding: '4px 10px', 
+                                                                                            borderRadius: '20px', 
+                                                                                            fontSize: '0.85rem', 
+                                                                                            fontWeight: '600',
+                                                                                            border: '1px solid #c2f4e8'
+                                                                                        }}
+                                                                                    >
+                                                                                        {dayNum}
+                                                                                    </span>
+                                                                                ))
+                                                                            ) : (
+                                                                                <span style={{ color: '#94a3b8', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                                                                                    {i18n.language === 'hi' ? 'कोई उपलब्ध तिथि नहीं' : 'No available dates'}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
-                                                                </div>
+                                                                </>
+                                                            ) : (
+                                                                    <div className="time-slots">
+                                                                        {avail.timeSlots.map((slot, idx) => (
+                                                                            <div key={idx} className={`time-slot ${slot.status.toLowerCase().replace(' ', '-')}`}>
+                                                                                <div className="slot-info">
+                                                                                    <span className="slot-period">{slot.period} :</span>
+                                                                                    <span className="slot-time">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
 
-                                                                {!searchResult.available && searchResult.nextAvailableDate && (
-                                                                    <div className="doctor-next-date-tag">
-                                                                        <Calendar size={13} className="tag-icon" />
-                                                                        <span>
-                                                                            {i18n.language === 'hi' ? 'अगली उपलब्धता: ' : 'Next Available: '}
-                                                                            {new Date(searchResult.nextAvailableDate).toLocaleDateString(i18n.language === 'hi' ? 'hi-IN' : 'en-US', {
-                                                                                weekday: 'short',
-                                                                                month: 'short',
-                                                                                day: 'numeric'
-                                                                            })}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-
-                                                                <div className="time-slots">
-                                                                    {avail.timeSlots.map((slot, idx) => (
-                                                                        <div key={idx} className={`time-slot ${slot.status.toLowerCase().replace(' ', '-')}`}>
-                                                                            <div className="slot-info">
-                                                                                <span className="slot-period">{slot.period} :</span>
-                                                                                <span className="slot-time">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</span>
-
-                                                                                <div className={`slot-status ${slot.status.toLowerCase().replace(' ', '-')}`}>
-                                                                                    {slot.status === 'Available' && (i18n.language === 'hi' ? '✓ उपलब्ध' : '✓ Available')}
-                                                                                    {slot.status === 'Not Available' && (i18n.language === 'hi' ? '✗ उपलब्ध नहीं' : '✗ Not Available')}
+                                                                                    <div className={`slot-status ${slot.status.toLowerCase().replace(' ', '-')}`}>
+                                                                                        {slot.status === 'Available' && (i18n.language === 'hi' ? '✓ उपलब्ध' : '✓ Available')}
+                                                                                        {slot.status === 'Not Available' && (i18n.language === 'hi' ? '✗ उपलब्ध नहीं' : '✗ Not Available')}
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         );
                                                     })}
@@ -696,11 +702,11 @@ const DoctorAvailability = () => {
 
                             {/* Find a Doctor - Category Search Modal */}
                             {showSearchModal && (
-                                <div className="date-picker-overlay" onClick={() => setShowSearchModal(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                                <div className="date-picker-overlay" onClick={handleCloseSearchModal} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
                                     <div className="date-picker-modal search-modal-premium" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', width: '90%', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', border: '1px solid rgba(255, 255, 255, 0.8)', background: 'white' }}>
                                         <div className="date-picker-header" style={{ padding: '20px 24px 15px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b', margin: 0 }}>{i18n.language === 'hi' ? 'डॉक्टर खोजें' : 'Find a Doctor'}</h3>
-                                            <button className="close-btn" onClick={() => setShowSearchModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b' }}>×</button>
+                                            <button className="close-btn" onClick={handleCloseSearchModal} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b' }}>×</button>
                                         </div>
                                         <form onSubmit={handleSearchSubmit} style={{ padding: '24px' }}>
                                             {/* Search/Filter dropdown */}
@@ -729,10 +735,40 @@ const DoctorAvailability = () => {
                                                             }
                                                         }}
                                                         placeholder={i18n.language === 'hi' ? 'आप किस विशेषज्ञ की तलाश कर रहे हैं?' : 'Which specialist are you looking for?'}
-                                                        style={{ width: '100%', padding: '10px 12px 10px 36px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.95rem', background: '#f8fafc' }}
+                                                        style={{ width: '100%', padding: '10px 36px 10px 36px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.95rem', background: '#f8fafc' }}
                                                         required
                                                     />
                                                     <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', color: '#64748b' }}>🔍</span>
+                                                    {searchQuery && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setSearchQuery('');
+                                                                setSearchCategoryId('');
+                                                            }}
+                                                            style={{
+                                                                position: 'absolute',
+                                                                right: '12px',
+                                                                top: '50%',
+                                                                transform: 'translateY(-50%)',
+                                                                background: 'none',
+                                                                border: 'none',
+                                                                cursor: 'pointer',
+                                                                color: '#94a3b8',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                padding: '4px',
+                                                                borderRadius: '50%',
+                                                                transition: 'all 0.2s'
+                                                            }}
+                                                            onMouseEnter={(e) => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.background = '#f1f5f9'; }}
+                                                            onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'none'; }}
+                                                            aria-label="Clear search"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    )}
                                                 </div>
 
                                                 {/* Filtered Dropdown list */}
@@ -754,11 +790,21 @@ const DoctorAvailability = () => {
                                                             'सभी विशेषज्ञ'.includes(lowerQuery) || 
                                                             'सभी'.includes(lowerQuery);
 
-                                                        const filteredCategories = searchCategories.filter(c => {
-                                                            const engName = c.name.toLowerCase();
-                                                            const hiName = (categoryTranslations[c.name] || '').toLowerCase();
-                                                            return engName.includes(lowerQuery) || hiName.includes(lowerQuery);
-                                                        });
+                                                        // If "All Specialists" (or equivalent) is the search query, show all categories in the dropdown list
+                                                        const isAllSelected = 
+                                                            lowerQuery === '' || 
+                                                            lowerQuery === 'all' || 
+                                                            lowerQuery === 'all specialists' || 
+                                                            lowerQuery === 'सभी' || 
+                                                            lowerQuery === 'सभी विशेषज्ञ';
+
+                                                        const filteredCategories = isAllSelected 
+                                                            ? searchCategories 
+                                                            : searchCategories.filter(c => {
+                                                                const engName = c.name.toLowerCase();
+                                                                const hiName = (categoryTranslations[c.name] || '').toLowerCase();
+                                                                return engName.includes(lowerQuery) || hiName.includes(lowerQuery);
+                                                            });
 
                                                         return (
                                                             <>
@@ -820,27 +866,12 @@ const DoctorAvailability = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Date selection */}
-                                            <div className="form-group" style={{ marginBottom: '24px' }}>
-                                                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
-                                                    {i18n.language === 'hi' ? 'पसंदीदा तिथि' : 'Preferred Date'}
-                                                </label>
-                                                <input
-                                                    type="date"
-                                                    value={getLocalDateString(searchDate)}
-                                                    min={getLocalDateString(new Date())}
-                                                    onChange={(e) => setSearchDate(parseLocalDate(e.target.value))}
-                                                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.95rem', background: '#f8fafc' }}
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px' }}>
                                                 <button
                                                     type="button"
                                                     className="btn-secondary-modern"
-                                                    onClick={() => setShowSearchModal(false)}
-                                                    style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #cbd5e1', background: 'white', color: '#475569', cursor: 'pointer', fontWeight: '600' }}
+                                                    onClick={handleCloseSearchModal}
+                                                    style={{ width: '100%', padding: '10px 15px', borderRadius: '8px', border: '1px solid #cbd5e1', background: 'white', color: '#475569', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem', textAlign: 'center' }}
                                                 >
                                                     {i18n.language === 'hi' ? 'रद्द करें' : 'Cancel'}
                                                 </button>
@@ -849,13 +880,16 @@ const DoctorAvailability = () => {
                                                     className="btn-primary-modern"
                                                     disabled={!searchCategoryId}
                                                     style={{
-                                                        padding: '10px 20px',
+                                                        width: '100%',
+                                                        padding: '10px 15px',
                                                         borderRadius: '8px',
                                                         border: 'none',
                                                         background: !searchCategoryId ? '#94a3b8' : 'linear-gradient(135deg, #00bf9a, #00bf9a)',
                                                         color: 'white',
                                                         cursor: !searchCategoryId ? 'not-allowed' : 'pointer',
                                                         fontWeight: '600',
+                                                        fontSize: '0.9rem',
+                                                        textAlign: 'center',
                                                         boxShadow: !searchCategoryId ? 'none' : '0 4px 6px -1px rgba(0, 191, 154, 0.2)'
                                                     }}
                                                 >
@@ -870,60 +904,7 @@ const DoctorAvailability = () => {
                     </div>
                 </div>
 
-                {/* Emergency Doctors Section */}
-                {filteredEmergencyDoctors.length > 0 && (
-                    <div className="emergency-section">
-                        <div className="container">
-                            <div className="emergency-header">
-                                <div>
-                                    <h2>In case of emergency,  Doctors Availability :</h2>
-                                    <p>Emergency doctors ready to help</p>
-                                </div>
-                            </div>
 
-                            <div className="emergency-doctors-grid">
-                                {filteredEmergencyDoctors.map(doctor => (
-                                    <div key={doctor._id} className="emergency-doctor-card">
-                                        <div className="emergency-badge-float">{i18n.language === 'hi' ? 'अभी उपलब्ध' : 'Available Now'}</div>
-                                        <div className="doctor-photo">
-                                            {doctor.photo ? (
-                                                <img
-                                                    src={doctor.photo.startsWith('http') ? doctor.photo : `${API_BASE_URL}${doctor.photo.startsWith('/') ? '' : '/'}${doctor.photo}`}
-                                                    alt={`Dr. ${doctor.name} - Emergency Doctor at The DharmArth Foundation`}
-                                                />
-                                            ) : (
-                                                <div className="photo-placeholder">👨‍⚕️</div>
-                                            )}
-                                        </div>
-                                        <h3>{i18n.language === 'hi' ? (doctor.name_hi || doctor.name) : doctor.name}</h3>
-                                        <p className="doctor-title">{i18n.language === 'hi' ? (doctor.title_hi || doctor.title) : doctor.title}</p>
-
-                                        {(i18n.language === 'hi' ? (doctor.description_hi || doctor.description) : doctor.description) && (
-                                            <p className="doctor-description-text" style={{ textAlign: 'left' }}>
-                                                {i18n.language === 'hi' ? (doctor.description_hi || doctor.description) : doctor.description}
-                                            </p>
-                                        )}
-
-                                        {(doctor.type === 'clinic' || doctor.type === 'both') && doctor.privateFee !== undefined && doctor.privateFee > 0 && (
-                                            <div className="doctor-fee-row" style={{ margin: '8px auto' }}>
-                                                <span>💵</span>
-                                                <span>{i18n.language === 'hi' ? 'फीस' : 'Fee'}: ₹{doctor.privateFee}</span>
-                                            </div>
-                                        )}
-
-                                        <div className={`doctor-type-badge ${doctor.type}`}>
-                                            {i18n.language === 'hi' ? (
-                                                doctor.type === 'clinic' ? '🏨 निजी क्लिनिक' : doctor.type === 'government' ? '🏥 सरकारी अस्पताल' : '🏥 दोनों में कार्यरत'
-                                            ) : (
-                                                doctor.type === 'clinic' ? '🏨 Private Clinic' : doctor.type === 'government' ? '🏥 Government Hospital' : '🏥 Works in Both'
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
 
 
 

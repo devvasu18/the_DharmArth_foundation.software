@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const doctorController = require('../controllers/doctorController');
 
+// Admin routes - bulk updates
+router.patch('/bulk-status', doctorController.bulkUpdateStatus);
+
 // Public routes
-router.get('/emergency', doctorController.getEmergencyDoctors);
 router.get('/', doctorController.getAllDoctors);
 router.get('/:id', doctorController.getDoctorById);
 
@@ -11,6 +13,5 @@ router.get('/:id', doctorController.getDoctorById);
 router.post('/', doctorController.createDoctor);
 router.put('/:id', doctorController.updateDoctor);
 router.delete('/:id', doctorController.deleteDoctor);
-router.patch('/:id/emergency', doctorController.toggleEmergencyAvailability);
 
 module.exports = router;

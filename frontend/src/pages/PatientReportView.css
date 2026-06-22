@@ -130,6 +130,24 @@
 }
 
 /* Mobile Warning for PDF Viewer */
+.report-download-warning {
+    display: flex;
+    background: #fef3c7;
+    border: 1.5px solid #fde68a;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    align-items: center;
+    gap: 12px;
+}
+
+.report-download-warning-text {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #92400e;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
 .mobile-view-pdf-warning {
     display: none;
     background: #fff9db;

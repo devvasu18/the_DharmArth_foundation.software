@@ -46,8 +46,8 @@ const Navbar = () => {
                             <div className="notif-empty">{t('navbar.noNotifications')}</div>
                         ) : (
                             notifications.map((notif, idx) => (
-                                <div 
-                                    key={idx} 
+                                <div
+                                    key={idx}
                                     className={`notif-item ${!notif.isRead ? 'unread' : ''}`}
                                     onClick={() => handleNotificationClick(notif)}
                                     style={{ cursor: 'pointer' }}
@@ -153,7 +153,7 @@ const Navbar = () => {
 
     const handleNotificationClick = async (notif) => {
         setIsNotificationsOpen(false);
-        
+
         // Mark as read
         if (!notif.isRead) {
             try {
@@ -226,7 +226,7 @@ const Navbar = () => {
                         <>
                             <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.home')}</NavLink>
                             <NavLink to="/events" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.fundraiseFor')}</NavLink>
-                            <NavLink to="/p/join-and-earn" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.joinAndEarn')}</NavLink>
+
                             {user && (
                                 <NavLink to={`/v/${user.referralCode || user.mobile}`} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.shareAndEarn')}</NavLink>
                             )}

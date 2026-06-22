@@ -48,6 +48,21 @@ const ensureAvailabilityRecordsForDateRange = async (startDate, endDate, doctorI
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const newRecords = [];
 
+    // Query all existing availability records for these doctors in the date range in ONE database call
+    const existingRecords = await DoctorAvailability.find({
+        doctorId: { $in: doctors.map(d => d._id) },
+        date: { $gte: start, $lte: end }
+    });
+
+    // Create a fast lookup map
+    const existingMap = new Map();
+    for (const record of existingRecords) {
+        const docId = record.doctorId.toString();
+        const dateKey = record.date.toISOString().substring(0, 10);
+        const hType = record.hospitalType;
+        existingMap.set(`${docId}_${dateKey}_${hType}`, record);
+    }
+
     for (const doc of doctors) {
         let currentDate = new Date(start);
         while (currentDate <= end) {
@@ -65,11 +80,8 @@ const ensureAvailabilityRecordsForDateRange = async (startDate, endDate, doctorI
             }
 
             for (const hType of hTypes) {
-                const existing = await DoctorAvailability.findOne({
-                    doctorId: doc._id,
-                    date: targetDate,
-                    hospitalType: hType
-                });
+                const dateKey = targetDate.toISOString().substring(0, 10);
+                const existing = existingMap.get(`${doc._id.toString()}_${dateKey}_${hType}`);
 
                 if (!existing) {
                     let finalSlots = [];
@@ -428,13 +440,12 @@ exports.getAvailabilitySearch = async (req, res) => {
     try {
         const { hospitalType, categoryId, date } = req.query;
 
-        if (!hospitalType || !categoryId || !date) {
-            return res.status(400).json({ message: 'hospitalType, categoryId, and date are required' });
+        if (!hospitalType || !categoryId) {
+            return res.status(400).json({ message: 'hospitalType and categoryId are required' });
         }
 
-        const targetDate = getUTCMidnight(date);
-        if (!targetDate) {
-            return res.status(400).json({ message: 'Invalid date format' });
+        if (hospitalType !== 'clinic' && !date) {
+            return res.status(400).json({ message: 'date is required' });
         }
 
         // 1. Find all active doctors matching the category and hospital setting
@@ -450,7 +461,7 @@ exports.getAvailabilitySearch = async (req, res) => {
         if (doctors.length === 0) {
             return res.json({
                 available: false,
-                selectedDate: date,
+                selectedDate: date || null,
                 nextAvailableDate: null,
                 doctors: [],
                 message: categoryId === 'all' 
@@ -460,6 +471,81 @@ exports.getAvailabilitySearch = async (req, res) => {
         }
 
         const doctorIds = doctors.map(d => d._id);
+
+        // Special logic for clinic: no specific date requested, fetch all available dates in current month
+        if (hospitalType === 'clinic') {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const startDate = new Date(Date.UTC(year, month, 1));
+            const endDate = new Date(Date.UTC(year, month + 1, 0)); // last day of the month
+
+            // Ensure availability records exist for all category doctors for this month
+            for (const doc of doctors) {
+                await ensureAvailabilityRecordsForDateRange(startDate, endDate, doc._id);
+            }
+
+            // Query all availability records in the range
+            const availabilities = await DoctorAvailability.find({
+                doctorId: { $in: doctorIds },
+                date: { $gte: startDate, $lte: endDate },
+                hospitalType: 'clinic',
+                isEnabled: true
+            }).populate({
+                path: 'doctorId',
+                populate: { path: 'categories' }
+            });
+
+            // Filter records where at least one slot is "Available"
+            const activeAvailabilities = availabilities.filter(a => 
+                a.timeSlots && a.timeSlots.some(s => s.status === 'Available')
+            );
+
+            // Group by doctor
+            const doctorMap = {};
+            for (const avail of activeAvailabilities) {
+                if (!avail.doctorId) continue;
+                const docId = avail.doctorId._id.toString();
+                if (!doctorMap[docId]) {
+                    const firstAvailableSlot = avail.timeSlots.find(s => s.status === 'Available');
+                    const timing = firstAvailableSlot 
+                        ? { startTime: firstAvailableSlot.startTime, endTime: firstAvailableSlot.endTime } 
+                        : null;
+
+                    doctorMap[docId] = {
+                        _id: docId,
+                        doctorId: avail.doctorId,
+                        availableDates: [],
+                        hospitalType: 'clinic',
+                        emergencyAvailable: avail.emergencyAvailable || avail.doctorId.isEmergencyAvailable || false,
+                        timing: timing
+                    };
+                }
+                const dayNum = avail.date.getUTCDate();
+                if (!doctorMap[docId].availableDates.includes(dayNum)) {
+                    doctorMap[docId].availableDates.push(dayNum);
+                }
+            }
+
+            // Sort days ascending
+            for (const docId in doctorMap) {
+                doctorMap[docId].availableDates.sort((a, b) => a - b);
+            }
+
+            const doctorsData = Object.values(doctorMap).filter(d => d.availableDates.length > 0);
+
+            return res.json({
+                available: doctorsData.length > 0,
+                hospitalType: 'clinic',
+                doctors: doctorsData
+            });
+        }
+
+        // Standard flow for government hospital (where date is required)
+        const targetDate = getUTCMidnight(date);
+        if (!targetDate) {
+            return res.status(400).json({ message: 'Invalid date format' });
+        }
 
         // 2. Ensure availability records exist for selected date
         await ensureAvailabilityRecordsForDateRange(targetDate, targetDate);
@@ -536,4 +622,65 @@ exports.getAvailabilitySearch = async (req, res) => {
         res.status(500).json({ message: 'Error searching availability', error: error.message });
     }
 };
+
+// Toggle daily availability for a government doctor
+exports.toggleDailyAvailability = async (req, res) => {
+    try {
+        const { doctorId, date, isEnabled } = req.body;
+        if (!doctorId || !date) {
+            return res.status(400).json({ message: 'doctorId and date are required' });
+        }
+        
+        const targetDate = getUTCMidnight(date);
+        
+        // Find existing record
+        let availability = await DoctorAvailability.findOne({
+            doctorId,
+            date: targetDate,
+            hospitalType: 'government'
+        });
+        
+        if (availability) {
+            availability.isEnabled = isEnabled;
+            await availability.save();
+        } else {
+            // Find doctor to get default slots
+            const doctor = await Doctor.findById(doctorId);
+            if (!doctor) {
+                return res.status(404).json({ message: 'Doctor not found' });
+            }
+            
+            // Get government default slots
+            const defaultSlots = (doctor.defaultTimeSlots || [])
+                .filter(s => s.hospitalType === 'government')
+                .map(s => ({
+                    period: s.period,
+                    startTime: s.startTime,
+                    endTime: s.endTime,
+                    status: 'Available'
+                }));
+                
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const dayName = dayNames[new Date(targetDate).getUTCDay()];
+            
+            availability = new DoctorAvailability({
+                doctorId,
+                date: targetDate,
+                dayName,
+                timeSlots: defaultSlots.length > 0 ? defaultSlots : [
+                    { period: 'Morning', startTime: '09:00', endTime: '12:00', status: 'Available' }
+                ],
+                hospitalType: 'government',
+                isEnabled
+            });
+            await availability.save();
+        }
+        
+        await availability.populate('doctorId');
+        res.json(availability);
+    } catch (error) {
+        res.status(500).json({ message: 'Error toggling availability', error: error.message });
+    }
+};
+
 

@@ -11,6 +11,7 @@ router.get('/', availabilityController.getAvailability);
 // Admin routes (add authentication middleware as needed)
 router.post('/', availabilityController.upsertAvailability);
 router.post('/bulk', availabilityController.bulkCreateAvailability);
+router.post('/toggle-daily', availabilityController.toggleDailyAvailability);
 router.delete('/:id', availabilityController.deleteAvailability);
 
 module.exports = router;
