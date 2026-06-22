@@ -11,9 +11,9 @@ import {
   Alert,
   Dimensions,
   Platform,
-  SafeAreaView,
   Linking
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../src/context/LanguageContext';
@@ -620,30 +620,7 @@ export default function DoctorsScreen() {
                 ))}
               </ScrollView>
 
-              {selectedType === 'government' && (
-                <View style={styles.dateSection}>
-                  <Text style={styles.inputLabel}>{t('doctors.selectDate')}</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dateChipsContainer}>
-                    {upcomingDates.map((date, i) => {
-                      const isSelected = date.getTime() === searchDate.getTime();
-                      const dayName = i === 0 ? (locale === 'hi' ? 'आज' : 'Today') : i === 1 ? (locale === 'hi' ? 'कल' : 'Tomorrow') : date.toLocaleDateString(locale === 'hi' ? 'hi-IN' : 'en-US', { weekday: 'short' });
-                      const dateNum = date.getDate();
-                      const monthName = date.toLocaleDateString(locale === 'hi' ? 'hi-IN' : 'en-US', { month: 'short' });
-                      return (
-                        <TouchableOpacity
-                          key={i}
-                          style={[styles.dateChip, isSelected && styles.dateChipActive]}
-                          onPress={() => setSearchDate(date)}
-                        >
-                          <Text style={[styles.dateDayText, isSelected && styles.dateTextActive]}>{dayName}</Text>
-                          <Text style={[styles.dateNumText, isSelected && styles.dateTextActive]}>{dateNum}</Text>
-                          <Text style={[styles.dateMonthText, isSelected && styles.dateTextActive]}>{monthName}</Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </ScrollView>
-                </View>
-              )}
+
             </ScrollView>
 
             <View style={styles.modalFooter}>

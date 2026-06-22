@@ -293,6 +293,24 @@ export default function TabLayout() {
 
                   <TouchableOpacity
                     style={styles.menuItem}
+                    onPress={() => navigateTo('/doctors', true)}
+                  >
+                    <Ionicons name="medical-outline" size={22} color="#475569" />
+                    <Text style={styles.menuItemText}>{t('navbar.findDoctor') || 'Find Doctor'}</Text>
+                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => navigateTo('/body-tests', true)}
+                  >
+                    <Ionicons name="fitness-outline" size={22} color="#475569" />
+                    <Text style={styles.menuItemText}>{t('navbar.bodyTests') || 'Body Tests'}</Text>
+                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.menuItem}
                     onPress={() => {
                       setMenuVisible(false);
                       setLangModalVisible(true);
