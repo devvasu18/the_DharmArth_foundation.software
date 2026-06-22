@@ -232,7 +232,7 @@ const Navbar = () => {
                             )}
                             <NavLink to="/leaderboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.leaderboard')}</NavLink>
                             <NavLink to="/p/about-us" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.aboutUs')}</NavLink>
-                            {/* <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.doctorAvailability')}</NavLink>*/}
+                            <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.doctorAvailability')}</NavLink>
                             <NavLink to="/order-medicine" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.orderMedicine')}</NavLink>
                             <NavLink to="/body-tests" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>{t('navbar.bodyTests')}</NavLink>
                         </>
@@ -327,6 +327,7 @@ const Navbar = () => {
                     {renderLanguageToggle(true)}
                     {!isDeliveryPartner && (
                         <>
+                            <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.doctorAvailability')}</NavLink>
                             <NavLink to="/body-tests" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.bodyTests')}</NavLink>
                         </>
                     )}
