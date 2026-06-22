@@ -25,7 +25,8 @@ const translations = {
       noNotifications: "No notifications yet",
       changeLanguage: "Change Language",
       brand: "Dharmarth",
-      bodyTests: "Body Tests"
+      bodyTests: "Body Tests",
+      findDoctor: "Find a Doctor"
     },
     bodyTests: {
       title: "Medical Tests & Diagnostic Services",
@@ -173,7 +174,8 @@ const translations = {
       noNotifications: "कोई नई सूचना नहीं",
       changeLanguage: "भाषा बदलें",
       brand: "धर्मार्थ",
-      bodyTests: "बॉडी टेस्ट"
+      bodyTests: "बॉडी टेस्ट",
+      findDoctor: "एक डॉक्टर खोजें"
     },
     bodyTests: {
       title: "चिकित्सीय परीक्षण एवं निदान सेवाएं",

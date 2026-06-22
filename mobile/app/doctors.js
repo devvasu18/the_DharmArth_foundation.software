@@ -493,14 +493,19 @@ export default function DoctorsScreen() {
           headerTintColor: '#1e293b',
           headerTitleStyle: { fontWeight: '900', fontSize: 16 },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 8 }}>
+            <TouchableOpacity 
+              onPress={() => router.back()} 
+              style={{ paddingHorizontal: 12, paddingVertical: 8, marginLeft: -4 }}
+              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+            >
               <Ionicons name="arrow-back" size={24} color="#1e293b" />
             </TouchableOpacity>
           ),
           headerRight: () => (
             <TouchableOpacity 
               onPress={() => Linking.openURL(`tel:${contactPhone}`)} 
-              style={{ marginRight: 8, padding: 4 }}
+              style={{ paddingHorizontal: 12, paddingVertical: 8, marginRight: -4 }}
+              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
             >
               <Ionicons name="call" size={22} color="#00bfa5" />
             </TouchableOpacity>
