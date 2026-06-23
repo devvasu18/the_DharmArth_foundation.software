@@ -13,7 +13,7 @@ import {
   Platform,
   Linking
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../src/context/LanguageContext';
@@ -69,6 +69,7 @@ const timeToMinutes = (timeStr) => {
 export default function DoctorsScreen() {
   const { t, locale } = useTranslation();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [selectedType, setSelectedType] = useState(null); // 'government' or 'clinic'
   
@@ -485,10 +486,11 @@ export default function DoctorsScreen() {
       : t('doctors.specialistSearch');
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
+    <SafeAreaView style={styles.safeContainer} edges={['bottom', 'left', 'right']}>
       <Stack.Screen
         options={{
           headerShown: true,
+          headerStatusBarHeight: insets.top,
           title: t('doctors.title'),
           headerTintColor: '#1e293b',
           headerTitleStyle: { fontWeight: '900', fontSize: 16 },
@@ -593,7 +595,7 @@ export default function DoctorsScreen() {
       {/* Search/Filter Modal */}
       <Modal visible={showSearchModal} transparent animationType="slide" onRequestClose={handleCloseSearchModal}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { paddingBottom: 24 + insets.bottom }]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('doctors.findDoctor')}</Text>
               <TouchableOpacity onPress={handleCloseSearchModal} style={styles.closeBtn}>
