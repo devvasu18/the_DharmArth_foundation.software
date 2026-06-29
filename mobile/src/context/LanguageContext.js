@@ -26,7 +26,8 @@ const translations = {
       changeLanguage: "Change Language",
       brand: "Dharmarth",
       bodyTests: "Body Tests",
-      findDoctor: "Find a Doctor"
+      findDoctor: "Find a Doctor",
+      leaderboard: "Leaderboard"
     },
     bodyTests: {
       title: "Medical Tests & Diagnostic Services",
@@ -151,6 +152,18 @@ const translations = {
       skip: "Skip",
       getStarted: "Get Started",
       next: "Next"
+    },
+    leaderboard: {
+      title: "Leaderboard",
+      fetching: "FETCHING CHAMPIONS...",
+      noDonations: "No donations recorded for this period yet.",
+      beFirst: "Be the First!",
+      tabs: {
+        today: "Today",
+        week: "This Week",
+        month: "This Month",
+        "all-time": "All Time"
+      }
     }
   },
   hi: {
@@ -175,7 +188,8 @@ const translations = {
       changeLanguage: "भाषा बदलें",
       brand: "धर्मार्थ",
       bodyTests: "बॉडी टेस्ट",
-      findDoctor: "एक डॉक्टर खोजें"
+      findDoctor: "एक डॉक्टर खोजें",
+      leaderboard: "लीडरबोर्ड"
     },
     bodyTests: {
       title: "चिकित्सीय परीक्षण एवं निदान सेवाएं",
@@ -300,6 +314,18 @@ const translations = {
       skip: "छोड़ें",
       getStarted: "शुरू करें",
       next: "अगला"
+    },
+    leaderboard: {
+      title: "लीडरबोर्ड",
+      fetching: "चैंपियंस प्राप्त किए जा रहे हैं...",
+      noDonations: "इस अवधि के लिए अभी तक कोई दान दर्ज नहीं किया गया है।",
+      beFirst: "पहले बनें!",
+      tabs: {
+        today: "आज",
+        week: "इस सप्ताह",
+        month: "इस महीने",
+        "all-time": "अब तक"
+      }
     }
   }
 };

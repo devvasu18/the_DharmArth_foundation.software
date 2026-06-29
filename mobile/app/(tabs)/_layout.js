@@ -90,6 +90,7 @@ export default function TabLayout() {
   }, [user?._id, pathname]); // Re-fetch on pathname change to catch mark-read updates
 
   const menuItems = [
+    { label: t('navbar.leaderboard') || 'Leaderboard', icon: 'trophy-outline', route: '/leaderboard', public: true },
     { label: t('navbar.bodyTests'), icon: 'flask-outline', route: '/body-tests', public: true },
     { label: t('navbar.myEarnings'), icon: 'wallet-outline', route: '/dashboard' },
     { label: t('navbar.myProfile'), icon: 'person-outline', route: '/profile' },
@@ -280,16 +281,16 @@ export default function TabLayout() {
                   {menuItems
                     .filter(item => item.route !== '/share-earn' || user)
                     .map((item, index) => (
-                    <TouchableOpacity
-                      key={`menu-item-${index}`}
-                      style={styles.menuItem}
-                      onPress={() => navigateTo(item.route, item.public)}
-                    >
-                      <Ionicons name={item.icon} size={22} color="#475569" />
-                      <Text style={styles.menuItemText}>{item.label}</Text>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                    </TouchableOpacity>
-                  ))}
+                      <TouchableOpacity
+                        key={`menu-item-${index}`}
+                        style={styles.menuItem}
+                        onPress={() => navigateTo(item.route, item.public)}
+                      >
+                        <Ionicons name={item.icon} size={22} color="#475569" />
+                        <Text style={styles.menuItemText}>{item.label}</Text>
+                        <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                      </TouchableOpacity>
+                    ))}
 
                   <TouchableOpacity
                     style={styles.menuItem}
@@ -371,7 +372,7 @@ export default function TabLayout() {
           >
             <View style={styles.langModalContainer}>
               <Text style={styles.langModalTitle}>{t('navbar.changeLanguage')}</Text>
-              
+
               <TouchableOpacity
                 style={[
                   styles.langOption,
