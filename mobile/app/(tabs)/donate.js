@@ -71,7 +71,7 @@ export default function DonateScreen() {
   const [confirmPan, setConfirmPan] = useState('');
   const [showPanModal, setShowPanModal] = useState(false);
   const [confirmError, setConfirmError] = useState('');
-  
+
   // Suggestions states
   const [suggestions, setSuggestions] = useState([]);
   const [sessionToken, setSessionToken] = useState('');
@@ -367,18 +367,18 @@ export default function DonateScreen() {
 
     if (Platform.OS === 'ios') {
       const webDonationUrl = `https://thedharmarth.com/donate?name=${encodeURIComponent(fullName)}&mobile=${encodeURIComponent(mobile)}&email=${encodeURIComponent(email)}&amount=${finalAmount}&is80G=${need80G}&pan=${encodeURIComponent(pan)}&aadhaar=${encodeURIComponent(aadhaar)}&ref=${encodeURIComponent(motivatorMobile)}&authToken=${encodeURIComponent(authUser?.token || '')}`;
-      
+
       Alert.alert(
         'Redirecting to Web Checkout',
         'To comply with App Store guidelines, donations are processed securely on our website. You will be redirected to complete your payment.',
         [
           { text: 'Cancel', style: 'cancel', onPress: () => setSubmitting(false) },
-          { 
-            text: 'Proceed', 
+          {
+            text: 'Proceed',
             onPress: () => {
               Linking.openURL(webDonationUrl);
               setSubmitting(false);
-            } 
+            }
           }
         ]
       );
@@ -635,8 +635,8 @@ export default function DonateScreen() {
             onPress={() => router.replace(isLoggedIn ? '/dashboard' : '/')}
           >
             <Text style={styles.goHomeText}>
-              {isLoggedIn 
-                ? (locale === 'hi' ? 'डैशबोर्ड पर जाएं' : 'Go to Dashboard') 
+              {isLoggedIn
+                ? (locale === 'hi' ? 'डैशबोर्ड पर जाएं' : 'Go to Dashboard')
                 : (locale === 'hi' ? 'छोड़ें और होम पर जाएं' : 'Skip & Go Home')}
             </Text>
             <Ionicons name="arrow-forward" size={18} color="#00bfa5" />
@@ -718,7 +718,7 @@ export default function DonateScreen() {
             <TextInput
               ref={fullNameInputRef}
               style={[styles.input, errors.fullName && styles.inputError]}
-              placeholder={locale === 'hi' ? 'जैसे: रघु कुमार' : "Ex. Raghu Kumar"}
+              placeholder={locale === 'hi' ? 'जैसे: वासुदेव शर्मा' : "Ex. Vasudev Sharma"}
               value={fullName}
               onChangeText={(text) => {
                 setFullName(text);
@@ -767,8 +767,8 @@ export default function DonateScreen() {
               >
                 <Ionicons name="location" size={14} color="#00bfa5" />
                 <Text style={styles.detectBtnText}>
-                  {isDetecting 
-                    ? (locale === 'hi' ? 'पता लगा रहा है...' : 'Detecting...') 
+                  {isDetecting
+                    ? (locale === 'hi' ? 'पता लगा रहा है...' : 'Detecting...')
                     : (locale === 'hi' ? 'ऑटो पता लगाएँ' : 'Auto Detect')}
                 </Text>
               </TouchableOpacity>
@@ -992,7 +992,7 @@ export default function DonateScreen() {
             <Text style={styles.modalText}>
               Please re-enter your PAN Number for verification.
             </Text>
-            
+
             <TextInput
               style={[styles.input, confirmError ? styles.inputError : null, { marginBottom: 10 }]}
               placeholder="Enter PAN Number again"
@@ -1013,7 +1013,7 @@ export default function DonateScreen() {
               >
                 <Text style={styles.modalBtnCancelText}>Cancel</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={[styles.modalBtn, styles.modalBtnConfirm]}
                 onPress={handlePanConfirm}
@@ -1031,7 +1031,7 @@ export default function DonateScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  
+
   // PAN Modal Styles
   modalOverlay: {
     flex: 1,
