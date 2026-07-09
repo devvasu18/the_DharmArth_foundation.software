@@ -209,7 +209,7 @@ const LandingScreen = () => {
                   }}
                 >
                   <Text style={styles.heroCtaText}>
-                    {locale === 'hi' && textSlides[currentTextIndex].ctaText_hi ? textSlides[currentTextIndex].ctaText_hi : (textSlides[currentTextIndex].ctaText || 'Donate Now')}
+                    {locale === 'hi' ? (textSlides[currentTextIndex].ctaText_hi || 'अभी दान करें') : (textSlides[currentTextIndex].ctaText || 'Donate Now')}
                   </Text>
                   <Ionicons name="arrow-forward" size={20} color="white" />
                 </TouchableOpacity>
@@ -342,7 +342,7 @@ const LandingScreen = () => {
             {[
               { icon: 'trophy-outline', text: locale === 'hi' ? 'कम खर्च में बेहतर दवाएं' : 'Better Medicines at Lower Costs' },
               { icon: 'people-outline', text: locale === 'hi' ? 'उद्देश्य केवल सेवा' : 'Objective Only Service' },
-              { icon: 'medical-outline', text: locale === 'hi' ? 'समाज सर्विसमैन द्वारा संचालित' : 'Run by the Community Service Men' },
+              { icon: 'medical-outline', text: locale === 'hi' ? 'सर्वसमाज द्वारा संचालित' : 'Run by the Community Service Men' },
               { icon: 'card-outline', text: locale === 'hi' ? '80G आयकर मुक्त' : 'Tax Exemption  80G' }
             ].map((item, i) => (
               <View key={`why-${i}`} style={styles.whyUsItem}>
@@ -355,7 +355,7 @@ const LandingScreen = () => {
           </View>
         </View>
 
-        {/* Monthly Giving Section */}
+        {/* Monthly Giving Section
         <View style={styles.monthlyGivingSection}>
           <Image
             source={{ uri: 'https://thedharmarth.com/assets/happy_kids_illustration-sgLu09hg.png' }}
@@ -376,6 +376,7 @@ const LandingScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
+        */}
 
         {/* FAQ Section */}
         {faqs.length > 0 && (
@@ -408,12 +409,12 @@ const styles = StyleSheet.create({
   },
   // Hero Section
   heroSection: {
-    paddingTop: 40,
+    paddingTop: 16,
     backgroundColor: '#E0F7FA', // Light teal background
-    paddingBottom: 60,
+    paddingBottom: 20,
   },
   heroSliderWrapper: {
-    marginBottom: 32,
+    marginBottom: 8,
     marginTop: 10,
   },
   heroDialContainer: {
@@ -495,7 +496,7 @@ const styles = StyleSheet.create({
     color: '#475569',
     textAlign: 'center',
     lineHeight: 24,
-    marginTop: 24,
+    marginTop: 8,
     marginBottom: 32,
   },
   heroCta: {
@@ -573,6 +574,7 @@ const styles = StyleSheet.create({
   // Quick Links Grid
   quickLinksContainer: {
     paddingHorizontal: 20,
+    paddingTop: 16,
     paddingBottom: 30,
     backgroundColor: 'white',
     gap: 12,

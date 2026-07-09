@@ -11,7 +11,8 @@ import {
   Pressable,
   Dimensions,
   Image,
-  Platform
+  Platform,
+  ScrollView
 } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 import DonationExitModal from '../../src/components/DonationExitModal';
@@ -260,7 +261,7 @@ export default function TabLayout() {
             onPress={() => setMenuVisible(false)}
           >
             <View style={styles.menuContainer}>
-              <View style={{ paddingTop: Platform.OS === 'ios' ? 50 : 30 }}>
+              <View style={{ paddingTop: Platform.OS === 'ios' ? 50 : 30, flex: 1 }}>
                 <View style={styles.menuHeader}>
                   <View style={styles.userInfo}>
                     <Image
@@ -277,7 +278,7 @@ export default function TabLayout() {
                   </TouchableOpacity>
                 </View>
 
-                <View style={styles.menuList}>
+                <ScrollView style={styles.menuList} showsVerticalScrollIndicator={false}>
                   {menuItems
                     .filter(item => item.route !== '/share-earn' || user)
                     .map((item, index) => (
@@ -344,7 +345,7 @@ export default function TabLayout() {
                       <Text style={[styles.menuItemText, { color: '#00bfa5' }]}>{t('navbar.login')}</Text>
                     </TouchableOpacity>
                   )}
-                </View>
+                </ScrollView>
 
                 <View style={styles.menuFooter}>
                   <Text style={styles.footerBrand}>The DharmArth Foundation</Text>
