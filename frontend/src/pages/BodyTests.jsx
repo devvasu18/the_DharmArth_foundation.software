@@ -133,7 +133,7 @@ const BodyTests = () => {
         "name": "The DharmArth Foundation Sujangarh Healthcare Services",
         "description": "Book diagnostic checkup packages and medical tests at affordable prices in Sujangarh, Rajasthan.",
         "url": "https://thedharmarth.com/body-tests",
-        "image": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1782711903/the_dharmarth_foundation/logo.jpg",
+        "image": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1783602963/the_dharmarth_foundation/logo.jpg",
         "telephone": contactPhone,
         "address": {
             "@type": "PostalAddress",

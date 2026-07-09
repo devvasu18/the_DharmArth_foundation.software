@@ -41,7 +41,7 @@ const Home = () => {
         "name": "The DharmArth Foundation",
         "alternateName": "TDMF",
         "url": "https://thedharmarth.com",
-        "logo": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1782711903/the_dharmarth_foundation/logo.jpg",
+        "logo": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1783602963/the_dharmarth_foundation/logo.jpg",
         "contactPoint": {
             "@type": "ContactPoint",
             "telephone": contactInfo.phone,

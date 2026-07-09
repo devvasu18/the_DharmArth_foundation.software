@@ -368,7 +368,7 @@ const DoctorAvailability = () => {
         "name": "The DharmArth Foundation Sujangarh Healthcare Services",
         "description": "Check real-time doctor availability and government hospital service updates in Sujangarh, Churu District, Rajasthan. Get healthcare assistance and diagnostic test guides.",
         "url": "https://thedharmarth.com/doctors",
-        "image": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1782711903/the_dharmarth_foundation/logo.jpg",
+        "image": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1783602963/the_dharmarth_foundation/logo.jpg",
         "telephone": contactPhone,
         "address": {
             "@type": "PostalAddress",

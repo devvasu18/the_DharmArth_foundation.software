@@ -12,7 +12,7 @@ cloudinary.config({
 });
 
 const uploadImage = async () => {
-  const filePath = path.join(__dirname, '../LOGO.jpg');
+  const filePath = path.join(__dirname, '../mobile/assets/LOGO.jpg');
   console.log('Uploading:', filePath);
   try {
     const result = await cloudinary.uploader.upload(filePath, {

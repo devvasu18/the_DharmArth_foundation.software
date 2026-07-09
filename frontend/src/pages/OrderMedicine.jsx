@@ -779,7 +779,7 @@ const OrderMedicine = () => {
         "name": "The DharmArth Foundation Free Medicine Ordering & Express Delivery",
         "description": "Order medicines online for delivery in Rajasthan and across India. Benefit from our NGO's free medicine service and emergency medical support.",
         "url": "https://thedharmarth.com/order-medicine",
-        "image": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1782711903/the_dharmarth_foundation/logo.jpg",
+        "image": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1783602963/the_dharmarth_foundation/logo.jpg",
         "telephone": contactPhone,
         "address": {
             "@type": "PostalAddress",

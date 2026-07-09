@@ -7,7 +7,7 @@ const SEO = ({
     canonicalUrl,
     ogTitle,
     ogDescription,
-    ogImage = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1782711903/the_dharmarth_foundation/logo.jpg',
+    ogImage = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1783602963/the_dharmarth_foundation/logo.jpg',
     ogType = 'website',
     twitterCard = 'summary_large_image',
     jsonLd
