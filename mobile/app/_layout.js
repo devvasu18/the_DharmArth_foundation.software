@@ -58,7 +58,7 @@ function RootLayoutNav() {
 
         const inAuthGroup = segments[0] === '(auth)';
         const publicRoutes = ['index', 'donate', 'events', 'contact', 'body-tests', 'doctors', 'leaderboard'];
-        const isPublicRoute = segments.length <= 1 || (segments[0] === '(tabs)' && publicRoutes.includes(segments[1])) || segments[0] === 'event' || segments[0] === 'contact' || segments[0] === 'body-tests' || segments[0] === 'doctors' || segments[0] === 'leaderboard';
+        const isPublicRoute = segments.length <= 1 || (segments[0] === '(tabs)' && publicRoutes.includes(segments[1])) || segments[0] === 'event' || segments[0] === 'contact' || segments[0] === 'body-tests' || segments[0] === 'doctors' || segments[0] === 'leaderboard' || segments[0] === 'p' || segments[0] === 'v';
 
         if (!user && !inAuthGroup && !isPublicRoute && !inOnboarding) {
           router.replace('/login');

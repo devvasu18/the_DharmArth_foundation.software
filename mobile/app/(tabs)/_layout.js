@@ -183,7 +183,10 @@ export default function TabLayout() {
               style={{ marginRight: 16, padding: 4 }}
               onPress={() => setLangModalVisible(true)}
             >
-              <Ionicons name="globe-outline" size={26} color="#0f172a" />
+              <View style={styles.langIconContainer}>
+                <Text style={styles.langTextDeva}>अ</Text>
+                <Text style={styles.langTextLatin}>A</Text>
+              </View>
             </TouchableOpacity>
             <TouchableOpacity
               style={{ marginRight: 16, padding: 4, position: 'relative' }}
@@ -459,6 +462,33 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
+  langIconContainer: {
+    width: 28,
+    height: 28,
+    backgroundColor: '#eceefb',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    position: 'relative',
+  },
+  langTextDeva: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0f172a',
+    position: 'absolute',
+    left: 2,
+    top: 0,
+    lineHeight: 14,
+  },
+  langTextLatin: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0f172a',
+    position: 'absolute',
+    right: 2,
+    bottom: -1,
+    lineHeight: 14,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
