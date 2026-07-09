@@ -97,7 +97,9 @@ export default function TabLayout() {
     { label: t('navbar.mySubscriptions'), icon: 'card-outline', route: '/my-subscriptions' },
     { label: t('navbar.myNetwork'), icon: 'git-network-outline', route: '/my-network' },
     { label: t('navbar.myReferrals'), icon: 'people-outline', route: '/my-referrals' },
-    { label: t('navbar.shareAndEarn'), icon: 'share-social-outline', route: '/share-earn' }
+    { label: t('navbar.shareAndEarn'), icon: 'share-social-outline', route: '/share-earn' },
+    { label: t('navbar.aboutUs'), icon: 'information-circle-outline', route: '/p/about-us', public: true },
+    { label: t('navbar.contactUs'), icon: 'mail-outline', route: '/contact', public: true }
   ];
 
   const handleLogout = () => {
@@ -165,16 +167,7 @@ export default function TabLayout() {
           borderBottomColor: '#00bfa5',
         },
         headerTitleAlign: 'left',
-        headerTitle: () => (
-          <Text style={{
-            fontWeight: '900',
-            color: '#00bfa5',
-            fontSize: 26,
-            marginLeft: 8,
-          }}>
-            {t('navbar.brand')}
-          </Text>
-        ),
+        headerTitle: () => null,
         headerLeft: () => (
           <Image
             source={require('../../assets/LOGO.jpg')}
@@ -182,8 +175,15 @@ export default function TabLayout() {
             resizeMode="contain"
           />
         ),
+
         headerRight: () => (
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity
+              style={{ marginRight: 16, padding: 4 }}
+              onPress={() => setLangModalVisible(true)}
+            >
+              <Ionicons name="globe-outline" size={26} color="#0f172a" />
+            </TouchableOpacity>
             <TouchableOpacity
               style={{ marginRight: 16, padding: 4, position: 'relative' }}
               onPress={() => {

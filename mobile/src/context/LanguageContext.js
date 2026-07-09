@@ -27,7 +27,9 @@ const translations = {
       brand: "Dharmarth",
       bodyTests: "Body Tests",
       findDoctor: "Find a Doctor",
-      leaderboard: "Leaderboard"
+      leaderboard: "Leaderboard",
+      aboutUs: "About Us",
+      contactUs: "Contact Us"
     },
     bodyTests: {
       title: "Medical Tests & Diagnostic Services",
@@ -189,7 +191,9 @@ const translations = {
       brand: "धर्मार्थ",
       bodyTests: "बॉडी टेस्ट",
       findDoctor: "एक डॉक्टर खोजें",
-      leaderboard: "लीडरबोर्ड"
+      leaderboard: "लीडरबोर्ड",
+      aboutUs: "हमारे बारे में",
+      contactUs: "संपर्क करें"
     },
     bodyTests: {
       title: "चिकित्सीय परीक्षण एवं निदान सेवाएं",

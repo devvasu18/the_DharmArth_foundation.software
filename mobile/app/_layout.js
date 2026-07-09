@@ -112,6 +112,15 @@ function RootLayoutNav() {
           }} 
         />
         <Stack.Screen 
+          name="p/[slug]" 
+          options={{ 
+            headerShown: true,
+            headerStyle: { backgroundColor: 'white' },
+            headerTitleStyle: { fontWeight: '800', color: '#1e293b' },
+            headerTintColor: '#00bfa5'
+          }} 
+        />
+        <Stack.Screen 
           name="my-subscriptions" 
           options={{ 
             title: 'My Subscriptions',

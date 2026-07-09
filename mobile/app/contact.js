@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,10 @@ import api from '../src/services/api';
 export default function ContactScreen() {
   const { t, locale } = useTranslation();
   const router = useRouter();
+  const [contactInfo, setContactInfo] = useState({
+    email: 'thedharmarth@gmail.com',
+    phone: '8306305569'
+  });
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -29,6 +33,23 @@ export default function ContactScreen() {
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const { data } = await api.get('/content/settings');
+        if (data) {
+          setContactInfo({
+            email: data.contact_email || 'thedharmarth@gmail.com',
+            phone: data.contact_phone || '8306305569'
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load contact info in Contact page", error);
+      }
+    };
+    fetchContactInfo();
+  }, []);
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.phone || !formData.message) {
@@ -45,7 +66,7 @@ export default function ContactScreen() {
         mobile: formData.phone,
         notes: `Subject: ${formData.subject || 'Mobile Inquiry'}\nMessage: ${formData.message}`,
         type: 'contact',
-        source: 'mobile_app'
+        source: 'mobile_contact_page'
       });
       setSuccess(true);
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
@@ -58,11 +79,11 @@ export default function ContactScreen() {
   };
 
   const handlePhoneCall = () => {
-    Linking.openURL('tel:+918306305569');
+    Linking.openURL(`tel:+91${contactInfo.phone}`);
   };
 
   const handleEmail = () => {
-    Linking.openURL('mailto:support@dharmarth.org');
+    Linking.openURL(`mailto:${contactInfo.email}`);
   };
 
   return (
@@ -108,7 +129,7 @@ export default function ContactScreen() {
               </View>
               <View style={styles.infoDetails}>
                 <Text style={styles.infoLabel}>{locale === 'hi' ? 'हेल्पलाइन नंबर' : 'Helpline Support'}</Text>
-                <Text style={styles.infoValue}>+91 8306305569</Text>
+                <Text style={styles.infoValue}>+91 {contactInfo.phone}</Text>
                 <Text style={styles.infoSubtext}>{locale === 'hi' ? 'कॉल करने के लिए टैप करें' : 'Tap to call us'}</Text>
               </View>
             </TouchableOpacity>
@@ -119,7 +140,7 @@ export default function ContactScreen() {
               </View>
               <View style={styles.infoDetails}>
                 <Text style={styles.infoLabel}>{locale === 'hi' ? 'ईमेल एड्रेस' : 'Email Address'}</Text>
-                <Text style={styles.infoValue}>support@dharmarth.org</Text>
+                <Text style={styles.infoValue}>{contactInfo.email}</Text>
                 <Text style={styles.infoSubtext}>{locale === 'hi' ? 'ईमेल भेजने के लिए टैप करें' : 'Tap to send mail'}</Text>
               </View>
             </TouchableOpacity>
@@ -130,8 +151,12 @@ export default function ContactScreen() {
               </View>
               <View style={styles.infoDetails}>
                 <Text style={styles.infoLabel}>{locale === 'hi' ? 'मुख्य कार्यालय' : 'Headquarters'}</Text>
-                <Text style={styles.infoValue}>TDMF Online Ventures</Text>
-                <Text style={styles.infoSubtext}>Jaipur, Rajasthan, India</Text>
+                <Text style={styles.infoValue}>TDMF Online Ventures Pvt Ltd</Text>
+                <Text style={styles.infoSubtext}>
+                  {locale === 'hi'
+                    ? 'जादव मार्ग, डुलिया बाईपास, सुजानगढ़, चूरू जिला, राजस्थान, भारत - 331507'
+                    : 'Jadaw Marg, Duliya Bypass, Sujangarh, Churu District, Rajasthan, India - 331507'}
+                </Text>
               </View>
             </View>
           </View>

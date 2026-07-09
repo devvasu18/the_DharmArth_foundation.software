@@ -162,7 +162,18 @@ export default function EventsScreen() {
                       {slide.ctaLink && (
                         <TouchableOpacity 
                           style={styles.headerCta} 
-                          onPress={() => Linking.openURL(`https://thedharmarth.com${slide.ctaLink}`)}
+                          onPress={() => {
+                            const link = slide.ctaLink || '';
+                            if (link.startsWith('/p/')) {
+                              router.push(link);
+                            } else if (link === '/donate' || link.endsWith('/donate')) {
+                              router.push('/donate');
+                            } else if (link.startsWith('/')) {
+                              router.push(link);
+                            } else {
+                              Linking.openURL(link.startsWith('http') ? link : `https://thedharmarth.com${link}`).catch(err => console.log(err));
+                            }
+                          }}
                         >
                           <Text style={styles.headerCtaText}>
                             {locale === 'hi' && slide.ctaText_hi ? slide.ctaText_hi : (slide.ctaText || 'Learn More')}

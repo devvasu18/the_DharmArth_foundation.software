@@ -54,6 +54,7 @@ const LandingScreen = () => {
   const [loading, setLoading] = useState(true);
   const [currentVisualIndex, setCurrentVisualIndex] = useState(0);
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -85,22 +86,22 @@ const LandingScreen = () => {
 
   // Auto-rotation logic
   useEffect(() => {
-    if (visuals.length > 1) {
+    if (visuals.length > 1 && !isPaused) {
       const interval = setInterval(() => {
         setCurrentVisualIndex((prev) => (prev + 1) % visuals.length);
       }, 5000);
       return () => clearInterval(interval);
     }
-  }, [visuals.length]);
+  }, [visuals.length, isPaused]);
 
   useEffect(() => {
-    if (textSlides.length > 1) {
+    if (textSlides.length > 1 && !isPaused) {
       const interval = setInterval(() => {
         setCurrentTextIndex((prev) => (prev + 1) % textSlides.length);
       }, 6000);
       return () => clearInterval(interval);
     }
-  }, [textSlides.length]);
+  }, [textSlides.length, isPaused]);
 
   const handleDonate = () => {
     router.push('/donate');
@@ -128,7 +129,12 @@ const LandingScreen = () => {
         {/* Premium Hero Slider Section */}
         <View style={styles.heroSection}>
           {/* App-like Hero Slider */}
-          <View style={styles.heroSliderWrapper}>
+          <View
+            style={styles.heroSliderWrapper}
+            onTouchStart={() => setIsPaused(true)}
+            onTouchEnd={() => setIsPaused(false)}
+            onTouchCancel={() => setIsPaused(false)}
+          >
             <View style={styles.heroDialContainer}>
               {visuals.map((slide, index) => {
                 const len = visuals.length;
@@ -177,38 +183,6 @@ const LandingScreen = () => {
           <View style={styles.heroContent}>
             {textSlides[currentTextIndex] && (
               <View key={`hero-txt-${textSlides[currentTextIndex]._id || ''}-${currentTextIndex}`}>
-                <Text style={styles.heroTitle}>
-                  {locale === 'hi' && textSlides[currentTextIndex].title_hi ? textSlides[currentTextIndex].title_hi : textSlides[currentTextIndex].title}
-                </Text>
-
-                <View style={styles.impactStats}>
-                  <View style={styles.impactItem}>
-                    <Text style={styles.impactNumber}>
-                      {locale === 'hi' 
-                        ? (textSlides[currentTextIndex].stat1Number_hi || textSlides[currentTextIndex].stat1Number || "0%") 
-                        : (textSlides[currentTextIndex].stat1Number || "0%")}
-                    </Text>
-                    <Text style={styles.impactLabel}>
-                      {locale === 'hi' 
-                        ? (textSlides[currentTextIndex].stat1Label_hi || textSlides[currentTextIndex].stat1Label || t('home.platformFee')) 
-                        : (textSlides[currentTextIndex].stat1Label || t('home.platformFee'))}
-                    </Text>
-                  </View>
-                  <View style={styles.impactDivider} />
-                  <View style={styles.impactItem}>
-                    <Text style={styles.impactNumber}>
-                      {locale === 'hi' 
-                        ? (textSlides[currentTextIndex].stat2Number_hi || textSlides[currentTextIndex].stat2Number || "72 लाख+") 
-                        : (textSlides[currentTextIndex].stat2Number || "72 Lakh+")}
-                    </Text>
-                    <Text style={styles.impactLabel}>
-                      {locale === 'hi' 
-                        ? (textSlides[currentTextIndex].stat2Label_hi || textSlides[currentTextIndex].stat2Label || t('home.contributors')) 
-                        : (textSlides[currentTextIndex].stat2Label || t('home.contributors'))}
-                    </Text>
-                  </View>
-                </View>
-
                 <Text style={styles.heroDescription}>
                   {locale === 'hi' && textSlides[currentTextIndex].subtitle_hi ? textSlides[currentTextIndex].subtitle_hi : (textSlides[currentTextIndex].subtitle || 'Empowering change through your generous contributions.')}
                 </Text>
@@ -221,6 +195,8 @@ const LandingScreen = () => {
                       router.push('/donate');
                     } else if (link === '/events' || link.endsWith('/events')) {
                       router.push('/events');
+                    } else if (link.startsWith('/p/')) {
+                      router.push(link);
                     } else {
                       let webLink = link;
                       if (link.startsWith('/')) {
@@ -242,58 +218,107 @@ const LandingScreen = () => {
           </View>
         </View>
 
-        {/* Welcome Section */}
+        {/* Welcome Section
         <View style={styles.welcomeSection}>
           <Text style={styles.welcomeTitle}>
             {t('home.feedChild')}
           </Text>
           <View style={styles.welcomeUnderline} />
         </View>
+        */}
 
         {/* Quick Links Grid */}
         <View style={styles.quickLinksContainer}>
           <View style={styles.quickLinksRow}>
-            <TouchableOpacity 
-              style={[styles.quickLinkBtn, { backgroundColor: '#16a34a' }]} 
-              onPress={() => router.push('/donate')}
-            >
-              <Text style={styles.quickLinkText}>{locale === 'hi' ? 'अभी दान\nकरें' : 'Donate\nNow'}</Text>
-              <Ionicons name="heart" size={38} color="white" />
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.quickLinkBtn, { backgroundColor: '#3b82f6' }]} 
+            <TouchableOpacity
+              style={[styles.quickLinkBtn, { backgroundColor: '#7bc4a3' }]}
               onPress={() => router.push('/doctors')}
             >
-              <Text style={styles.quickLinkText}>{locale === 'hi' ? 'डॉक्टर\nखोजें' : 'Find\nDoctors'}</Text>
+              <Text style={styles.quickLinkText}>{locale === 'hi' ? 'सुजानगढ़ के\nडॉक्टर खोजें' : 'Find Doctors\nof Sujangarh'}</Text>
               <Ionicons name="medkit" size={38} color="white" />
             </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.quickLinkBtn, { backgroundColor: '#2b9ebb' }]}
+              onPress={() => router.push('/p/join-and-earn')}
+            >
+              <Text style={styles.quickLinkText}>{locale === 'hi' ? 'जुड़ें और\nकमाएं' : 'Join &\nEarn'}</Text>
+              <Ionicons name="people" size={38} color="white" />
+            </TouchableOpacity>
+
+
           </View>
 
           <View style={styles.quickLinksRow}>
-            <TouchableOpacity 
-              style={[styles.quickLinkBtn, { backgroundColor: '#f97316' }]} 
+            <TouchableOpacity
+              style={[styles.quickLinkBtn, { backgroundColor: '#f09953' }]}
               onPress={() => router.push('/body-tests')}
             >
               <Text style={styles.quickLinkText}>{locale === 'hi' ? 'मेडिकल\nटेस्ट' : 'Body\nTests'}</Text>
               <Ionicons name="flask" size={38} color="white" />
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.quickLinkBtn, { backgroundColor: '#0d9488' }]} 
-              onPress={() => {
-                if (user) {
-                  router.push('/donate-wallet');
-                } else {
-                  router.push('/login');
-                }
-              }}
+            <TouchableOpacity
+              style={[styles.quickLinkBtn, { backgroundColor: '#af8fbe', position: 'relative' }]}
+              activeOpacity={1}
             >
-              <Text style={styles.quickLinkText}>{locale === 'hi' ? 'मेरा\nवॉलेट' : 'My\nWallet'}</Text>
-              <Ionicons name="wallet" size={38} color="white" />
+              <View style={{
+                position: 'absolute',
+                top: 8,
+                left: 12,
+                backgroundColor: '#ef4444',
+                paddingHorizontal: 6,
+                paddingVertical: 2,
+                borderRadius: 4,
+              }}>
+                <Text style={{ color: 'white', fontSize: 9, fontWeight: '900' }}>
+                  {locale === 'hi' ? 'आगामी' : 'UPCOMING'}
+                </Text>
+              </View>
+              <Text style={[styles.quickLinkText, { paddingTop: 10 }]}>
+                {locale === 'hi' ? 'दवा\nऑर्डर करें' : 'Order\nMedicine'}
+              </Text>
+              <Ionicons name="cart" size={38} color="white" />
             </TouchableOpacity>
           </View>
         </View>
+
+        {textSlides[currentTextIndex] && (
+          <View style={styles.heroContent}>
+            <Text style={styles.heroTitle}>
+              {locale === 'hi' && textSlides[currentTextIndex].title_hi ? textSlides[currentTextIndex].title_hi : textSlides[currentTextIndex].title}
+            </Text>
+
+            {/* 
+            <View style={styles.impactStats}>
+              <View style={styles.impactItem}>
+                <Text style={styles.impactNumber}>
+                  {locale === 'hi'
+                    ? (textSlides[currentTextIndex].stat1Number_hi || textSlides[currentTextIndex].stat1Number || "0%")
+                    : (textSlides[currentTextIndex].stat1Number || "0%")}
+                </Text>
+                <Text style={styles.impactLabel}>
+                  {locale === 'hi'
+                    ? (textSlides[currentTextIndex].stat1Label_hi || textSlides[currentTextIndex].stat1Label || t('home.platformFee'))
+                    : (textSlides[currentTextIndex].stat1Label || t('home.platformFee'))}
+                </Text>
+              </View>
+              <View style={styles.impactDivider} />
+              <View style={styles.impactItem}>
+                <Text style={styles.impactNumber}>
+                  {locale === 'hi'
+                    ? (textSlides[currentTextIndex].stat2Number_hi || textSlides[currentTextIndex].stat2Number || "72 लाख+")
+                    : (textSlides[currentTextIndex].stat2Number || "72 Lakh+")}
+                </Text>
+                <Text style={styles.impactLabel}>
+                  {locale === 'hi'
+                    ? (textSlides[currentTextIndex].stat2Label_hi || textSlides[currentTextIndex].stat2Label || t('home.contributors'))
+                    : (textSlides[currentTextIndex].stat2Label || t('home.contributors'))}
+                </Text>
+              </View>
+            </View>
+            */}
+          </View>
+        )}
 
         {/* Crowdfunding Sections */}
         {crowdfunding.map((section, index) => (
@@ -315,10 +340,10 @@ const LandingScreen = () => {
           <Text style={styles.sectionHeading}>{t('home.whyChooseUs')}</Text>
           <View style={styles.whyUsGrid}>
             {[
-              { icon: 'trophy-outline', text: locale === 'hi' ? 'पारदर्शी और जवाबदेह' : 'Transparent & Accountable' },
-              { icon: 'people-outline', text: locale === 'hi' ? 'समुदाय संचालित' : 'Community Driven' },
-              { icon: 'medical-outline', text: locale === 'hi' ? 'जीवन रक्षक सहायता' : 'Life Saving Aid' },
-              { icon: 'card-outline', text: locale === 'hi' ? 'सुरक्षित भुगतान' : 'Secure Payments' }
+              { icon: 'trophy-outline', text: locale === 'hi' ? 'कम खर्च में बेहतर दवाएं' : 'Better Medicines at Lower Costs' },
+              { icon: 'people-outline', text: locale === 'hi' ? 'उद्देश्य केवल सेवा' : 'Objective Only Service' },
+              { icon: 'medical-outline', text: locale === 'hi' ? 'समाज सर्विसमैन द्वारा संचालित' : 'Run by the Community Service Men' },
+              { icon: 'card-outline', text: locale === 'hi' ? '80G आयकर मुक्त' : 'Tax Exemption  80G' }
             ].map((item, i) => (
               <View key={`why-${i}`} style={styles.whyUsItem}>
                 <View style={styles.whyUsIcon}>
@@ -344,7 +369,7 @@ const LandingScreen = () => {
             </Text>
             <TouchableOpacity
               style={styles.monthlyGivingBtn}
-              onPress={() => router.push('/dashboard')}
+              onPress={() => router.push('/p/join-and-earn')}
             >
               <Text style={styles.monthlyGivingBtnText}>{t('home.joinEarnMonthly')}</Text>
               <Ionicons name="arrow-forward" size={18} color="white" />
@@ -357,10 +382,10 @@ const LandingScreen = () => {
           <View style={styles.faqSection}>
             <Text style={styles.sectionHeading}>{t('home.faqTitle')}</Text>
             {faqs.map((faq, index) => (
-              <FAQItem 
-                key={faq._id || index} 
-                question={locale === 'hi' && faq.question_hi ? faq.question_hi : faq.question} 
-                answer={locale === 'hi' && faq.answer_hi ? faq.answer_hi : faq.answer} 
+              <FAQItem
+                key={faq._id || index}
+                question={locale === 'hi' && faq.question_hi ? faq.question_hi : faq.question}
+                answer={locale === 'hi' && faq.answer_hi ? faq.answer_hi : faq.answer}
               />
             ))}
           </View>
