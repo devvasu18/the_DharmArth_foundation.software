@@ -178,12 +178,11 @@ export default function TabLayout() {
             />
             <View style={{ marginLeft: 8, justifyContent: 'center' }}>
               <Text style={{
-                fontSize: 8,
+                fontSize: locale === 'hi' ? 10 : 8,
                 fontWeight: '800',
                 color: '#00bfa5',
-                textTransform: 'uppercase',
-                letterSpacing: 1,
-                lineHeight: 9
+                textTransform: locale === 'hi' ? 'none' : 'uppercase',
+                letterSpacing: locale === 'hi' ? 0 : 1,
               }}>
                 {locale === 'hi' ? 'द' : 'THE'}
               </Text>
@@ -191,18 +190,16 @@ export default function TabLayout() {
                 fontSize: 15,
                 fontWeight: '900',
                 color: '#0f172a',
-                lineHeight: 16,
                 marginVertical: 1
               }}>
                 {locale === 'hi' ? 'धर्मार्थ' : 'DharmArth'}
               </Text>
               <Text style={{
-                fontSize: 8,
+                fontSize: locale === 'hi' ? 9 : 8,
                 fontWeight: '800',
                 color: '#00bfa5',
-                textTransform: 'uppercase',
-                letterSpacing: 0.5,
-                lineHeight: 9
+                textTransform: locale === 'hi' ? 'none' : 'uppercase',
+                letterSpacing: locale === 'hi' ? 0 : 0.5,
               }}>
                 {locale === 'hi' ? 'मेडिकल फाउंडेशन' : 'MEDICAL FOUNDATION'}
               </Text>

@@ -271,7 +271,7 @@ const LandingScreen = () => {
                 borderRadius: 4,
               }}>
                 <Text style={{ color: 'white', fontSize: 9, fontWeight: '900' }}>
-                  {locale === 'hi' ? 'आगामी' : 'UPCOMING'}
+                  {locale === 'hi' ? 'जल्द आ रहा है' : 'Coming Soon'}
                 </Text>
               </View>
               <Text style={[styles.quickLinkText, { paddingTop: 10 }]}>
