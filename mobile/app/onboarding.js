@@ -19,36 +19,35 @@ const { width, height } = Dimensions.get('window');
 const SLIDES = [
   {
     id: '1',
-    title: 'Divine Support',
-    subtitle: 'Cow Seva & Medical Aid',
-    description: 'Support noble causes like cow shelters, health camps, and child education. Directly touch lives with your kind contributions.',
-    icon: 'medkit-sharp',
+    title: 'Get Better Medicines & Tests in Less Cost',
+    subtitle: 'Trusted Healthcare at Affordable Prices',
+    description: 'Our mission is to make quality healthcare services affordable and accessible, ensuring that everyone can benefit from better medicines and essential diagnostic tests.',
     bgColor: '#00bfa5',
     accentColor: '#e6fffa',
   },
   {
     id: '2',
-    title: 'Inspire & Earn',
-    subtitle: '10% Wallet Commission',
-    description: 'Share your personal referral link with your family and networks. Earn a 10% instant reward for every inspired donation.',
+    title: 'Support Our Mission with Your Donation',
+    subtitle: 'Your Small Donation Can Bring Big Hope.',
+    description: 'Be a Part of Our Mission. Your contribution helps us provide affordable, high quality healthcare services to families in need.',
     icon: 'heart-sharp',
     bgColor: '#00897b',
     accentColor: '#e0f2f1',
   },
   {
     id: '3',
-    title: 'Grow Your Network',
-    subtitle: 'Multi-Level Tracking',
-    description: 'Track directly inspired L1 and partner-inspired L2 donors via a visual network tree. Download your 80G tax certificates instantly.',
+    title: 'How to Donate',
+    subtitle: '80G Tax Benefit Certificate',
+    description: 'Go to "Donate Now" from the app main menu, enter the donation amount, and complete the payment securely. Once your donation is successful, you will instantly receive your Section 80G Tax Exemption Certificate.',
     icon: 'cash-sharp',
     bgColor: '#00695c',
     accentColor: '#e0f2f1',
   },
   {
     id: '4',
-    title: 'Secure Payouts',
-    subtitle: 'Direct Bank Transfer',
-    description: 'Manage your earnings inside a secure wallet. Withdraw funds directly to your verified bank account at any time with total safety.',
+    title: 'How to Find Doctor Availability',
+    subtitle: 'Sujangarh Government Hospital',
+    description: 'On the app home screen, tap "Find Doctors in Sujangarh." Then select "Government Hospital" and choose the specialist category and preferred date to view doctors availability and schedules.',
     icon: 'medical-sharp',
     bgColor: '#004d40',
     accentColor: '#e0f2f1',
@@ -127,9 +126,9 @@ export default function OnboardingScreen() {
         {/* Animated Feature Icon Box */}
         <Animated.View style={[
           styles.iconContainer,
-          { 
+          {
             backgroundColor: item.accentColor,
-            transform: [{ scale }, { translateY }] 
+            transform: [{ scale }, { translateY }]
           }
         ]}>
           <Ionicons name={item.icon} size={110} color={item.bgColor} />
@@ -183,7 +182,7 @@ export default function OnboardingScreen() {
         <View style={styles.indicatorContainer}>
           {SLIDES.map((_, i) => {
             const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
-            
+
             // Expand width dynamically for the selected slide indicator dot
             const dotWidth = scrollX.interpolate({
               inputRange,
