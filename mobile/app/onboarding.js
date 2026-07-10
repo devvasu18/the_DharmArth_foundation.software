@@ -22,6 +22,7 @@ const SLIDES = [
     title: 'Get Better Medicines & Tests in Less Cost',
     subtitle: 'Trusted Healthcare at Affordable Prices',
     description: 'Our mission is to make quality healthcare services affordable and accessible, ensuring that everyone can benefit from better medicines and essential diagnostic tests.',
+    icon: 'medkit-sharp',
     bgColor: '#00bfa5',
     accentColor: '#e6fffa',
   },
