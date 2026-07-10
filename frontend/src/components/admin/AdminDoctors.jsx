@@ -33,6 +33,19 @@ const AdminDoctors = () => {
     const [activeTab, setActiveTab] = useState('profile');
     const [selectedDateNum, setSelectedDateNum] = useState(1);
 
+    const [selectedClinicDates, setSelectedClinicDates] = useState([]);
+    const [singleClinicSlot, setSingleClinicSlot] = useState({ period: 'Morning', startTime: '09:00', endTime: '12:00' });
+
+    const toggleClinicDate = (num) => {
+        setSelectedClinicDates(prev => {
+            if (prev.includes(num)) {
+                return prev.filter(d => d !== num);
+            } else {
+                return [...prev, num].sort((a, b) => a - b);
+            }
+        });
+    };
+
     // Doctor Categories States
     const [categories, setCategories] = useState([]);
     const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -102,10 +115,62 @@ const AdminDoctors = () => {
 
             const method = editingDoctor ? 'PUT' : 'POST';
 
+            const finalFormData = { ...formData };
+            
+            // Map selectedClinicDates and singleClinicSlot into dateSpecificTimeSlots
+            if (formData.type === 'clinic' || formData.type === 'both') {
+                const governmentOverrides = (formData.dateSpecificTimeSlots || [])
+                    .map(override => ({
+                        ...override,
+                        timeSlots: (override.timeSlots || []).filter(s => s.hospitalType === 'government')
+                    }))
+                    .filter(override => override.timeSlots.length > 0);
+
+                const clinicOverrides = selectedClinicDates.map(dayNum => ({
+                    dateNumber: dayNum,
+                    timeSlots: [{
+                        period: singleClinicSlot.period,
+                        startTime: singleClinicSlot.startTime,
+                        endTime: singleClinicSlot.endTime,
+                        hospitalType: 'clinic'
+                    }]
+                }));
+
+                const mergedOverrides = [];
+                const allDays = Array.from(new Set([
+                    ...governmentOverrides.map(o => o.dateNumber),
+                    ...clinicOverrides.map(o => o.dateNumber)
+                ]));
+
+                for (const day of allDays) {
+                    const gov = governmentOverrides.find(o => o.dateNumber === day);
+                    const cl = clinicOverrides.find(o => o.dateNumber === day);
+
+                    const mergedSlots = [
+                        ...(gov ? gov.timeSlots : []),
+                        ...(cl ? cl.timeSlots : [])
+                    ];
+
+                    mergedOverrides.push({
+                        dateNumber: day,
+                        timeSlots: mergedSlots
+                    });
+                }
+
+                finalFormData.dateSpecificTimeSlots = mergedOverrides;
+            } else {
+                finalFormData.dateSpecificTimeSlots = (formData.dateSpecificTimeSlots || [])
+                    .map(override => ({
+                        ...override,
+                        timeSlots: (override.timeSlots || []).filter(s => s.hospitalType === 'government')
+                    }))
+                    .filter(override => override.timeSlots.length > 0);
+            }
+
             const response = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(finalFormData)
             });
 
             if (response.ok) {
@@ -238,6 +303,38 @@ const AdminDoctors = () => {
                 description_hi: doctor.description_hi || '',
                 privateFee: doctor.privateFee || 0
             });
+
+            // Load clinic specific overrides
+            const clinicDates = (doctor.dateSpecificTimeSlots || [])
+                .filter(s => s.timeSlots && s.timeSlots.some(slot => slot.hospitalType === 'clinic'))
+                .map(s => s.dateNumber);
+            setSelectedClinicDates(clinicDates);
+
+            let firstClinicSlot = null;
+            for (const override of doctor.dateSpecificTimeSlots || []) {
+                const slot = (override.timeSlots || []).find(s => s.hospitalType === 'clinic');
+                if (slot) {
+                    firstClinicSlot = {
+                        period: slot.period,
+                        startTime: slot.startTime,
+                        endTime: slot.endTime
+                    };
+                    break;
+                }
+            }
+            if (!firstClinicSlot) {
+                const defaultClinic = (doctor.defaultTimeSlots || []).find(s => s.hospitalType === 'clinic');
+                if (defaultClinic) {
+                    firstClinicSlot = {
+                        period: defaultClinic.period,
+                        startTime: defaultClinic.startTime,
+                        endTime: defaultClinic.endTime
+                    };
+                } else {
+                    firstClinicSlot = { period: 'Morning', startTime: '09:00', endTime: '12:00' };
+                }
+            }
+            setSingleClinicSlot(firstClinicSlot);
         } else {
             setEditingDoctor(null);
             setFormData({
@@ -265,6 +362,8 @@ const AdminDoctors = () => {
                 description_hi: '',
                 privateFee: 0
             });
+            setSelectedClinicDates([]);
+            setSingleClinicSlot({ period: 'Morning', startTime: '09:00', endTime: '12:00' });
         }
         setShowModal(true);
     };
@@ -882,17 +981,17 @@ const AdminDoctors = () => {
                                 <div className="date-specific-section">
                                     <div className="date-grid-container">
                                         <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px', textAlign: 'center' }}>
-                                            Select a date number (1-31) to configure custom availability overrides:
+                                            Select date numbers (1-31) to make the doctor available for the Private Clinic:
                                         </p>
                                         <div className="date-grid">
                                             {Array.from({ length: 31 }, (_, i) => i + 1).map((num) => {
-                                                const hasOverride = (formData.dateSpecificTimeSlots || []).some(s => s.dateNumber === num);
+                                                const isSelected = selectedClinicDates.includes(num);
                                                 return (
                                                     <button
                                                         key={num}
                                                         type="button"
-                                                        className={`date-cell ${selectedDateNum === num ? 'selected' : ''} ${hasOverride ? 'has-override' : ''}`}
-                                                        onClick={() => setSelectedDateNum(num)}
+                                                        className={`date-cell ${isSelected ? 'selected' : ''}`}
+                                                        onClick={() => toggleClinicDate(num)}
                                                     >
                                                         {num}
                                                     </button>
@@ -901,112 +1000,50 @@ const AdminDoctors = () => {
                                         </div>
                                     </div>
 
-                                    {(() => {
-                                        const override = (formData.dateSpecificTimeSlots || []).find(s => s.dateNumber === selectedDateNum);
-                                        const hasOverride = !!override;
-
-                                        return (
-                                            <div className="date-override-panel">
-                                                <div className={`override-status-banner ${hasOverride ? 'active-override' : 'no-override'}`}>
-                                                    <div>
-                                                        <strong>Day {selectedDateNum} status:</strong> {hasOverride ? 'Custom override schedule active' : 'Using default weekly schedule'}
-                                                    </div>
-                                                    {hasOverride ? (
-                                                        <button
-                                                            type="button"
-                                                            className="btn-status-action danger"
-                                                            onClick={() => handleClearOverride(selectedDateNum)}
-                                                        >
-                                                            Restore Defaults
-                                                        </button>
-                                                    ) : (
-                                                        <button
-                                                            type="button"
-                                                            className="btn-status-action"
-                                                            onClick={() => handleCreateOverride(selectedDateNum)}
-                                                        >
-                                                            Override Day {selectedDateNum}
-                                                        </button>
-                                                    )}
-                                                </div>
-
-                                                {hasOverride && (
-                                                    <div className="override-slots-editor">
-                                                        {(() => {
-                                                            const renderOverrideSlots = (hospitalType, label) => {
-                                                                const slots = (override.timeSlots || []).map((slot, index) => ({ ...slot, originalIndex: index })).filter(s => s.hospitalType === hospitalType);
-
-                                                                return (
-                                                                    <div className="default-slots-section" style={{ margin: '15px 0 0', borderTop: '1px solid #e2e8f0', paddingTop: '10px' }}>
-                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                                                                            <h5 style={{ fontSize: '0.9rem', color: '#334155', margin: 0, fontWeight: '600' }}>{label}</h5>
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => addDateSpecificSlot(selectedDateNum, hospitalType)}
-                                                                                style={{ background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', borderRadius: '4px', padding: '2px 6px', fontSize: '0.75rem', cursor: 'pointer' }}
-                                                                            >
-                                                                                + Add Slot
-                                                                            </button>
-                                                                        </div>
-                                                                        {slots.length === 0 ? (
-                                                                            <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '5px 0' }}>No slots set for this type. Doctor is unavailable for {label}.</p>
-                                                                        ) : (
-                                                                            slots.map((slot) => (
-                                                                                <div key={slot.originalIndex} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
-                                                                                    <div>
-                                                                                        <select
-                                                                                            value={slot.period}
-                                                                                            onChange={(e) => updateDateSpecificSlot(selectedDateNum, slot.originalIndex, 'period', e.target.value)}
-                                                                                            style={{ width: '100%', padding: '5px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.8rem' }}
-                                                                                        >
-                                                                                            <option value="Morning">Morning</option>
-                                                                                            <option value="Afternoon">Afternoon</option>
-                                                                                            <option value="Evening">Evening</option>
-                                                                                        </select>
-                                                                                    </div>
-                                                                                    <div>
-                                                                                        <input
-                                                                                            type="time"
-                                                                                            value={slot.startTime}
-                                                                                            onChange={(e) => updateDateSpecificSlot(selectedDateNum, slot.originalIndex, 'startTime', e.target.value)}
-                                                                                            style={{ width: '100%', padding: '5px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.8rem' }}
-                                                                                        />
-                                                                                    </div>
-                                                                                    <div>
-                                                                                        <input
-                                                                                            type="time"
-                                                                                            value={slot.endTime}
-                                                                                            onChange={(e) => updateDateSpecificSlot(selectedDateNum, slot.originalIndex, 'endTime', e.target.value)}
-                                                                                            style={{ width: '100%', padding: '5px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.8rem' }}
-                                                                                        />
-                                                                                    </div>
-                                                                                    <div>
-                                                                                        <button
-                                                                                            type="button"
-                                                                                            onClick={() => removeDateSpecificSlot(selectedDateNum, slot.originalIndex)}
-                                                                                            style={{ background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem' }}
-                                                                                        >
-                                                                                            ×
-                                                                                        </button>
-                                                                                    </div>
-                                                                                </div>
-                                                                            ))
-                                                                        )}
-                                                                    </div>
-                                                                );
-                                                            };
-
-                                                            return (
-                                                                <>
-                                                                    {(formData.type === 'clinic' || formData.type === 'both') && renderOverrideSlots('clinic', '🏨 Private Clinic Slots')}
-                                                                </>
-                                                            );
-                                                        })()}
-                                                    </div>
-                                                )}
+                                    <div className="date-override-panel" style={{ marginTop: '20px' }}>
+                                        <div className="override-status-banner active-override">
+                                            <div>
+                                                <strong>Private Clinic Time Slot:</strong> This single slot configuration applies to all selected dates.
                                             </div>
-                                        );
-                                    })()}
+                                        </div>
+
+                                        <div className="override-slots-editor" style={{ marginTop: '15px' }}>
+                                            <div className="default-slots-section">
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1.2fr', gap: '12px', alignItems: 'center' }}>
+                                                    <div>
+                                                        <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>Period</label>
+                                                        <select
+                                                            value={singleClinicSlot.period}
+                                                            onChange={(e) => setSingleClinicSlot(prev => ({ ...prev, period: e.target.value }))}
+                                                            style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem', marginTop: '4px' }}
+                                                        >
+                                                            <option value="Morning">Morning</option>
+                                                            <option value="Afternoon">Afternoon</option>
+                                                            <option value="Evening">Evening</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>Start Time</label>
+                                                        <input
+                                                            type="time"
+                                                            value={singleClinicSlot.startTime}
+                                                            onChange={(e) => setSingleClinicSlot(prev => ({ ...prev, startTime: e.target.value }))}
+                                                            style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem', marginTop: '4px' }}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>End Time</label>
+                                                        <input
+                                                            type="time"
+                                                            value={singleClinicSlot.endTime}
+                                                            onChange={(e) => setSingleClinicSlot(prev => ({ ...prev, endTime: e.target.value }))}
+                                                            style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.85rem', marginTop: '4px' }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
