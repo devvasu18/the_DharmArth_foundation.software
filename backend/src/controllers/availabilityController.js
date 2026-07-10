@@ -89,53 +89,30 @@ const ensureAvailabilityRecordsForDateRange = async (startDate, endDate, doctorI
                     let emergencyAvailable = false;
                     let notes = '';
 
-                    // 1. Date-specific override
-                    const dateOverride = (doc.dateSpecificTimeSlots || []).find(slot => slot.dateNumber === dateNum);
-                    if (dateOverride) {
-                        const overriddenSlots = dateOverride.timeSlots.filter(s => s.hospitalType === hType);
-                        finalSlots = overriddenSlots.map(s => ({
-                            period: s.period,
-                            startTime: s.startTime,
-                            endTime: s.endTime,
-                            status: 'Available'
-                        }));
-                        isEnabled = true;
-                        emergencyAvailable = doc.isEmergencyAvailable || false;
-                    } else {
-                        // 2. Carry forward from previous month
-                        const targetYear = targetDate.getUTCFullYear();
-                        const targetMonth = targetDate.getUTCMonth();
-                        const prevMonthStart = new Date(Date.UTC(targetYear, targetMonth - 1, 1));
-                        const prevMonthEnd = new Date(Date.UTC(targetYear, targetMonth, 0));
-
-                        const prevRecords = await DoctorAvailability.find({
-                            doctorId: doc._id,
-                            date: { $gte: prevMonthStart, $lte: prevMonthEnd },
-                            hospitalType: hType
-                        }).sort({ date: 1 });
-
-                        const sameWeekdayRecords = prevRecords.filter(r => r.date.getUTCDay() === dayOfWeek);
-                        const targetOccurrenceIndex = Math.floor((dateNum - 1) / 7);
-
-                        let carryForwardRecord = sameWeekdayRecords.find(r => Math.floor((r.date.getUTCDate() - 1) / 7) === targetOccurrenceIndex);
-                        if (!carryForwardRecord && sameWeekdayRecords.length > 0) {
-                            carryForwardRecord = sameWeekdayRecords[sameWeekdayRecords.length - 1];
-                        }
-
-                        if (carryForwardRecord) {
-                            finalSlots = carryForwardRecord.timeSlots.map(s => ({
+                    if (hType === 'clinic') {
+                        // Clinic availability relies strictly on explicit date-specific overrides (1-31)
+                        const dateOverride = (doc.dateSpecificTimeSlots || []).find(slot => slot.dateNumber === dateNum);
+                        if (dateOverride) {
+                            const overriddenSlots = dateOverride.timeSlots.filter(s => s.hospitalType === hType);
+                            finalSlots = overriddenSlots.map(s => ({
                                 period: s.period,
                                 startTime: s.startTime,
                                 endTime: s.endTime,
-                                status: s.status || 'Available'
+                                status: 'Available'
                             }));
-                            isEnabled = carryForwardRecord.isEnabled;
-                            emergencyAvailable = carryForwardRecord.emergencyAvailable;
-                            notes = carryForwardRecord.notes || '';
+                            isEnabled = overriddenSlots.length > 0;
+                            emergencyAvailable = doc.isEmergencyAvailable || false;
                         } else {
-                            // 3. Fall back to default weekly slots
-                            const defaultSlots = (doc.defaultTimeSlots || []).filter(s => s.hospitalType === hType);
-                            finalSlots = defaultSlots.map(s => ({
+                            finalSlots = [];
+                            isEnabled = false;
+                            emergencyAvailable = false;
+                        }
+                    } else {
+                        // 1. Date-specific override
+                        const dateOverride = (doc.dateSpecificTimeSlots || []).find(slot => slot.dateNumber === dateNum);
+                        if (dateOverride) {
+                            const overriddenSlots = dateOverride.timeSlots.filter(s => s.hospitalType === hType);
+                            finalSlots = overriddenSlots.map(s => ({
                                 period: s.period,
                                 startTime: s.startTime,
                                 endTime: s.endTime,
@@ -143,6 +120,49 @@ const ensureAvailabilityRecordsForDateRange = async (startDate, endDate, doctorI
                             }));
                             isEnabled = true;
                             emergencyAvailable = doc.isEmergencyAvailable || false;
+                        } else {
+                            // 2. Carry forward from previous month
+                            const targetYear = targetDate.getUTCFullYear();
+                            const targetMonth = targetDate.getUTCMonth();
+                            const prevMonthStart = new Date(Date.UTC(targetYear, targetMonth - 1, 1));
+                            const prevMonthEnd = new Date(Date.UTC(targetYear, targetMonth, 0));
+
+                            const prevRecords = await DoctorAvailability.find({
+                                doctorId: doc._id,
+                                date: { $gte: prevMonthStart, $lte: prevMonthEnd },
+                                hospitalType: hType
+                            }).sort({ date: 1 });
+
+                            const sameWeekdayRecords = prevRecords.filter(r => r.date.getUTCDay() === dayOfWeek);
+                            const targetOccurrenceIndex = Math.floor((dateNum - 1) / 7);
+
+                            let carryForwardRecord = sameWeekdayRecords.find(r => Math.floor((r.date.getUTCDate() - 1) / 7) === targetOccurrenceIndex);
+                            if (!carryForwardRecord && sameWeekdayRecords.length > 0) {
+                                carryForwardRecord = sameWeekdayRecords[sameWeekdayRecords.length - 1];
+                            }
+
+                            if (carryForwardRecord) {
+                                finalSlots = carryForwardRecord.timeSlots.map(s => ({
+                                    period: s.period,
+                                    startTime: s.startTime,
+                                    endTime: s.endTime,
+                                    status: s.status || 'Available'
+                                }));
+                                isEnabled = carryForwardRecord.isEnabled;
+                                emergencyAvailable = carryForwardRecord.emergencyAvailable;
+                                notes = carryForwardRecord.notes || '';
+                            } else {
+                                // 3. Fall back to default weekly slots
+                                const defaultSlots = (doc.defaultTimeSlots || []).filter(s => s.hospitalType === hType);
+                                finalSlots = defaultSlots.map(s => ({
+                                    period: s.period,
+                                    startTime: s.startTime,
+                                    endTime: s.endTime,
+                                    status: 'Available'
+                                }));
+                                isEnabled = true;
+                                emergencyAvailable = doc.isEmergencyAvailable || false;
+                            }
                         }
                     }
 

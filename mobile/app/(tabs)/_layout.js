@@ -170,11 +170,44 @@ export default function TabLayout() {
         headerTitleAlign: 'left',
         headerTitle: () => null,
         headerLeft: () => (
-          <Image
-            source={require('../../assets/LOGO.jpg')}
-            style={{ width: 34, height: 34, borderRadius: 17, marginLeft: 16 }}
-            resizeMode="contain"
-          />
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16 }}>
+            <Image
+              source={require('../../assets/LOGO.jpg')}
+              style={{ width: 40, height: 40, borderRadius: 20 }}
+              resizeMode="contain"
+            />
+            <View style={{ marginLeft: 8, justifyContent: 'center' }}>
+              <Text style={{
+                fontSize: 8,
+                fontWeight: '800',
+                color: '#00bfa5',
+                textTransform: 'uppercase',
+                letterSpacing: 1,
+                lineHeight: 9
+              }}>
+                {locale === 'hi' ? 'द' : 'THE'}
+              </Text>
+              <Text style={{
+                fontSize: 15,
+                fontWeight: '900',
+                color: '#0f172a',
+                lineHeight: 16,
+                marginVertical: 1
+              }}>
+                {locale === 'hi' ? 'धर्मार्थ' : 'DharmArth'}
+              </Text>
+              <Text style={{
+                fontSize: 8,
+                fontWeight: '800',
+                color: '#00bfa5',
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+                lineHeight: 9
+              }}>
+                {locale === 'hi' ? 'मेडिकल फाउंडेशन' : 'MEDICAL FOUNDATION'}
+              </Text>
+            </View>
+          </View>
         ),
 
         headerRight: () => (

@@ -231,14 +231,14 @@ const LandingScreen = () => {
         <View style={styles.quickLinksContainer}>
           <View style={styles.quickLinksRow}>
             <TouchableOpacity
-              style={[styles.quickLinkBtn, { backgroundColor: '#7bc4a3' }]}
+              style={[styles.quickLinkBtn, { backgroundColor: '#f09953' }]}
               onPress={() => router.push('/doctors')}
             >
               <Text style={styles.quickLinkText}>{locale === 'hi' ? 'सुजानगढ़ के\nडॉक्टर खोजें' : 'Find Doctors\nof Sujangarh'}</Text>
               <Ionicons name="medkit" size={38} color="white" />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.quickLinkBtn, { backgroundColor: '#2b9ebb' }]}
+              style={[styles.quickLinkBtn, { backgroundColor: '#af8fbe' }]}
               onPress={() => router.push('/p/join-and-earn')}
             >
               <Text style={styles.quickLinkText}>{locale === 'hi' ? 'जुड़ें और\nकमाएं' : 'Join &\nEarn'}</Text>
@@ -250,7 +250,7 @@ const LandingScreen = () => {
 
           <View style={styles.quickLinksRow}>
             <TouchableOpacity
-              style={[styles.quickLinkBtn, { backgroundColor: '#f09953' }]}
+              style={[styles.quickLinkBtn, { backgroundColor: '#7bc4a3' }]}
               onPress={() => router.push('/body-tests')}
             >
               <Text style={styles.quickLinkText}>{locale === 'hi' ? 'मेडिकल\nटेस्ट' : 'Body\nTests'}</Text>
@@ -258,7 +258,7 @@ const LandingScreen = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.quickLinkBtn, { backgroundColor: '#af8fbe', position: 'relative' }]}
+              style={[styles.quickLinkBtn, { backgroundColor: '#2b9ebb', position: 'relative' }]}
               activeOpacity={1}
             >
               <View style={{
@@ -275,7 +275,7 @@ const LandingScreen = () => {
                 </Text>
               </View>
               <Text style={[styles.quickLinkText, { paddingTop: 10 }]}>
-                {locale === 'hi' ? 'दवा\nऑर्डर करें' : 'Online\nMedicine'}
+                {locale === 'hi' ? 'दवा\nऑनलाइन ऑर्डर करें' : 'Order Online\nMedicine'}
               </Text>
               <Ionicons name="cart" size={38} color="white" />
             </TouchableOpacity>
@@ -340,10 +340,10 @@ const LandingScreen = () => {
           <Text style={styles.sectionHeading}>{t('home.whyChooseUs')}</Text>
           <View style={styles.whyUsGrid}>
             {[
-              { icon: 'trophy-outline', text: locale === 'hi' ? 'कम खर्च में बेहतर दवाएं' : 'Better Medicines at Lower Costs' },
+              { icon: 'trophy-outline', text: locale === 'hi' ? 'कम खर्च में बेहतर दवा और जांच' : 'Better Medicines and Tests at Lower Costs' },
               { icon: 'people-outline', text: locale === 'hi' ? 'उद्देश्य केवल सेवा' : 'Objective Only Service' },
               { icon: 'medical-outline', text: locale === 'hi' ? 'सर्वसमाज द्वारा संचालित' : 'Run by the Community Service Men' },
-              { icon: 'card-outline', text: locale === 'hi' ? '80G आयकर मुक्त' : 'Tax Exemption  80G' }
+              { icon: 'card-outline', text: locale === 'hi' ? 'दान 80G आयकर मुक्त' : 'Tax Exemption  80G' }
             ].map((item, i) => (
               <View key={`why-${i}`} style={styles.whyUsItem}>
                 <View style={styles.whyUsIcon}>
@@ -585,9 +585,9 @@ const styles = StyleSheet.create({
   },
   quickLinkBtn: {
     flex: 1,
-    height: 90,
+    height: 95,
     borderRadius: 16,
-    padding: 16,
+    padding: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -599,9 +599,11 @@ const styles = StyleSheet.create({
   },
   quickLinkText: {
     color: 'white',
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '800',
-    lineHeight: 22,
+    lineHeight: 19,
+    flex: 1,
+    marginRight: 6,
   },
 
   // Crowdfunding Sections
