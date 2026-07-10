@@ -39,11 +39,26 @@ const ensureAvailabilityRecordsForDateRange = async (startDate, endDate, doctorI
 
     let doctors = [];
     if (doctorId) {
-        const doc = await Doctor.findById(doctorId);
-        if (doc) doctors.push(doc);
+        if (typeof doctorId === 'object' && doctorId._id) {
+            doctors.push(doctorId);
+        } else if (Array.isArray(doctorId)) {
+            for (const item of doctorId) {
+                if (typeof item === 'object' && item._id) {
+                    doctors.push(item);
+                } else {
+                    const doc = await Doctor.findById(item);
+                    if (doc) doctors.push(doc);
+                }
+            }
+        } else {
+            const doc = await Doctor.findById(doctorId);
+            if (doc) doctors.push(doc);
+        }
     } else {
         doctors = await Doctor.find({ isActive: true });
     }
+
+    if (doctors.length === 0) return;
 
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const newRecords = [];
@@ -62,6 +77,9 @@ const ensureAvailabilityRecordsForDateRange = async (startDate, endDate, doctorI
         const hType = record.hospitalType;
         existingMap.set(`${docId}_${dateKey}_${hType}`, record);
     }
+
+    // In-memory cache for previous month queries to avoid N+1 queries inside the date loop
+    const prevMonthBatchCache = new Map();
 
     for (const doc of doctors) {
         let currentDate = new Date(start);
@@ -121,18 +139,33 @@ const ensureAvailabilityRecordsForDateRange = async (startDate, endDate, doctorI
                             isEnabled = true;
                             emergencyAvailable = doc.isEmergencyAvailable || false;
                         } else {
-                            // 2. Carry forward from previous month
+                            // 2. Carry forward from previous month (optimized with cache)
                             const targetYear = targetDate.getUTCFullYear();
                             const targetMonth = targetDate.getUTCMonth();
                             const prevMonthStart = new Date(Date.UTC(targetYear, targetMonth - 1, 1));
                             const prevMonthEnd = new Date(Date.UTC(targetYear, targetMonth, 0));
 
-                            const prevRecords = await DoctorAvailability.find({
-                                doctorId: doc._id,
-                                date: { $gte: prevMonthStart, $lte: prevMonthEnd },
-                                hospitalType: hType
-                            }).sort({ date: 1 });
+                            const batchKey = `${prevMonthStart.toISOString().substring(0, 7)}_${hType}`;
+                            let docRecordsMap = prevMonthBatchCache.get(batchKey);
+                            if (!docRecordsMap) {
+                                const allPrevRecords = await DoctorAvailability.find({
+                                    doctorId: { $in: doctors.map(d => d._id) },
+                                    date: { $gte: prevMonthStart, $lte: prevMonthEnd },
+                                    hospitalType: hType
+                                }).sort({ date: 1 });
 
+                                docRecordsMap = new Map();
+                                for (const rec of allPrevRecords) {
+                                    const dId = rec.doctorId.toString();
+                                    if (!docRecordsMap.has(dId)) {
+                                        docRecordsMap.set(dId, []);
+                                    }
+                                    docRecordsMap.get(dId).push(rec);
+                                }
+                                prevMonthBatchCache.set(batchKey, docRecordsMap);
+                            }
+
+                            const prevRecords = docRecordsMap.get(doc._id.toString()) || [];
                             const sameWeekdayRecords = prevRecords.filter(r => r.date.getUTCDay() === dayOfWeek);
                             const targetOccurrenceIndex = Math.floor((dateNum - 1) / 7);
 
@@ -501,9 +534,8 @@ exports.getAvailabilitySearch = async (req, res) => {
             const endDate = new Date(Date.UTC(year, month + 1, 0)); // last day of the month
 
             // Ensure availability records exist for all category doctors for this month
-            for (const doc of doctors) {
-                await ensureAvailabilityRecordsForDateRange(startDate, endDate, doc._id);
-            }
+            // Optimized: Pass doctors array directly
+            await ensureAvailabilityRecordsForDateRange(startDate, endDate, doctors);
 
             // Query all availability records in the range
             const availabilities = await DoctorAvailability.find({
@@ -568,7 +600,8 @@ exports.getAvailabilitySearch = async (req, res) => {
         }
 
         // 2. Ensure availability records exist for selected date
-        await ensureAvailabilityRecordsForDateRange(targetDate, targetDate);
+        // Optimized: Pass doctors array directly to avoid querying all active doctors
+        await ensureAvailabilityRecordsForDateRange(targetDate, targetDate, doctors);
 
         // 3. Query availabilities on selected date
         let availabilities = await DoctorAvailability.find({
@@ -596,36 +629,42 @@ exports.getAvailabilitySearch = async (req, res) => {
         }
 
         // 4. Fallback: Search future dates up to 60 days
-        let futureDate = new Date(targetDate);
-        for (let i = 1; i <= 60; i++) {
-            futureDate.setUTCDate(futureDate.getUTCDate() + 1);
+        const fallbackStartDate = new Date(targetDate);
+        fallbackStartDate.setUTCDate(fallbackStartDate.getUTCDate() + 1);
+        const fallbackEndDate = new Date(targetDate);
+        fallbackEndDate.setUTCDate(fallbackEndDate.getUTCDate() + 60);
 
-            // Ensure availability records exist for this future date
-            await ensureAvailabilityRecordsForDateRange(futureDate, futureDate);
+        // Optimized: Ensure 60 days of records exist in a single call, passing only matching doctors
+        await ensureAvailabilityRecordsForDateRange(fallbackStartDate, fallbackEndDate, doctors);
 
-            const futureAvailabilities = await DoctorAvailability.find({
-                doctorId: { $in: doctorIds },
-                date: futureDate,
-                hospitalType: hospitalType,
-                isEnabled: true
-            }).populate({
-                path: 'doctorId',
-                populate: { path: 'categories' }
-            });
+        // Optimized: Query all future availabilities in a single db call instead of a 60-day loop
+        const allFutureAvailabilities = await DoctorAvailability.find({
+            doctorId: { $in: doctorIds },
+            date: { $gte: fallbackStartDate, $lte: fallbackEndDate },
+            hospitalType: hospitalType,
+            isEnabled: true
+        }).populate({
+            path: 'doctorId',
+            populate: { path: 'categories' }
+        }).sort({ date: 1 });
 
-            const activeFutureAvailabilities = futureAvailabilities.filter(a => 
-                a.timeSlots && a.timeSlots.some(s => s.status === 'Available')
+        const activeFutureAvailabilities = allFutureAvailabilities.filter(a => 
+            a.timeSlots && a.timeSlots.some(s => s.status === 'Available')
+        );
+
+        if (activeFutureAvailabilities.length > 0) {
+            const earliestAvailableDate = activeFutureAvailabilities[0].date;
+            const earliestAvailableDateKey = earliestAvailableDate.toISOString().split('T')[0];
+            const doctorsOnEarliestDate = activeFutureAvailabilities.filter(a => 
+                a.date.toISOString().split('T')[0] === earliestAvailableDateKey
             );
 
-            if (activeFutureAvailabilities.length > 0) {
-                const nextDateStr = futureDate.toISOString().split('T')[0];
-                return res.json({
-                    available: false,
-                    selectedDate: date,
-                    nextAvailableDate: nextDateStr,
-                    doctors: activeFutureAvailabilities
-                });
-            }
+            return res.json({
+                available: false,
+                selectedDate: date,
+                nextAvailableDate: earliestAvailableDateKey,
+                doctors: doctorsOnEarliestDate
+            });
         }
 
         // 5. No upcoming availability found within 60 days
