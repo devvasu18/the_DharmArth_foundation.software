@@ -7,7 +7,8 @@ import {
   Dimensions,
   TouchableOpacity,
   Animated,
-  StatusBar
+  StatusBar,
+  Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -22,7 +23,7 @@ const SLIDES = [
     title: 'Get Better Medicines & Tests in Less Cost',
     subtitle: 'Trusted Healthcare at Affordable Prices',
     description: 'Our mission is to make quality healthcare services affordable and accessible, ensuring that everyone can benefit from better medicines and essential diagnostic tests.',
-    icon: 'medkit-sharp',
+    image: require('../assets/medical_jar.png'),
     bgColor: '#00bfa5',
     accentColor: '#e6fffa',
   },
@@ -31,7 +32,7 @@ const SLIDES = [
     title: 'Support Our Mission with Your Donation',
     subtitle: 'Your Small Donation Can Bring Big Hope.',
     description: 'Be a Part of Our Mission. Your contribution helps us provide affordable, high quality healthcare services to families in need.',
-    icon: 'heart-sharp',
+    image: require('../assets/WhatsApp Image 2026-07-11 at 6.02.34 PM.jpeg'),
     bgColor: '#00897b',
     accentColor: '#e0f2f1',
   },
@@ -49,7 +50,7 @@ const SLIDES = [
     title: 'How to Find Doctor Availability',
     subtitle: 'Sujangarh Government Hospital',
     description: 'On the app home screen, tap "Find Doctors in Sujangarh." Then select "Government Hospital" and choose the specialist category and preferred date to view doctors availability and schedules.',
-    icon: 'medical-sharp',
+    image: require('../assets/WhatsApp Image 2026-07-11 at 6.25.55 PM.jpeg'),
     bgColor: '#004d40',
     accentColor: '#e0f2f1',
   }
@@ -132,7 +133,15 @@ export default function OnboardingScreen() {
             transform: [{ scale }, { translateY }]
           }
         ]}>
-          <Ionicons name={item.icon} size={110} color={item.bgColor} />
+          {item.image ? (
+            <Image 
+              source={item.image} 
+              style={{ width: 150, height: 150, borderRadius: 20 }} 
+              resizeMode="cover"
+            />
+          ) : (
+            <Ionicons name={item.icon} size={110} color={item.bgColor} />
+          )}
         </Animated.View>
 
         {/* Slide Copy */}

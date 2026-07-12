@@ -318,7 +318,6 @@ export default function BodyTestsScreen() {
             filteredTests.map((test) => {
               const hasDiscount = !!test.originalPrice;
               const name = (locale === 'hi' && test.name_hi) ? test.name_hi : test.name;
-              const desc = (locale === 'hi' && test.description_hi) ? test.description_hi : (test.description || 'Professional diagnostic checkup package.');
               const cat = (locale === 'hi' && test.category_hi) ? test.category_hi : test.category;
 
               return (
@@ -341,13 +340,20 @@ export default function BodyTestsScreen() {
                   </View>
 
                   <View style={styles.testInfo}>
-                    <Text style={styles.testName}>{name}</Text>
-                    <Text style={styles.testDesc} numberOfLines={3}>{desc}</Text>
-
+                    <Text style={styles.testName} numberOfLines={2}>{name}</Text>
+                    
                     <View style={styles.metaRow}>
                       <View style={styles.timeBadge}>
                         <Ionicons name="time-outline" size={14} color="#64748b" style={{ marginRight: 4 }} />
                         <Text style={styles.timeText}>{test.time}</Text>
+                      </View>
+                      <View style={[styles.timeBadge, { marginLeft: 8 }]}>
+                        <Ionicons name="restaurant-outline" size={14} color="#64748b" style={{ marginRight: 4 }} />
+                        <Text style={styles.timeText}>
+                          {test.beforeFood 
+                            ? (locale === 'hi' ? 'खाली पेट' : 'Before food')
+                            : (locale === 'hi' ? 'भोजन के बाद' : 'After lunch')}
+                        </Text>
                       </View>
                       <View style={styles.priceContainer}>
                         {hasDiscount && (

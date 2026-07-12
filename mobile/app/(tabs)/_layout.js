@@ -173,29 +173,32 @@ export default function TabLayout() {
           <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16 }}>
             <Image
               source={require('../../assets/LOGO.jpg')}
-              style={{ width: 40, height: 40, borderRadius: 20 }}
+              style={{ width: 50, height: 50, borderRadius: 25 }}
               resizeMode="contain"
             />
             <View style={{ marginLeft: 8, justifyContent: 'center' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                <Text style={{
+                  fontSize: locale === 'hi' ? 14 : 12,
+                  fontWeight: '800',
+                  color: '#00bfa5',
+                  textTransform: locale === 'hi' ? 'none' : 'uppercase',
+                  letterSpacing: locale === 'hi' ? 0 : 1,
+                  marginRight: 4,
+                }}>
+                  {locale === 'hi' ? 'द' : 'THE'}
+                </Text>
+                <Text style={{
+                  fontSize: 20,
+                  fontWeight: '900',
+                  color: '#0f172a',
+                  marginVertical: 1
+                }}>
+                  {locale === 'hi' ? 'धर्मार्थ' : 'DharmArth'}
+                </Text>
+              </View>
               <Text style={{
-                fontSize: locale === 'hi' ? 10 : 8,
-                fontWeight: '800',
-                color: '#00bfa5',
-                textTransform: locale === 'hi' ? 'none' : 'uppercase',
-                letterSpacing: locale === 'hi' ? 0 : 1,
-              }}>
-                {locale === 'hi' ? 'द' : 'THE'}
-              </Text>
-              <Text style={{
-                fontSize: 15,
-                fontWeight: '900',
-                color: '#0f172a',
-                marginVertical: 1
-              }}>
-                {locale === 'hi' ? 'धर्मार्थ' : 'DharmArth'}
-              </Text>
-              <Text style={{
-                fontSize: locale === 'hi' ? 9 : 8,
+                fontSize: locale === 'hi' ? 11 : 10,
                 fontWeight: '800',
                 color: '#00bfa5',
                 textTransform: locale === 'hi' ? 'none' : 'uppercase',

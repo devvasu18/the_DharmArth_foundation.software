@@ -26,7 +26,8 @@ const AdminBodyTests = () => {
         image: '',
         description: '',
         description_hi: '',
-        isActive: true
+        isActive: true,
+        beforeFood: true
     });
 
     useEffect(() => {
@@ -110,7 +111,8 @@ const AdminBodyTests = () => {
                 image: test.image || '',
                 description: test.description || '',
                 description_hi: test.description_hi || '',
-                isActive: test.isActive !== undefined ? test.isActive : true
+                isActive: test.isActive !== undefined ? test.isActive : true,
+                beforeFood: test.beforeFood !== undefined ? test.beforeFood : true
             });
         } else {
             setEditingTest(null);
@@ -125,7 +127,8 @@ const AdminBodyTests = () => {
                 image: '',
                 description: '',
                 description_hi: '',
-                isActive: true
+                isActive: true,
+                beforeFood: true
             });
         }
         setShowModal(true);
@@ -178,7 +181,9 @@ const AdminBodyTests = () => {
         }
     };
 
-    const categories = ['General Health', 'Pathology', 'Radiology', 'Cardiology', 'Neurology', 'Other'];
+    const categories = ['BLOOD TESTS', 'FULL BODY TESTS', 'URINE TEST', 'RADIOLOGY'];
+    const categoriesHi = ['रक्त जांच', 'संपूर्ण शरीर जांच', 'मूत्र जांच', 'रेडियोलॉजी'];
+
 
     const filteredTests = tests.filter(test => {
         const matchesSearch = test.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -414,16 +419,7 @@ const AdminBodyTests = () => {
                                         </div>
                                     </div>
 
-                                    <div className="form-group">
-                                        <label>Description (English)</label>
-                                        <textarea
-                                            name="description"
-                                            value={formData.description}
-                                            onChange={handleChange}
-                                            placeholder="Provide detailed description of test requirements in English (e.g., fasting required)"
-                                            rows="3"
-                                        />
-                                    </div>
+
                                 </>
                             ) : (
                                 <>
@@ -441,26 +437,20 @@ const AdminBodyTests = () => {
                                     <div className="form-row-admin">
                                         <div className="form-group">
                                             <label>Category (Hindi)</label>
-                                            <input
-                                                type="text"
+                                            <select
                                                 name="category_hi"
                                                 value={formData.category_hi || ''}
                                                 onChange={handleChange}
-                                                placeholder="e.g. सामान्य स्वास्थ्य"
-                                            />
+                                            >
+                                                <option value="">Select Category (Hindi)</option>
+                                                {categoriesHi.map((cat, idx) => (
+                                                    <option key={idx} value={cat}>{cat}</option>
+                                                ))}
+                                            </select>
                                         </div>
                                     </div>
 
-                                    <div className="form-group">
-                                        <label>Description (Hindi)</label>
-                                        <textarea
-                                            name="description_hi"
-                                            value={formData.description_hi || ''}
-                                            onChange={handleChange}
-                                            placeholder="विवरण हिंदी में दर्ज करें..."
-                                            rows="3"
-                                        />
-                                    </div>
+
                                 </>
                             )}
 
@@ -511,6 +501,17 @@ const AdminBodyTests = () => {
                                             onChange={handleChange}
                                         />
                                         <span>Available for booking</span>
+                                    </label>
+                                </div>
+                                <div className="form-group checkbox-admin">
+                                    <label className="checkbox-label-admin">
+                                        <input
+                                            type="checkbox"
+                                            name="beforeFood"
+                                            checked={formData.beforeFood}
+                                            onChange={handleChange}
+                                        />
+                                        <span>Before Food (Fasting)</span>
                                     </label>
                                 </div>
                             </div>

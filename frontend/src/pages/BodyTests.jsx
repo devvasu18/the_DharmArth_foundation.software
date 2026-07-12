@@ -298,9 +298,13 @@ const BodyTests = () => {
                                             </div>
                                             <div className="test-content">
                                                 <h3>{(isHindi && test.name_hi) ? test.name_hi : test.name}</h3>
-                                                <p className="test-description">{(isHindi && test.description_hi) ? test.description_hi : (test.description || 'Professional diagnostic checkup package.')}</p>
                                                 <div className="test-meta">
                                                     <span>⏱️ {test.time}</span>
+                                                    <span style={{ marginLeft: '10px' }}>
+                                                        🍽️ {test.beforeFood 
+                                                            ? (isHindi ? 'खाली पेट' : 'Before food')
+                                                            : (isHindi ? 'भोजन के बाद' : 'After lunch')}
+                                                    </span>
                                                     <div className="test-prices">
                                                         {test.originalPrice && (
                                                             <span className="test-price-original">
