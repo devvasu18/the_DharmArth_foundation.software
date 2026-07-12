@@ -136,8 +136,8 @@ export default function OnboardingScreen() {
           {item.image ? (
             <Image 
               source={item.image} 
-              style={{ width: 200, height: 200, borderRadius: 100 }} 
-              resizeMode="cover"
+              style={{ width: 200, height: 200, borderRadius: 100, backgroundColor: 'white' }} 
+              resizeMode="contain"
             />
           ) : (
             <Ionicons name={item.icon} size={110} color={item.bgColor} />

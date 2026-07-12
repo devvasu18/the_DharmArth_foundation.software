@@ -275,7 +275,7 @@ const LandingScreen = () => {
                 </Text>
               </View>
               <Text style={[styles.quickLinkText, { paddingTop: 10 }]}>
-                {locale === 'hi' ? 'दवा\nऑनलाइन ऑर्डर करें' : 'Order Online\nMedicine'}
+                {locale === 'hi' ? 'ऑनलाइन\nदवा ऑर्डर करें' : 'Order Online\nMedicine'}
               </Text>
               <Ionicons name="cart" size={38} color="white" />
             </TouchableOpacity>
