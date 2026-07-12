@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   heroCta: {
-    backgroundColor: '#ef4444',
+    backgroundColor: '#f30808ff',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     gap: 12,
     elevation: 8,
-    shadowColor: '#ef4444',
+    shadowColor: '#f30808ff',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
