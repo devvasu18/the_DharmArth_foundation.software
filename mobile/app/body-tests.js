@@ -143,16 +143,7 @@ export default function BodyTestsScreen() {
 
 
 
-  const displayedTests = filteredTests.slice(0, page * itemsPerPage);
 
-  const handleScroll = (event) => {
-    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 300;
-    
-    if (isCloseToBottom && displayedTests.length < filteredTests.length) {
-      setPage(prev => prev + 1);
-    }
-  };
 
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
@@ -213,6 +204,17 @@ export default function BodyTestsScreen() {
 
     return false;
   });
+
+  const displayedTests = filteredTests.slice(0, page * itemsPerPage);
+
+  const handleScroll = (event) => {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 300;
+    
+    if (isCloseToBottom && displayedTests.length < filteredTests.length) {
+      setPage(prev => prev + 1);
+    }
+  };
 
   if (loading) {
     return (

@@ -136,7 +136,7 @@ export default function OnboardingScreen() {
           {item.image ? (
             <Image 
               source={item.image} 
-              style={{ width: 150, height: 150, borderRadius: 20 }} 
+              style={{ width: 200, height: 200, borderRadius: 100 }} 
               resizeMode="cover"
             />
           ) : (
