@@ -86,7 +86,13 @@ export default function BodyTestsScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 20;
+  const [selectedImage, setSelectedImage] = useState(null);
 
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, selectedCategory]);
   // Admin Settings State (for mobile dialer fallback)
   const [adminMobile, setAdminMobile] = useState('918306305569');
   const [bodyTestMobile, setBodyTestMobile] = useState('918306305569');
@@ -136,6 +142,17 @@ export default function BodyTestsScreen() {
   };
 
 
+
+  const displayedTests = filteredTests.slice(0, page * itemsPerPage);
+
+  const handleScroll = (event) => {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 300;
+    
+    if (isCloseToBottom && displayedTests.length < filteredTests.length) {
+      setPage(prev => prev + 1);
+    }
+  };
 
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
@@ -256,6 +273,8 @@ export default function BodyTestsScreen() {
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
 
 
@@ -315,7 +334,7 @@ export default function BodyTestsScreen() {
               </TouchableOpacity>
             </View>
           ) : (
-            filteredTests.map((test) => {
+            displayedTests.map((test) => {
               const hasDiscount = !!test.originalPrice;
               const name = (locale === 'hi' && test.name_hi) ? test.name_hi : test.name;
               const cat = (locale === 'hi' && test.category_hi) ? test.category_hi : test.category;
@@ -324,11 +343,16 @@ export default function BodyTestsScreen() {
                 <View key={test._id} style={styles.testCard}>
                   <View style={styles.testImageContainer}>
                     {test.image ? (
-                      <Image
-                        source={{ uri: getImageUrl(test.image) }}
-                        style={styles.testImage}
-                        resizeMode="cover"
-                      />
+                      <TouchableOpacity activeOpacity={0.9} onPress={() => setSelectedImage(getImageUrl(test.image))} style={{ width: '100%', height: '100%' }}>
+                        <Image
+                          source={{ uri: getImageUrl(test.image) }}
+                          style={styles.testImage}
+                          resizeMode="cover"
+                        />
+                        <View style={styles.zoomIconContainer}>
+                          <Ionicons name="scan-outline" size={20} color="white" />
+                        </View>
+                      </TouchableOpacity>
                     ) : (
                       <View style={styles.testPlaceholder}>
                         <Ionicons name="flask-outline" size={48} color="#00bfa5" />
@@ -385,8 +409,27 @@ export default function BodyTestsScreen() {
               );
             })
           )}
+          {displayedTests.length < filteredTests.length && (
+            <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color="#00bfa5" />
+              <Text style={{ marginTop: 8, color: '#64748b', fontSize: 12 }}>
+                {locale === 'hi' ? 'और टेस्ट लोड हो रहे हैं...' : 'Loading more tests...'}
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
+
+      <Modal visible={!!selectedImage} transparent={true} animationType="fade" onRequestClose={() => setSelectedImage(null)}>
+        <View style={styles.imageModalOverlay}>
+          <TouchableOpacity style={styles.imageModalClose} onPress={() => setSelectedImage(null)}>
+            <Ionicons name="close-circle" size={36} color="white" />
+          </TouchableOpacity>
+          {selectedImage && (
+            <Image source={{ uri: selectedImage }} style={styles.fullImage} resizeMode="contain" />
+          )}
+        </View>
+      </Modal>
 
     </SafeAreaView>
   );
@@ -537,7 +580,7 @@ const styles = StyleSheet.create({
     }),
   },
   testImageContainer: {
-    height: 180,
+    height: 220,
     position: 'relative',
     backgroundColor: '#f8fafc',
   },
@@ -674,5 +717,29 @@ const styles = StyleSheet.create({
     color: '#475569',
     fontSize: 14,
     fontWeight: '700',
+  },
+  zoomIconContainer: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 20,
+    padding: 6,
+  },
+  imageModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageModalClose: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+  },
+  fullImage: {
+    width: '100%',
+    height: '80%',
   },
 });
