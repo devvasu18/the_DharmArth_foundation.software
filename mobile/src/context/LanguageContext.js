@@ -208,7 +208,13 @@ const translations = {
       helpResolved: "HELP RESOLVED",
       commission: "Commission",
       donation: "Donation",
-      shareMessage: "Namaste! 🙏 Join me in making a difference with The DharmArth Foundation. 🕉️\n\n✨ Donate here: {donationLink}\n📜 View my Volunteer Profile: {profileLink}"
+      shareMessage: "Namaste! 🙏 Join me in making a difference with The DharmArth Foundation. 🕉️\n\n✨ Donate here: {donationLink}\n📜 View my Volunteer Profile: {profileLink}",
+      generateQr: "QR Code",
+      qrModalTitle: "Your Referral QR Code",
+      qrModalDesc: "Scan this QR code to visit your personalized donation link.",
+      downloadQr: "Download QR",
+      shareQr: "Share QR",
+      qrDownloadAlert: "Opening QR Code in browser. Long press or use browser options to download/save the image."
     },
     profile: {
       title: "My Profile",
@@ -526,7 +532,13 @@ const translations = {
       commission: "कमीशन",
       donation: "दान",
       completed: "पूर्ण",
-      shareMessage: "नमस्ते! 🙏 धर्मार्थ फाउंडेशन के साथ जुड़कर एक बदलाव लाने में मेरी मदद करें। 🕉️\n\n✨ यहाँ दान करें: {donationLink}\n📜 मेरी स्वयंसेवक प्रोफ़ाइल देखें: {profileLink}"
+      shareMessage: "नमस्ते! 🙏 धर्मार्थ फाउंडेशन के साथ जुड़कर एक बदलाव लाने में मेरी मदद करें। 🕉️\n\n✨ यहाँ दान करें: {donationLink}\n📜 मेरी स्वयंसेवक प्रोफ़ाइल देखें: {profileLink}",
+      generateQr: "क्यूआर कोड",
+      qrModalTitle: "आपका रेफ़रल क्यूआर कोड",
+      qrModalDesc: "अपने व्यक्तिगत दान लिंक पर जाने के लिए इस क्यूआर कोड को स्कैन करें।",
+      downloadQr: "क्यूआर डाउनलोड करें",
+      shareQr: "क्यूआर साझा करें",
+      qrDownloadAlert: "ब्राउज़र में क्यूआर कोड खोला जा रहा है। इमेज को डाउनलोड या सेव करने के लिए उसे दबाकर रखें (long press) या ब्राउज़र विकल्पों का उपयोग करें।"
     },
     profile: {
       title: "मेरी प्रोफ़ाइल",

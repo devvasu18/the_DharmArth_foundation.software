@@ -12,13 +12,16 @@ import {
   Clipboard,
   Alert,
   Modal,
-  RefreshControl
+  RefreshControl,
+  Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTranslation } from '../../src/context/LanguageContext';
 import api from '../../src/services/api';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 const { width } = Dimensions.get('window');
 
@@ -36,6 +39,7 @@ export default function DashboardScreen() {
 
   // L1/L2 Donors state
   const [donorModalVisible, setDonorModalVisible] = useState(false);
+  const [qrModalVisible, setQrModalVisible] = useState(false);
   const [donorModalType, setDonorModalType] = useState('L1'); // 'L1' or 'L2'
   const [donorsList, setDonorsList] = useState([]);
   const [summaryStats, setSummaryStats] = useState({ lifetimeEarning: 0, prevMonthEarning: 0 });
@@ -169,6 +173,47 @@ export default function DashboardScreen() {
     }
   };
 
+  const handleShareQr = async () => {
+    const link = `https://thedharmarth.com/donate?ref=${user.referralCode || user.mobile}`;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(link)}`;
+    
+    try {
+      const filename = FileSystem.cacheDirectory + 'referral_qr.png';
+      const { uri } = await FileSystem.downloadAsync(qrCodeUrl, filename);
+      
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert(t('common.error') || "Error", "Sharing is not available on this device");
+        return;
+      }
+      
+      await Sharing.shareAsync(uri, {
+        mimeType: 'image/png',
+        dialogTitle: t('dashboard.qrModalTitle'),
+        UTI: 'public.png'
+      });
+    } catch (error) {
+      console.error("Error sharing QR image:", error);
+      handleShare();
+    }
+  };
+
+  const handleDownloadQr = () => {
+    const link = `https://thedharmarth.com/donate?ref=${user.referralCode || user.mobile}`;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(link)}`;
+    Alert.alert(
+      t('dashboard.downloadQr'),
+      t('dashboard.qrDownloadAlert'),
+      [
+        { text: t('dashboard.close') || "Close", style: "cancel" },
+        { 
+          text: t('dashboard.downloadQr') || "Download", 
+          onPress: () => Linking.openURL(qrCodeUrl)
+        }
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -292,6 +337,10 @@ export default function DashboardScreen() {
             <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#25D366' }]} onPress={handleShare}>
               <Ionicons name="logo-whatsapp" size={24} color="white" />
               <Text style={styles.socialBtnText}>{t('dashboard.whatsapp')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#6366f1' }]} onPress={() => setQrModalVisible(true)}>
+              <Ionicons name="qr-code-outline" size={24} color="white" />
+              <Text style={styles.socialBtnText}>{t('dashboard.generateQr')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -538,6 +587,103 @@ export default function DashboardScreen() {
               >
                 <Text style={styles.closeFooterBtnText}>{t('dashboard.close')}</Text>
               </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* QR Code Modal */}
+      <Modal
+        visible={qrModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setQrModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, { height: 480 }]}>
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderTitleRow}>
+                <Ionicons name="qr-code" size={24} color="white" />
+                <Text style={styles.modalTitle}>{t('dashboard.qrModalTitle')}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setQrModalVisible(false)}
+              >
+                <Ionicons name="close" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.modalCentered, { flex: 1, padding: 24 }]}>
+              <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 20, fontWeight: '600' }}>
+                {t('dashboard.qrModalDesc')}
+              </Text>
+
+              {/* QR Image */}
+              <View style={{
+                padding: 16,
+                backgroundColor: 'white',
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: '#e2e8f0',
+                elevation: 4,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 8,
+                marginBottom: 24,
+                alignItems: 'center'
+              }}>
+                <Text style={{ fontSize: 13, fontWeight: '800', color: '#00bfa5', marginBottom: 12, textAlign: 'center' }}>
+                  द धर्मार्थ मेडिकल फाउंडेशन को दान करे
+                </Text>
+                <Image
+                  source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`https://thedharmarth.com/donate?ref=${user.referralCode || user.mobile}`)}` }}
+                  style={{ width: 180, height: 180 }}
+                />
+              </View>
+
+              {/* Action Buttons */}
+              <View style={{ flexDirection: 'row', gap: 12, width: '100%', paddingHorizontal: 16 }}>
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    backgroundColor: '#6366f1',
+                    paddingVertical: 12,
+                    borderRadius: 12,
+                  }}
+                  onPress={handleShareQr}
+                >
+                  <Ionicons name="share-social-outline" size={18} color="white" />
+                  <Text style={{ color: 'white', fontWeight: '700', fontSize: 14 }}>
+                    {t('dashboard.shareQr')}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    backgroundColor: '#00bfa5',
+                    paddingVertical: 12,
+                    borderRadius: 12,
+                  }}
+                  onPress={handleDownloadQr}
+                >
+                  <Ionicons name="download-outline" size={18} color="white" />
+                  <Text style={{ color: 'white', fontWeight: '700', fontSize: 14 }}>
+                    {t('dashboard.downloadQr')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
