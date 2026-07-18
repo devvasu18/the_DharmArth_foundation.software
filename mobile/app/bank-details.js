@@ -13,6 +13,7 @@ import {
   Linking
 } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
+import { useTranslation } from '../src/context/LanguageContext';
 import api from '../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
@@ -36,6 +37,7 @@ const indianBanks = [
 
 export default function BankDetailsScreen() {
   const { user, setUser } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
   
   const [bankForm, setBankForm] = useState({
@@ -67,19 +69,19 @@ export default function BankDetailsScreen() {
     // IFSC Validation: 4 chars, 0, then 6 alphanumeric
     const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
     if (!ifscRegex.test(bankForm.ifscCode)) {
-      Alert.alert("Invalid IFSC", "Format: ABCD0123456");
+      Alert.alert(t('bankDetails.invalidIfsc'), t('bankDetails.ifscFormat'));
       return;
     }
 
     // Account Number Validation: 9-18 digits
     const accRegex = /^\d{9,18}$/;
     if (!accRegex.test(bankForm.accountNumber)) {
-      Alert.alert("Invalid Account", "Should be 9-18 digits.");
+      Alert.alert(t('bankDetails.invalidAccount'), t('bankDetails.accountDigits'));
       return;
     }
 
     if (!bankForm.bankName) {
-      Alert.alert("Error", "Please select a Bank Name");
+      Alert.alert(t('common.error') || "Error", t('bankDetails.selectBankError'));
       return;
     }
 
@@ -89,10 +91,10 @@ export default function BankDetailsScreen() {
       const updatedUser = { ...data.user, token: user.token };
       setUser(updatedUser);
       await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-      Alert.alert("Success", "Payout details saved successfully!");
+      Alert.alert(t('profile.success') || "Success", t('bankDetails.saveSuccess'));
       router.back();
     } catch (error) {
-      Alert.alert("Error", error.response?.data?.message || "Failed to save details");
+      Alert.alert(t('common.error') || "Error", error.response?.data?.message || t('bankDetails.saveError'));
     } finally {
       setLoading(false);
     }
@@ -103,26 +105,26 @@ export default function BankDetailsScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <Stack.Screen options={{ title: 'Bank Details', headerTitleAlign: 'center' }} />
+      <Stack.Screen options={{ title: t('bankDetails.title'), headerTitleAlign: 'center' }} />
       
       {Platform.OS === 'ios' ? (
         <ScrollView contentContainerStyle={[styles.scrollContent, { flex: 1, justifyContent: 'center' }]}>
           <View style={[styles.form, { alignItems: 'center', padding: 24 }]}>
             <Ionicons name="business" size={48} color="#00bfa5" style={{ marginBottom: 12 }} />
             <Text style={[styles.title, { fontSize: 18, marginTop: 12, textAlign: 'center', color: '#1e293b' }]}>
-              Web Payout Setup
+              {t('bankDetails.webSetupTitle')}
             </Text>
             <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20, marginTop: 8 }}>
-              To comply with App Store guidelines, bank details and payout options cannot be configured within the iOS application.
+              {t('bankDetails.iosRestriction')}
             </Text>
             <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20, marginTop: 12, fontWeight: '600' }}>
-              Please log in to your account at thedharmarth.com on a web browser to complete your payout profile.
+              {t('bankDetails.iosRestrictionDesc')}
             </Text>
             <TouchableOpacity 
               style={[styles.saveButton, { width: '100%', marginTop: 24 }]}
               onPress={() => Linking.openURL(`https://thedharmarth.com/profile?authToken=${encodeURIComponent(user?.token || '')}`)}
             >
-              <Text style={styles.saveButtonText}>Go to Website</Text>
+              <Text style={styles.saveButtonText}>{t('bankDetails.goToWebBtn')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -132,46 +134,46 @@ export default function BankDetailsScreen() {
             <View style={styles.headerIcon}>
               <Ionicons name="business" size={32} color="#00bfa5" />
             </View>
-            <Text style={styles.title}>Payout Profile</Text>
-            <Text style={styles.subtitle}>Provide your bank details to receive commissions.</Text>
+            <Text style={styles.title}>{t('bankDetails.payoutProfile')}</Text>
+            <Text style={styles.subtitle}>{t('bankDetails.provideDetailsDesc')}</Text>
           </View>
 
           <View style={styles.form}>
-            <Text style={styles.label}>Bank Name</Text>
+            <Text style={styles.label}>{t('bankDetails.bankNameLabel')}</Text>
             <TouchableOpacity 
               style={styles.pickerTrigger}
               onPress={() => setShowBankPicker(true)}
             >
               <Text style={bankForm.bankName ? styles.pickerText : styles.placeholderText}>
-                {bankForm.bankName || "Select Bank"}
+                {bankForm.bankName || t('bankDetails.selectBankPlaceholder')}
               </Text>
               <Ionicons name="chevron-down" size={20} color="#64748b" />
             </TouchableOpacity>
 
-            <Text style={styles.label}>Account Holder Name</Text>
+            <Text style={styles.label}>{t('bankDetails.holderNameLabel')}</Text>
             <View style={styles.inputWrapper}>
               <Ionicons name="person-outline" size={18} color="#64748b" style={styles.fieldIcon} />
               <TextInput
                 style={styles.input}
                 value={bankForm.accountHolder}
                 onChangeText={(text) => setBankForm({...bankForm, accountHolder: text})}
-                placeholder="Name as per Bank"
+                placeholder={t('bankDetails.holderNamePlaceholder')}
               />
             </View>
 
-            <Text style={styles.label}>Account Number</Text>
+            <Text style={styles.label}>{t('bankDetails.accNoLabel')}</Text>
             <View style={styles.inputWrapper}>
               <Ionicons name="card-outline" size={18} color="#64748b" style={styles.fieldIcon} />
               <TextInput
                 style={styles.input}
                 value={bankForm.accountNumber}
                 onChangeText={(text) => setBankForm({...bankForm, accountNumber: text.replace(/\D/g, '')})}
-                placeholder="9-18 Digits"
+                placeholder={t('bankDetails.accNoPlaceholder')}
                 keyboardType="number-pad"
               />
             </View>
 
-            <Text style={styles.label}>IFSC Code</Text>
+            <Text style={styles.label}>{t('bankDetails.ifscLabel')}</Text>
             <View style={styles.inputWrapper}>
               <Ionicons name="shield-checkmark-outline" size={18} color="#64748b" style={styles.fieldIcon} />
               <TextInput
@@ -191,7 +193,7 @@ export default function BankDetailsScreen() {
               {loading ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text style={styles.saveButtonText}>Save & Enable Payouts</Text>
+                <Text style={styles.saveButtonText}>{t('bankDetails.saveBtnText')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -203,7 +205,7 @@ export default function BankDetailsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Bank</Text>
+              <Text style={styles.modalTitle}>{t('bankDetails.selectBankPlaceholder')}</Text>
               <TouchableOpacity onPress={() => setShowBankPicker(false)}>
                 <Ionicons name="close" size={24} color="#1e293b" />
               </TouchableOpacity>
@@ -212,7 +214,7 @@ export default function BankDetailsScreen() {
               <Ionicons name="search" size={18} color="#64748b" />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Search banks..."
+                placeholder={t('bankDetails.searchPlaceholder')}
                 value={searchTerm}
                 onChangeText={setSearchTerm}
               />

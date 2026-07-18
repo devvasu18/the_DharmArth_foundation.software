@@ -13,12 +13,14 @@ import {
   Linking
 } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
+import { useTranslation } from '../src/context/LanguageContext';
 import api from '../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 
 export default function WithdrawScreen() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
   
   const [wallet, setWallet] = useState(null);
@@ -45,7 +47,7 @@ export default function WithdrawScreen() {
         setAmount(Math.floor(walletRes.data.wallet.balance));
       } catch (error) {
         console.error(error);
-        Alert.alert("Error", "Failed to load wallet data");
+        Alert.alert(t('common.error') || "Error", t('withdraw.walletError'));
       } finally {
         setLoading(false);
       }
@@ -55,17 +57,17 @@ export default function WithdrawScreen() {
 
   const handleSendOTP = async () => {
     if (amount < rules.minBalance) {
-      Alert.alert("Minimum Balance", `Minimum withdrawal is ₹${rules.minBalance}`);
+      Alert.alert(t('withdraw.minBalanceTitle'), t('withdraw.minBalanceError').replace('{minBalance}', rules.minBalance.toString()));
       return;
     }
     if (amount > wallet.balance) {
-      Alert.alert("Error", "Amount exceeds available balance");
+      Alert.alert(t('common.error') || "Error", t('withdraw.balanceExceeded'));
       return;
     }
     if (!user.payoutCredentials?.accountNumber) {
-      Alert.alert("Incomplete Profile", "Please set up your Bank Details first.", [
-        { text: "Go to Bank Details", onPress: () => router.push('/bank-details') },
-        { text: "Cancel", style: "cancel" }
+      Alert.alert(t('withdraw.incompleteProfile'), t('withdraw.setupBankDesc'), [
+        { text: t('withdraw.goBankBtn'), onPress: () => router.push('/bank-details') },
+        { text: t('withdraw.cancel'), style: "cancel" }
       ]);
       return;
     }
@@ -74,9 +76,9 @@ export default function WithdrawScreen() {
     try {
       await api.post('/payouts/send-otp');
       setStep(2);
-      Alert.alert("OTP Sent", "A 6-digit verification code has been sent to your WhatsApp.");
+      Alert.alert(t('withdraw.otpSentTitle'), t('withdraw.otpSentDesc'));
     } catch (error) {
-      Alert.alert("Error", error.response?.data?.message || "Failed to send OTP");
+      Alert.alert(t('common.error') || "Error", error.response?.data?.message || t('withdraw.otpSendError'));
     } finally {
       setSubmitting(false);
     }
@@ -85,7 +87,7 @@ export default function WithdrawScreen() {
   const handleSubmit = async () => {
     const otpString = otp.join('');
     if (otpString.length < 6) {
-      Alert.alert("Error", "Please enter complete 6-digit OTP");
+      Alert.alert(t('common.error') || "Error", t('withdraw.enterOtpError'));
       return;
     }
 
@@ -97,7 +99,7 @@ export default function WithdrawScreen() {
       });
       setStep(3);
     } catch (error) {
-      Alert.alert("Error", error.response?.data?.message || "Failed to submit request");
+      Alert.alert(t('common.error') || "Error", error.response?.data?.message || t('withdraw.submitError'));
     } finally {
       setSubmitting(false);
     }
@@ -158,18 +160,18 @@ export default function WithdrawScreen() {
   if (step === 3) {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: 'Success' }} />
+        <Stack.Screen options={{ title: t('withdraw.successTitle') }} />
         <View style={styles.successContent}>
           <View style={styles.successIcon}>
             <Ionicons name="checkmark-circle" size={80} color="#10b981" />
           </View>
-          <Text style={styles.successTitle}>Request Submitted!</Text>
+          <Text style={styles.successTitle}>{t('withdraw.submittedTitle')}</Text>
           <Text style={styles.successText}>{rules.successMessage}</Text>
           <TouchableOpacity 
             style={styles.doneButton}
             onPress={() => router.replace('/(tabs)')}
           >
-            <Text style={styles.doneButtonText}>Back to Dashboard</Text>
+            <Text style={styles.doneButtonText}>{t('withdraw.backDashboard')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -181,7 +183,7 @@ export default function WithdrawScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <Stack.Screen options={{ title: step === 1 ? 'Withdrawal' : 'Verify OTP' }} />
+      <Stack.Screen options={{ title: step === 1 ? t('withdraw.title') : t('withdraw.verifyTitle') }} />
       
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {Platform.OS === 'ios' ? (
@@ -189,35 +191,35 @@ export default function WithdrawScreen() {
             <View style={{ alignItems: 'center', marginBottom: 20 }}>
               <Ionicons name="information-circle-outline" size={48} color="#00bfa5" style={{ marginBottom: 12 }} />
               <Text style={[styles.label, { fontSize: 18, marginTop: 12, textAlign: 'center', color: '#1e293b' }]}>
-                Web Dashboard Payouts
+                {t('withdraw.webPayouts')}
               </Text>
               <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20, marginTop: 8 }}>
-                To comply with App Store guidelines, wallet withdrawals and bank transfers cannot be processed directly within the iOS application.
+                {t('withdraw.iosRestrictionDesc1')}
               </Text>
               <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20, marginTop: 12, fontWeight: '600' }}>
-                Please log in to your account at thedharmarth.com on a web browser to manage your bank payouts.
+                {t('withdraw.iosRestrictionDesc2')}
               </Text>
             </View>
             <TouchableOpacity 
               style={styles.primaryButton}
               onPress={() => Linking.openURL(`https://thedharmarth.com/dashboard?authToken=${encodeURIComponent(user?.token || '')}`)}
             >
-              <Text style={styles.primaryButtonText}>Go to Website</Text>
+              <Text style={styles.primaryButtonText}>{t('withdraw.goToWebBtn')}</Text>
             </TouchableOpacity>
           </View>
         ) : step === 1 ? (
           <>
             <View style={styles.walletCard}>
-              <Text style={styles.walletLabel}>Available Balance</Text>
+              <Text style={styles.walletLabel}>{t('withdraw.availBalance')}</Text>
               <Text style={styles.walletBalance}>₹ {wallet.balance.toLocaleString()}</Text>
               <View style={styles.minInfo}>
                 <Ionicons name="information-circle-outline" size={16} color="white" />
-                <Text style={styles.minText}>Minimum required: ₹{rules.minBalance}</Text>
+                <Text style={styles.minText}>{t('withdraw.minReq').replace('{minBalance}', rules.minBalance.toString())}</Text>
               </View>
             </View>
 
             <View style={styles.card}>
-              <Text style={styles.label}>Enter Amount</Text>
+              <Text style={styles.label}>{t('withdraw.enterAmount')}</Text>
               <View style={styles.amountInputWrapper}>
                 <Text style={styles.currency}>₹</Text>
                 <TextInput
@@ -231,10 +233,10 @@ export default function WithdrawScreen() {
 
               <View style={styles.bankPreview}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <Text style={styles.bankPreviewLabel}>Transfer to:</Text>
+                  <Text style={styles.bankPreviewLabel}>{t('withdraw.transferTo')}</Text>
                   {user.payoutCredentials?.accountNumber && (
                     <TouchableOpacity onPress={() => router.push('/bank-details')}>
-                      <Text style={styles.changeLinkText}>Change</Text>
+                      <Text style={styles.changeLinkText}>{t('withdraw.change')}</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -248,7 +250,7 @@ export default function WithdrawScreen() {
                   </View>
                 ) : (
                   <TouchableOpacity onPress={() => router.push('/bank-details')}>
-                    <Text style={styles.setupLink}>Setup Bank Details First</Text>
+                    <Text style={styles.setupLink}>{t('withdraw.setupBankLink')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -261,7 +263,7 @@ export default function WithdrawScreen() {
                 {submitting ? (
                   <ActivityIndicator color="white" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Next Step</Text>
+                  <Text style={styles.primaryButtonText}>{t('withdraw.nextStep')}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -270,8 +272,8 @@ export default function WithdrawScreen() {
           <View style={styles.card}>
             <View style={styles.otpHeader}>
               <Ionicons name="lock-closed-outline" size={40} color="#00bfa5" />
-              <Text style={styles.otpTitle}>Security Check</Text>
-              <Text style={styles.otpSubtitle}>Enter the 6-digit code sent to your WhatsApp (+91 {user.mobile})</Text>
+              <Text style={styles.otpTitle}>{t('withdraw.securityCheck')}</Text>
+              <Text style={styles.otpSubtitle}>{t('withdraw.otpSentTo').replace('{mobile}', user.mobile || '')}</Text>
             </View>
 
             <View style={styles.otpContainer}>
@@ -300,7 +302,7 @@ export default function WithdrawScreen() {
               {submitting ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text style={styles.primaryButtonText}>Confirm Withdrawal</Text>
+                <Text style={styles.primaryButtonText}>{t('withdraw.confirmWithdraw')}</Text>
               )}
             </TouchableOpacity>
 
@@ -309,7 +311,7 @@ export default function WithdrawScreen() {
               onPress={() => setStep(1)}
               disabled={submitting}
             >
-              <Text style={styles.backLinkText}>Change Amount</Text>
+              <Text style={styles.backLinkText}>{t('withdraw.changeAmount')}</Text>
             </TouchableOpacity>
           </View>
         )}
