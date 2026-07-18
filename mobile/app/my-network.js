@@ -10,13 +10,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../src/context/AuthContext';
+import { useTranslation } from '../src/context/LanguageContext';
 import api from '../src/services/api';
 import { Stack } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
+const formatDate = (dateString, t) => {
+  if (!dateString) return t ? t('myNetwork.na') : 'N/A';
   return new Date(dateString).toLocaleDateString('en-IN', {
     day: '2-digit',
     month: 'short',
@@ -25,6 +26,7 @@ const formatDate = (dateString) => {
 };
 
 const NetworkNode = ({ user, level, title, subtitle }) => {
+  const { t } = useTranslation();
   const isYou = level === 'you';
   const isMotivator = level === 'root';
   const isL1 = level === 'L1';
@@ -55,7 +57,7 @@ const NetworkNode = ({ user, level, title, subtitle }) => {
           </Text>
           {!isMotivator && user?.createdAt && (
             <Text style={styles.nodeDate}>
-              Member since {formatDate(user.createdAt)}
+              {t('myNetwork.memberSince')}{formatDate(user.createdAt, t)}
             </Text>
           )}
         </View>
@@ -66,6 +68,7 @@ const NetworkNode = ({ user, level, title, subtitle }) => {
 
 export default function MyNetwork() {
   const { user: authUser } = useAuth();
+  const { t } = useTranslation();
   const [referralTree, setReferralTree] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -78,7 +81,7 @@ export default function MyNetwork() {
       setError(null);
     } catch (err) {
       console.error('Error fetching network:', err);
-      setError('Failed to load your network structure.');
+      setError(t('myNetwork.loadFailed'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -98,7 +101,7 @@ export default function MyNetwork() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#00bfa5" />
-        <Text style={styles.loadingText}>Building your network map...</Text>
+        <Text style={styles.loadingText}>{t('myNetwork.buildingMap')}</Text>
       </View>
     );
   }
@@ -108,7 +111,7 @@ export default function MyNetwork() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'My Referral Network' }} />
+      <Stack.Screen options={{ title: t('myNetwork.title') }} />
       
       <ScrollView 
         contentContainerStyle={styles.mainScroll}
@@ -124,7 +127,7 @@ export default function MyNetwork() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.statVal}>{directCount}</Text>
-              <Text style={styles.statLbl}>Direct (L1)</Text>
+              <Text style={styles.statLbl}>{t('myNetwork.directL1')}</Text>
             </View>
           </View>
           
@@ -134,7 +137,7 @@ export default function MyNetwork() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.statVal}>{indirectCount}</Text>
-              <Text style={styles.statLbl}>Indirect (L2)</Text>
+              <Text style={styles.statLbl}>{t('myNetwork.indirectL2')}</Text>
             </View>
           </View>
         </View>
@@ -146,7 +149,7 @@ export default function MyNetwork() {
             {referralTree?.user?.referredBy && (
               <View style={styles.motivatorWrapper}>
                 <View style={styles.motivatorLabelBox}>
-                  <Text style={styles.motivatorLabelText}>MY MOTIVATOR</Text>
+                  <Text style={styles.motivatorLabelText}>{t('myNetwork.myMotivator')}</Text>
                 </View>
                 <NetworkNode 
                   user={referralTree.user.referredBy} 
@@ -160,7 +163,7 @@ export default function MyNetwork() {
             <NetworkNode 
               user={referralTree?.user} 
               level="you" 
-              title={`You (${referralTree?.user?.name})`}
+              title={t('myNetwork.youNode').replace('{name}', referralTree?.user?.name || '')}
             />
             {directCount > 0 && <View style={styles.connectorVertical} />}
           </View>
@@ -176,7 +179,7 @@ export default function MyNetwork() {
                 <View style={styles.emptyNetwork}>
                   <Ionicons name="people-outline" size={48} color="#cbd5e1" />
                   <Text style={styles.emptyNetworkText}>
-                    No direct referrals yet. Start sharing your link to build your network!
+                    {t('myNetwork.emptyDesc')}
                   </Text>
                 </View>
               ) : (

@@ -14,11 +14,13 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../src/context/AuthContext';
+import { useTranslation } from '../src/context/LanguageContext';
 import api from '../src/services/api';
 import { Stack } from 'expo-router';
 
 export default function MySubscriptions() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -57,7 +59,7 @@ export default function MySubscriptions() {
       setPage(pageNum);
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "Failed to fetch subscriptions");
+      Alert.alert(t('common.error') || "Error", t('mySubscriptions.fetchError'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -82,12 +84,12 @@ export default function MySubscriptions() {
 
   const handleCancel = async (sub) => {
     Alert.alert(
-      "Cancel Subscription?",
-      `Are you sure you want to cancel this monthly donation (ID: ${sub.subscriptionId})? An OTP will be sent to your mobile for confirmation.`,
+      t('mySubscriptions.cancelConfirmTitle'),
+      t('mySubscriptions.cancelConfirmDesc').replace('{id}', sub.subscriptionId),
       [
-        { text: "No", style: "cancel" },
+        { text: t('mySubscriptions.no'), style: "cancel" },
         { 
-          text: "Yes, Send OTP", 
+          text: t('mySubscriptions.sendOtp'), 
           onPress: async () => {
             try {
               setSendingOtp(true);
@@ -95,7 +97,7 @@ export default function MySubscriptions() {
               setSelectedSub(sub);
               setOtpModalOpen(true);
             } catch (error) {
-              Alert.alert("Error", error.response?.data?.message || "Failed to send OTP");
+              Alert.alert(t('common.error') || "Error", error.response?.data?.message || t('mySubscriptions.sendOtpError'));
             } finally {
               setSendingOtp(false);
             }
@@ -107,20 +109,20 @@ export default function MySubscriptions() {
 
   const confirmCancel = async () => {
     if (otpValue.length !== 6) {
-      Alert.alert("Invalid OTP", "Please enter a valid 6-digit OTP");
+      Alert.alert(t('mySubscriptions.invalidOtp'), t('mySubscriptions.invalidOtpDesc'));
       return;
     }
 
     try {
       setVerifyingOtp(true);
       await api.post(`/subscriptions/cancel/${selectedSub._id}`, { otp: otpValue });
-      Alert.alert("Success", "Subscription cancelled successfully");
+      Alert.alert(t('profile.success') || "Success", t('mySubscriptions.cancelSuccess'));
       setOtpModalOpen(false);
       setOtpValue('');
       setSelectedSub(null);
       fetchSubscriptions(1, true);
     } catch (error) {
-      Alert.alert("Error", error.response?.data?.message || "Failed to cancel");
+      Alert.alert(t('common.error') || "Error", error.response?.data?.message || t('mySubscriptions.cancelFailed'));
     } finally {
       setVerifyingOtp(false);
     }
@@ -129,13 +131,13 @@ export default function MySubscriptions() {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'active':
-        return { text: 'ACTIVE', color: '#059669', bg: '#ecfdf5' };
+        return { text: t('mySubscriptions.active'), color: '#059669', bg: '#ecfdf5' };
       case 'cancelled':
-        return { text: 'CANCELLED', color: '#dc2626', bg: '#fef2f2' };
+        return { text: t('mySubscriptions.cancelled'), color: '#dc2626', bg: '#fef2f2' };
       case 'failed':
-        return { text: 'FAILED', color: '#dc2626', bg: '#fef2f2' };
+        return { text: t('mySubscriptions.failed'), color: '#dc2626', bg: '#fef2f2' };
       case 'created':
-        return { text: 'PENDING', color: '#c2410c', bg: '#fff7ed' };
+        return { text: t('mySubscriptions.pending'), color: '#c2410c', bg: '#fff7ed' };
       default:
         return { text: status.toUpperCase(), color: '#64748b', bg: '#f1f5f9' };
     }
@@ -149,7 +151,7 @@ export default function MySubscriptions() {
         <View style={styles.cardHeader}>
           <View>
             <Text style={styles.amount}>₹{item.amount.toLocaleString()}</Text>
-            <Text style={styles.freq}>/ monthly</Text>
+            <Text style={styles.freq}>{t('mySubscriptions.monthly')}</Text>
           </View>
           <View style={[styles.badge, { backgroundColor: status.bg }]}>
             <Text style={[styles.badgeText, { color: status.color }]}>{status.text}</Text>
@@ -158,16 +160,16 @@ export default function MySubscriptions() {
 
         <View style={styles.cardBody}>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>ID:</Text>
+            <Text style={styles.label}>{t('mySubscriptions.idLabel')}</Text>
             <Text style={styles.value} numberOfLines={1}>{item.subscriptionId}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Started:</Text>
+            <Text style={styles.label}>{t('mySubscriptions.startedLabel')}</Text>
             <Text style={styles.value}>{new Date(item.createdAt).toLocaleDateString()}</Text>
           </View>
           {item.status === 'active' && item.nextBillingDate && (
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Next Billing:</Text>
+              <Text style={styles.label}>{t('mySubscriptions.nextBillingLabel')}</Text>
               <Text style={[styles.value, styles.highlight]}>{new Date(item.nextBillingDate).toLocaleDateString()}</Text>
             </View>
           )}
@@ -177,13 +179,13 @@ export default function MySubscriptions() {
           {item.status === 'active' && (
             <TouchableOpacity style={styles.cancelBtn} onPress={() => handleCancel(item)}>
               <Ionicons name="close-circle-outline" size={18} color="#dc2626" />
-              <Text style={styles.cancelBtnText}>Cancel Subscription</Text>
+              <Text style={styles.cancelBtnText}>{t('mySubscriptions.cancelBtnText')}</Text>
             </TouchableOpacity>
           )}
           {item.status === 'failed' && (
             <TouchableOpacity style={styles.retryBtn} onPress={() => Linking.openURL(`https://thedharmarth.com/my-subscriptions?authToken=${encodeURIComponent(user?.token || '')}`)}>
               <Ionicons name="refresh-outline" size={18} color="white" />
-              <Text style={styles.retryBtnText}>Retry Payment</Text>
+              <Text style={styles.retryBtnText}>{t('mySubscriptions.retryBtnText')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -193,7 +195,7 @@ export default function MySubscriptions() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'My Subscriptions', headerTitleAlign: 'center' }} />
+      <Stack.Screen options={{ title: t('mySubscriptions.title'), headerTitleAlign: 'center' }} />
       <FlatList
         data={subscriptions}
         renderItem={renderItem}
@@ -213,14 +215,14 @@ export default function MySubscriptions() {
           !loading && (
             <View style={styles.empty}>
               <Ionicons name="card-outline" size={64} color="#e2e8f0" />
-              <Text style={styles.emptyText}>No monthly donations found</Text>
+              <Text style={styles.emptyText}>{t('mySubscriptions.noDonations')}</Text>
             </View>
           )
         }
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>My Subscriptions</Text>
-            <Text style={styles.headerDesc}>Manage your recurring donations and support.</Text>
+            <Text style={styles.headerTitle}>{t('mySubscriptions.title')}</Text>
+            <Text style={styles.headerDesc}>{t('mySubscriptions.manageDesc')}</Text>
           </View>
         }
         ListFooterComponent={
@@ -235,9 +237,9 @@ export default function MySubscriptions() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Verify Cancellation</Text>
+            <Text style={styles.modalTitle}>{t('mySubscriptions.verifyCancellation')}</Text>
             <Text style={styles.modalDesc}>
-              Enter the 6-digit code sent to your mobile.
+              {t('mySubscriptions.enterOtpDesc')}
             </Text>
             
             <TextInput
@@ -257,7 +259,7 @@ export default function MySubscriptions() {
                   setOtpValue('');
                 }}
               >
-                <Text style={styles.modalBtnTextCancel}>Cancel</Text>
+                <Text style={styles.modalBtnTextCancel}>{t('mySubscriptions.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.modalBtnConfirm} 
@@ -267,7 +269,7 @@ export default function MySubscriptions() {
                 {verifyingOtp ? (
                   <ActivityIndicator color="white" size="small" />
                 ) : (
-                  <Text style={styles.modalBtnTextConfirm}>Confirm</Text>
+                  <Text style={styles.modalBtnTextConfirm}>{t('mySubscriptions.confirm')}</Text>
                 )}
               </TouchableOpacity>
             </View>

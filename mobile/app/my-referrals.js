@@ -11,12 +11,14 @@ import {
   Alert
 } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
+import { useTranslation } from '../src/context/LanguageContext';
 import api from '../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 
 export default function MyReferrals() {
   const { user } = useAuth();
+  const { t, locale } = useTranslation();
   const [referrals, setReferrals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -69,14 +71,18 @@ export default function MyReferrals() {
 
   const handleReinvite = (ref) => {
     const donorName = ref.donorName;
-    const motivatorName = user?.name || 'Your Motivator';
+    const motivatorName = user?.name || (locale === 'hi' ? 'आपका प्रेरक' : 'Your Motivator');
     const mobile = ref.donorMobile;
     const amount = ref.amount;
     const is80G = ref.donorUserId?.pan ? 'true' : 'false';
     
     const donationUrl = `https://thedharmarth.com/donate?motivator=${user?.mobile}&name=${encodeURIComponent(donorName)}&mobile=${mobile}&amount=${amount}&is80G=${is80G}`;
 
-    const message = `Namaste ${donorName}, this is ${motivatorName} from The DharmArth Foundation. 🕉️\n\nYour monthly contribution of ₹${amount} has stopped. We invite you to continue your noble support for our mission. 🙏\n\nYou can restart your donation with just one click here: ${donationUrl}\n\nThank you for your kindness!`;
+    const message = t('myReferrals.reinviteMessage')
+      .replace('{donorName}', donorName)
+      .replace('{motivatorName}', motivatorName)
+      .replace('{amount}', amount.toString())
+      .replace('{donationUrl}', donationUrl);
 
     const whatsappUrl = `whatsapp://send?phone=91${mobile}&text=${encodeURIComponent(message)}`;
     
@@ -84,7 +90,7 @@ export default function MyReferrals() {
       if (supported) {
         Linking.openURL(whatsappUrl);
       } else {
-        Alert.alert("Error", "WhatsApp is not installed.");
+        Alert.alert(t('common.error') || "Error", t('myReferrals.whatsappError'));
       }
     });
   };
@@ -111,18 +117,18 @@ export default function MyReferrals() {
           </View>
           <View style={[styles.statusBadge, item.status === 'active' ? styles.statusActive : styles.statusInactive]}>
             <Text style={[styles.statusText, item.status === 'active' ? styles.statusTextActive : styles.statusTextInactive]}>
-              {item.status.toUpperCase()}
+              {item.status === 'active' ? t('myReferrals.active') : t('myReferrals.inactive')}
             </Text>
           </View>
         </View>
         
         <View style={styles.cardDetails}>
           <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Monthly Contribution</Text>
+            <Text style={styles.detailLabel}>{t('myReferrals.monthlyContribution')}</Text>
             <Text style={styles.detailValuePrimary}>₹{item.amount}</Text>
           </View>
           <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Started On</Text>
+            <Text style={styles.detailLabel}>{t('myReferrals.startedOn')}</Text>
             <Text style={styles.detailValue}>
               {new Date(item.createdAt).toLocaleDateString()}
             </Text>
@@ -132,7 +138,7 @@ export default function MyReferrals() {
         {item.status !== 'active' && (
           <TouchableOpacity style={styles.reinviteBtn} onPress={() => handleReinvite(item)}>
             <Ionicons name="logo-whatsapp" size={18} color="white" />
-            <Text style={styles.reinviteText}>Send Re-invite on WhatsApp</Text>
+            <Text style={styles.reinviteText}>{t('myReferrals.reinviteBtnText')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -141,7 +147,7 @@ export default function MyReferrals() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'My Referrals', headerTitleAlign: 'center' }} />
+      <Stack.Screen options={{ title: t('myReferrals.title'), headerTitleAlign: 'center' }} />
       
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -149,8 +155,8 @@ export default function MyReferrals() {
             <Ionicons name="people" size={24} color="#00bfa5" />
           </View>
           <View>
-            <Text style={styles.headerTitle}>My Referrals</Text>
-            <Text style={styles.headerDesc}>Track donors motivated by you.</Text>
+            <Text style={styles.headerTitle}>{t('myReferrals.title')}</Text>
+            <Text style={styles.headerDesc}>{t('myReferrals.trackDesc')}</Text>
           </View>
         </View>
 
@@ -159,13 +165,13 @@ export default function MyReferrals() {
             style={[styles.filterBtn, statusFilter === 'active' && styles.filterBtnActive]}
             onPress={() => setStatusFilter('active')}
           >
-            <Text style={[styles.filterBtnText, statusFilter === 'active' && styles.filterBtnTextActive]}>Active Donors</Text>
+            <Text style={[styles.filterBtnText, statusFilter === 'active' && styles.filterBtnTextActive]}>{t('myReferrals.activeDonors')}</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.filterBtn, statusFilter === 'inactive' && styles.filterBtnActive]}
             onPress={() => setStatusFilter('inactive')}
           >
-            <Text style={[styles.filterBtnText, statusFilter === 'inactive' && styles.filterBtnTextActive]}>Inactive Donors</Text>
+            <Text style={[styles.filterBtnText, statusFilter === 'inactive' && styles.filterBtnTextActive]}>{t('myReferrals.inactiveDonors')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -189,7 +195,9 @@ export default function MyReferrals() {
             !loading && (
               <View style={styles.empty}>
                 <Ionicons name="people-outline" size={64} color="#e2e8f0" />
-                <Text style={styles.emptyText}>No {statusFilter} referrals found</Text>
+                <Text style={styles.emptyText}>
+                  {t('myReferrals.noReferrals').replace('{status}', statusFilter === 'active' ? t('myReferrals.active').toLowerCase() : t('myReferrals.inactive').toLowerCase())}
+                </Text>
               </View>
             )
           }

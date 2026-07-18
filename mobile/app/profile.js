@@ -12,6 +12,7 @@ import {
   Dimensions
 } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
+import { useTranslation } from '../src/context/LanguageContext';
 import api from '../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
@@ -22,6 +23,7 @@ const DEFAULT_AVATAR_URL = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1
 
 export default function ProfileScreen() {
   const { user, setUser } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
   
   const [formData, setFormData] = useState({
@@ -45,7 +47,7 @@ export default function ProfileScreen() {
   const handleImageUpload = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
-      Alert.alert("Permission Required", "Please allow access to your photos to upload a profile picture.");
+      Alert.alert(t('profile.permissionRequired'), t('profile.permissionRequiredDesc'));
       return;
     }
 
@@ -72,7 +74,7 @@ export default function ProfileScreen() {
         });
         setFormData(prev => ({ ...prev, profileImage: data.imageUrl }));
       } catch (error) {
-        Alert.alert("Upload Failed", "Could not upload photo. Please try again.");
+        Alert.alert(t('profile.uploadFailed'), t('profile.uploadFailedDesc'));
       } finally {
         setIsUploading(false);
       }
@@ -80,15 +82,15 @@ export default function ProfileScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.name) return Alert.alert("Required", "Please enter your name");
+    if (!formData.name) return Alert.alert(t('profile.required'), t('profile.nameRequired'));
     
     setIsSaving(true);
     try {
       const { data } = await api.put('/users/profile', formData);
       setUser(data.user);
-      Alert.alert("Success", "Profile updated successfully!");
+      Alert.alert(t('profile.success'), t('profile.updateSuccess'));
     } catch (error) {
-      Alert.alert("Error", error.response?.data?.message || "Failed to update profile");
+      Alert.alert(t('profile.error'), error.response?.data?.message || t('profile.updateFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -96,11 +98,11 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <Stack.Screen options={{ title: 'My Profile', headerTitleAlign: 'center' }} />
+      <Stack.Screen options={{ title: t('profile.title'), headerTitleAlign: 'center' }} />
       
       <View style={styles.formCard}>
-        <Text style={styles.sectionTitle}>My Identity Profile</Text>
-        <Text style={styles.sectionSubtitle}>Complete your profile to generate your official ID Card.</Text>
+        <Text style={styles.sectionTitle}>{t('profile.identityProfile')}</Text>
+        <Text style={styles.sectionSubtitle}>{t('profile.identityProfileDesc')}</Text>
 
         <View style={styles.photoSection}>
           <View style={styles.photoWrapper}>
@@ -120,54 +122,54 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Full Name</Text>
+          <Text style={styles.label}>{t('profile.fullName')}</Text>
           <View style={styles.inputWrapper}>
             <Ionicons name="person-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput 
               style={styles.input}
               value={formData.name}
               onChangeText={(v) => handleInputChange('name', v)}
-              placeholder="Enter full name"
+              placeholder={t('profile.placeholderName')}
             />
           </View>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Email Address</Text>
+          <Text style={styles.label}>{t('profile.emailAddress')}</Text>
           <View style={styles.inputWrapper}>
             <Ionicons name="mail-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput 
               style={styles.input}
               value={formData.email}
               onChangeText={(v) => handleInputChange('email', v)}
-              placeholder="Enter email"
+              placeholder={t('profile.placeholderEmail')}
               keyboardType="email-address"
             />
           </View>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Work / Profession</Text>
+          <Text style={styles.label}>{t('profile.workProfession')}</Text>
           <View style={styles.inputWrapper}>
             <Ionicons name="briefcase-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput 
               style={styles.input}
               value={formData.work}
               onChangeText={(v) => handleInputChange('work', v)}
-              placeholder="e.g. Software Engineer"
+              placeholder={t('profile.placeholderWork')}
             />
           </View>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Bio / Vision</Text>
+          <Text style={styles.label}>{t('profile.bioVision')}</Text>
           <View style={[styles.inputWrapper, { alignItems: 'flex-start', paddingTop: 12 }]}>
             <Ionicons name="information-circle-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput 
               style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
               value={formData.bio}
               onChangeText={(v) => handleInputChange('bio', v)}
-              placeholder="A short sentence about your mission..."
+              placeholder={t('profile.placeholderBio')}
               multiline
               maxLength={100}
             />
@@ -177,26 +179,26 @@ export default function ProfileScreen() {
 
         <View style={styles.row}>
           <View style={[styles.inputGroup, { flex: 1 }]}>
-            <Text style={styles.label}>City</Text>
+            <Text style={styles.label}>{t('profile.city')}</Text>
             <View style={styles.inputWrapper}>
               <Ionicons name="location-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
               <TextInput 
                 style={styles.input}
                 value={formData.city}
                 onChangeText={(v) => handleInputChange('city', v)}
-                placeholder="City"
+                placeholder={t('profile.city')}
               />
             </View>
           </View>
           <View style={{ width: 12 }} />
           <View style={[styles.inputGroup, { flex: 1 }]}>
-            <Text style={styles.label}>State</Text>
+            <Text style={styles.label}>{t('profile.state')}</Text>
             <View style={styles.inputWrapper}>
               <TextInput 
                 style={styles.input}
                 value={formData.state}
                 onChangeText={(v) => handleInputChange('state', v)}
-                placeholder="State"
+                placeholder={t('profile.state')}
               />
             </View>
           </View>
@@ -212,20 +214,20 @@ export default function ProfileScreen() {
           ) : (
             <>
               <Ionicons name="save-outline" size={20} color="white" />
-              <Text style={styles.submitBtnText}>Save Profile Details</Text>
+              <Text style={styles.submitBtnText}>{t('profile.saveProfile')}</Text>
             </>
           )}
         </TouchableOpacity>
       </View>
 
       <View style={styles.cardPreviewBox}>
-        <Text style={styles.previewTitle}>ID Card Preview</Text>
+        <Text style={styles.previewTitle}>{t('profile.cardPreview')}</Text>
         <TouchableOpacity 
           style={styles.viewCardBtn}
           onPress={() => router.push('/volunteer-card')}
         >
           <Ionicons name="eye-outline" size={18} color="#00bfa5" />
-          <Text style={styles.viewCardText}>View Full ID Card</Text>
+          <Text style={styles.viewCardText}>{t('profile.viewFullCard')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -233,17 +235,17 @@ export default function ProfileScreen() {
       <View style={styles.dangerZone}>
         <View style={styles.dangerZoneHeader}>
           <Ionicons name="alert-circle" size={18} color="#e11d48" />
-          <Text style={styles.dangerZoneTitle}>Danger Zone</Text>
+          <Text style={styles.dangerZoneTitle}>{t('profile.dangerZone')}</Text>
         </View>
         <Text style={styles.dangerZoneDesc}>
-          Deleting your account will permanently remove your profile and login access.
+          {t('profile.deleteWarning')}
         </Text>
         <TouchableOpacity
           style={styles.deleteAccountBtn}
           onPress={() => router.push('/delete-account')}
         >
           <Ionicons name="trash-outline" size={18} color="#e11d48" />
-          <Text style={styles.deleteAccountBtnText}>Delete My Account</Text>
+          <Text style={styles.deleteAccountBtnText}>{t('profile.deleteAccount')}</Text>
         </TouchableOpacity>
       </View>
 

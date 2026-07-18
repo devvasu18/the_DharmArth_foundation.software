@@ -13,12 +13,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../src/context/AuthContext';
+import { useTranslation } from '../src/context/LanguageContext';
 import { Stack, useRouter } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
 export default function ShareEarn() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
 
   const referralCode = user?.referralCode || user?.mobile || 'DF0000';
@@ -26,17 +28,17 @@ export default function ShareEarn() {
 
   const name = user?.name || 'Your Name';
   const mobilePhone = user?.mobile || '0000000000';
-  const work = user?.work || user?.roles?.[0]?.name || 'Volunteer';
-  const bio = user?.bio || 'Dedicated to supporting humanity and spreading kindness through The DharmArth Foundation.';
-  const location = user?.city ? `${user.city}, ${user?.state || ''}` : 'India';
+  const work = user?.work || user?.roles?.[0]?.name || t('shareEarn.defaultWork');
+  const bio = user?.bio || t('shareEarn.defaultBio');
+  const location = user?.city ? `${user.city}, ${user?.state || ''}` : t('shareEarn.defaultLocation');
   const profileImage = user?.profileImage || `https://ui-avatars.com/api/?name=${name}&background=00bfa5&color=fff&size=128`;
   const joinedDate = user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '2026';
 
   const handleShare = async () => {
     try {
       await Share.share({
-        title: 'Join The DharmArth Foundation',
-        message: `Namaste! I am an official volunteer at The DharmArth Foundation. Join me in our noble cause. Support through my verified profile here: ${shareUrl}`,
+        title: t('shareEarn.shareTitle'),
+        message: t('shareEarn.shareMessage').replace('{shareUrl}', shareUrl),
         url: shareUrl,
       });
     } catch (error) {
@@ -46,18 +48,18 @@ export default function ShareEarn() {
 
   const copyToClipboard = () => {
     Clipboard.setString(shareUrl);
-    alert('Link copied to clipboard!');
+    alert(t('shareEarn.copied'));
   };
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Share & Earn' }} />
+      <Stack.Screen options={{ title: t('shareEarn.title') }} />
       
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Header Section */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Your Digital Identity</Text>
-          <Text style={styles.headerSubtitle}>Share your verified volunteer profile to grow your network and earn commissions.</Text>
+          <Text style={styles.headerTitle}>{t('shareEarn.digitalIdentity')}</Text>
+          <Text style={styles.headerSubtitle}>{t('shareEarn.digitalIdentityDesc')}</Text>
         </View>
 
         {/* Digital ID Card */}
@@ -83,7 +85,7 @@ export default function ShareEarn() {
                   <Text style={styles.tagline}>Spreading Humanity & Hope</Text>
                 </View>
                 <View style={styles.idArea}>
-                  <Text style={styles.idLabelText}>VOLUNTEER ID</Text>
+                  <Text style={styles.idLabelText}>{t('shareEarn.volunteerId')}</Text>
                   <Text style={styles.idValueText}>{referralCode}</Text>
                 </View>
               </View>
@@ -99,29 +101,29 @@ export default function ShareEarn() {
                   <View style={styles.detailItem}>
                     <Ionicons name="call" size={24} color="#1e293b" />
                     <View style={styles.detailContent}>
-                      <Text style={styles.detailLabel}>Contact</Text>
+                      <Text style={styles.detailLabel}>{t('shareEarn.contact')}</Text>
                       <Text style={styles.detailValue}>{mobilePhone}</Text>
                     </View>
                   </View>
                   <View style={styles.detailItem}>
                     <Ionicons name="location" size={24} color="#1e293b" />
                     <View style={styles.detailContent}>
-                      <Text style={styles.detailLabel}>Location</Text>
+                      <Text style={styles.detailLabel}>{t('shareEarn.location')}</Text>
                       <Text style={styles.detailValue} numberOfLines={1}>{location}</Text>
                     </View>
                   </View>
                   <View style={styles.detailItem}>
                     <Ionicons name="calendar" size={24} color="#1e293b" />
                     <View style={styles.detailContent}>
-                      <Text style={styles.detailLabel}>Verified</Text>
+                      <Text style={styles.detailLabel}>{t('shareEarn.verified')}</Text>
                       <Text style={styles.detailValue}>{joinedDate}</Text>
                     </View>
                   </View>
                   <View style={styles.detailItem}>
                     <Ionicons name="shield-checkmark" size={24} color="#1e293b" />
                     <View style={styles.detailContent}>
-                      <Text style={styles.detailLabel}>Status</Text>
-                      <Text style={styles.detailValue}>Active</Text>
+                      <Text style={styles.detailLabel}>{t('shareEarn.status')}</Text>
+                      <Text style={styles.detailValue}>{t('shareEarn.active')}</Text>
                     </View>
                   </View>
                 </View>
@@ -143,23 +145,23 @@ export default function ShareEarn() {
 
         {/* Your Impact Stats */}
         <View style={styles.impactSection}>
-          <Text style={styles.sectionLabel}>Your Impact</Text>
+          <Text style={styles.sectionLabel}>{t('shareEarn.yourImpact')}</Text>
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
               <Text style={styles.statValue}>{user?.totalReferrals || 0}</Text>
-              <Text style={styles.statLabel}>Referrals</Text>
+              <Text style={styles.statLabel}>{t('shareEarn.referrals')}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
               <Text style={styles.statValue}>₹{user?.totalEarnings || 0}</Text>
-              <Text style={styles.statLabel}>Earned</Text>
+              <Text style={styles.statLabel}>{t('shareEarn.earned')}</Text>
             </View>
           </View>
         </View>
 
         {/* Sharing Options */}
         <View style={styles.shareSection}>
-          <Text style={styles.sectionLabel}>Your Unique Sharing Link</Text>
+          <Text style={styles.sectionLabel}>{t('shareEarn.uniqueLink')}</Text>
           <View style={styles.linkBox}>
             <Text style={styles.linkText} numberOfLines={1}>{shareUrl}</Text>
             <TouchableOpacity onPress={copyToClipboard} style={styles.copyBtn}>
@@ -170,12 +172,12 @@ export default function ShareEarn() {
           <View style={styles.btnGrid}>
             <TouchableOpacity style={[styles.shareBtn, styles.waBtn]} onPress={handleShare}>
               <Ionicons name="logo-whatsapp" size={24} color="white" />
-              <Text style={styles.shareBtnText}>WhatsApp</Text>
+              <Text style={styles.shareBtnText}>{t('shareEarn.whatsapp')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={[styles.shareBtn, styles.nativeBtn]} onPress={handleShare}>
               <Ionicons name="share-social" size={24} color="white" />
-              <Text style={styles.shareBtnText}>Share More</Text>
+              <Text style={styles.shareBtnText}>{t('shareEarn.shareMore')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -186,9 +188,9 @@ export default function ShareEarn() {
             <Ionicons name="information-circle" size={24} color="#00bfa5" />
           </View>
           <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>How it works?</Text>
+            <Text style={styles.infoTitle}>{t('shareEarn.howItWorks')}</Text>
             <Text style={styles.infoText}>
-              When someone clicks your link and makes a donation, they are automatically added to your network. You earn commissions on every successful donation made through your link!
+              {t('shareEarn.howItWorksDesc')}
             </Text>
           </View>
         </View>

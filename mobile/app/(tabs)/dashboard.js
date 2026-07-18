@@ -17,12 +17,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
+import { useTranslation } from '../../src/context/LanguageContext';
 import api from '../../src/services/api';
 
 const { width } = Dimensions.get('window');
 
 export default function DashboardScreen() {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
   const [wallet, setWallet] = useState(null);
   const [stats, setStats] = useState({ l1Donors: 0, l2Donors: 0 });
@@ -77,7 +79,7 @@ export default function DashboardScreen() {
       setSummaryStats(res.data.summary || { lifetimeEarning: 0, prevMonthEarning: 0 });
     } catch (err) {
       console.error(`Error fetching ${type} donors`, err);
-      Alert.alert("Error", `Failed to load ${type} donors list.`);
+      Alert.alert(t('common.error') || "Error", t('dashboard.errorLoadingDonors'));
     } finally {
       setModalLoading(false);
     }
@@ -150,13 +152,15 @@ export default function DashboardScreen() {
   const handleCopyLink = () => {
     const link = `https://thedharmarth.com/donate?ref=${user.referralCode || user.mobile}`;
     Clipboard.setString(link);
-    Alert.alert("Link Copied!", "Donation link copied to clipboard.");
+    Alert.alert(t('dashboard.copied'), t('dashboard.copiedDesc'));
   };
 
   const handleShare = async () => {
     const donationLink = `https://thedharmarth.com/donate?ref=${user.referralCode || user.mobile}`;
     const profileLink = `https://thedharmarth.com/v/${user.referralCode || user.mobile}`;
-    const message = `Namaste! 🙏 Join me in making a difference with The DharmArth Foundation. 🕉️\n\n✨ Donate here: ${donationLink}\n📜 View my Volunteer Profile: ${profileLink}`;
+    const message = t('dashboard.shareMessage')
+      .replace('{donationLink}', donationLink)
+      .replace('{profileLink}', profileLink);
 
     try {
       await Share.share({ message });
@@ -194,12 +198,12 @@ export default function DashboardScreen() {
             <Ionicons name="wallet" size={140} color="rgba(255,255,255,0.2)" />
           </View>
 
-          <Text style={styles.walletLabel}>My Wallet Balance</Text>
+          <Text style={styles.walletLabel}>{t('dashboard.walletBalance')}</Text>
           <Text style={styles.walletBalance}>₹ {wallet?.balance?.toLocaleString() || 0}</Text>
 
           <View style={styles.walletStats}>
             <Ionicons name="trending-up" size={16} color="white" />
-            <Text style={styles.statText}>Total Earned: ₹ {wallet?.totalEarned?.toLocaleString() || 0}</Text>
+            <Text style={styles.statText}>{t('dashboard.totalEarned')}{wallet?.totalEarned?.toLocaleString() || 0}</Text>
           </View>
 
           <View style={styles.statGrid}>
@@ -213,7 +217,7 @@ export default function DashboardScreen() {
                   <Ionicons name="eye-outline" size={16} color="white" />
                 </TouchableOpacity>
               </View>
-              <Text style={styles.statLabel}>Directly Inspired Donor</Text>
+              <Text style={styles.statLabel}>{t('dashboard.directDonor')}</Text>
             </View>
 
             <View style={styles.statSeparator} />
@@ -228,7 +232,7 @@ export default function DashboardScreen() {
                   <Ionicons name="eye-outline" size={16} color="white" />
                 </TouchableOpacity>
               </View>
-              <Text style={styles.statLabel}>Partner-Inspired Donor</Text>
+              <Text style={styles.statLabel}>{t('dashboard.partnerDonor')}</Text>
             </View>
           </View>
 
@@ -237,12 +241,12 @@ export default function DashboardScreen() {
             onPress={() => router.push('/my-network')}
           >
             <Ionicons name="git-network" size={16} color="white" />
-            <Text style={styles.viewNetworkLinkText}>View Network Tree</Text>
+            <Text style={styles.viewNetworkLinkText}>{t('dashboard.viewNetwork')}</Text>
             <Ionicons name="arrow-forward" size={14} color="rgba(255,255,255,0.8)" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.withdrawBtn} onPress={() => router.push('/withdraw')}>
-            <Text style={styles.withdrawBtnText}>Withdraw Now</Text>
+            <Text style={styles.withdrawBtnText}>{t('dashboard.withdrawNow')}</Text>
           </TouchableOpacity>
 
           {wallet?.balance > 0 && (
@@ -252,7 +256,7 @@ export default function DashboardScreen() {
             >
               <Ionicons name="heart" size={18} color="#00695c" style={{ marginRight: 8 }} />
               <Text style={styles.walletDonateBtnText}>
-                {settings?.wallet_donate_btn_text || 'Donate From Wallet'}
+                {settings?.wallet_donate_btn_text || t('dashboard.donateWallet')}
               </Text>
             </TouchableOpacity>
           )}
@@ -262,16 +266,16 @@ export default function DashboardScreen() {
         <View style={styles.shareCard}>
           <View style={styles.shareHeader}>
             <Ionicons name="share-social" size={24} color="#667eea" />
-            <Text style={styles.shareTitle}>Share & Earn</Text>
+            <Text style={styles.shareTitle}>{t('dashboard.shareEarn')}</Text>
           </View>
 
           <Text style={styles.shareDesc}>
-            Share this personalized link with your network. When someone donates using your link, you receive a <Text style={{ color: '#00bfa5' }}>10% commission</Text> instantly in your wallet!
+            {t('dashboard.shareDesc')}
           </Text>
 
           <View style={styles.refCodeLabel}>
             <Text style={styles.refText}>
-              Referral Code: <Text style={styles.refHighlight}>{user.referralCode || user.mobile}</Text>
+              {t('dashboard.referralCode')} <Text style={styles.refHighlight}>{user.referralCode || user.mobile}</Text>
             </Text>
           </View>
 
@@ -280,35 +284,27 @@ export default function DashboardScreen() {
               {`https://thedharmarth.com/donate?ref=${user.referralCode || user.mobile}`}
             </Text>
             <TouchableOpacity style={styles.copyBtn} onPress={handleCopyLink}>
-              <Text style={styles.copyBtnText}>Copy</Text>
+              <Text style={styles.copyBtnText}>{t('dashboard.copy')}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.socialRow}>
             <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#25D366' }]} onPress={handleShare}>
               <Ionicons name="logo-whatsapp" size={24} color="white" />
-              <Text style={styles.socialBtnText}>WhatsApp</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#1877F2' }]} onPress={handleShare}>
-              <Ionicons name="logo-facebook" size={24} color="white" />
-              <Text style={styles.socialBtnText}>Facebook</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#dc2743' }]} onPress={handleShare}>
-              <Ionicons name="logo-instagram" size={24} color="white" />
-              <Text style={styles.socialBtnText}>Instagram</Text>
+              <Text style={styles.socialBtnText}>{t('dashboard.whatsapp')}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.profileActions}>
-            <Text style={styles.actionHeading}>Volunteer Identity Card</Text>
+            <Text style={styles.actionHeading}>{t('dashboard.volunteerCard')}</Text>
             <View style={styles.actionGrid}>
               <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/profile')}>
                 <Ionicons name="person-outline" size={16} color="#475569" />
-                <Text style={styles.actionBtnText}>Edit Profile</Text>
+                <Text style={styles.actionBtnText}>{t('dashboard.editProfile')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#00bfa5' }]} onPress={handleShare}>
                 <Ionicons name="share-outline" size={16} color="white" />
-                <Text style={[styles.actionBtnText, { color: 'white' }]}>Share Profile</Text>
+                <Text style={[styles.actionBtnText, { color: 'white' }]}>{t('dashboard.shareProfile')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -317,9 +313,9 @@ export default function DashboardScreen() {
         {/* Transaction List */}
         <View style={styles.transactionsSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Transactions</Text>
+            <Text style={styles.sectionTitle}>{t('dashboard.recentTxns')}</Text>
             <TouchableOpacity onPress={() => router.push('/transactions')}>
-              <Text style={styles.viewAll}>View All</Text>
+              <Text style={styles.viewAll}>{t('dashboard.viewAll')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -328,12 +324,12 @@ export default function DashboardScreen() {
             const statusColor = txn.status === 'failed' ? '#0f0f0fff' : '#64748b';
 
             let statusText = '';
-            if (txn.reason === 'payout' && txn.status === 'pending') statusText = 'IN PROCESS';
-            else if (txn.status === 'failed') statusText = 'FAILED';
-            else if (txn.isHelpResolved) statusText = 'HELP RESOLVED';
-            else if (txn.type === 'credit') statusText = 'Commission';
-            else if (txn.isDonation || txn.reason === 'wallet_donation') statusText = 'Donation';
-            else if (txn.reason === 'payout') statusText = txn.status === 'success' || txn.status === 'completed' ? 'COMPLETED' : 'FAILED';
+            if (txn.reason === 'payout' && txn.status === 'pending') statusText = t('dashboard.inProcess');
+            else if (txn.status === 'failed') statusText = t('dashboard.failed');
+            else if (txn.isHelpResolved) statusText = t('dashboard.helpResolved');
+            else if (txn.type === 'credit') statusText = t('dashboard.commission');
+            else if (txn.isDonation || txn.reason === 'wallet_donation') statusText = t('dashboard.donation');
+            else if (txn.reason === 'payout') statusText = txn.status === 'success' || txn.status === 'completed' ? t('dashboard.completed') : t('dashboard.failed');
             else statusText = (txn.type || '').toUpperCase();
 
             return (
@@ -368,7 +364,7 @@ export default function DashboardScreen() {
                         onPress={() => Linking.openURL(`${api.defaults.baseURL.replace('/api', '')}${txn.receiptUrl || txn.certificateUrl}`)}
                       >
                         <Ionicons name="download-outline" size={12} color="#00bfa5" />
-                        <Text style={styles.actionPillText}>Receipt</Text>
+                        <Text style={styles.actionPillText}>{t('dashboard.receipt')}</Text>
                       </TouchableOpacity>
                     )}
 
@@ -384,7 +380,7 @@ export default function DashboardScreen() {
                         </TouchableOpacity>
                       ) : txn.is80G ? (
                         <View style={[styles.actionPill, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}>
-                          <Text style={[styles.actionPillText, { color: '#c2410c' }]}>80G Pending</Text>
+                          <Text style={[styles.actionPillText, { color: '#c2410c' }]}>{t('dashboard.pending80G')}</Text>
                         </View>
                       ) : null
                     )}
@@ -416,7 +412,7 @@ export default function DashboardScreen() {
                   color="white"
                 />
                 <Text style={styles.modalTitle}>
-                  {donorModalType === 'L1' ? 'Directly Inspired Donors' : 'Indirectly Inspired Donors'}
+                  {donorModalType === 'L1' ? t('dashboard.directDonorsTitle') : t('dashboard.indirectDonorsTitle')}
                 </Text>
               </View>
               <TouchableOpacity
@@ -430,13 +426,13 @@ export default function DashboardScreen() {
             {/* Earnings Stats Cards */}
             <View style={styles.modalStatsSection}>
               <View style={[styles.modalStatCard, { borderLeftColor: '#00bfa5' }]}>
-                <Text style={styles.modalStatLabel}>LIFETIME</Text>
+                <Text style={styles.modalStatLabel}>{t('dashboard.lifetime')}</Text>
                 <Text style={styles.modalStatValue}>
                   ₹{(summaryStats?.lifetimeEarning || 0).toFixed(2)}
                 </Text>
               </View>
               <View style={[styles.modalStatCard, { borderLeftColor: '#f59e0b' }]}>
-                <Text style={styles.modalStatLabel}>LAST MONTH</Text>
+                <Text style={styles.modalStatLabel}>{t('dashboard.lastMonth')}</Text>
                 <Text style={styles.modalStatValue}>
                   ₹{(summaryStats?.prevMonthEarning || 0).toFixed(2)}
                 </Text>
@@ -445,14 +441,14 @@ export default function DashboardScreen() {
 
             {/* Scrolling Horizontal Filters */}
             <View style={styles.filterSection}>
-              <Text style={styles.filterSectionTitle}>Select Month</Text>
+              <Text style={styles.filterSectionTitle}>{t('dashboard.selectMonth')}</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 style={styles.horizontalScroll}
                 contentContainerStyle={styles.horizontalScrollContent}
               >
-                {["Lifetime", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, idx) => (
+                {t('dashboard.months').map((m, idx) => (
                   <TouchableOpacity
                     key={idx}
                     style={[styles.filterTab, filterMonth === idx && styles.filterTabActive]}
@@ -467,7 +463,7 @@ export default function DashboardScreen() {
 
               {filterMonth !== 0 && (
                 <>
-                  <Text style={styles.filterSectionTitle}>Select Year</Text>
+                  <Text style={styles.filterSectionTitle}>{t('dashboard.selectYear')}</Text>
                   <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -495,19 +491,19 @@ export default function DashboardScreen() {
               {modalLoading ? (
                 <View style={styles.modalCentered}>
                   <ActivityIndicator size="large" color="#00bfa5" />
-                  <Text style={styles.modalLoadingText}>Loading donors list...</Text>
+                  <Text style={styles.modalLoadingText}>{t('dashboard.loadingDonors')}</Text>
                 </View>
               ) : donorsList.length === 0 ? (
                 <View style={styles.modalCentered}>
                   <Ionicons name="person-outline" size={48} color="#cbd5e1" style={{ marginBottom: 12 }} />
-                  <Text style={styles.modalEmptyText}>No donors found for this period.</Text>
+                  <Text style={styles.modalEmptyText}>{t('dashboard.noDonors')}</Text>
                 </View>
               ) : (
                 <ScrollView style={styles.donorsListScroll}>
                   {/* Custom Table Header */}
                   <View style={styles.tableHeader}>
-                    <Text style={styles.tableHeaderCol}>Donor Details</Text>
-                    <Text style={[styles.tableHeaderCol, { textAlign: 'right' }]}>Your Earning</Text>
+                    <Text style={styles.tableHeaderCol}>{t('dashboard.donorDetails')}</Text>
+                    <Text style={[styles.tableHeaderCol, { textAlign: 'right' }]}>{t('dashboard.yourEarning')}</Text>
                   </View>
 
                   {donorsList.map((donor, idx) => (
@@ -516,7 +512,7 @@ export default function DashboardScreen() {
                         <Text style={styles.donorName}>{donor.donorName}</Text>
                         <Text style={styles.donorMobile}>{donor.donorMobile}</Text>
                         <Text style={styles.donorDate}>
-                          Last Donation: {new Date(donor.lastDonation || donor.createdAt).toLocaleDateString('en-IN', {
+                          {t('dashboard.lastDonation')}{new Date(donor.lastDonation || donor.createdAt).toLocaleDateString('en-IN', {
                             day: 'numeric',
                             month: 'short',
                             year: 'numeric'
@@ -540,7 +536,7 @@ export default function DashboardScreen() {
                 style={styles.closeFooterBtn}
                 onPress={() => setDonorModalVisible(false)}
               >
-                <Text style={styles.closeFooterBtnText}>Close</Text>
+                <Text style={styles.closeFooterBtnText}>{t('dashboard.close')}</Text>
               </TouchableOpacity>
             </View>
           </View>
