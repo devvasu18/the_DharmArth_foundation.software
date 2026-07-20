@@ -90,15 +90,7 @@ export default function VolunteerCardScreen() {
               </View>
             </View>
 
-            <View style={styles.cardFooter}>
-              <View style={styles.footerWeb}>
-                <Ionicons name="globe-outline" size={14} color="#00bfa5" />
-                <Text style={styles.webText}>dharmarth.com</Text>
-              </View>
-              <View style={styles.qrPlaceholder}>
-                <Ionicons name="qr-code-outline" size={24} color="#1e293b" />
-              </View>
-            </View>
+
           </View>
         </View>
       </View>

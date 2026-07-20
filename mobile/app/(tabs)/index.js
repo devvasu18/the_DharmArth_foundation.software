@@ -8,13 +8,15 @@ import {
   TouchableOpacity,
   Dimensions,
   Linking,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal
 } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTranslation } from '../../src/context/LanguageContext';
 import api from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
+import DoctorSvg from '../../src/components/DoctorSvg';
 
 const { width } = Dimensions.get('window');
 
@@ -55,6 +57,7 @@ const LandingScreen = () => {
   const [currentVisualIndex, setCurrentVisualIndex] = useState(0);
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -235,7 +238,7 @@ const LandingScreen = () => {
               onPress={() => router.push('/doctors')}
             >
               <Text style={styles.quickLinkText}>{locale === 'hi' ? 'सुजानगढ़ के\nडॉक्टर खोजें' : 'Find Doctors\nof Sujangarh'}</Text>
-              <Ionicons name="medkit" size={38} color="white" />
+              <DoctorSvg size={38} />
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.quickLinkBtn, { backgroundColor: '#af8fbe' }]}
@@ -251,9 +254,9 @@ const LandingScreen = () => {
           <View style={styles.quickLinksRow}>
             <TouchableOpacity
               style={[styles.quickLinkBtn, { backgroundColor: '#7bc4a3' }]}
-              onPress={() => router.push('/body-tests')}
+              onPress={() => setCategoryModalVisible(true)}
             >
-              <Text style={styles.quickLinkText}>{locale === 'hi' ? 'मेडिकल\nटेस्ट' : 'Body\nTests'}</Text>
+              <Text style={styles.quickLinkText}>{locale === 'hi' ? 'खून की\nजांच' : 'Blood\nTests'}</Text>
               <Ionicons name="flask" size={38} color="white" />
             </TouchableOpacity>
 
@@ -284,9 +287,11 @@ const LandingScreen = () => {
 
         {textSlides[currentTextIndex] && (
           <View style={styles.heroContent}>
+            {/* 
             <Text style={styles.heroTitle}>
               {locale === 'hi' && textSlides[currentTextIndex].title_hi ? textSlides[currentTextIndex].title_hi : textSlides[currentTextIndex].title}
             </Text>
+            */}
 
             {/* 
             <View style={styles.impactStats}>
@@ -393,6 +398,98 @@ const LandingScreen = () => {
         )}
 
       </ScrollView>
+
+      {/* Categories Selection Modal */}
+      <Modal
+        visible={categoryModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setCategoryModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {locale === 'hi' ? 'जांच कैटेगरी चुनें' : 'Select Test Category'}
+              </Text>
+              <TouchableOpacity onPress={() => setCategoryModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalGrid}>
+              <View style={styles.modalRow}>
+                <TouchableOpacity
+                  style={styles.modalGridBtn}
+                  onPress={() => {
+                    setCategoryModalVisible(false);
+                    router.push({ pathname: '/body-tests', params: { initialCategory: 'BLOOD TESTS' } });
+                  }}
+                >
+                  <Ionicons name="flask-outline" size={28} color="#00bfa5" style={{ marginBottom: 6 }} />
+                  <Text style={styles.modalGridBtnText} numberOfLines={2}>
+                    {locale === 'hi' ? 'खून की जांच' : 'Blood Test'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalGridBtn}
+                  onPress={() => {
+                    setCategoryModalVisible(false);
+                    router.push({ pathname: '/body-tests', params: { initialCategory: 'URINE TEST' } });
+                  }}
+                >
+                  <Ionicons name="water-outline" size={28} color="#00bfa5" style={{ marginBottom: 6 }} />
+                  <Text style={styles.modalGridBtnText} numberOfLines={2}>
+                    {locale === 'hi' ? 'पेशाब की जांच' : 'Urine Test'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalGridBtn}
+                  onPress={() => {
+                    setCategoryModalVisible(false);
+                    router.push({ pathname: '/body-tests', params: { initialCategory: 'RADIOLOGY' } });
+                  }}
+                >
+                  <Ionicons name="barcode-outline" size={28} color="#00bfa5" style={{ marginBottom: 6 }} />
+                  <Text style={styles.modalGridBtnText} numberOfLines={2}>
+                    {locale === 'hi' ? 'एक्स-रे और ईसीजी' : 'X-Ray & ECG'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.modalRow}>
+                <TouchableOpacity
+                  style={[styles.modalGridBtn, { flex: 1.5 }]}
+                  onPress={() => {
+                    setCategoryModalVisible(false);
+                    router.push({ pathname: '/body-tests', params: { initialCategory: 'FULL BODY TESTS' } });
+                  }}
+                >
+                  <Ionicons name="body-outline" size={28} color="#00bfa5" style={{ marginBottom: 6 }} />
+                  <Text style={styles.modalGridBtnText} numberOfLines={2}>
+                    {locale === 'hi' ? 'फुल बॉडी चेकअप' : 'Full Body Checkup'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.modalGridBtn, { flex: 1 }]}
+                  onPress={() => {
+                    setCategoryModalVisible(false);
+                    router.push({ pathname: '/body-tests', params: { initialCategory: 'All' } });
+                  }}
+                >
+                  <Ionicons name="apps-outline" size={28} color="#00bfa5" style={{ marginBottom: 6 }} />
+                  <Text style={styles.modalGridBtnText} numberOfLines={2}>
+                    {locale === 'hi' ? 'सभी जांच' : 'All Tests'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -847,6 +944,66 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     textAlign: 'center',
     lineHeight: 18,
+  },
+  // Category Selection Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 24,
+    width: '100%',
+    maxWidth: 400,
+    padding: 20,
+    elevation: 20,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    paddingBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: '#0f172a',
+  },
+  modalGrid: {
+    gap: 10,
+  },
+  modalRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  modalGridBtn: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalGridBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#334155',
+    textAlign: 'center',
+    marginTop: 4,
+    lineHeight: 14,
   },
 });
 

@@ -126,9 +126,16 @@ export default function LeaderboardScreen() {
                       />
                     )}
                     <View style={[styles.avatarCircle, isFirst ? styles.avatarCircleFirst : null]}>
-                      <Text style={[styles.avatarInitials, isFirst ? styles.avatarInitialsFirst : null]}>
-                        {getInitials(donor.name)}
-                      </Text>
+                      {donor.profileImage ? (
+                        <Image
+                          source={{ uri: donor.profileImage }}
+                          style={{ width: '100%', height: '100%', borderRadius: 9999 }}
+                        />
+                      ) : (
+                        <Text style={[styles.avatarInitials, isFirst ? styles.avatarInitialsFirst : null]}>
+                          {getInitials(donor.name)}
+                        </Text>
+                      )}
                     </View>
                     <View style={[styles.rankBadge, isFirst ? styles.rankBadgeFirst : null]}>
                       <Text style={[styles.rankBadgeText, isFirst ? styles.rankBadgeTextFirst : null]}>
@@ -156,9 +163,16 @@ export default function LeaderboardScreen() {
                     <Text style={styles.listItemRank}>{idx + 4}</Text>
                     <View style={styles.rankDash} />
                     <View style={styles.listItemAvatar}>
-                      <Text style={styles.listItemAvatarText}>
-                        {getInitials(donor.name)}
-                      </Text>
+                      {donor.profileImage ? (
+                        <Image
+                          source={{ uri: donor.profileImage }}
+                          style={{ width: '100%', height: '100%', borderRadius: 9999 }}
+                        />
+                      ) : (
+                        <Text style={styles.listItemAvatarText}>
+                          {getInitials(donor.name)}
+                        </Text>
+                      )}
                     </View>
                     <Text style={styles.listItemName} numberOfLines={1}>
                       {donor.name}

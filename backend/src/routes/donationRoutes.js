@@ -690,6 +690,19 @@ router.get('/leaderboard', async (req, res) => {
                     totalAmount: { $sum: "$amount" }
                 }
             },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "_id",
+                    foreignField: "mobile",
+                    as: "userDetails"
+                }
+            },
+            {
+                $addFields: {
+                    profileImage: { $arrayElemAt: ["$userDetails.profileImage", 0] }
+                }
+            },
             { $sort: { totalAmount: -1 } },
             { $limit: limit },
             {
@@ -697,7 +710,8 @@ router.get('/leaderboard', async (req, res) => {
                     _id: 0,
                     name: 1,
                     totalAmount: 1,
-                    mobile: "$_id"
+                    mobile: "$_id",
+                    profileImage: 1
                 }
             }
         ]);

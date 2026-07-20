@@ -92,7 +92,6 @@ export default function TabLayout() {
 
   const menuItems = [
     { label: t('navbar.leaderboard') || 'Leaderboard', icon: 'trophy-outline', route: '/leaderboard', public: true },
-    { label: t('navbar.bodyTests'), icon: 'flask-outline', route: '/body-tests', public: true },
     { label: t('navbar.myEarnings'), icon: 'wallet-outline', route: '/dashboard' },
     { label: t('navbar.myProfile'), icon: 'person-outline', route: '/profile' },
     { label: t('navbar.mySubscriptions'), icon: 'card-outline', route: '/my-subscriptions' },
@@ -177,35 +176,68 @@ export default function TabLayout() {
               resizeMode="contain"
             />
             <View style={{ marginLeft: 8, justifyContent: 'center' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                <Text style={{
-                  fontSize: locale === 'hi' ? 14 : 12,
-                  fontWeight: '800',
-                  color: '#00bfa5',
-                  textTransform: locale === 'hi' ? 'none' : 'uppercase',
-                  letterSpacing: locale === 'hi' ? 0 : 1,
-                  marginRight: 4,
-                }}>
-                  {locale === 'hi' ? 'द' : 'THE'}
-                </Text>
-                <Text style={{
-                  fontSize: 20,
-                  fontWeight: '900',
-                  color: '#0f172a',
-                  marginVertical: 1
-                }}>
-                  {locale === 'hi' ? 'धर्मार्थ' : 'DharmArth'}
-                </Text>
-              </View>
-              <Text style={{
-                fontSize: locale === 'hi' ? 11 : 10,
-                fontWeight: '800',
-                color: '#00bfa5',
-                textTransform: locale === 'hi' ? 'none' : 'uppercase',
-                letterSpacing: locale === 'hi' ? 0 : 0.5,
-              }}>
-                {locale === 'hi' ? 'मेडिकल फाउंडेशन' : 'MEDICAL FOUNDATION'}
-              </Text>
+              {locale === 'hi' ? (
+                <>
+                  <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                    <Text style={{
+                      fontSize: 20,
+                      fontWeight: '900',
+                      color: '#0f172a',
+                      marginRight: 4,
+                    }}>
+                      द
+                    </Text>
+                    <Text style={{
+                      fontSize: 20,
+                      fontWeight: '900',
+                      color: '#0f172a',
+                      marginVertical: 1
+                    }}>
+                      धर्मार्थ
+                    </Text>
+                  </View>
+                  <View style={{ height: 1, backgroundColor: '#cbd5e1', marginVertical: 3 }} />
+                  <Text style={{
+                    fontSize: 11,
+                    fontWeight: '800',
+                    color: '#00bfa5',
+                  }}>
+                    मेडिकल फाउंडेशन
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={{
+                    fontSize: 10,
+                    fontWeight: '800',
+                    color: '#00bfa5',
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                    marginBottom: 1,
+                  }}>
+                    THE
+                  </Text>
+                  <Text style={{
+                    fontSize: 20,
+                    fontWeight: '900',
+                    color: '#0f172a',
+                    marginVertical: 1
+                  }}>
+                    Dharmarth
+                  </Text>
+                  <View style={{ height: 1, backgroundColor: '#cbd5e1', marginVertical: 1 }} />
+                  <Text style={{
+                    fontSize: 9,
+                    fontWeight: '800',
+                    color: '#00bfa5',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5,
+                    marginTop: 1,
+                  }}>
+                    MEDICAL FOUNDATION
+                  </Text>
+                </>
+              )}
             </View>
           </View>
         ),
@@ -315,6 +347,18 @@ export default function TabLayout() {
                 </View>
 
                 <ScrollView style={styles.menuList} showsVerticalScrollIndicator={false}>
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => {
+                      setMenuVisible(false);
+                      setLangModalVisible(true);
+                    }}
+                  >
+                    <Ionicons name="globe-outline" size={22} color="#475569" />
+                    <Text style={styles.menuItemText}>{t('navbar.changeLanguage')}</Text>
+                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  </TouchableOpacity>
+
                   {menuItems
                     .filter(item => item.route !== '/share-earn' || user)
                     .map((item, index) => (
@@ -329,35 +373,7 @@ export default function TabLayout() {
                       </TouchableOpacity>
                     ))}
 
-                  <TouchableOpacity
-                    style={styles.menuItem}
-                    onPress={() => navigateTo('/doctors', true)}
-                  >
-                    <Ionicons name="medical-outline" size={22} color="#475569" />
-                    <Text style={styles.menuItemText}>{t('navbar.findDoctor') || 'Find Doctor'}</Text>
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                  </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={styles.menuItem}
-                    onPress={() => navigateTo('/body-tests', true)}
-                  >
-                    <Ionicons name="fitness-outline" size={22} color="#475569" />
-                    <Text style={styles.menuItemText}>{t('navbar.bodyTests') || 'Body Tests'}</Text>
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.menuItem}
-                    onPress={() => {
-                      setMenuVisible(false);
-                      setLangModalVisible(true);
-                    }}
-                  >
-                    <Ionicons name="globe-outline" size={22} color="#475569" />
-                    <Text style={styles.menuItemText}>{t('navbar.changeLanguage')}</Text>
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                  </TouchableOpacity>
 
                   <View style={styles.divider} />
 

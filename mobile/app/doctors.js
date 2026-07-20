@@ -72,7 +72,7 @@ export default function DoctorsScreen() {
   const insets = useSafeAreaInsets();
 
   const [selectedType, setSelectedType] = useState(null); // 'government' or 'clinic'
-  
+
   const [searchCategories, setSearchCategories] = useState([]);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchCategoryId, setSearchCategoryId] = useState('all');
@@ -81,11 +81,11 @@ export default function DoctorsScreen() {
     today.setHours(0, 0, 0, 0);
     return today;
   });
-  
+
   const [searching, setSearching] = useState(false);
   const [searchResult, setSearchResult] = useState(null);
   const [searchPerformed, setSearchPerformed] = useState(false);
-  
+
   const [loading, setLoading] = useState(true);
   const [contactPhone, setContactPhone] = useState('8306305569');
 
@@ -188,8 +188,25 @@ export default function DoctorsScreen() {
     setSearchResult(null);
   };
 
-  const checkDoctorAvailability = (timeSlots, targetDate) => {
-    if (!timeSlots) timeSlots = [];
+  const getCategoryOrder = (doctor) => {
+    if (!doctor || !doctor.categories || doctor.categories.length === 0) {
+      return 999999;
+    }
+    let minIndex = 999999;
+    for (const cat of doctor.categories) {
+      const catId = typeof cat === 'object' ? cat._id : cat;
+      const idx = searchCategories.findIndex(c => c._id === catId);
+      if (idx !== -1 && idx < minIndex) {
+        minIndex = idx;
+      }
+    }
+    return minIndex;
+  };
+
+  const checkDoctorAvailability = (avail, targetDate) => {
+    if (!avail) return { isAvailableNow: false, status: 'Absent', nextSlot: null, sortOrder: 999999 };
+    
+    const timeSlots = avail.timeSlots || [];
     const now = new Date();
     const isToday = targetDate && targetDate.toDateString() === now.toDateString();
     const isFuture = targetDate && targetDate > now && !isToday;
@@ -197,8 +214,9 @@ export default function DoctorsScreen() {
     const currentMinutes = getCurrentTimeInMinutes();
     const hasAvailableSlots = timeSlots.some(slot => slot.status === 'Available');
 
-    if (!hasAvailableSlots) {
-      return { isAvailableNow: false, status: 'Not Available Today', nextSlot: null, sortOrder: 999999 };
+    // If disabled or has no available slots at all, the doctor is Absent
+    if (avail.isEnabled === false || !hasAvailableSlots) {
+      return { isAvailableNow: false, status: 'Absent', nextSlot: null, sortOrder: 999999 };
     }
 
     if (isFuture) {
@@ -258,8 +276,17 @@ export default function DoctorsScreen() {
 
   const sortDoctorsByAvailability = (doctors, targetDate) => {
     return [...doctors].sort((a, b) => {
-      const availA = checkDoctorAvailability(a.timeSlots, targetDate);
-      const availB = checkDoctorAvailability(b.timeSlots, targetDate);
+      // 1. Primary sort: Category order (only if searchCategoryId is 'all')
+      if (searchCategoryId === 'all') {
+        const orderA = getCategoryOrder(a.doctorId);
+        const orderB = getCategoryOrder(b.doctorId);
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+      }
+      // 2. Secondary sort: Availability status/sortOrder
+      const availA = checkDoctorAvailability(a, targetDate);
+      const availB = checkDoctorAvailability(b, targetDate);
       return availA.sortOrder - availB.sortOrder;
     });
   };
@@ -280,10 +307,10 @@ export default function DoctorsScreen() {
     if (status === 'Not Available') return 'उपलब्ध नहीं';
     if (status === 'Scheduled') return 'निर्धारित';
     if (status.startsWith('Available in')) {
-        return status.replace('Available in', '').replace('minutes', 'मिनट में उपलब्ध').replace('hours', 'घंटे में उपलब्ध').replace('hour', 'घंटे में उपलब्ध').trim();
+      return status.replace('Available in', '').replace('minutes', 'मिनट में उपलब्ध').replace('hours', 'घंटे में उपलब्ध').replace('hour', 'घंटे में उपलब्ध').trim();
     }
     if (status.startsWith('Available at')) {
-        return status.replace('Available at', '').trim() + ' पर उपलब्ध';
+      return status.replace('Available at', '').trim() + ' पर उपलब्ध';
     }
     return status;
   };
@@ -299,7 +326,7 @@ export default function DoctorsScreen() {
     <View style={styles.categoryView}>
       <View style={styles.categoryHeader}>
         <Text style={styles.categoryHeaderTitle}>{t('doctors.selectSetting')}</Text>
-        <Text style={styles.categoryHeaderSubtitle}>{t('doctors.selectSettingDesc')}</Text>
+
       </View>
 
       <TouchableOpacity style={[styles.typeCard, styles.govCard]} onPress={() => handleTypeSelect('government')}>
@@ -307,10 +334,7 @@ export default function DoctorsScreen() {
           <Text style={{ fontSize: 32 }}>🏥</Text>
         </View>
         <Text style={styles.typeCardTitle}>{t('doctors.govHospital')}</Text>
-        <Text style={styles.typeCardDesc}>{t('doctors.govHospitalDesc')}</Text>
-        <View style={styles.typeBadge}>
-          <Text style={styles.typeBadgeText}>{t('doctors.scheduled')}</Text>
-        </View>
+
       </TouchableOpacity>
 
       <TouchableOpacity style={[styles.typeCard, styles.clinicCard]} onPress={() => handleTypeSelect('clinic')}>
@@ -318,10 +342,7 @@ export default function DoctorsScreen() {
           <Text style={{ fontSize: 32 }}>🏨</Text>
         </View>
         <Text style={styles.typeCardTitle}>{t('doctors.privateClinic')}</Text>
-        <Text style={styles.typeCardDesc}>{t('doctors.privateClinicDesc')}</Text>
-        <View style={[styles.typeBadge, styles.clinicBadge]}>
-          <Text style={[styles.typeBadgeText, styles.clinicBadgeText]}>{t('doctors.highAvailability')}</Text>
-        </View>
+
       </TouchableOpacity>
     </View>
   );
@@ -373,12 +394,13 @@ export default function DoctorsScreen() {
       <View style={styles.doctorsList}>
         {doctorsToRender.map(avail => {
           const activeDate = selectedType === 'clinic' ? null : getActiveSearchDate();
-          const availabilityInfo = selectedType === 'clinic' ? null : checkDoctorAvailability(avail.timeSlots, activeDate);
+          const availabilityInfo = selectedType === 'clinic' ? null : checkDoctorAvailability(avail, activeDate);
           const isUpcoming = selectedType === 'clinic' ? false : (!availabilityInfo.isAvailableNow &&
             availabilityInfo.status !== 'Not Available Today' &&
             availabilityInfo.status !== 'Shift Ended' &&
-            availabilityInfo.status !== 'Not Available');
-          
+            availabilityInfo.status !== 'Not Available' &&
+            availabilityInfo.status !== 'Absent');
+
           const doctorName = locale === 'hi' ? (avail.doctorId.name_hi || avail.doctorId.name) : avail.doctorId.name;
           const doctorTitle = locale === 'hi' ? (avail.doctorId.title_hi || avail.doctorId.title) : avail.doctorId.title;
           const doctorExp = locale === 'hi' ? (avail.doctorId.experience_hi || avail.doctorId.experience) : avail.doctorId.experience;
@@ -405,25 +427,25 @@ export default function DoctorsScreen() {
                   )}
                 </View>
               </View>
-
+ 
               {doctorDesc && <Text style={styles.doctorDesc}>{doctorDesc}</Text>}
-
+ 
               {selectedType !== 'clinic' && !isUpcoming && availabilityInfo && (
                 <View style={[
-                  styles.statusBadge, 
-                  availabilityInfo.isAvailableNow ? styles.statusAvailable : 
-                  (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available') ? styles.statusClosed : styles.statusUpcoming
+                  styles.statusBadge,
+                  availabilityInfo.isAvailableNow ? styles.statusAvailable :
+                    (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available' || availabilityInfo.status === 'Absent') ? styles.statusClosed : styles.statusUpcoming
                 ]}>
                   <Text style={[
                     styles.statusBadgeText,
-                    availabilityInfo.isAvailableNow ? styles.statusAvailableText : 
-                    (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available') ? styles.statusClosedText : styles.statusUpcomingText
+                    availabilityInfo.isAvailableNow ? styles.statusAvailableText :
+                      (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available' || availabilityInfo.status === 'Absent') ? styles.statusClosedText : styles.statusUpcomingText
                   ]}>
-                    {availabilityInfo.isAvailableNow ? '●' : (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available') ? '✕' : '🕒'} {getTranslatedStatus(availabilityInfo.status)}
+                    {availabilityInfo.isAvailableNow ? '●' : (availabilityInfo.status === 'Not Available Today' || availabilityInfo.status === 'Shift Ended' || availabilityInfo.status === 'Not Available' || availabilityInfo.status === 'Absent') ? '✕' : '🕒'} {getTranslatedStatus(availabilityInfo.status)}
                   </Text>
                 </View>
               )}
-
+ 
               {selectedType === 'clinic' ? (
                 <View style={styles.clinicInfoBox}>
                   {avail.timing && (
@@ -448,19 +470,21 @@ export default function DoctorsScreen() {
                   </View>
                 </View>
               ) : (
-                <View style={styles.timeSlotsContainer}>
-                  {avail.timeSlots.map((slot, idx) => (
-                    <View key={idx} style={[styles.timeSlot, slot.status === 'Available' ? styles.timeSlotAvailable : styles.timeSlotNotAvailable]}>
-                      <View style={styles.slotRow}>
-                        <Text style={styles.slotPeriod}>{slot.period}:</Text>
-                        <Text style={styles.slotTime}>{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</Text>
+                availabilityInfo?.status !== 'Absent' && (
+                  <View style={styles.timeSlotsContainer}>
+                    {avail.timeSlots.map((slot, idx) => (
+                      <View key={idx} style={[styles.timeSlot, slot.status === 'Available' ? styles.timeSlotAvailable : styles.timeSlotNotAvailable]}>
+                        <View style={styles.slotRow}>
+                          <Text style={styles.slotPeriod}>{slot.period}:</Text>
+                          <Text style={styles.slotTime}>{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</Text>
+                        </View>
+                        <Text style={[styles.slotStatus, slot.status === 'Available' ? styles.slotStatusAvailable : styles.slotStatusNotAvailable]}>
+                          {slot.status === 'Available' ? t('doctors.available') : t('doctors.notAvailable')}
+                        </Text>
                       </View>
-                      <Text style={[styles.slotStatus, slot.status === 'Available' ? styles.slotStatusAvailable : styles.slotStatusNotAvailable]}>
-                        {slot.status === 'Available' ? t('doctors.available') : t('doctors.notAvailable')}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
+                    ))}
+                  </View>
+                )
               )}
             </View>
           );
@@ -479,9 +503,9 @@ export default function DoctorsScreen() {
     );
   }
 
-  const selectedCategoryName = searchCategoryId === 'all' 
-    ? t('doctors.allSpecialists') 
-    : searchCategoryId 
+  const selectedCategoryName = searchCategoryId === 'all'
+    ? t('doctors.allSpecialists')
+    : searchCategoryId
       ? getTranslatedCategoryName(searchCategories.find(c => c._id === searchCategoryId) || { name: '...' })
       : t('doctors.specialistSearch');
 
@@ -495,30 +519,19 @@ export default function DoctorsScreen() {
           headerTintColor: '#1e293b',
           headerTitleStyle: { fontWeight: '900', fontSize: 16 },
           headerLeft: () => (
-            <TouchableOpacity 
-              onPress={() => router.back()} 
+            <TouchableOpacity
+              onPress={() => router.back()}
               style={{ paddingHorizontal: 12, paddingVertical: 8, marginLeft: -4 }}
               hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
             >
               <Ionicons name="arrow-back" size={24} color="#1e293b" />
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <TouchableOpacity 
-              onPress={() => Linking.openURL(`tel:${contactPhone}`)} 
-              style={{ paddingHorizontal: 12, paddingVertical: 8, marginRight: -4 }}
-              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-            >
-              <Ionicons name="call" size={22} color="#00bfa5" />
             </TouchableOpacity>
           )
         }}
       />
 
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
-        <View style={styles.bannerCard}>
-          <Text style={styles.bannerSubtitle}>{t('doctors.subtitle')}</Text>
-        </View>
+
 
         {!selectedType ? (
           renderCategorySelection()
@@ -534,6 +547,11 @@ export default function DoctorsScreen() {
                   <Text style={styles.headerTypeLabel}>
                     {selectedType === 'government' ? t('doctors.govHospital') : t('doctors.privateClinic')}
                   </Text>
+                  {selectedType === 'government' && (
+                    <Text style={{ fontSize: 11, color: '#00bfa5', fontWeight: '800', marginTop: 1, marginBottom: 2 }}>
+                      {locale === 'hi' ? `आज: ${new Date().toLocaleDateString('hi-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}` : `Today: ${new Date().toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}`}
+                    </Text>
+                  )}
                   <Text style={styles.headerCatName} numberOfLines={1}>{selectedCategoryName}</Text>
                 </View>
               </View>
@@ -566,7 +584,7 @@ export default function DoctorsScreen() {
                 const isOpen = openFaqIndex === index;
                 const question = (locale === 'hi' && faq.question_hi) ? faq.question_hi : faq.question;
                 const answer = (locale === 'hi' && faq.answer_hi) ? faq.answer_hi : faq.answer;
-                
+
                 return (
                   <TouchableOpacity
                     key={faq._id}
@@ -649,7 +667,7 @@ const styles = StyleSheet.create({
   contentContainer: { padding: 16, paddingBottom: 40 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 100 },
   loadingText: { marginTop: 12, fontSize: 14, color: '#64748b', fontWeight: '600' },
-  
+
   bannerCard: {
     backgroundColor: '#0f172a',
     borderRadius: 20,
@@ -657,26 +675,26 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   bannerSubtitle: { fontSize: 14, color: '#e2e8f0', textAlign: 'center', lineHeight: 22, fontWeight: '500' },
-  
+
   categoryView: { alignItems: 'center' },
   categoryHeader: { marginBottom: 24, alignItems: 'center' },
   categoryHeaderTitle: { fontSize: 24, fontWeight: '900', color: '#1e293b', marginBottom: 8 },
   categoryHeaderSubtitle: { fontSize: 14, color: '#64748b', textAlign: 'center' },
-  
+
   typeCard: {
     width: '100%', backgroundColor: 'white', borderRadius: 20, padding: 24, marginBottom: 16, alignItems: 'center',
     borderWidth: 1, borderColor: '#f1f5f9',
     ...Platform.select({ ios: { shadowColor: '#0f172a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10 }, android: { elevation: 2 } }),
   },
   typeIconBox: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  typeCardTitle: { fontSize: 20, fontWeight: '800', color: '#1e293b', marginBottom: 8 },
+  typeCardTitle: { fontSize: 20, fontWeight: '800', color: '#1e293b', marginBottom: 8, textAlign: 'center' },
   typeCardDesc: { fontSize: 14, color: '#64748b', marginBottom: 16 },
   typeBadge: { backgroundColor: '#e2e8f0', paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20 },
   typeBadgeText: { color: '#475569', fontSize: 12, fontWeight: '700' },
   clinicCard: { borderColor: '#e6fffa' },
   clinicBadge: { backgroundColor: '#e6fffa' },
   clinicBadgeText: { color: '#00bfa5' },
-  
+
   headerCard: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'white',
     padding: 12, borderRadius: 16, marginBottom: 20, borderWidth: 1, borderColor: '#e2e8f0',
@@ -690,7 +708,7 @@ const styles = StyleSheet.create({
   headerRight: { paddingLeft: 10 },
   actionBtnFilter: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0fdfa', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
   actionBtnFilterText: { color: '#00bfa5', fontWeight: '700', fontSize: 13, marginLeft: 4 },
-  
+
   doctorsList: { gap: 16 },
   doctorCard: {
     backgroundColor: 'white', borderRadius: 20, padding: 20, borderWidth: 1, borderColor: '#e2e8f0',
@@ -706,7 +724,7 @@ const styles = StyleSheet.create({
   feeRow: { flexDirection: 'row', alignItems: 'center' },
   feeText: { fontSize: 13, color: '#16a34a', fontWeight: '700', marginLeft: 4 },
   doctorDesc: { fontSize: 14, color: '#475569', lineHeight: 20, marginBottom: 16, backgroundColor: '#f8fafc', padding: 12, borderRadius: 12 },
-  
+
   statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 16 },
   statusBadgeText: { fontSize: 13, fontWeight: '800' },
   statusAvailable: { backgroundColor: '#dcfce7' },
@@ -715,7 +733,7 @@ const styles = StyleSheet.create({
   statusClosedText: { color: '#dc2626' },
   statusUpcoming: { backgroundColor: '#fef3c7' },
   statusUpcomingText: { color: '#d97706' },
-  
+
   clinicInfoBox: { borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 16 },
   timingRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   timingText: { fontSize: 14, color: '#0f766e', fontWeight: '700', marginLeft: 6 },
@@ -725,7 +743,7 @@ const styles = StyleSheet.create({
   dayChip: { backgroundColor: 'white', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: '#ccfbf1' },
   dayChipText: { fontSize: 12, color: '#0f766e', fontWeight: '700' },
   noDaysText: { fontSize: 12, color: '#64748b', fontStyle: 'italic' },
-  
+
   timeSlotsContainer: { gap: 10 },
   timeSlot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, borderRadius: 12, borderWidth: 1 },
   timeSlotAvailable: { backgroundColor: 'white', borderColor: '#e2e8f0' },
@@ -736,7 +754,7 @@ const styles = StyleSheet.create({
   slotStatus: { fontSize: 12, fontWeight: '800' },
   slotStatusAvailable: { color: '#16a34a' },
   slotStatusNotAvailable: { color: '#94a3b8' },
-  
+
   emptyContainer: { alignItems: 'center', padding: 32, backgroundColor: 'white', borderRadius: 20, borderWidth: 1, borderColor: '#e2e8f0', marginTop: 20 },
   emptyTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b', marginBottom: 8 },
   emptyDesc: { fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 24, lineHeight: 20 },
@@ -744,7 +762,7 @@ const styles = StyleSheet.create({
   primaryButtonText: { color: 'white', fontWeight: '800', fontSize: 14 },
   secondaryButton: { backgroundColor: '#f1f5f9', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
   secondaryButtonText: { color: '#475569', fontWeight: '800', fontSize: 14 },
-  
+
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'flex-end' },
   modalContent: { backgroundColor: 'white', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '80%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
@@ -756,7 +774,7 @@ const styles = StyleSheet.create({
   catChipActive: { backgroundColor: '#f0fdfa', borderColor: '#00bfa5' },
   catChipText: { fontSize: 14, color: '#475569', fontWeight: '600' },
   catChipTextActive: { color: '#00bfa5', fontWeight: '800' },
-  
+
   dateSection: { marginBottom: 24 },
   dateChipsContainer: { flexDirection: 'row', gap: 12 },
   dateChip: { width: 70, height: 80, backgroundColor: '#f8fafc', borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0', marginRight: 12 },
@@ -765,11 +783,11 @@ const styles = StyleSheet.create({
   dateNumText: { fontSize: 20, color: '#1e293b', fontWeight: '800', marginBottom: 2 },
   dateMonthText: { fontSize: 11, color: '#64748b', fontWeight: '600', textTransform: 'uppercase' },
   dateTextActive: { color: 'white' },
-  
+
   modalFooter: { paddingTop: 16, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
   submitBtn: { backgroundColor: '#0f172a', borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
   submitBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
-  
+
   faqSection: { marginTop: 32, paddingBottom: 24 },
   faqHeader: { alignItems: 'center', marginBottom: 24 },
   faqHeaderTitle: { fontSize: 22, fontWeight: '900', color: '#1e293b', marginBottom: 8 },

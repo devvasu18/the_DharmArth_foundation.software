@@ -1,15 +1,16 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
-  Image, 
-  Share, 
-  Clipboard, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Share,
+  Clipboard,
   Dimensions,
-  Platform
+  Platform,
+  Linking
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../src/context/AuthContext';
@@ -46,6 +47,32 @@ export default function ShareEarn() {
     }
   };
 
+  const handleWhatsAppShare = async () => {
+    const message = t('shareEarn.shareMessage').replace('{shareUrl}', shareUrl);
+    const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(message)}`;
+    const webWhatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+
+    try {
+      const canOpen = await Linking.canOpenURL(whatsappUrl);
+      if (canOpen) {
+        await Linking.openURL(whatsappUrl);
+      } else {
+        await Linking.openURL(webWhatsappUrl);
+      }
+    } catch (error) {
+      console.error("WhatsApp deep link failed, using native share fallback", error);
+      try {
+        await Share.share({
+          title: t('shareEarn.shareTitle'),
+          message: message,
+          url: shareUrl,
+        });
+      } catch (shareError) {
+        console.error(shareError.message);
+      }
+    }
+  };
+
   const copyToClipboard = () => {
     Clipboard.setString(shareUrl);
     alert(t('shareEarn.copied'));
@@ -54,7 +81,7 @@ export default function ShareEarn() {
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ title: t('shareEarn.title') }} />
-      
+
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Header Section */}
         <View style={styles.header}>
@@ -80,9 +107,10 @@ export default function ShareEarn() {
             <View style={styles.cardBottomPane}>
               {/* Header inside Bottom */}
               <View style={styles.bottomHeader}>
-                <View style={styles.logoArea}>
-                  <Text style={styles.foundationNameHi}>धर्मार्थ फाउंडेशन</Text>
-                  <Text style={styles.tagline}>Spreading Humanity & Hope</Text>
+                <View style={[styles.userInfoArea, { flex: 1, marginBottom: 0, marginRight: 16 }]}>
+                  <Text style={styles.userName}>{name}</Text>
+                  <Text style={styles.userWork}>{work}</Text>
+                  <Text style={styles.userBio} numberOfLines={3}>"{bio}"</Text>
                 </View>
                 <View style={styles.idArea}>
                   <Text style={styles.idLabelText}>{t('shareEarn.volunteerId')}</Text>
@@ -90,112 +118,96 @@ export default function ShareEarn() {
                 </View>
               </View>
 
-              {/* User Info */}
-              <View style={styles.userInfoArea}>
-                <Text style={styles.userName}>{name}</Text>
-                <Text style={styles.userWork}>{work}</Text>
-                <Text style={styles.userBio} numberOfLines={3}>"{bio}"</Text>
-
-                {/* Grid */}
-                <View style={styles.detailsGrid}>
-                  <View style={styles.detailItem}>
-                    <Ionicons name="call" size={24} color="#1e293b" />
-                    <View style={styles.detailContent}>
-                      <Text style={styles.detailLabel}>{t('shareEarn.contact')}</Text>
-                      <Text style={styles.detailValue}>{mobilePhone}</Text>
-                    </View>
+              {/* Grid */}
+              <View style={styles.detailsGrid}>
+                <View style={styles.detailItem}>
+                  <Ionicons name="call" size={24} color="#1e293b" />
+                  <View style={styles.detailContent}>
+                    <Text style={styles.detailLabel}>{t('shareEarn.contact')}</Text>
+                    <Text style={styles.detailValue}>{mobilePhone}</Text>
                   </View>
-                  <View style={styles.detailItem}>
-                    <Ionicons name="location" size={24} color="#1e293b" />
-                    <View style={styles.detailContent}>
-                      <Text style={styles.detailLabel}>{t('shareEarn.location')}</Text>
-                      <Text style={styles.detailValue} numberOfLines={1}>{location}</Text>
-                    </View>
+                </View>
+                <View style={styles.detailItem}>
+                  <Ionicons name="location" size={24} color="#1e293b" />
+                  <View style={styles.detailContent}>
+                    <Text style={styles.detailLabel}>{t('shareEarn.location')}</Text>
+                    <Text style={styles.detailValue} numberOfLines={1}>{location}</Text>
                   </View>
-                  <View style={styles.detailItem}>
-                    <Ionicons name="calendar" size={24} color="#1e293b" />
-                    <View style={styles.detailContent}>
-                      <Text style={styles.detailLabel}>{t('shareEarn.verified')}</Text>
-                      <Text style={styles.detailValue}>{joinedDate}</Text>
-                    </View>
+                </View>
+                <View style={styles.detailItem}>
+                  <Ionicons name="calendar" size={24} color="#1e293b" />
+                  <View style={styles.detailContent}>
+                    <Text style={styles.detailLabel}>{t('shareEarn.verified')}</Text>
+                    <Text style={styles.detailValue}>{joinedDate}</Text>
                   </View>
-                  <View style={styles.detailItem}>
-                    <Ionicons name="shield-checkmark" size={24} color="#1e293b" />
-                    <View style={styles.detailContent}>
-                      <Text style={styles.detailLabel}>{t('shareEarn.status')}</Text>
-                      <Text style={styles.detailValue}>{t('shareEarn.active')}</Text>
-                    </View>
+                </View>
+                <View style={styles.detailItem}>
+                  <Ionicons name="shield-checkmark" size={24} color="#1e293b" />
+                  <View style={styles.detailContent}>
+                    <Text style={styles.detailLabel}>{t('shareEarn.status')}</Text>
+                    <Text style={styles.detailValue}>{t('shareEarn.active')}</Text>
                   </View>
                 </View>
               </View>
-
-              {/* Footer */}
-              <View style={styles.cardFooterArea}>
-                <View style={styles.footerWeb}>
-                  <Ionicons name="globe-outline" size={20} color="#00bfa5" />
-                  <Text style={styles.footerWebText}>dharmarth.com</Text>
-                </View>
-                <View style={styles.qrCodeBox}>
-                  <Ionicons name="qr-code" size={40} color="#1e293b" />
-                </View>
-              </View>
             </View>
+
           </View>
         </View>
 
-        {/* Your Impact Stats */}
-        <View style={styles.impactSection}>
-          <Text style={styles.sectionLabel}>{t('shareEarn.yourImpact')}</Text>
-          <View style={styles.statsContainer}>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{user?.totalReferrals || 0}</Text>
-              <Text style={styles.statLabel}>{t('shareEarn.referrals')}</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>₹{user?.totalEarnings || 0}</Text>
-              <Text style={styles.statLabel}>{t('shareEarn.earned')}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Sharing Options */}
-        <View style={styles.shareSection}>
-          <Text style={styles.sectionLabel}>{t('shareEarn.uniqueLink')}</Text>
-          <View style={styles.linkBox}>
-            <Text style={styles.linkText} numberOfLines={1}>{shareUrl}</Text>
-            <TouchableOpacity onPress={copyToClipboard} style={styles.copyBtn}>
-              <Ionicons name="copy-outline" size={20} color="#00bfa5" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.btnGrid}>
-            <TouchableOpacity style={[styles.shareBtn, styles.waBtn]} onPress={handleShare}>
-              <Ionicons name="logo-whatsapp" size={24} color="white" />
-              <Text style={styles.shareBtnText}>{t('shareEarn.whatsapp')}</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={[styles.shareBtn, styles.nativeBtn]} onPress={handleShare}>
-              <Ionicons name="share-social" size={24} color="white" />
-              <Text style={styles.shareBtnText}>{t('shareEarn.shareMore')}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Info Box */}
-        <View style={styles.infoCard}>
-          <View style={styles.infoIcon}>
-            <Ionicons name="information-circle" size={24} color="#00bfa5" />
-          </View>
-          <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>{t('shareEarn.howItWorks')}</Text>
-            <Text style={styles.infoText}>
-              {t('shareEarn.howItWorksDesc')}
-            </Text>
-          </View>
-        </View>
-      </ScrollView>
+        {/* Sharing Options */ }
+  <View style={styles.shareSection}>
+    <Text style={styles.sectionLabel}>{t('shareEarn.uniqueLink')}</Text>
+    <View style={styles.linkBox}>
+      <Text style={styles.linkText} numberOfLines={1}>{shareUrl}</Text>
+      <TouchableOpacity onPress={copyToClipboard} style={styles.copyBtn}>
+        <Ionicons name="copy-outline" size={20} color="#00bfa5" />
+      </TouchableOpacity>
     </View>
+
+    <View style={styles.btnGrid}>
+      <TouchableOpacity style={[styles.shareBtn, styles.waBtn]} onPress={handleWhatsAppShare}>
+        <Ionicons name="logo-whatsapp" size={24} color="white" />
+        <Text style={styles.shareBtnText}>{t('shareEarn.whatsapp')}</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={[styles.shareBtn, styles.nativeBtn]} onPress={handleShare}>
+        <Ionicons name="share-social" size={24} color="white" />
+        <Text style={styles.shareBtnText}>{t('shareEarn.shareMore')}</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+
+  {/* Your Impact Stats */ }
+  <View style={styles.impactSection}>
+    <Text style={styles.sectionLabel}>{t('shareEarn.yourImpact')}</Text>
+    <View style={styles.statsContainer}>
+      <View style={styles.statBox}>
+        <Text style={styles.statValue}>{user?.totalReferrals || 0}</Text>
+        <Text style={styles.statLabel}>{t('shareEarn.referrals')}</Text>
+      </View>
+      <View style={styles.statDivider} />
+      <View style={styles.statBox}>
+        <Text style={styles.statValue}>₹{user?.totalEarnings || 0}</Text>
+        <Text style={styles.statLabel}>{t('shareEarn.earned')}</Text>
+      </View>
+    </View>
+  </View>
+
+
+  {/* Info Box */ }
+  <View style={styles.infoCard}>
+    <View style={styles.infoIcon}>
+      <Ionicons name="information-circle" size={24} color="#00bfa5" />
+    </View>
+    <View style={styles.infoContent}>
+      <Text style={styles.infoTitle}>{t('shareEarn.howItWorks')}</Text>
+      <Text style={styles.infoText}>
+        {t('shareEarn.howItWorksDesc')}
+      </Text>
+    </View>
+  </View>
+      </ScrollView >
+    </View >
   );
 }
 

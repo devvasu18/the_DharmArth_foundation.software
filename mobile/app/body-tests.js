@@ -17,7 +17,7 @@ import {
   KeyboardAvoidingView,
   Linking
 } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../src/context/LanguageContext';
 import { useAuth } from '../src/context/AuthContext';
@@ -80,11 +80,12 @@ const synonymMap = {
 export default function BodyTestsScreen() {
   const { t, locale } = useTranslation();
   const router = useRouter();
+  const params = useLocalSearchParams();
   const { user } = useAuth();
 
   const [bodyTests, setBodyTests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState(params.initialCategory || 'All');
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const itemsPerPage = 20;
@@ -102,11 +103,6 @@ export default function BodyTestsScreen() {
     fetchBodyTests();
     fetchSettings();
   }, []);
-
-  // Reset category filter when language is changed
-  useEffect(() => {
-    setSelectedCategory('All');
-  }, [locale]);
 
   const fetchBodyTests = async () => {
     try {
@@ -152,16 +148,27 @@ export default function BodyTestsScreen() {
     return `${API_BASE_URL}${cleanPath}`;
   };
 
-  // Get unique categories
-  const testCategories = ['All', ...new Set(bodyTests.map(t => (locale === 'hi' && t.category_hi) ? t.category_hi : t.category))];
+  // Selected category value mapping
+  const CATEGORIES = [
+    { id: 'BLOOD TESTS', label: 'Blood Test', labelHi: 'खून की जांच' },
+    { id: 'URINE TEST', label: 'Urine Test', labelHi: 'पेशाब की जांच' },
+    { id: 'RADIOLOGY', label: 'X-Ray & ECG', labelHi: 'एक्स-रे और ईसीजी' },
+    { id: 'FULL BODY TESTS', label: 'Full Body Checkup', labelHi: 'फुल बॉडी चेकअप' },
+    { id: 'All', label: 'All Tests', labelHi: 'सभी जांच' },
+  ];
 
   const filteredTests = bodyTests.filter(test => {
     const isSearching = !!searchTerm.trim();
 
     // 1. Category check - ignore if searching
     if (!isSearching) {
-      const localizedCat = (locale === 'hi' && test.category_hi) ? test.category_hi : test.category;
-      const matchesCategory = selectedCategory === 'All' || localizedCat === selectedCategory;
+      const matchesCategory = selectedCategory === 'All' || 
+                              test.category === selectedCategory ||
+                              (test.category && test.category.toUpperCase() === selectedCategory.toUpperCase()) ||
+                              (selectedCategory === 'BLOOD TESTS' && (test.category === 'BLOOD TESTS' || test.category === 'Pathology' || test.category_hi === 'रक्त जांच')) ||
+                              (selectedCategory === 'URINE TEST' && (test.category === 'URINE TEST' || test.category_hi === 'मूत्र जांच')) ||
+                              (selectedCategory === 'RADIOLOGY' && (test.category === 'RADIOLOGY' || test.category === 'Radiology' || test.category_hi === 'रेडियोलॉजी')) ||
+                              (selectedCategory === 'FULL BODY TESTS' && (test.category === 'FULL BODY TESTS' || test.category_hi === 'संपूर्ण शरीर जांच'));
       if (!matchesCategory) return false;
     }
 
@@ -205,7 +212,14 @@ export default function BodyTestsScreen() {
     return false;
   });
 
-  const displayedTests = filteredTests.slice(0, page * itemsPerPage);
+  // Sort alphabetically by default
+  const sortedFilteredTests = [...filteredTests].sort((a, b) => {
+    const nameA = (locale === 'hi' && a.name_hi) ? a.name_hi : a.name;
+    const nameB = (locale === 'hi' && b.name_hi) ? b.name_hi : b.name;
+    return nameA.localeCompare(nameB, locale === 'hi' ? 'hi' : 'en');
+  });
+
+  const displayedTests = sortedFilteredTests.slice(0, page * itemsPerPage);
 
   const handleScroll = (event) => {
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
@@ -297,28 +311,49 @@ export default function BodyTestsScreen() {
           ) : null}
         </View>
 
-        {/* Categories Scroller */}
+        {/* Categories Grid */}
         <View style={styles.categoriesWrapper}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryContainer}
-          >
-            {testCategories.map(cat => {
-              const isActive = selectedCategory === cat;
-              return (
-                <TouchableOpacity
-                  key={cat}
-                  style={[styles.categoryChip, isActive && styles.categoryChipActive]}
-                  onPress={() => setSelectedCategory(cat)}
-                >
-                  <Text style={[styles.categoryText, isActive && styles.categoryTextActive]}>
-                    {cat === 'All' ? t('bodyTests.all') : cat}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          <View style={styles.categoryGrid}>
+            <View style={styles.categoryRow}>
+              {CATEGORIES.slice(0, 3).map(cat => {
+                const isActive = selectedCategory === cat.id;
+                const label = locale === 'hi' ? cat.labelHi : cat.label;
+                return (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[styles.categoryColumnBtn, isActive && styles.categoryColumnBtnActive]}
+                    onPress={() => setSelectedCategory(cat.id)}
+                  >
+                    <Text style={[styles.categoryColumnText, isActive && styles.categoryColumnTextActive]} numberOfLines={2}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <View style={styles.categoryRow}>
+              {CATEGORIES.slice(3, 5).map((cat, idx) => {
+                const isActive = selectedCategory === cat.id;
+                const label = locale === 'hi' ? cat.labelHi : cat.label;
+                return (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[
+                      styles.categoryColumnBtn, 
+                      isActive && styles.categoryColumnBtnActive,
+                      { flex: idx === 0 ? 1.5 : 1 }
+                    ]}
+                    onPress={() => setSelectedCategory(cat.id)}
+                  >
+                    <Text style={[styles.categoryColumnText, isActive && styles.categoryColumnTextActive]} numberOfLines={2}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
         </View>
 
         {/* Header Label */}
@@ -528,30 +563,37 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   categoriesWrapper: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
-  categoryContainer: {
+  categoryGrid: {
     gap: 8,
-    paddingRight: 16,
   },
-  categoryChip: {
+  categoryRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  categoryColumnBtn: {
+    flex: 1,
     backgroundColor: 'white',
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
-    borderRadius: 25,
-    paddingVertical: 8,
-    paddingHorizontal: 18,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  categoryChipActive: {
+  categoryColumnBtnActive: {
     borderColor: '#00bfa5',
     backgroundColor: '#e6fffa',
   },
-  categoryText: {
-    fontSize: 14,
-    fontWeight: '700',
+  categoryColumnText: {
+    fontSize: 11,
+    fontWeight: '800',
     color: '#64748b',
+    textAlign: 'center',
   },
-  categoryTextActive: {
+  categoryColumnTextActive: {
     color: '#004d40',
   },
   sectionTitle: {

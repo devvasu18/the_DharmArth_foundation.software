@@ -603,28 +603,30 @@ exports.getAvailabilitySearch = async (req, res) => {
         // Optimized: Pass doctors array directly to avoid querying all active doctors
         await ensureAvailabilityRecordsForDateRange(targetDate, targetDate, doctors);
 
-        // 3. Query availabilities on selected date
+        // 3. Query availabilities on selected date (both enabled and disabled)
         let availabilities = await DoctorAvailability.find({
             doctorId: { $in: doctorIds },
             date: targetDate,
-            hospitalType: hospitalType,
-            isEnabled: true
+            hospitalType: hospitalType
         }).populate({
             path: 'doctorId',
             populate: { path: 'categories' }
         });
 
-        // Filter out records where at least one slot is "Available"
-        const activeAvailabilities = availabilities.filter(a => 
-            a.timeSlots && a.timeSlots.some(s => s.status === 'Available')
+        // Filter out records where no time slots exist (i.e. doctor is not scheduled for this setting on this day at all)
+        const scheduledAvailabilities = availabilities.filter(a => 
+            a.timeSlots && a.timeSlots.length > 0
         );
 
-        if (activeAvailabilities.length > 0) {
+        if (scheduledAvailabilities.length > 0) {
+            const hasAnyAvailable = scheduledAvailabilities.some(a => 
+                a.isEnabled && a.timeSlots.some(s => s.status === 'Available')
+            );
             return res.json({
-                available: true,
+                available: hasAnyAvailable,
                 selectedDate: date,
                 nextAvailableDate: null,
-                doctors: activeAvailabilities
+                doctors: scheduledAvailabilities
             });
         }
 

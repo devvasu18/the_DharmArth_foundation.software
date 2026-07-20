@@ -173,6 +173,33 @@ export default function DashboardScreen() {
     }
   };
 
+  const handleWhatsAppShare = async () => {
+    const donationLink = `https://thedharmarth.com/donate?ref=${user.referralCode || user.mobile}`;
+    const profileLink = `https://thedharmarth.com/v/${user.referralCode || user.mobile}`;
+    const message = t('dashboard.shareMessage')
+      .replace('{donationLink}', donationLink)
+      .replace('{profileLink}', profileLink);
+
+    const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(message)}`;
+    const webWhatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+
+    try {
+      const canOpen = await Linking.canOpenURL(whatsappUrl);
+      if (canOpen) {
+        await Linking.openURL(whatsappUrl);
+      } else {
+        await Linking.openURL(webWhatsappUrl);
+      }
+    } catch (error) {
+      console.error("WhatsApp deep link failed, using native share fallback", error);
+      try {
+        await Share.share({ message });
+      } catch (shareError) {
+        console.error(shareError);
+      }
+    }
+  };
+
   const handleShareQr = async () => {
     const link = `https://thedharmarth.com/donate?ref=${user.referralCode || user.mobile}`;
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(link)}`;
@@ -334,7 +361,7 @@ export default function DashboardScreen() {
           </View>
 
           <View style={styles.socialRow}>
-            <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#25D366' }]} onPress={handleShare}>
+            <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#25D366' }]} onPress={handleWhatsAppShare}>
               <Ionicons name="logo-whatsapp" size={24} color="white" />
               <Text style={styles.socialBtnText}>{t('dashboard.whatsapp')}</Text>
             </TouchableOpacity>
