@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import DoctorSvg from '../../src/components/DoctorSvg';
 import CapsuleSvg from '../../src/components/CapsuleSvg';
+import XRaySvg from '../../src/components/XRaySvg';
 
 const { width } = Dimensions.get('window');
 
@@ -440,7 +441,7 @@ const LandingScreen = () => {
                     router.push({ pathname: '/body-tests', params: { initialCategory: 'RADIOLOGY' } });
                   }}
                 >
-                  <Ionicons name="barcode-outline" size={28} color="#00bfa5" style={{ marginBottom: 6 }} />
+                  <XRaySvg size={38} style={{ marginBottom: 6 }} />
                   <Text style={styles.modalGridBtnText} numberOfLines={2}>
                     {locale === 'hi' ? 'एक्स-रे और ईसीजी' : 'X-Ray & ECG'}
                   </Text>
