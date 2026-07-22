@@ -12,6 +12,7 @@ import {
   ScrollView
 } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
+import { useTranslation } from '../../src/context/LanguageContext';
 import api from '../../src/services/api';
 import { Link, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,7 +36,12 @@ export default function Login() {
   const [showResetPassword, setShowResetPassword] = useState(false);
   
   const { login } = useAuth();
+  const { locale, changeLanguage } = useTranslation();
   const router = useRouter();
+
+  const toggleLanguage = () => {
+    changeLanguage(locale === 'hi' ? 'en' : 'hi');
+  };
 
   const handleLogin = async () => {
     if (!identifier || !password) {
@@ -141,12 +147,18 @@ export default function Login() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
+          <TouchableOpacity onPress={toggleLanguage} style={styles.langToggle}>
+            <Ionicons name="language" size={20} color="#00bfa5" />
+            <Text style={styles.langText}>{locale === 'hi' ? 'English' : 'हिंदी'}</Text>
+          </TouchableOpacity>
           <View style={styles.logoCircle}>
              <Ionicons name="heart" size={40} color="#00bfa5" />
           </View>
-          <Text style={styles.title}>DharmArth Foundation</Text>
+          <Text style={styles.title}>{locale === 'hi' ? 'धर्मअर्थ फाउंडेशन' : 'DharmArth Foundation'}</Text>
           <Text style={styles.subtitle}>
-            {isForgotPassword ? 'Reset Password' : 'Welcome back!'}
+            {isForgotPassword 
+              ? (locale === 'hi' ? 'पासवर्ड रीसेट करें' : 'Reset Password') 
+              : (locale === 'hi' ? 'वापसी पर स्वागत है!' : 'Welcome back!')}
           </Text>
         </View>
 
@@ -235,11 +247,11 @@ export default function Login() {
               </View>
             )}
 
-            <Text style={styles.label}>Email / Mobile Number</Text>
+            <Text style={styles.label}>{locale === 'hi' ? 'ईमेल / मोबाइल नंबर' : 'Email / Mobile Number'}</Text>
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.flexInput}
-                placeholder="Enter Email or 10-digit Mobile"
+                placeholder={locale === 'hi' ? 'ईमेल या 10-अंकीय मोबाइल दर्ज करें' : 'Enter Email or 10-digit Mobile'}
                 value={identifier}
                 onChangeText={(val) => {
                   let cleanVal = val.replace(/\s/g, '');
@@ -260,18 +272,18 @@ export default function Login() {
                   }}
                   style={{ padding: 10 }}
                 >
-                  <Text style={styles.changeBtnText}>Change</Text>
+                  <Text style={styles.changeBtnText}>{locale === 'hi' ? 'बदलें' : 'Change'}</Text>
                 </TouchableOpacity>
               )}
             </View>
 
             {loginMethod === 'password' && (
               <>
-                <Text style={styles.label}>Password</Text>
+                <Text style={styles.label}>{locale === 'hi' ? 'पासवर्ड' : 'Password'}</Text>
                 <View style={styles.passwordContainer}>
                   <TextInput
                     style={styles.passwordInput}
-                    placeholder="Enter Password"
+                    placeholder={locale === 'hi' ? 'पासवर्ड दर्ज करें' : 'Enter Password'}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
@@ -297,17 +309,17 @@ export default function Login() {
                     setResetStep(1);
                   }}
                 >
-                  <Text style={styles.forgotText}>Forgot Password?</Text>
+                  <Text style={styles.forgotText}>{locale === 'hi' ? 'पासवर्ड भूल गए?' : 'Forgot Password?'}</Text>
                 </TouchableOpacity>
               </>
             )}
 
             {loginMethod === 'otp' && otpSent && (
               <>
-                <Text style={styles.label}>Enter 6-digit OTP</Text>
+                <Text style={styles.label}>{locale === 'hi' ? '6-अंकीय OTP दर्ज करें' : 'Enter 6-digit OTP'}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter 6-digit OTP"
+                  placeholder={locale === 'hi' ? '6-अंकीय OTP दर्ज करें' : 'Enter 6-digit OTP'}
                   value={otp}
                   onChangeText={(val) => setOtp(val.replace(/\D/g, ''))}
                   keyboardType="number-pad"
@@ -326,7 +338,7 @@ export default function Login() {
                   {otpLoading ? (
                     <ActivityIndicator color="white" />
                   ) : (
-                    <Text style={styles.loginButtonText}>Get OTP</Text>
+                    <Text style={styles.loginButtonText}>{locale === 'hi' ? 'OTP प्राप्त करें' : 'Get OTP'}</Text>
                   )}
                 </TouchableOpacity>
               ) : (
@@ -339,7 +351,9 @@ export default function Login() {
                     <ActivityIndicator color="white" />
                   ) : (
                     <Text style={styles.loginButtonText}>
-                      {isForgotPassword ? 'Verify OTP' : 'Verify & Login'}
+                      {isForgotPassword 
+                        ? (locale === 'hi' ? 'OTP सत्यापित करें' : 'Verify OTP') 
+                        : (locale === 'hi' ? 'सत्यापित करें और लॉगिन करें' : 'Verify & Login')}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -353,7 +367,7 @@ export default function Login() {
                 {loading ? (
                   <ActivityIndicator color="white" />
                 ) : (
-                  <Text style={styles.loginButtonText}>Login</Text>
+                  <Text style={styles.loginButtonText}>{locale === 'hi' ? 'लॉगिन' : 'Login'}</Text>
                 )}
               </TouchableOpacity>
             )}
@@ -374,7 +388,9 @@ export default function Login() {
                   style={{ marginRight: 8 }}
                 />
                 <Text style={styles.toggleMethodText}>
-                  {loginMethod === 'otp' ? 'Login via Password' : 'Login via OTP'}
+                  {loginMethod === 'otp' 
+                    ? (locale === 'hi' ? 'पासवर्ड से लॉगिन करें' : 'Login via Password') 
+                    : (locale === 'hi' ? 'OTP से लॉगिन करें' : 'Login via OTP')}
                 </Text>
               </TouchableOpacity>
             )}
@@ -389,7 +405,7 @@ export default function Login() {
                   setOtp('');
                 }}
               >
-                <Text style={styles.skipButtonText}>Cancel</Text>
+                <Text style={styles.skipButtonText}>{locale === 'hi' ? 'रद्द करें' : 'Cancel'}</Text>
               </TouchableOpacity>
             )}
 
@@ -400,14 +416,14 @@ export default function Login() {
                   onPress={() => router.replace('/')}
                   disabled={loading}
                 >
-                  <Text style={styles.skipButtonText}>Skip for now</Text>
+                  <Text style={styles.skipButtonText}>{locale === 'hi' ? 'अभी के लिए छोड़ें' : 'Skip for now'}</Text>
                 </TouchableOpacity>
 
                 <View style={styles.footer}>
-                  <Text style={styles.footerText}>Don't have an account? </Text>
+                  <Text style={styles.footerText}>{locale === 'hi' ? 'क्या आपका खाता नहीं है?' : "Don't have an account?"} </Text>
                   <Link href="/signup" asChild>
                     <TouchableOpacity>
-                      <Text style={styles.linkText}>Sign Up</Text>
+                      <Text style={styles.linkText}>{locale === 'hi' ? 'साइन अप करें' : 'Sign Up'}</Text>
                     </TouchableOpacity>
                   </Link>
                 </View>

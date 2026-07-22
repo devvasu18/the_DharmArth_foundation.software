@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import YoutubeIframe from 'react-native-youtube-iframe';
 import api from '../../src/services/api';
 import { useTranslation } from '../../src/context/LanguageContext';
 import { useAuth } from '../../src/context/AuthContext';
@@ -194,24 +195,40 @@ export default function DynamicCmsScreen() {
               return (
                 <View key={`comp-${idx}`} style={styles.section}>
                   {compTitle !== '' && <Text style={styles.sectionTitle}>{compTitle}</Text>}
-                  <TouchableOpacity 
-                    style={styles.videoCard}
-                    activeOpacity={0.9}
-                    onPress={() => Linking.openURL(videoUrl).catch(err => console.log(err))}
-                  >
-                    {thumbUrl ? (
-                      <ImageBackground source={{ uri: thumbUrl }} style={styles.videoThumb} imageStyle={{ borderRadius: 16 }}>
-                        <View style={styles.videoOverlay}>
-                          <Ionicons name="play-circle" size={72} color="#00bfa5" />
+                  {(() => {
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                    const match = videoUrl.match(regExp);
+                    const videoId = (match && match[2].length === 11) ? match[2] : null;
+
+                    if (videoId) {
+                      return (
+                        <View style={{ borderRadius: 16, overflow: 'hidden', marginTop: 10 }}>
+                          <YoutubeIframe height={220} videoId={videoId} />
                         </View>
-                      </ImageBackground>
-                    ) : (
-                      <View style={[styles.videoThumb, styles.videoPlaceholder]}>
-                        <Ionicons name="play-circle" size={72} color="#00bfa5" />
-                        <Text style={styles.videoPlaceholderText}>Watch Guide Video</Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
+                      );
+                    }
+
+                    return (
+                      <TouchableOpacity 
+                        style={styles.videoCard}
+                        activeOpacity={0.9}
+                        onPress={() => Linking.openURL(videoUrl).catch(err => console.log(err))}
+                      >
+                        {thumbUrl ? (
+                          <ImageBackground source={{ uri: thumbUrl }} style={styles.videoThumb} imageStyle={{ borderRadius: 16 }}>
+                            <View style={styles.videoOverlay}>
+                              <Ionicons name="play-circle" size={72} color="#00bfa5" />
+                            </View>
+                          </ImageBackground>
+                        ) : (
+                          <View style={[styles.videoThumb, styles.videoPlaceholder]}>
+                            <Ionicons name="play-circle" size={72} color="#00bfa5" />
+                            <Text style={styles.videoPlaceholderText}>Watch Guide Video</Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })()}
                 </View>
               );
             }

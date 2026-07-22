@@ -63,7 +63,7 @@ function RootLayoutNav() {
         if (!user && !inAuthGroup && !isPublicRoute && !inOnboarding) {
           router.replace('/login');
         } else if (user && inAuthGroup) {
-          router.replace('/dashboard');
+          router.replace('/');
         }
       } catch (e) {
         console.error('Navigation check failed:', e);

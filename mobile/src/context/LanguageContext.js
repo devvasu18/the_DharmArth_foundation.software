@@ -386,6 +386,25 @@ const translations = {
       ifscLabel: "IFSC Code",
       saveBtnText: "Save & Enable Payouts",
       searchPlaceholder: "Search banks..."
+    },
+    exitModal: {
+      titleGiveUp: "Please Don't Give Up!",
+      descGiveUp: "Every small contribution makes a huge difference in someone's life. Are you sure you want to leave?",
+      contributeNow: "Contribute Now",
+      remindLater: "Remind Me Later",
+      titleRemind: "We'll remind you!",
+      descRemind: "Leave your details and we'll send you a gentle reminder when you're ready.",
+      yourName: "Your Name",
+      mobileNumber: "Mobile Number",
+      saving: "Saving...",
+      btnRemindLater: "Remind Later",
+      backDashboard: "back to dashboard",
+      invalidInput: "Invalid Input",
+      invalidMobile: "Please enter a valid 10-digit mobile number.",
+      thankYou: "Thank You",
+      willRemindLater: "We'll remind you later!",
+      oops: "Oops",
+      somethingWentWrong: "Something went wrong, but you can still donate later!"
     }
   },
   hi: {
@@ -772,6 +791,25 @@ const translations = {
       ifscLabel: "आईएफएससी कोड",
       saveBtnText: "सहेजें और भुगतान सक्षम करें",
       searchPlaceholder: "बैंक खोजें..."
+    },
+    exitModal: {
+      titleGiveUp: "कृपया हार न मानें!",
+      descGiveUp: "आपका हर छोटा योगदान किसी के जीवन में बहुत बड़ा बदलाव ला सकता है। क्या आप वाकई जाना चाहते हैं?",
+      contributeNow: "अभी योगदान दें",
+      remindLater: "मुझे बाद में याद दिलाएं",
+      titleRemind: "हम आपको याद दिलाएंगे!",
+      descRemind: "अपना विवरण छोड़ें और जब आप तैयार होंगे तो हम आपको याद दिलाएंगे।",
+      yourName: "आपका नाम",
+      mobileNumber: "मोबाइल नंबर",
+      saving: "सहेजा जा रहा है...",
+      btnRemindLater: "बाद में याद दिलाएं",
+      backDashboard: "डैशबोर्ड पर वापस जाएं",
+      invalidInput: "अमान्य इनपुट",
+      invalidMobile: "कृपया 10-अंकीय वैध मोबाइल नंबर दर्ज करें।",
+      thankYou: "धन्यवाद",
+      willRemindLater: "हम आपको बाद में याद दिलाएंगे!",
+      oops: "उफ़",
+      somethingWentWrong: "कुछ गलत हो गया, लेकिन आप बाद में दान कर सकते हैं!"
     }
   }
 };

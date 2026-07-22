@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../context/LanguageContext';
 
 const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
   const [phase, setPhase] = useState(1);
@@ -22,6 +23,7 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const { user: authUser } = useAuth();
+  const { t, locale } = useTranslation();
 
   useEffect(() => {
     if (isOpen) {
@@ -46,7 +48,7 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
 
   const handleSubmit = async () => {
     if (!formData.mobile || formData.mobile.length < 10) {
-      Alert.alert('Invalid Input', 'Please enter a valid 10-digit mobile number.');
+      Alert.alert(t('exitModal.invalidInput'), t('exitModal.invalidMobile'));
       return;
     }
 
@@ -56,13 +58,13 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
         ...formData,
         type: 'donation_exit',
         source: 'donation_page',
-        language: 'en'
+        language: locale || 'en'
       });
-      Alert.alert('Thank You', "We'll remind you later!");
+      Alert.alert(t('exitModal.thankYou'), t('exitModal.willRemindLater'));
       onConfirmNavigation();
     } catch (error) {
       console.error("Failed to save lead:", error);
-      Alert.alert('Oops', "Something went wrong, but you can still donate later!");
+      Alert.alert(t('exitModal.oops'), t('exitModal.somethingWentWrong'));
       onConfirmNavigation();
     } finally {
       setLoading(false);
@@ -96,17 +98,17 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
                     <Ionicons name="heart" size={54} color="#ef4444" />
                   </Animated.View>
                 </View>
-                <Text style={styles.title}>Please Don't Give Up!</Text>
+                <Text style={styles.title}>{t('exitModal.titleGiveUp')}</Text>
                 <Text style={styles.description}>
-                  Every small contribution makes a huge difference in someone's life. Are you sure you want to leave?
+                  {t('exitModal.descGiveUp')}
                 </Text>
 
                 <View style={styles.actions}>
                   <TouchableOpacity style={styles.btnStay} onPress={onClose}>
-                    <Text style={styles.btnStayText}>Contribute Now</Text>
+                    <Text style={styles.btnStayText}>{t('exitModal.contributeNow')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.btnLater} onPress={() => setPhase(2)}>
-                    <Text style={styles.btnLaterText}>Remind Me Later</Text>
+                    <Text style={styles.btnLaterText}>{t('exitModal.remindLater')}</Text>
                     <Ionicons name="arrow-forward" size={16} color="#64748b" />
                   </TouchableOpacity>
                 </View>
@@ -116,9 +118,9 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
                 <View style={[styles.iconWrapper, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
                   <Ionicons name="call" size={38} color="#3b82f6" />
                 </View>
-                <Text style={styles.title}>We'll remind you!</Text>
+                <Text style={styles.title}>{t('exitModal.titleRemind')}</Text>
                 <Text style={styles.description}>
-                  Leave your details and we'll send you a gentle reminder when you're ready.
+                  {t('exitModal.descRemind')}
                 </Text>
 
                 <View style={styles.formGroup}>
@@ -126,7 +128,7 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
                     <Ionicons name="person-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
-                      placeholder="Your Name"
+                      placeholder={t('exitModal.yourName')}
                       value={formData.name}
                       onChangeText={(text) => setFormData({ ...formData, name: text })}
                     />
@@ -138,7 +140,7 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
                     <Ionicons name="call-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
-                      placeholder="Mobile Number"
+                      placeholder={t('exitModal.mobileNumber')}
                       keyboardType="phone-pad"
                       maxLength={10}
                       value={formData.mobile}
@@ -148,12 +150,12 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
                 </View>
 
                 <TouchableOpacity style={styles.btnSubmit} onPress={handleSubmit} disabled={loading}>
-                  <Text style={styles.btnSubmitText}>{loading ? 'Saving...' : 'Remind Later'}</Text>
+                  <Text style={styles.btnSubmitText}>{loading ? t('exitModal.saving') : t('exitModal.btnRemindLater')}</Text>
                   {!loading && <Ionicons name="paper-plane" size={16} color="white" />}
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.btnLeave} onPress={onConfirmNavigation}>
-                  <Text style={styles.btnLeaveText}>back to dashboard</Text>
+                  <Text style={styles.btnLeaveText}>{t('exitModal.backDashboard')}</Text>
                 </TouchableOpacity>
               </View>
             )}

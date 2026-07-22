@@ -12,6 +12,7 @@ import {
   ScrollView
 } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
+import { useTranslation } from '../../src/context/LanguageContext';
 import api from '../../src/services/api';
 import { Link, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,7 +28,12 @@ export default function Signup() {
   const [checkingMobile, setCheckingMobile] = useState(false);
   
   const { login } = useAuth();
+  const { locale, changeLanguage } = useTranslation();
   const router = useRouter();
+
+  const toggleLanguage = () => {
+    changeLanguage(locale === 'hi' ? 'en' : 'hi');
+  };
 
   const handleMobileChange = async (val) => {
     const numericVal = val.replace(/\D/g, '');
@@ -96,8 +102,12 @@ export default function Signup() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join the DharmArth Foundation</Text>
+          <TouchableOpacity onPress={toggleLanguage} style={styles.langToggle}>
+            <Ionicons name="language" size={20} color="#00bfa5" />
+            <Text style={styles.langText}>{locale === 'hi' ? 'English' : 'हिंदी'}</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>{locale === 'hi' ? 'खाता बनाएं' : 'Create Account'}</Text>
+          <Text style={styles.subtitle}>{locale === 'hi' ? 'धर्मअर्थ फाउंडेशन से जुड़ें' : 'Join the DharmArth Foundation'}</Text>
         </View>
 
         <View style={styles.card}>
@@ -105,83 +115,107 @@ export default function Signup() {
             <View style={styles.claimingAlert}>
               <Ionicons name="information-circle" size={20} color="#0d7a8c" />
               <Text style={styles.claimingText}>
-                Account Found! We found your previous donations. Please create a password to secure your account.
+                {locale === 'hi' ? 'खाता मिल गया! हमें आपके पिछले दान मिले हैं। अपना खाता सुरक्षित करने के लिए कृपया एक पासवर्ड बनाएं।' : 'Account Found! We found your previous donations. Please create a password to secure your account.'}
               </Text>
             </View>
           )}
 
-          <Text style={styles.label}>Full Name *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Full Name"
-            value={name}
-            onChangeText={setName}
-          />
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{locale === 'hi' ? 'पूरा नाम' : 'Full Name'}</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="person-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder={locale === 'hi' ? "अपना पूरा नाम दर्ज करें" : "Enter your full name"}
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                  editable={!isClaiming}
+                />
+              </View>
+            </View>
 
-          <Text style={styles.label}>Mobile Number *</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.flexInput}
-              placeholder="10-digit Mobile"
-              value={mobile}
-              onChangeText={handleMobileChange}
-              keyboardType="phone-pad"
-            />
-            {checkingMobile && <ActivityIndicator size="small" color="#00bfa5" style={{ marginRight: 10 }} />}
-          </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{locale === 'hi' ? 'मोबाइल नंबर' : 'Mobile Number'}</Text>
+              <View style={styles.inputContainer}>
+                <Text style={styles.prefix}>+91</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="00000 00000"
+                  keyboardType="numeric"
+                  maxLength={10}
+                  value={mobile}
+                  onChangeText={handleMobileChange}
+                />
+                {checkingMobile && <ActivityIndicator size="small" color="#00bfa5" style={{ marginLeft: 10 }} />}
+              </View>
+            </View>
 
-          <Text style={styles.label}>Email Address (Optional)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{locale === 'hi' ? 'ईमेल पता (वैकल्पिक)' : 'Email Address (Optional)'}</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="mail-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder={locale === 'hi' ? "अपना ईमेल दर्ज करें" : "Enter your email"}
+                  keyboardType="email-address"
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
 
-          <Text style={styles.label}>Password *</Text>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Create Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-            />
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{locale === 'hi' ? 'पासवर्ड' : 'Password'}</Text>
+              <View style={styles.passwordContainer}>
+                <Ionicons name="lock-closed-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder={locale === 'hi' ? "अपना पासवर्ड बनाएं" : "Create a password"}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity 
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
+                >
+                  <Ionicons 
+                    name={showPassword ? 'eye-off' : 'eye'} 
+                    size={20} 
+                    color="#64748b" 
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
             <TouchableOpacity 
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeIcon}
+              style={[styles.signupButton, isClaiming && styles.claimButton]}
+              onPress={handleSignup}
+              disabled={loading || checkingMobile}
             >
-              <Ionicons 
-                name={showPassword ? 'eye-off' : 'eye'} 
-                size={20} 
-                color="#64748b" 
-              />
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.signupButtonText}>
+                  {isClaiming 
+                    ? (locale === 'hi' ? 'दावा करें और खाता सेट करें' : 'Claim & Setup Account')
+                    : (locale === 'hi' ? 'खाता बनाएं' : 'Create Account')
+                  }
+                </Text>
+              )}
             </TouchableOpacity>
-          </View>
 
-          <TouchableOpacity 
-            style={styles.signupButton}
-            onPress={handleSignup}
-            disabled={loading || checkingMobile}
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.signupButtonText}>
-                {isClaiming ? 'Claim Account' : 'Sign Up'}
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
-            <Link href="/login" asChild>
-              <TouchableOpacity>
-                <Text style={styles.linkText}>Login</Text>
-              </TouchableOpacity>
-            </Link>
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>{locale === 'hi' ? 'क्या आपके पास पहले से खाता है?' : 'Already have an account?'}</Text>
+              <Link href="/login" asChild>
+                <TouchableOpacity>
+                  <Text style={styles.linkText}>{locale === 'hi' ? 'लॉगिन करें' : 'Login'}</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -201,13 +235,34 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginTop: 20,
+    marginBottom: 40,
+    position: 'relative'
+  },
+  langToggle: {
+    position: 'absolute',
+    top: -10,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  langText: {
+    marginLeft: 6,
+    fontSize: 14,
+    color: '#00bfa5',
+    fontWeight: '600'
   },
   title: {
     fontSize: 28,
     fontWeight: '800',
     color: '#1e293b',
     marginBottom: 8,
+    textAlign: 'center',
+    marginTop: 30
   },
   subtitle: {
     fontSize: 16,

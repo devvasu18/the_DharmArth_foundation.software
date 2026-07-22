@@ -632,17 +632,6 @@ export default function DoctorsScreen() {
                     {t('doctors.allSpecialists')}
                   </Text>
                 </TouchableOpacity>
-                {searchCategories.map(cat => (
-                  <TouchableOpacity
-                    key={cat._id}
-                    style={[styles.catChip, searchCategoryId === cat._id && styles.catChipActive]}
-                    onPress={() => setSearchCategoryId(cat._id)}
-                  >
-                    <Text style={[styles.catChipText, searchCategoryId === cat._id && styles.catChipTextActive]}>
-                      {getTranslatedCategoryName(cat)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
               </ScrollView>
 
 

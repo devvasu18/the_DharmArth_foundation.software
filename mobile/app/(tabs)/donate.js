@@ -136,7 +136,7 @@ export default function DonateScreen() {
       }
 
       const onBackPress = () => {
-        setShowExitModal(true);
+        // Disable back button
         return true;
       };
 
@@ -651,7 +651,7 @@ export default function DonateScreen() {
       <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
         {/* Amount Selection */}
-        <Text style={styles.sectionTitle}>{locale === 'hi' ? 'दान राशि चुनें' : 'Select Donation Amount'}</Text>
+        <Text style={styles.sectionTitle}>{locale === 'hi' ? 'मासिक दान राशि चुनें' : 'Select Monthly Donation Amount'}</Text>
 
         {!!donationLabel && (
           <View style={styles.subtitleContainer}>
@@ -747,7 +747,7 @@ export default function DonateScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>{locale === 'hi' ? 'ईमेल पता' : 'Email Address'}</Text>
+            <Text style={styles.label}>{locale === 'hi' ? 'ईमेल पता (वैकल्पिक)' : 'Email Address (Optional)'}</Text>
             <TextInput
               style={styles.input}
               placeholder="mail@example.com"
@@ -812,7 +812,7 @@ export default function DonateScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>{locale === 'hi' ? 'द्वारा प्रेरित (मोबाइल/आईडी)' : 'Motivated By (Mobile/ID)'}</Text>
+            <Text style={styles.label}>{locale === 'hi' ? 'प्रेरक का मोबाइल/आईडी' : 'Motivated By (Mobile/ID)'}</Text>
 
             {isMotivatorLocked && motivatorName ? (
               /* Locked verified motivator chip */

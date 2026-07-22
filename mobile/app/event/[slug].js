@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import YoutubeIframe from 'react-native-youtube-iframe';
 import api from '../../src/services/api';
 
 const { width } = Dimensions.get('window');
@@ -73,19 +74,12 @@ const EventDetails = () => {
         return (
           <View key={`detail-${index}`} style={styles.detailBlock}>
             <Text style={styles.blockLabel}>Watch Highlight</Text>
-            <TouchableOpacity 
-              style={styles.youtubeCard}
-              onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${videoId}`)}
-              activeOpacity={0.8}
-            >
-              <Image 
-                source={{ uri: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` }} 
-                style={styles.youtubeThumbnail} 
+            <View style={{ borderRadius: 12, overflow: 'hidden', marginTop: 10 }}>
+              <YoutubeIframe
+                height={220}
+                videoId={videoId}
               />
-              <View style={styles.playIconOverlay}>
-                <Ionicons name="play-circle" size={60} color="rgba(255, 255, 255, 0.9)" />
-              </View>
-            </TouchableOpacity>
+            </View>
           </View>
         );
       default:
