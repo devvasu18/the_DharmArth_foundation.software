@@ -70,8 +70,8 @@ export default function TransactionsScreen() {
 
   const handleDownloadFile = async (url, type) => {
     try {
-      const fileName = url.substring(url.lastIndexOf('/') + 1);
-      const localUri = FileSystem.documentDirectory + fileName;
+      const fileName = url.substring(url.lastIndexOf('/') + 1) || 'receipt.pdf';
+      const localUri = FileSystem.cacheDirectory + fileName;
       
       Alert.alert('Downloading', `Please wait while the ${type} is downloading...`);
       
@@ -79,15 +79,17 @@ export default function TransactionsScreen() {
       
       if (downloadRes.status === 200) {
         if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(downloadRes.uri);
+          const mimeType = fileName.endsWith('.png') ? 'image/png' : 'application/pdf';
+          const UTI = fileName.endsWith('.png') ? 'public.png' : 'com.adobe.pdf';
+          await Sharing.shareAsync(downloadRes.uri, { mimeType, UTI });
         } else {
           Alert.alert('Downloaded', 'File downloaded successfully, but sharing is not available on this device.');
         }
       } else {
-        Alert.alert('Error', `Failed to download ${type}`);
+        Alert.alert('Error', `Failed to download ${type}. Status: ${downloadRes.status}`);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Download Error:", error);
       Alert.alert('Error', `An error occurred while downloading the ${type}`);
     }
   };

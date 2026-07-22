@@ -21,7 +21,7 @@ const { width } = Dimensions.get('window');
 
 export default function ShareEarn() {
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const router = useRouter();
 
   const referralCode = user?.referralCode || user?.mobile || 'DF0000';
@@ -98,8 +98,8 @@ export default function ShareEarn() {
                 <Image source={{ uri: profileImage }} style={styles.photo} />
               </View>
               <View style={styles.topBrandArea}>
-                <Text style={styles.topBrandName}>DharmArth</Text>
-                <Text style={styles.topBrandTag}>FOUNDATION</Text>
+                <Text style={styles.topBrandName}>{locale === 'hi' ? 'द धर्मार्थ' : 'The DharmArth'}</Text>
+                <Text style={styles.topBrandTag}>{locale === 'hi' ? 'मेडिकल फाउंडेशन' : 'Medical FOUNDATION'}</Text>
               </View>
             </View>
 
@@ -154,58 +154,58 @@ export default function ShareEarn() {
           </View>
         </View>
 
-        {/* Sharing Options */ }
-  <View style={styles.shareSection}>
-    <Text style={styles.sectionLabel}>{t('shareEarn.uniqueLink')}</Text>
-    <View style={styles.linkBox}>
-      <Text style={styles.linkText} numberOfLines={1}>{shareUrl}</Text>
-      <TouchableOpacity onPress={copyToClipboard} style={styles.copyBtn}>
-        <Ionicons name="copy-outline" size={20} color="#00bfa5" />
-      </TouchableOpacity>
-    </View>
+        {/* Sharing Options */}
+        <View style={styles.shareSection}>
+          <Text style={styles.sectionLabel}>{t('shareEarn.uniqueLink')}</Text>
+          <View style={styles.linkBox}>
+            <Text style={styles.linkText} numberOfLines={1}>{shareUrl}</Text>
+            <TouchableOpacity onPress={copyToClipboard} style={styles.copyBtn}>
+              <Ionicons name="copy-outline" size={20} color="#00bfa5" />
+            </TouchableOpacity>
+          </View>
 
-    <View style={styles.btnGrid}>
-      <TouchableOpacity style={[styles.shareBtn, styles.waBtn]} onPress={handleWhatsAppShare}>
-        <Ionicons name="logo-whatsapp" size={24} color="white" />
-        <Text style={styles.shareBtnText}>{t('shareEarn.whatsapp')}</Text>
-      </TouchableOpacity>
+          <View style={styles.btnGrid}>
+            <TouchableOpacity style={[styles.shareBtn, styles.waBtn]} onPress={handleWhatsAppShare}>
+              <Ionicons name="logo-whatsapp" size={24} color="white" />
+              <Text style={styles.shareBtnText}>{t('shareEarn.whatsapp')}</Text>
+            </TouchableOpacity>
 
-      <TouchableOpacity style={[styles.shareBtn, styles.nativeBtn]} onPress={handleShare}>
-        <Ionicons name="share-social" size={24} color="white" />
-        <Text style={styles.shareBtnText}>{t('shareEarn.shareMore')}</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
+            <TouchableOpacity style={[styles.shareBtn, styles.nativeBtn]} onPress={handleShare}>
+              <Ionicons name="share-social" size={24} color="white" />
+              <Text style={styles.shareBtnText}>{t('shareEarn.shareMore')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-  {/* Your Impact Stats */ }
-  <View style={styles.impactSection}>
-    <Text style={styles.sectionLabel}>{t('shareEarn.yourImpact')}</Text>
-    <View style={styles.statsContainer}>
-      <View style={styles.statBox}>
-        <Text style={styles.statValue}>{user?.totalReferrals || 0}</Text>
-        <Text style={styles.statLabel}>{t('shareEarn.referrals')}</Text>
-      </View>
-      <View style={styles.statDivider} />
-      <View style={styles.statBox}>
-        <Text style={styles.statValue}>₹{user?.totalEarnings || 0}</Text>
-        <Text style={styles.statLabel}>{t('shareEarn.earned')}</Text>
-      </View>
-    </View>
-  </View>
+        {/* Your Impact Stats */}
+        <View style={styles.impactSection}>
+          <Text style={styles.sectionLabel}>{t('shareEarn.yourImpact')}</Text>
+          <View style={styles.statsContainer}>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{user?.totalReferrals || 0}</Text>
+              <Text style={styles.statLabel}>{t('shareEarn.referrals')}</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>₹{user?.totalEarnings || 0}</Text>
+              <Text style={styles.statLabel}>{t('shareEarn.earned')}</Text>
+            </View>
+          </View>
+        </View>
 
 
-  {/* Info Box */ }
-  <View style={styles.infoCard}>
-    <View style={styles.infoIcon}>
-      <Ionicons name="information-circle" size={24} color="#00bfa5" />
-    </View>
-    <View style={styles.infoContent}>
-      <Text style={styles.infoTitle}>{t('shareEarn.howItWorks')}</Text>
-      <Text style={styles.infoText}>
-        {t('shareEarn.howItWorksDesc')}
-      </Text>
-    </View>
-  </View>
+        {/* Info Box */}
+        <View style={styles.infoCard}>
+          <View style={styles.infoIcon}>
+            <Ionicons name="information-circle" size={24} color="#00bfa5" />
+          </View>
+          <View style={styles.infoContent}>
+            <Text style={styles.infoTitle}>{t('shareEarn.howItWorks')}</Text>
+            <Text style={styles.infoText}>
+              {t('shareEarn.howItWorksDesc')}
+            </Text>
+          </View>
+        </View>
       </ScrollView >
     </View >
   );

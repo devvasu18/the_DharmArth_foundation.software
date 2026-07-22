@@ -123,7 +123,7 @@ export default function DashboardScreen() {
         if (fileName.includes('?')) fileName = fileName.split('?')[0];
         if (!fileName) fileName = 'download.pdf';
       }
-      const localUri = FileSystem.documentDirectory + fileName;
+      const localUri = FileSystem.cacheDirectory + fileName;
       
       Alert.alert('Downloading', `Please wait while the ${type} is downloading...`);
       
@@ -131,15 +131,17 @@ export default function DashboardScreen() {
       
       if (downloadRes.status === 200) {
         if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(downloadRes.uri);
+          const mimeType = fileName.endsWith('.png') ? 'image/png' : 'application/pdf';
+          const UTI = fileName.endsWith('.png') ? 'public.png' : 'com.adobe.pdf';
+          await Sharing.shareAsync(downloadRes.uri, { mimeType, UTI });
         } else {
           Alert.alert('Downloaded', 'File downloaded successfully, but sharing is not available on this device.');
         }
       } else {
-        Alert.alert('Error', `Failed to download ${type}`);
+        Alert.alert('Error', `Failed to download ${type}. Status: ${downloadRes.status}`);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Download Error:", error);
       Alert.alert('Error', `An error occurred while downloading the ${type}`);
     }
   };
@@ -255,6 +257,10 @@ export default function DashboardScreen() {
   };
 
   const handleDownloadQr = () => {
+    if (!user) {
+      Alert.alert('Error', 'Please login to download your QR code');
+      return;
+    }
     const link = `https://thedharmarth.com/donate?ref=${user.referralCode || user.mobile}`;
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(link)}`;
     handleDownloadFile(qrCodeUrl, 'QR Code', 'my_qr_code.png');

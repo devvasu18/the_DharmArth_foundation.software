@@ -144,32 +144,14 @@ export default function DoctorsScreen() {
     }
   };
 
-  const handleTypeSelect = (type) => {
-    setSelectedType(type);
-    setSearchCategoryId('all');
-    setShowSearchModal(true);
-  };
-
-  const handleCloseSearchModal = () => {
-    setShowSearchModal(false);
-    if (!searchPerformed) {
-      setSelectedType(null);
-    }
-  };
-
-  const handleSearchSubmit = async () => {
-    if (!selectedType || !searchCategoryId) {
-      Alert.alert(locale === 'hi' ? 'त्रुटि' : 'Error', locale === 'hi' ? 'कृपया एक विशेषज्ञ श्रेणी चुनें' : 'Please select a specialist category');
-      return;
-    }
-
+  const handleSearchSubmit = async (type = selectedType) => {
     try {
       setSearching(true);
       setSearchPerformed(true);
       setShowSearchModal(false);
 
-      let url = `/availability/search?hospitalType=${selectedType}&categoryId=${searchCategoryId}`;
-      if (selectedType !== 'clinic') {
+      let url = `/availability/search?hospitalType=${type}&categoryId=all`;
+      if (type !== 'clinic') {
         const dateStr = getLocalDateString(searchDate);
         url += `&date=${dateStr}`;
       }
@@ -183,6 +165,12 @@ export default function DoctorsScreen() {
     } finally {
       setSearching(false);
     }
+  };
+
+  const handleTypeSelect = (type) => {
+    setSelectedType(type);
+    setSearchCategoryId('all');
+    handleSearchSubmit(type);
   };
 
   const handleBackToTypeSelection = () => {
@@ -366,9 +354,6 @@ export default function DoctorsScreen() {
           <Ionicons name="search" size={64} color="#cbd5e1" style={{ marginBottom: 16 }} />
           <Text style={styles.emptyTitle}>{t('doctors.noResults')}</Text>
           <Text style={styles.emptyDesc}>{t('doctors.noResultsDesc')}</Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={() => setShowSearchModal(true)}>
-            <Text style={styles.primaryButtonText}>{t('doctors.searchDoctors')}</Text>
-          </TouchableOpacity>
         </View>
       );
     }
@@ -380,9 +365,6 @@ export default function DoctorsScreen() {
           <Text style={styles.emptyTitle}>{t('doctors.noDoctors')}</Text>
           <Text style={styles.emptyDesc}>{searchResult.message || t('doctors.noDoctorsDesc')}</Text>
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-            <TouchableOpacity style={styles.primaryButton} onPress={() => setShowSearchModal(true)}>
-              <Text style={styles.primaryButtonText}>{t('doctors.modifySearch')}</Text>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.secondaryButton} onPress={handleBackToTypeSelection}>
               <Text style={styles.secondaryButtonText}>{t('doctors.changeHospital')}</Text>
             </TouchableOpacity>
@@ -614,28 +596,6 @@ export default function DoctorsScreen() {
         </View>
 
       </ScrollView>
-
-      {/* Search/Filter Modal */}
-      <Modal visible={showSearchModal} transparent animationType="slide" onRequestClose={handleCloseSearchModal}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { paddingBottom: 24 + insets.bottom }]}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{t('doctors.findDoctor')}</Text>
-              <TouchableOpacity onPress={handleCloseSearchModal} style={styles.closeBtn}>
-                <Ionicons name="close" size={24} color="#64748b" />
-              </TouchableOpacity>
-            </View>
-
-
-
-            <View style={styles.modalFooter}>
-              <TouchableOpacity style={styles.submitBtn} onPress={handleSearchSubmit}>
-                <Text style={styles.submitBtnText}>{t('doctors.searchDoctors')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
     </SafeAreaView>
   );

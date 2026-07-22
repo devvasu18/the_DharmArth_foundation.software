@@ -17,6 +17,7 @@ import api from '../../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import DoctorSvg from '../../src/components/DoctorSvg';
+import CapsuleSvg from '../../src/components/CapsuleSvg';
 
 const { width } = Dimensions.get('window');
 
@@ -280,7 +281,7 @@ const LandingScreen = () => {
               <Text style={[styles.quickLinkText, { paddingTop: 10 }]}>
                 {locale === 'hi' ? 'ऑनलाइन\nदवा ऑर्डर करें' : 'Order Online\nMedicine'}
               </Text>
-              <Ionicons name="medkit" size={38} color="white" />
+              <CapsuleSvg size={42} />
             </TouchableOpacity>
           </View>
         </View>
