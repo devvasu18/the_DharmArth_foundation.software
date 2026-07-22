@@ -66,6 +66,9 @@ const timeToMinutes = (timeStr) => {
   return hours * 60 + minutes;
 };
 
+const monthNamesEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const monthNamesHi = ["जनवरी", "फरवरी", "मार्च", "अप्रैल", "मई", "जून", "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"];
+
 export default function DoctorsScreen() {
   const { t, locale } = useTranslation();
   const router = useRouter();
@@ -455,7 +458,9 @@ export default function DoctorsScreen() {
                     </View>
                   )}
                   <View style={styles.daysContainer}>
-                    <Text style={styles.daysHeader}><Ionicons name="calendar" size={14} /> {t('doctors.availableDates')}</Text>
+                    <Text style={styles.daysHeader}>
+                      <Ionicons name="calendar" size={14} /> {t('doctors.availableDates')} ({locale === 'hi' ? monthNamesHi[new Date().getMonth()] : monthNamesEn[new Date().getMonth()]})
+                    </Text>
                     <View style={styles.daysList}>
                       {avail.availableDates && avail.availableDates.length > 0 ? (
                         avail.availableDates.map(dayNum => (
@@ -515,7 +520,7 @@ export default function DoctorsScreen() {
         options={{
           headerShown: true,
           headerStatusBarHeight: insets.top,
-          title: t('doctors.title'),
+          title: '',
           headerTintColor: '#1e293b',
           headerTitleStyle: { fontWeight: '900', fontSize: 16 },
           headerLeft: () => (
@@ -621,21 +626,7 @@ export default function DoctorsScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
-              <Text style={styles.inputLabel}>{t('doctors.selectCategory')}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catChipsContainer}>
-                <TouchableOpacity
-                  style={[styles.catChip, searchCategoryId === 'all' && styles.catChipActive]}
-                  onPress={() => setSearchCategoryId('all')}
-                >
-                  <Text style={[styles.catChipText, searchCategoryId === 'all' && styles.catChipTextActive]}>
-                    {t('doctors.allSpecialists')}
-                  </Text>
-                </TouchableOpacity>
-              </ScrollView>
 
-
-            </ScrollView>
 
             <View style={styles.modalFooter}>
               <TouchableOpacity style={styles.submitBtn} onPress={handleSearchSubmit}>

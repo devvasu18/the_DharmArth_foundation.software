@@ -20,12 +20,14 @@ import { Ionicons } from '@expo/vector-icons';
 export default function Signup() {
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [checkingMobile, setCheckingMobile] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
   
   const { login } = useAuth();
   const { locale, changeLanguage } = useTranslation();
@@ -62,7 +64,7 @@ export default function Signup() {
     }
   };
 
-  const handleSignup = async () => {
+  const handleSendOTP = async () => {
     if (!name || !mobile || !password) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
@@ -73,13 +75,34 @@ export default function Signup() {
       return;
     }
 
+    setOtpLoading(true);
+    try {
+      const { data } = await api.post('/auth/send-register-otp', { mobile });
+      if (data.success) {
+        setOtpSent(true);
+        Alert.alert('Success', 'OTP sent successfully. Please check your WhatsApp.');
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Failed', err.response?.data?.message || 'Failed to send OTP');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleSignup = async () => {
+    if (!otp || otp.length !== 6) {
+      Alert.alert('Error', 'Please enter a valid 6-digit OTP');
+      return;
+    }
+
     setLoading(true);
     try {
       const { data } = await api.post('/auth/register', { 
         name, 
         mobile, 
-        email: email ? email.toLowerCase().trim() : undefined, 
-        password 
+        password,
+        otp
       });
       await login(data);
       Alert.alert(
@@ -152,20 +175,6 @@ export default function Signup() {
               </View>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{locale === 'hi' ? 'ईमेल पता (वैकल्पिक)' : 'Email Address (Optional)'}</Text>
-              <View style={styles.inputContainer}>
-                <Ionicons name="mail-outline" size={20} color="#64748b" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder={locale === 'hi' ? "अपना ईमेल दर्ज करें" : "Enter your email"}
-                  keyboardType="email-address"
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                />
-              </View>
-            </View>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{locale === 'hi' ? 'पासवर्ड' : 'Password'}</Text>
@@ -191,22 +200,55 @@ export default function Signup() {
               </View>
             </View>
 
-            <TouchableOpacity 
-              style={[styles.signupButton, isClaiming && styles.claimButton]}
-              onPress={handleSignup}
-              disabled={loading || checkingMobile}
-            >
-              {loading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text style={styles.signupButtonText}>
-                  {isClaiming 
-                    ? (locale === 'hi' ? 'दावा करें और खाता सेट करें' : 'Claim & Setup Account')
-                    : (locale === 'hi' ? 'खाता बनाएं' : 'Create Account')
-                  }
-                </Text>
-              )}
-            </TouchableOpacity>
+            {otpSent && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{locale === 'hi' ? '6-अंकीय OTP दर्ज करें' : 'Enter 6-digit OTP'}</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="keypad-outline" size={20} color="#64748b" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder={locale === 'hi' ? '6-अंकीय OTP दर्ज करें' : 'Enter 6-digit OTP'}
+                    value={otp}
+                    onChangeText={(val) => setOtp(val.replace(/\D/g, ''))}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                  />
+                </View>
+              </View>
+            )}
+
+            {!otpSent ? (
+              <TouchableOpacity 
+                style={[styles.signupButton, isClaiming && styles.claimButton]}
+                onPress={handleSendOTP}
+                disabled={otpLoading || checkingMobile}
+              >
+                {otpLoading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text style={styles.signupButtonText}>
+                    {locale === 'hi' ? 'OTP प्राप्त करें' : 'Get OTP'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity 
+                style={[styles.signupButton, isClaiming && styles.claimButton]}
+                onPress={handleSignup}
+                disabled={loading || checkingMobile}
+              >
+                {loading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text style={styles.signupButtonText}>
+                    {isClaiming 
+                      ? (locale === 'hi' ? 'सत्यापित करें और खाता सेट करें' : 'Verify & Setup Account')
+                      : (locale === 'hi' ? 'सत्यापित करें और खाता बनाएं' : 'Verify & Create Account')
+                    }
+                  </Text>
+                )}
+              </TouchableOpacity>
+            )}
 
             <View style={styles.footer}>
               <Text style={styles.footerText}>{locale === 'hi' ? 'क्या आपके पास पहले से खाता है?' : 'Already have an account?'}</Text>
@@ -237,12 +279,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
     marginBottom: 40,
-    position: 'relative'
+    position: 'relative',
+    width: '100%',
   },
   langToggle: {
     position: 'absolute',
     top: -10,
-    right: 0,
+    left: 0,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f1f5f9',

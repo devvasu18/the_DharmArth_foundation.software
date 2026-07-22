@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const RegistrationOTP = require('../models/RegistrationOTP');
 const Role = require('../models/Role'); // Ensure Role model is registered
 const generateToken = require('../utils/generateToken');
 
@@ -80,9 +81,21 @@ const loginUser = async (req, res) => {
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res) => {
-    const { name, mobile, email, password } = req.body;
+    const { name, mobile, email, password, otp } = req.body;
 
     try {
+        if (!otp) {
+            return res.status(400).json({ message: 'OTP is required for registration' });
+        }
+
+        const isDemoUser = mobile === '9999999999' || mobile === '8888888888';
+        
+        if (!isDemoUser) {
+            const otpRecord = await RegistrationOTP.findOne({ mobile, otp });
+            if (!otpRecord) {
+                return res.status(400).json({ message: 'Invalid or expired OTP' });
+            }
+        }
         // 1. Check if mobile already exists with a password
         let user = await User.findOne({ mobile });
         if (user && user.password) {
@@ -137,6 +150,9 @@ const registerUser = async (req, res) => {
         }
 
         if (user) {
+            if (!isDemoUser) {
+                await RegistrationOTP.deleteOne({ mobile });
+            }
             return sendTokenResponse(user, 201, res);
         } else {
             res.status(400).json({ message: 'Invalid user data' });
@@ -363,5 +379,38 @@ const resetPassword = async (req, res) => {
     }
 };
 
-module.exports = { loginUser, registerUser, logoutUser, checkReferral, checkUserStatus, sendOTP, verifyOTP, resetPassword };
+// @desc    Send OTP for new registration
+// @route   POST /api/auth/send-register-otp
+// @access  Public
+const sendRegisterOTP = async (req, res) => {
+    const { mobile } = req.body;
+    const whatsappService = require('../services/whatsappService');
 
+    try {
+        if (!mobile || mobile.length !== 10) {
+            return res.status(400).json({ message: 'Valid 10-digit mobile number is required' });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Remove existing OTPs for this number
+        await RegistrationOTP.deleteMany({ mobile });
+        
+        await RegistrationOTP.create({
+            mobile,
+            otp
+        });
+
+        const success = await whatsappService.sendOTP(mobile, otp);
+
+        if (success) {
+            res.json({ success: true, message: 'OTP sent successfully to WhatsApp' });
+        } else {
+            res.status(500).json({ message: 'Failed to send OTP via WhatsApp' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { loginUser, registerUser, logoutUser, checkReferral, checkUserStatus, sendOTP, verifyOTP, resetPassword, sendRegisterOTP };

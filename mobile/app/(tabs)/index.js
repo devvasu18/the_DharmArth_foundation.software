@@ -420,7 +420,7 @@ const LandingScreen = () => {
             <View style={styles.modalGrid}>
               <View style={styles.modalRow}>
                 <TouchableOpacity
-                  style={styles.modalGridBtn}
+                  style={[styles.modalGridBtn, { flex: 1 }]}
                   onPress={() => {
                     setCategoryModalVisible(false);
                     router.push({ pathname: '/body-tests', params: { initialCategory: 'BLOOD TESTS' } });
@@ -428,25 +428,12 @@ const LandingScreen = () => {
                 >
                   <Ionicons name="flask-outline" size={28} color="#00bfa5" style={{ marginBottom: 6 }} />
                   <Text style={styles.modalGridBtnText} numberOfLines={2}>
-                    {locale === 'hi' ? 'खून की जांच' : 'Blood Test'}
+                    {locale === 'hi' ? 'खून और पेशाब की जांच' : 'Blood & Urine Test'}
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.modalGridBtn}
-                  onPress={() => {
-                    setCategoryModalVisible(false);
-                    router.push({ pathname: '/body-tests', params: { initialCategory: 'URINE TEST' } });
-                  }}
-                >
-                  <Ionicons name="water-outline" size={28} color="#00bfa5" style={{ marginBottom: 6 }} />
-                  <Text style={styles.modalGridBtnText} numberOfLines={2}>
-                    {locale === 'hi' ? 'पेशाब की जांच' : 'Urine Test'}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.modalGridBtn}
+                  style={[styles.modalGridBtn, { flex: 1 }]}
                   onPress={() => {
                     setCategoryModalVisible(false);
                     router.push({ pathname: '/body-tests', params: { initialCategory: 'RADIOLOGY' } });
@@ -461,7 +448,7 @@ const LandingScreen = () => {
 
               <View style={styles.modalRow}>
                 <TouchableOpacity
-                  style={[styles.modalGridBtn, { flex: 1.5 }]}
+                  style={[styles.modalGridBtn, { flex: 1 }]}
                   onPress={() => {
                     setCategoryModalVisible(false);
                     router.push({ pathname: '/body-tests', params: { initialCategory: 'FULL BODY TESTS' } });

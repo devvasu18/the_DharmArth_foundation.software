@@ -63,13 +63,12 @@ export default function Login() {
 
   const handleSendOTP = async () => {
     if (!identifier) {
-      Alert.alert('Error', 'Please enter your mobile number or email address');
+      Alert.alert('Error', 'Please enter your mobile number');
       return;
     }
     
-    const isEmail = identifier.includes('@');
-    if (!isEmail && identifier.replace(/\D/g, '').length !== 10) {
-      Alert.alert('Error', 'Please enter a valid 10-digit mobile number or email address');
+    if (identifier.replace(/\D/g, '').length !== 10) {
+      Alert.alert('Error', 'Please enter a valid 10-digit mobile number');
       return;
     }
 
@@ -242,27 +241,26 @@ export default function Login() {
               <View style={styles.claimingAlert}>
                 <Ionicons name="information-circle" size={20} color="#0d7a8c" />
                 <Text style={styles.claimingText}>
-                  Forgot Password? We will send an OTP to your registered WhatsApp or Email to reset your password.
+                  Forgot Password? We will send an OTP to your registered WhatsApp to reset your password.
                 </Text>
               </View>
             )}
 
-            <Text style={styles.label}>{locale === 'hi' ? 'ईमेल / मोबाइल नंबर' : 'Email / Mobile Number'}</Text>
+            <Text style={styles.label}>{locale === 'hi' ? 'मोबाइल नंबर' : 'Mobile Number'}</Text>
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.flexInput}
-                placeholder={locale === 'hi' ? 'ईमेल या 10-अंकीय मोबाइल दर्ज करें' : 'Enter Email or 10-digit Mobile'}
+                placeholder={locale === 'hi' ? '10-अंकीय मोबाइल दर्ज करें' : 'Enter 10-digit Mobile'}
                 value={identifier}
                 onChangeText={(val) => {
-                  let cleanVal = val.replace(/\s/g, '');
-                  if (/^\d+$/.test(cleanVal) && cleanVal.length > 10) {
-                    setIdentifier(cleanVal.slice(0, 10));
-                  } else {
-                    setIdentifier(cleanVal);
+                  const numericVal = val.replace(/\D/g, '');
+                  if (numericVal.length <= 10) {
+                    setIdentifier(numericVal);
                   }
                 }}
+                keyboardType="numeric"
+                maxLength={10}
                 editable={!otpSent}
-                autoCapitalize="none"
               />
               {otpSent && loginMethod === 'otp' && (
                 <TouchableOpacity
@@ -449,6 +447,26 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 40,
+    position: 'relative',
+    width: '100%',
+  },
+  langToggle: {
+    position: 'absolute',
+    top: -10,
+    left: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    zIndex: 10,
+  },
+  langText: {
+    marginLeft: 6,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#00bfa5'
   },
   logoCircle: {
     width: 80,

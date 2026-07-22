@@ -115,6 +115,35 @@ export default function DashboardScreen() {
     fetchData();
   }, [user]);
 
+  const handleDownloadFile = async (url, type, customFileName = null) => {
+    try {
+      let fileName = customFileName;
+      if (!fileName) {
+        fileName = url.substring(url.lastIndexOf('/') + 1);
+        if (fileName.includes('?')) fileName = fileName.split('?')[0];
+        if (!fileName) fileName = 'download.pdf';
+      }
+      const localUri = FileSystem.documentDirectory + fileName;
+      
+      Alert.alert('Downloading', `Please wait while the ${type} is downloading...`);
+      
+      const downloadRes = await FileSystem.downloadAsync(url, localUri);
+      
+      if (downloadRes.status === 200) {
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(downloadRes.uri);
+        } else {
+          Alert.alert('Downloaded', 'File downloaded successfully, but sharing is not available on this device.');
+        }
+      } else {
+        Alert.alert('Error', `Failed to download ${type}`);
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', `An error occurred while downloading the ${type}`);
+    }
+  };
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -228,17 +257,7 @@ export default function DashboardScreen() {
   const handleDownloadQr = () => {
     const link = `https://thedharmarth.com/donate?ref=${user.referralCode || user.mobile}`;
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(link)}`;
-    Alert.alert(
-      t('dashboard.downloadQr'),
-      t('dashboard.qrDownloadAlert'),
-      [
-        { text: t('dashboard.close') || "Close", style: "cancel" },
-        { 
-          text: t('dashboard.downloadQr') || "Download", 
-          onPress: () => Linking.openURL(qrCodeUrl)
-        }
-      ]
-    );
+    handleDownloadFile(qrCodeUrl, 'QR Code', 'my_qr_code.png');
   };
 
   if (loading) {
@@ -365,9 +384,9 @@ export default function DashboardScreen() {
               <Ionicons name="logo-whatsapp" size={24} color="white" />
               <Text style={styles.socialBtnText}>{t('dashboard.whatsapp')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#6366f1' }]} onPress={() => setQrModalVisible(true)}>
-              <Ionicons name="qr-code-outline" size={24} color="white" />
-              <Text style={styles.socialBtnText}>{t('dashboard.generateQr')}</Text>
+            <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#6366f1' }]} onPress={handleDownloadQr}>
+              <Ionicons name="download-outline" size={24} color="white" />
+              <Text style={styles.socialBtnText}>{t('dashboard.downloadQr')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -378,10 +397,7 @@ export default function DashboardScreen() {
                 <Ionicons name="person-outline" size={16} color="#475569" />
                 <Text style={styles.actionBtnText}>{t('dashboard.editProfile')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#00bfa5' }]} onPress={handleShare}>
-                <Ionicons name="share-outline" size={16} color="white" />
-                <Text style={[styles.actionBtnText, { color: 'white' }]}>{t('dashboard.shareProfile')}</Text>
-              </TouchableOpacity>
+
             </View>
           </View>
         </View>
@@ -437,7 +453,7 @@ export default function DashboardScreen() {
                     {txn.isDonation && (txn.receiptUrl || txn.certificateUrl) && (
                       <TouchableOpacity
                         style={styles.actionPill}
-                        onPress={() => Linking.openURL(`${api.defaults.baseURL.replace('/api', '')}${txn.receiptUrl || txn.certificateUrl}`)}
+                        onPress={() => handleDownloadFile(`${api.defaults.baseURL.replace('/api', '')}${txn.receiptUrl || txn.certificateUrl}`, 'receipt')}
                       >
                         <Ionicons name="download-outline" size={12} color="#00bfa5" />
                         <Text style={styles.actionPillText}>{t('dashboard.receipt')}</Text>
@@ -449,7 +465,7 @@ export default function DashboardScreen() {
                       txn.is80GUploaded && txn.certificate80GUrl ? (
                         <TouchableOpacity
                           style={[styles.actionPill, { backgroundColor: '#f0fdf4', borderColor: '#dcfce7' }]}
-                          onPress={() => Linking.openURL(`${api.defaults.baseURL.replace('/api', '')}${txn.certificate80GUrl}`)}
+                          onPress={() => handleDownloadFile(`${api.defaults.baseURL.replace('/api', '')}${txn.certificate80GUrl}`, '80G certificate')}
                         >
                           <Ionicons name="document-text-outline" size={12} color="#16a34a" />
                           <Text style={[styles.actionPillText, { color: '#16a34a' }]}>80G</Text>

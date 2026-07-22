@@ -9,11 +9,14 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  Linking
+  Linking,
+  Alert
 } from 'react-native';
 import api from '../src/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 export default function TransactionsScreen() {
   const [transactions, setTransactions] = useState([]);
@@ -64,6 +67,30 @@ export default function TransactionsScreen() {
   useEffect(() => {
     fetchTransactions(1, true);
   }, [selectedMonth, selectedYear, txnType]);
+
+  const handleDownloadFile = async (url, type) => {
+    try {
+      const fileName = url.substring(url.lastIndexOf('/') + 1);
+      const localUri = FileSystem.documentDirectory + fileName;
+      
+      Alert.alert('Downloading', `Please wait while the ${type} is downloading...`);
+      
+      const downloadRes = await FileSystem.downloadAsync(url, localUri);
+      
+      if (downloadRes.status === 200) {
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(downloadRes.uri);
+        } else {
+          Alert.alert('Downloaded', 'File downloaded successfully, but sharing is not available on this device.');
+        }
+      } else {
+        Alert.alert('Error', `Failed to download ${type}`);
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', `An error occurred while downloading the ${type}`);
+    }
+  };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -118,7 +145,7 @@ export default function TransactionsScreen() {
             {txn.isDonation && (txn.receiptUrl || txn.certificateUrl) && (
               <TouchableOpacity
                 style={styles.actionPill}
-                onPress={() => Linking.openURL(`${api.defaults.baseURL.replace('/api', '')}${txn.receiptUrl || txn.certificateUrl}`)}
+                onPress={() => handleDownloadFile(`${api.defaults.baseURL.replace('/api', '')}${txn.receiptUrl || txn.certificateUrl}`, 'receipt')}
               >
                 <Ionicons name="download-outline" size={12} color="#00bfa5" />
                 <Text style={styles.actionPillText}>Receipt</Text>
@@ -130,7 +157,7 @@ export default function TransactionsScreen() {
               txn.is80GUploaded && txn.certificate80GUrl ? (
                 <TouchableOpacity
                   style={[styles.actionPill, { backgroundColor: '#f0fdf4', borderColor: '#dcfce7' }]}
-                  onPress={() => Linking.openURL(`${api.defaults.baseURL.replace('/api', '')}${txn.certificate80GUrl}`)}
+                  onPress={() => handleDownloadFile(`${api.defaults.baseURL.replace('/api', '')}${txn.certificate80GUrl}`, '80G certificate')}
                 >
                   <Ionicons name="document-text-outline" size={12} color="#16a34a" />
                   <Text style={[styles.actionPillText, { color: '#16a34a' }]}>80G</Text>

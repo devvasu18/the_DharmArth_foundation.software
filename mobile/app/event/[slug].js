@@ -101,6 +101,7 @@ const EventDetails = () => {
   if (loading) {
     return (
       <View style={styles.centered}>
+        <Stack.Screen options={{ title: '' }} />
         <ActivityIndicator size="large" color="#00bfa5" />
       </View>
     );
@@ -109,6 +110,7 @@ const EventDetails = () => {
   if (!event) {
     return (
       <View style={styles.centered}>
+        <Stack.Screen options={{ title: 'Error' }} />
         <Text style={styles.errorText}>Event not found</Text>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Text style={styles.backButtonText}>Go Back</Text>

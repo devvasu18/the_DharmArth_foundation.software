@@ -152,6 +152,7 @@ export default function DynamicCmsScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
+        <Stack.Screen options={{ title: '' }} />
         <ActivityIndicator size="large" color="#00bfa5" />
         <Text style={styles.loadingText}>Loading page...</Text>
       </View>
@@ -161,6 +162,7 @@ export default function DynamicCmsScreen() {
   if (error || !pageData) {
     return (
       <View style={styles.centered}>
+        <Stack.Screen options={{ title: 'Error' }} />
         <Ionicons name="alert-circle-outline" size={64} color="#ef4444" />
         <Text style={styles.errorText}>{error || "Page not found"}</Text>
         <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/')}>
