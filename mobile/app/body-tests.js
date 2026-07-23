@@ -311,50 +311,7 @@ export default function BodyTestsScreen() {
           ) : null}
         </View>
 
-        {/* Categories Grid */}
-        <View style={styles.categoriesWrapper}>
-          <View style={styles.categoryGrid}>
-            <View style={styles.categoryRow}>
-              {CATEGORIES.slice(0, 3).map(cat => {
-                const isActive = selectedCategory === cat.id;
-                const label = locale === 'hi' ? cat.labelHi : cat.label;
-                return (
-                  <TouchableOpacity
-                    key={cat.id}
-                    style={[styles.categoryColumnBtn, isActive && styles.categoryColumnBtnActive]}
-                    onPress={() => setSelectedCategory(cat.id)}
-                  >
-                    <Text style={[styles.categoryColumnText, isActive && styles.categoryColumnTextActive]} numberOfLines={2}>
-                      {label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
 
-            <View style={styles.categoryRow}>
-              {CATEGORIES.slice(3, 5).map((cat, idx) => {
-                const isActive = selectedCategory === cat.id;
-                const label = locale === 'hi' ? cat.labelHi : cat.label;
-                return (
-                  <TouchableOpacity
-                    key={cat.id}
-                    style={[
-                      styles.categoryColumnBtn, 
-                      isActive && styles.categoryColumnBtnActive,
-                      { flex: idx === 0 ? 1.5 : 1 }
-                    ]}
-                    onPress={() => setSelectedCategory(cat.id)}
-                  >
-                    <Text style={[styles.categoryColumnText, isActive && styles.categoryColumnTextActive]} numberOfLines={2}>
-                      {label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        </View>
 
         {/* Header Label */}
         <Text style={styles.sectionTitle}>{t('bodyTests.availableTests')}</Text>

@@ -524,31 +524,7 @@ export default function DoctorsScreen() {
           renderCategorySelection()
         ) : (
           <View style={styles.mainView}>
-            <View style={styles.headerCard}>
-              <View style={styles.headerLeft}>
-                <TouchableOpacity style={styles.backBtnSquare} onPress={handleBackToTypeSelection}>
-                  <Ionicons name="arrow-back" size={20} color="#1e293b" />
-                </TouchableOpacity>
-                <View style={styles.headerDivider} />
-                <View style={styles.headerInfo}>
-                  <Text style={styles.headerTypeLabel}>
-                    {selectedType === 'government' ? t('doctors.govHospital') : t('doctors.privateClinic')}
-                  </Text>
-                  {selectedType === 'government' && (
-                    <Text style={{ fontSize: 11, color: '#00bfa5', fontWeight: '800', marginTop: 1, marginBottom: 2 }}>
-                      {locale === 'hi' ? `आज: ${new Date().toLocaleDateString('hi-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}` : `Today: ${new Date().toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}`}
-                    </Text>
-                  )}
-                  <Text style={styles.headerCatName} numberOfLines={1}>{selectedCategoryName}</Text>
-                </View>
-              </View>
-              <View style={styles.headerRight}>
-                <TouchableOpacity style={styles.actionBtnFilter} onPress={() => setShowSearchModal(true)}>
-                  <Ionicons name="filter" size={16} color="#00bfa5" />
-                  <Text style={styles.actionBtnFilterText}>{t('doctors.filter')}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+
 
             {renderDoctorList()}
           </View>
