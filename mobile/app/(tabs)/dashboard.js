@@ -22,6 +22,7 @@ import { useTranslation } from '../../src/context/LanguageContext';
 import api from '../../src/services/api';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import * as MediaLibrary from 'expo-media-library';
 
 const { width } = Dimensions.get('window');
 
@@ -40,6 +41,7 @@ export default function DashboardScreen() {
   // L1/L2 Donors state
   const [donorModalVisible, setDonorModalVisible] = useState(false);
   const [qrModalVisible, setQrModalVisible] = useState(false);
+  const [downloadPermissionModalVisible, setDownloadPermissionModalVisible] = useState(false);
   const [donorModalType, setDonorModalType] = useState('L1'); // 'L1' or 'L2'
   const [donorsList, setDonorsList] = useState([]);
   const [summaryStats, setSummaryStats] = useState({ lifetimeEarning: 0, prevMonthEarning: 0 });
@@ -261,9 +263,34 @@ export default function DashboardScreen() {
       Alert.alert('Error', 'Please login to download your QR code');
       return;
     }
+    setDownloadPermissionModalVisible(true);
+  };
+
+  const executeDownloadQr = async () => {
+    setDownloadPermissionModalVisible(false);
     const link = `https://thedharmarth.com/donate?ref=${user.referralCode || user.mobile}`;
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(link)}`;
-    handleDownloadFile(qrCodeUrl, 'QR Code', 'my_qr_code.png');
+    
+    try {
+      Alert.alert('Downloading', 'Please wait while the QR Code is downloading...');
+      const localUri = FileSystem.cacheDirectory + 'my_qr_code.png';
+      const downloadRes = await FileSystem.downloadAsync(qrCodeUrl, localUri);
+      
+      if (downloadRes.status === 200) {
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        if (status === 'granted') {
+          await MediaLibrary.saveToLibraryAsync(downloadRes.uri);
+          Alert.alert('Success', 'QR Code saved to gallery successfully!');
+        } else {
+          Alert.alert('Permission Required', 'We need permission to save the QR code to your device.');
+        }
+      } else {
+        Alert.alert('Error', `Failed to download QR Code. Status: ${downloadRes.status}`);
+      }
+    } catch (error) {
+      console.error("Download Error:", error);
+      Alert.alert('Error', `Failed to download: ${error.message || 'Unknown error'}`);
+    }
   };
 
   if (loading) {
@@ -731,6 +758,52 @@ export default function DashboardScreen() {
                   <Text style={{ color: 'white', fontWeight: '700', fontSize: 14 }}>
                     {t('dashboard.downloadQr')}
                   </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Permission Modal */}
+      <Modal
+        visible={downloadPermissionModalVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setDownloadPermissionModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, { height: 280, padding: 0 }]}>
+            <View style={[styles.modalHeader, { backgroundColor: '#6366f1', borderTopLeftRadius: 24, borderTopRightRadius: 24 }]}>
+              <View style={styles.modalHeaderTitleRow}>
+                <Ionicons name="images-outline" size={24} color="white" />
+                <Text style={styles.modalTitle}>Storage Permission</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setDownloadPermissionModalVisible(false)}
+              >
+                <Ionicons name="close" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={{ flex: 1, padding: 24, justifyContent: 'center', alignItems: 'center' }}>
+              <Text style={{ fontSize: 15, color: '#334155', textAlign: 'center', marginBottom: 24, fontWeight: '600', lineHeight: 22 }}>
+                We need access to your device's photo gallery to save the QR code so you can share it easily.
+              </Text>
+              
+              <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
+                <TouchableOpacity
+                  style={{ flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: '#f1f5f9', alignItems: 'center' }}
+                  onPress={() => setDownloadPermissionModalVisible(false)}
+                >
+                  <Text style={{ color: '#64748b', fontWeight: '700', fontSize: 14 }}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: '#6366f1', alignItems: 'center' }}
+                  onPress={executeDownloadQr}
+                >
+                  <Text style={{ color: 'white', fontWeight: '700', fontSize: 14 }}>Allow</Text>
                 </TouchableOpacity>
               </View>
             </View>
