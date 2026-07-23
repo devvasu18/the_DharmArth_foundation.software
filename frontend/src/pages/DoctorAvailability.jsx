@@ -449,64 +449,7 @@ const DoctorAvailability = () => {
                             {/* Doctor Cards View */}
                             {selectedType && (
                                 <div className="doctors-view">
-                                    <div className="premium-header-card">
-                                        <div className="header-left">
-                                            <button className="btn-back-square" onClick={handleBackToTypeSelection}>
-                                                <ArrowLeft className="back-arrow-icon" size={20} />
-                                            </button>
-                                            
-                                            <div className="header-divider-line"></div>
-                                            
-                                            <div className="category-avatar-bubble">
-                                                {selectedType === 'government' ? (
-                                                    <Hospital size={22} className="category-avatar-icon" />
-                                                ) : (
-                                                    <Building2 size={22} className="category-avatar-icon" />
-                                                )}
-                                            </div>
 
-                                            <div className="category-info-mini">
-                                                <div className="category-label-wrapper">
-                                                    <span className="category-label-text">
-                                                        {selectedType === 'government' ? (
-                                                            i18n.language === 'hi' ? 'सरकारी अस्पताल' : 'Government Hospital'
-                                                        ) : (
-                                                            i18n.language === 'hi' ? 'निजी क्लिनिक' : 'Private Clinic'
-                                                        )}
-                                                    </span>
-                                                    <BadgeCheck size={14} className="verified-badge-icon" />
-                                                </div>
-                                                
-                                                <h2 className="category-name-modern">
-                                                    {searchCategoryId === 'all'
-                                                        ? (i18n.language === 'hi' ? 'सभी विशेषज्ञ' : 'All Specialists')
-                                                        : searchCategoryId && searchCategories.find(c => c._id === searchCategoryId)
-                                                            ? (i18n.language === 'hi'
-                                                                ? (categoryTranslations[searchCategories.find(c => c._id === searchCategoryId).name] || searchCategories.find(c => c._id === searchCategoryId).name)
-                                                                : searchCategories.find(c => c._id === searchCategoryId).name)
-                                                            : (i18n.language === 'hi' ? 'विशेषज्ञ खोज' : 'Specialist Search')}
-                                                </h2>
-                                            </div>
-                                        </div>
-
-                                        <div className="header-right-actions">
-                                            {/* Filter Button */}
-                                            <button className="action-btn-filter" onClick={() => setShowSearchModal(true)}>
-                                                <Filter size={15} className="action-icon-green" />
-                                                <span className="action-btn-text">
-                                                    {i18n.language === 'hi' ? 'फ़िल्टर' : 'Filter'}
-                                                </span>
-                                            </button>
-
-                                            {/* Change/Modify Button */}
-                                            <button className="action-btn-change" onClick={() => setShowSearchModal(true)}>
-                                                <RotateCw size={14} className="action-icon-white" />
-                                                <span className="action-btn-text">
-                                                    {i18n.language === 'hi' ? 'बदलें' : 'Modify'}
-                                                </span>
-                                            </button>
-                                        </div>
-                                    </div>
 
                                     {searching ? (
                                         <div className="loading-doctors">

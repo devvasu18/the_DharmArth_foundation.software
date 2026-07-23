@@ -12,9 +12,9 @@ const AdminBodyTests = () => {
     const [uploading, setUploading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('All');
-    
+
     const [activeLang, setActiveLang] = useState('en');
-    
+
     const [formData, setFormData] = useState({
         name: '',
         name_hi: '',
@@ -166,7 +166,7 @@ const AdminBodyTests = () => {
             const response = await api.post('/upload', uploadData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            
+
             if (response.data && response.data.imageUrl) {
                 setFormData(prev => ({ ...prev, image: response.data.imageUrl }));
                 toast.success('Image uploaded successfully');
@@ -186,10 +186,10 @@ const AdminBodyTests = () => {
 
 
     const filteredTests = tests.filter(test => {
-        const matchesSearch = test.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                              test.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              (test.name_hi && test.name_hi.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                              (test.category_hi && test.category_hi.toLowerCase().includes(searchTerm.toLowerCase()));
+        const matchesSearch = test.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            test.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (test.name_hi && test.name_hi.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (test.category_hi && test.category_hi.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchesCategory = selectedCategoryFilter === 'All' || test.category === selectedCategoryFilter;
         return matchesSearch && matchesCategory;
     });
@@ -256,18 +256,7 @@ const AdminBodyTests = () => {
                     />
                 </div>
 
-                <div className="filter-select-wrapper">
-                    <select
-                        value={selectedCategoryFilter}
-                        onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-                        className="category-select"
-                    >
-                        <option value="All">All Categories</option>
-                        {categories.map((cat, idx) => (
-                            <option key={idx} value={cat}>{cat}</option>
-                        ))}
-                    </select>
-                </div>
+
             </div>
 
             {/* Grid display */}
@@ -281,9 +270,9 @@ const AdminBodyTests = () => {
                         <div key={test._id} className={`test-card-admin ${!test.isActive ? 'inactive' : ''}`}>
                             <div className="test-image-admin">
                                 {test.image ? (
-                                    <img 
-                                        src={test.image.startsWith('http') ? test.image : `${API_BASE_URL}${test.image.startsWith('/') ? '' : '/'}${test.image}`} 
-                                        alt={test.name} 
+                                    <img
+                                        src={test.image.startsWith('http') ? test.image : `${API_BASE_URL}${test.image.startsWith('/') ? '' : '/'}${test.image}`}
+                                        alt={test.name}
                                     />
                                 ) : (
                                     <div className="placeholder-image-admin">🔬</div>
@@ -299,7 +288,7 @@ const AdminBodyTests = () => {
                                 {test.name_hi && <h4 style={{ fontSize: '0.9rem', color: '#475569', marginTop: '2px', fontWeight: 'normal' }}>Name (Hindi): {test.name_hi}</h4>}
                                 <p className="test-desc-admin">{test.description || 'No description provided.'}</p>
                                 {test.description_hi && <p style={{ fontSize: '0.85rem', color: '#475569', marginTop: '2px' }}>Desc (Hindi): {test.description_hi}</p>}
-                                
+
                                 <div className="test-details-admin">
                                     <div className="detail-item">
                                         <Clock size={16} />
@@ -354,7 +343,7 @@ const AdminBodyTests = () => {
                                 <h2>{editingTest ? 'Edit Medical Test' : 'Add New Medical Test'}</h2>
                                 <button className="modal-close" onClick={closeModal}>&times;</button>
                             </div>
-                            
+
                             {/* Language Toggle */}
                             <div style={{ background: '#f1f5f9', borderRadius: '999px', padding: '4px', display: 'flex', border: '1px solid #cbd5e1' }}>
                                 <button
@@ -541,12 +530,12 @@ const AdminBodyTests = () => {
                                         </label>
                                     </div>
                                     <small className="upload-hint">Recommended ratio 3:2, max file size: 4MB</small>
-                                    
+
                                     {formData.image && (
                                         <div className="image-preview-admin">
-                                            <img 
-                                                src={formData.image.startsWith('http') ? formData.image : `${API_BASE_URL}${formData.image.startsWith('/') ? '' : '/'}${formData.image}`} 
-                                                alt="Preview" 
+                                            <img
+                                                src={formData.image.startsWith('http') ? formData.image : `${API_BASE_URL}${formData.image.startsWith('/') ? '' : '/'}${formData.image}`}
+                                                alt="Preview"
                                             />
                                             <button
                                                 type="button"
