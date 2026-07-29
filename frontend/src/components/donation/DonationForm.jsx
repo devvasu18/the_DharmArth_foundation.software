@@ -43,7 +43,7 @@ const DonationForm = ({ onSuccess }) => {
     const [pan, setPan] = useState('');
     const [aadhaar, setAadhaar] = useState('');
     const [errors, setErrors] = useState({});
-    
+
     // Address suggestions states & refs
     const [suggestions, setSuggestions] = useState([]);
     const autocompleteServiceRef = useRef(null);
@@ -434,7 +434,7 @@ const DonationForm = ({ onSuccess }) => {
                 key: rzpKey,
                 amount: orderData.amount,
                 currency: orderData.currency,
-                name: "The DharmArth Foundation",
+                name: "The Dharmarth Medical Foundation",
                 description: "Monthly Donation Subscription",
                 order_id: orderData.order_id || null,
                 subscription_id: orderData.subscriptionId || null,
@@ -861,8 +861,8 @@ const DonationForm = ({ onSuccess }) => {
                                 } else {
                                     setErrors(prev => ({ ...prev, name: '' }));
                                 }
-                             }}
-                         />
+                            }}
+                        />
                     </div>
                     {errors.name && <small className="error-text" style={{ color: 'red', display: 'block', marginTop: '5px' }}>{errors.name}</small>}
 

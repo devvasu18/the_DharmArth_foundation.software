@@ -24,7 +24,7 @@ const VolunteerCard = ({ userData, cardRef, forceVertical = false }) => {
     const name = userData?.name || 'Your Name';
     const mobile = userData?.mobile || '0000000000';
     const work = userData?.work || 'Volunteer';
-    const bio = userData?.bio || 'Dedicated to supporting humanity and spreading kindness through The DharmArth Foundation.';
+    const bio = userData?.bio || "The greatest service to humanity is cooperation in health care. Let's us together build a healthy society.";
     const location = userData?.city ? `${userData.city}, ${userData.state || ''}` : 'India';
     const referralCode = userData?.referralCode || 'DF0000';
     const profileImage = userData?.profileImage || DEFAULT_AVATAR_URL;

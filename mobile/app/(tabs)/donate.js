@@ -56,8 +56,10 @@ export default function DonateScreen() {
   const [wasAutoFetched, setWasAutoFetched] = useState(false);
 
   const [donationLabel, setDonationLabel] = useState('');
+  const [donationLabelHi, setDonationLabelHi] = useState('');
   const [donationLabelLink, setDonationLabelLink] = useState('');
   const [donationLabelBtnText, setDonationLabelBtnText] = useState('');
+  const [donationLabelBtnTextHi, setDonationLabelBtnTextHi] = useState('');
 
   // Success & Claim Account State
   const [donationSuccess, setDonationSuccess] = useState(null);
@@ -157,8 +159,10 @@ export default function DonateScreen() {
         setCustomAmount((dConfig.popularAmount || dConfig.plans[0]).toString());
       }
       if (data.donation_label) setDonationLabel(data.donation_label);
+      if (data.donation_label_hi) setDonationLabelHi(data.donation_label_hi);
       if (data.donation_label_link) setDonationLabelLink(data.donation_label_link);
       if (data.donation_label_btn_text) setDonationLabelBtnText(data.donation_label_btn_text);
+      if (data.donation_label_btn_text_hi) setDonationLabelBtnTextHi(data.donation_label_btn_text_hi);
     } catch (error) {
       console.error("Failed to load settings", error);
     } finally {
@@ -353,7 +357,7 @@ export default function DonateScreen() {
 
   const handlePanConfirm = () => {
     if (confirmPan.toUpperCase() !== pan.toUpperCase()) {
-      setConfirmError("PAN numbers do not match.");
+      setConfirmError(locale === 'hi' ? "पैन नंबर मेल नहीं खाते।" : "PAN numbers do not match.");
       return;
     }
     setConfirmError('');
@@ -407,7 +411,7 @@ export default function DonateScreen() {
         image: 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1783602963/the_dharmarth_foundation/logo.jpg',
         currency: data.currency || 'INR',
         key: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_SvdzLNA9hdG9PL',
-        name: 'DharmArth Foundation',
+        name: 'The Dharmarth Medical Foundation',
         prefill: {
           contact: mobile,
           name: fullName,
@@ -653,15 +657,21 @@ export default function DonateScreen() {
         {/* Amount Selection */}
         <Text style={styles.sectionTitle}>{locale === 'hi' ? 'मासिक दान राशि चुनें' : 'Select Monthly Donation Amount'}</Text>
 
-        {!!donationLabel && (
+        {!!(locale === 'hi' ? (donationLabelHi || donationLabel) : donationLabel) && (
           <View style={styles.subtitleContainer}>
-            <Text style={styles.donationSubtitle}>{donationLabel}</Text>
+            <Text style={styles.donationSubtitle}>
+              {locale === 'hi' ? (donationLabelHi || donationLabel) : donationLabel}
+            </Text>
             {!!donationLabelLink && (
               <TouchableOpacity
                 style={styles.subtitleLinkBtn}
                 onPress={() => Linking.openURL(donationLabelLink)}
               >
-                <Text style={styles.subtitleLinkText}>{donationLabelBtnText || (locale === 'hi' ? 'और जानें' : 'Learn More')}</Text>
+                <Text style={styles.subtitleLinkText}>
+                  {locale === 'hi'
+                    ? (donationLabelBtnTextHi || donationLabelBtnText || 'और जानें')
+                    : (donationLabelBtnText || 'Learn More')}
+                </Text>
                 <Ionicons name="open-outline" size={14} color="#00bfa5" />
               </TouchableOpacity>
             )}
@@ -986,16 +996,18 @@ export default function DonateScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Confirm PAN Details</Text>
+              <Text style={styles.modalTitle}>
+                {locale === 'hi' ? "पैन विवरण की पुष्टि करें" : "Confirm PAN Details"}
+              </Text>
             </View>
 
             <Text style={styles.modalText}>
-              Please re-enter your PAN Number for verification.
+              {locale === 'hi' ? "सत्यापन के लिए कृपया अपना पैन नंबर पुनः दर्ज करें।" : "Please re-enter your PAN Number for verification."}
             </Text>
 
             <TextInput
               style={[styles.input, confirmError ? styles.inputError : null, { marginBottom: 10 }]}
-              placeholder="Enter PAN Number again"
+              placeholder={locale === 'hi' ? "पैन नंबर दोबारा दर्ज करें" : "Enter PAN Number again"}
               value={confirmPan}
               onChangeText={(text) => {
                 setConfirmPan(text.toUpperCase());
@@ -1011,14 +1023,18 @@ export default function DonateScreen() {
                 style={[styles.modalBtn, styles.modalBtnCancel]}
                 onPress={() => setShowPanModal(false)}
               >
-                <Text style={styles.modalBtnCancelText}>Cancel</Text>
+                <Text style={styles.modalBtnCancelText}>
+                  {locale === 'hi' ? "रद्द करें" : "Cancel"}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.modalBtn, styles.modalBtnConfirm]}
                 onPress={handlePanConfirm}
               >
-                <Text style={styles.modalBtnConfirmText}>Verify & Pay</Text>
+                <Text style={styles.modalBtnConfirmText}>
+                  {locale === 'hi' ? "सत्यापित करें और भुगतान करें" : "Verify & Pay"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

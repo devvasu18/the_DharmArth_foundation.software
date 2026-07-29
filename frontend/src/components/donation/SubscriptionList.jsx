@@ -184,10 +184,10 @@ const SubscriptionList = ({ isAdmin = false }) => {
 
     const handleCancel = async (sub, otp = null) => {
         if (!otp) {
-            const message = isAdmin 
+            const message = isAdmin
                 ? `Are you sure you want to cancel ${sub.donorName}'s monthly donation of ₹${sub.amount}? An OTP will be sent to the donor for confirmation.`
                 : `Are you sure you want to cancel this monthly donation (ID: ${sub.subscriptionId})? An OTP will be sent to your mobile for confirmation.`;
-            
+
             const confirmed = await showConfirm("Cancel Subscription?", message);
             if (!confirmed) return;
 
@@ -235,7 +235,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
 
             const options = {
                 key: rzpKey,
-                name: "The DharmArth Foundation",
+                name: "The Dharmarth Medical Foundation",
                 description: "Retry Subscription Payment",
                 subscription_id: sub.subscriptionId,
                 handler: async (response) => {
@@ -423,8 +423,8 @@ const SubscriptionList = ({ isAdmin = false }) => {
                     <CreditCard size={48} className="empty-icon" />
                     <p>{searchTerm || statusFilter || amountFilter ? "No subscriptions match your filters." : "No monthly donations found."}</p>
                     {(searchTerm || statusFilter || amountFilter) && (
-                        <button 
-                            className="btn-link" 
+                        <button
+                            className="btn-link"
                             style={{ marginTop: '1rem', color: 'var(--primary)', cursor: 'pointer', border: 'none', background: 'none', fontWeight: 600 }}
                             onClick={() => {
                                 setSearchTerm('');
@@ -439,195 +439,195 @@ const SubscriptionList = ({ isAdmin = false }) => {
             ) : (
                 <>
                     {!isAdmin ? (
-                // User Table View
-                <>
-                    <div className="user-table-container hide-mobile">
-                        <table className="user-sub-table">
-                            <thead>
-                                <tr>
-                                    <th>Contribution</th>
-                                    <th>Reference ID</th>
-                                    <th>Started On</th>
-                                    <th>Next Billing</th>
-                                    <th>Status</th>
-                                    <th className="text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                        // User Table View
+                        <>
+                            <div className="user-table-container hide-mobile">
+                                <table className="user-sub-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Contribution</th>
+                                            <th>Reference ID</th>
+                                            <th>Started On</th>
+                                            <th>Next Billing</th>
+                                            <th>Status</th>
+                                            <th className="text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {subscriptions.map((sub) => (
+                                            <tr key={sub._id}>
+                                                <td>
+                                                    <div className="user-amount-cell">
+                                                        <strong>₹{sub.amount.toLocaleString()}</strong>
+                                                        <span className="freq">/ month</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <code className="user-sub-id">{sub.subscriptionId}</code>
+                                                </td>
+                                                <td>{new Date(sub.createdAt).toLocaleDateString()}</td>
+                                                <td>
+                                                    {sub.nextBillingDate && sub.status === 'active'
+                                                        ? new Date(sub.nextBillingDate).toLocaleDateString()
+                                                        : '-'}
+                                                </td>
+                                                <td>{getStatusBadge(sub)}</td>
+                                                <td>
+                                                    <div className="user-actions-cell">
+                                                        {sub.status === 'active' && (
+                                                            <button
+                                                                className="btn-cancel-small"
+                                                                onClick={() => handleCancel(sub)}
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        )}
+                                                        {sub.status === 'failed' && (
+                                                            <>
+                                                                <button
+                                                                    className="btn-retry-small"
+                                                                    onClick={() => handleRetry(sub)}
+                                                                >
+                                                                    Retry
+                                                                </button>
+                                                                <button
+                                                                    className="btn-cancel-small"
+                                                                    onClick={() => handleCancel(sub)}
+                                                                >
+                                                                    Cancel
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Mobile User Cards */}
+                            <div className="subscription-card-grid show-mobile">
                                 {subscriptions.map((sub) => (
-                                    <tr key={sub._id}>
-                                        <td>
-                                            <div className="user-amount-cell">
-                                                <strong>₹{sub.amount.toLocaleString()}</strong>
-                                                <span className="freq">/ month</span>
+                                    <div className="sub-mobile-card" key={sub._id}>
+                                        <div className="card-header">
+                                            <div className="amount-info">
+                                                <span className="amount">₹{sub.amount.toLocaleString()}</span>
+                                                <span className="freq">/ monthly</span>
                                             </div>
-                                        </td>
-                                        <td>
-                                            <code className="user-sub-id">{sub.subscriptionId}</code>
-                                        </td>
-                                        <td>{new Date(sub.createdAt).toLocaleDateString()}</td>
-                                        <td>
-                                            {sub.nextBillingDate && sub.status === 'active'
-                                                ? new Date(sub.nextBillingDate).toLocaleDateString()
-                                                : '-'}
-                                        </td>
-                                        <td>{getStatusBadge(sub)}</td>
-                                        <td>
-                                            <div className="user-actions-cell">
+                                            <div className="status">{getStatusBadge(sub)}</div>
+                                        </div>
+                                        <div className="card-body">
+                                            <div className="info-row">
+                                                <span className="label">ID:</span>
+                                                <code className="value">{sub.subscriptionId}</code>
+                                            </div>
+                                            <div className="info-row">
+                                                <span className="label">Started:</span>
+                                                <span className="value">{new Date(sub.createdAt).toLocaleDateString()}</span>
+                                            </div>
+                                            {sub.status === 'active' && sub.nextBillingDate && (
+                                                <div className="info-row">
+                                                    <span className="label">Next Billing:</span>
+                                                    <span className="value highlight">{new Date(sub.nextBillingDate).toLocaleDateString()}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="card-footer">
+                                            {sub.status === 'active' && (
+                                                <button className="mobile-action-btn cancel" onClick={() => handleCancel(sub)}>
+                                                    <XCircle size={16} /> Cancel Subscription
+                                                </button>
+                                            )}
+                                            {sub.status === 'failed' && (
+                                                <div className="button-group">
+                                                    <button className="mobile-action-btn retry" onClick={() => handleRetry(sub)}>
+                                                        <CreditCard size={16} /> Retry Payment
+                                                    </button>
+                                                    <button className="mobile-action-btn cancel" onClick={() => handleCancel(sub)}>
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    ) : (
+                        // Admin Table View
+                        <div className="admin-table-container">
+                            <table className="admin-sub-table">
+                                <thead>
+                                    <tr>
+                                        <th>Donor Details</th>
+                                        <th>Amount</th>
+                                        <th>ID / Reference</th>
+                                        <th>Status</th>
+                                        <th>Started On</th>
+                                        <th>Next Billing</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {subscriptions.map((sub) => (
+                                        <tr key={sub._id}>
+                                            <td>
+                                                <div className="admin-donor-info">
+                                                    <span className="d-name">{sub.donorName}</span>
+                                                    {sub.donorUserId?.referralCode && (
+                                                        <span className="d-code">User Code: {sub.donorUserId.referralCode}</span>
+                                                    )}
+                                                    <span className="d-mobile">{sub.donorMobile}</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="admin-amount-cell">
+                                                    <strong>₹{sub.amount.toLocaleString()}</strong>
+                                                    <span className="freq">/ month</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <code className="admin-sub-id">{sub.subscriptionId}</code>
+                                            </td>
+                                            <td>{getStatusBadge(sub)}</td>
+                                            <td>{new Date(sub.createdAt).toLocaleDateString()}</td>
+                                            <td>
+                                                {sub.nextBillingDate ? new Date(sub.nextBillingDate).toLocaleDateString() : '-'}
+                                            </td>
+                                            <td>
                                                 {sub.status === 'active' && (
                                                     <button
-                                                        className="btn-cancel-small"
+                                                        className="admin-btn-cancel"
                                                         onClick={() => handleCancel(sub)}
                                                     >
                                                         Cancel
                                                     </button>
                                                 )}
-                                                {sub.status === 'failed' && (
-                                                    <>
-                                                        <button
-                                                            className="btn-retry-small"
-                                                            onClick={() => handleRetry(sub)}
-                                                        >
-                                                            Retry
-                                                        </button>
-                                                        <button
-                                                            className="btn-cancel-small"
-                                                            onClick={() => handleCancel(sub)}
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
 
-                    {/* Mobile User Cards */}
-                    <div className="subscription-card-grid show-mobile">
-                        {subscriptions.map((sub) => (
-                            <div className="sub-mobile-card" key={sub._id}>
-                                <div className="card-header">
-                                    <div className="amount-info">
-                                        <span className="amount">₹{sub.amount.toLocaleString()}</span>
-                                        <span className="freq">/ monthly</span>
-                                    </div>
-                                    <div className="status">{getStatusBadge(sub)}</div>
-                                </div>
-                                <div className="card-body">
-                                    <div className="info-row">
-                                        <span className="label">ID:</span>
-                                        <code className="value">{sub.subscriptionId}</code>
-                                    </div>
-                                    <div className="info-row">
-                                        <span className="label">Started:</span>
-                                        <span className="value">{new Date(sub.createdAt).toLocaleDateString()}</span>
-                                    </div>
-                                    {sub.status === 'active' && sub.nextBillingDate && (
-                                        <div className="info-row">
-                                            <span className="label">Next Billing:</span>
-                                            <span className="value highlight">{new Date(sub.nextBillingDate).toLocaleDateString()}</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="card-footer">
-                                    {sub.status === 'active' && (
-                                        <button className="mobile-action-btn cancel" onClick={() => handleCancel(sub)}>
-                                            <XCircle size={16} /> Cancel Subscription
-                                        </button>
-                                    )}
-                                    {sub.status === 'failed' && (
-                                        <div className="button-group">
-                                            <button className="mobile-action-btn retry" onClick={() => handleRetry(sub)}>
-                                                <CreditCard size={16} /> Retry Payment
-                                            </button>
-                                            <button className="mobile-action-btn cancel" onClick={() => handleCancel(sub)}>
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </>
-            ) : (
-                // Admin Table View
-                <div className="admin-table-container">
-                    <table className="admin-sub-table">
-                        <thead>
-                            <tr>
-                                <th>Donor Details</th>
-                                <th>Amount</th>
-                                <th>ID / Reference</th>
-                                <th>Status</th>
-                                <th>Started On</th>
-                                <th>Next Billing</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {subscriptions.map((sub) => (
-                                <tr key={sub._id}>
-                                    <td>
-                                        <div className="admin-donor-info">
-                                            <span className="d-name">{sub.donorName}</span>
-                                            {sub.donorUserId?.referralCode && (
-                                                <span className="d-code">User Code: {sub.donorUserId.referralCode}</span>
-                                            )}
-                                            <span className="d-mobile">{sub.donorMobile}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="admin-amount-cell">
-                                            <strong>₹{sub.amount.toLocaleString()}</strong>
+                            {isAdmin && (
+                                <div className="admin-table-footer">
+                                    <div className="summary-group">
+                                        <div className="total-summary failed">
+                                            <span className="label">Failed Total:</span>
+                                            <span className="value">₹{failedPageTotal.toLocaleString()}</span>
                                             <span className="freq">/ month</span>
                                         </div>
-                                    </td>
-                                    <td>
-                                        <code className="admin-sub-id">{sub.subscriptionId}</code>
-                                    </td>
-                                    <td>{getStatusBadge(sub)}</td>
-                                    <td>{new Date(sub.createdAt).toLocaleDateString()}</td>
-                                    <td>
-                                        {sub.nextBillingDate ? new Date(sub.nextBillingDate).toLocaleDateString() : '-'}
-                                    </td>
-                                    <td>
-                                        {sub.status === 'active' && (
-                                            <button
-                                                className="admin-btn-cancel"
-                                                onClick={() => handleCancel(sub)}
-                                            >
-                                                Cancel
-                                            </button>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                        <div className="total-summary active">
+                                            <span className="label">Active Total:</span>
+                                            <span className="value">₹{activePageTotal.toLocaleString()}</span>
+                                            <span className="freq">/ month</span>
+                                        </div>
 
-                    {isAdmin && (
-                        <div className="admin-table-footer">
-                            <div className="summary-group">
-                                <div className="total-summary failed">
-                                    <span className="label">Failed Total:</span>
-                                    <span className="value">₹{failedPageTotal.toLocaleString()}</span>
-                                    <span className="freq">/ month</span>
+                                    </div>
                                 </div>
-                                <div className="total-summary active">
-                                    <span className="label">Active Total:</span>
-                                    <span className="value">₹{activePageTotal.toLocaleString()}</span>
-                                    <span className="freq">/ month</span>
-                                </div>
-
-                            </div>
+                            )}
                         </div>
-                    )}
-                </div>
                     )}
                 </>
             )}

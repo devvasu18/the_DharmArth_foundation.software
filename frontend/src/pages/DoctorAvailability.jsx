@@ -611,9 +611,9 @@ const DoctorAvailability = () => {
                                                     </div>
                                                     <h3>{i18n.language === 'hi' ? 'कोई डॉक्टर उपलब्ध नहीं है' : 'No Doctors Available'}</h3>
                                                     <p>
-                                                        {searchResult.message || (i18n.language === 'hi' 
-                                                            ? 'निकट भविष्य में इस श्रेणी के लिए कोई डॉक्टर निर्धारित नहीं हैं। कृपया एक अलग श्रेणी चुनें या अस्पताल सेटिंग बदलें।' 
-                                                            : 'There are no doctors scheduled for this category in the near future. Please select a different category or change the hospital setting.')}
+                                                        {i18n.language === 'hi' 
+                                                            ? (searchResult.message_hi || searchResult.message || 'निकट भविष्य में इस श्रेणी के लिए कोई डॉक्टर निर्धारित नहीं हैं। कृपया एक अलग श्रेणी चुनें या अस्पताल सेटिंग बदलें।') 
+                                                            : (searchResult.message || 'There are no doctors scheduled for this category in the near future. Please select a different category or change the hospital setting.')}
                                                     </p>
                                                     <div className="blank-actions">
                                                         <button className="btn-primary-modern" onClick={() => setShowSearchModal(true)}>

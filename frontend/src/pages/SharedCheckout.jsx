@@ -228,7 +228,7 @@ const SharedCheckout = () => {
                 key: rzpKey,
                 amount: rzpOrder.amount,
                 currency: rzpOrder.currency,
-                name: "The DharmArth Foundation",
+                name: "The Dharmarth Medical Foundation",
                 description: `Medicine Order for ${prescription.user?.name || 'Patient'}`,
                 order_id: rzpOrder.order_id,
                 handler: async (response) => {
@@ -433,15 +433,15 @@ const SharedCheckout = () => {
                                     <MapPin size={20} />
                                     <h3>Delivery Address</h3>
                                 </div>
-                                
-                                <div style={{ 
-                                    background: '#f8fafc', 
-                                    border: '1px solid #e2e8f0', 
-                                    borderRadius: '16px', 
-                                    padding: '20px', 
-                                    display: 'flex', 
-                                    flexDirection: 'column', 
-                                    gap: '15px' 
+
+                                <div style={{
+                                    background: '#f8fafc',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '16px',
+                                    padding: '20px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '15px'
                                 }}>
                                     <div>
                                         <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Street Address</span>
@@ -493,100 +493,100 @@ const SharedCheckout = () => {
                                         <Package size={20} />
                                         <h3>Medicine List</h3>
                                     </div>
-                                     <div className="verified-items-list-shared">
-                                         {prescription.verifiedItems.map((item, index) => (
-                                             <div key={index} className={`v-item-card ${item.fulfillmentStatus === 'Shortlisted' ? 'shortlisted' : ''}`}>
-                                                 <div className="v-item-header">
-                                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                         <span className="med-name">{item.medicineName}</span>
-                                                         {item.fulfillmentStatus === 'Shortlisted' && (
-                                                             <span style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '700', textTransform: 'uppercase', marginTop: '2px' }}>
-                                                                 ⌛ Shortlisted (Arrival in {item.estimatedArrivalDays || 3} days)
-                                                             </span>
-                                                         )}
-                                                     </div>
-                                                     <span className="med-price">₹{item.price?.toFixed(2)}</span>
-                                                 </div>
-                                                 <div className="med-details-shared">
-                                                     <button
-                                                         type="button"
-                                                         className="btn-link-dosage"
-                                                         onClick={() => {
-                                                             const newShow = { ...showDosageMap };
-                                                             newShow[index] = !newShow[index];
-                                                             setShowDosageMap(newShow);
-                                                         }}
-                                                     >
-                                                         {showDosageMap[index] ? 'Hide Timing' : 'View Timing'}
-                                                     </button>
+                                    <div className="verified-items-list-shared">
+                                        {prescription.verifiedItems.map((item, index) => (
+                                            <div key={index} className={`v-item-card ${item.fulfillmentStatus === 'Shortlisted' ? 'shortlisted' : ''}`}>
+                                                <div className="v-item-header">
+                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                        <span className="med-name">{item.medicineName}</span>
+                                                        {item.fulfillmentStatus === 'Shortlisted' && (
+                                                            <span style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '700', textTransform: 'uppercase', marginTop: '2px' }}>
+                                                                ⌛ Shortlisted (Arrival in {item.estimatedArrivalDays || 3} days)
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <span className="med-price">₹{item.price?.toFixed(2)}</span>
+                                                </div>
+                                                <div className="med-details-shared">
+                                                    <button
+                                                        type="button"
+                                                        className="btn-link-dosage"
+                                                        onClick={() => {
+                                                            const newShow = { ...showDosageMap };
+                                                            newShow[index] = !newShow[index];
+                                                            setShowDosageMap(newShow);
+                                                        }}
+                                                    >
+                                                        {showDosageMap[index] ? 'Hide Timing' : 'View Timing'}
+                                                    </button>
 
-                                                     {showDosageMap[index] && (
-                                                         <div className="dosage-popover-shared">
-                                                             <SimplifyDosage
-                                                                 frequency={item.frequency}
-                                                                 time={item.time}
-                                                                 foodRelation={item.foodRelation}
-                                                                 intakeMethod={item.intakeMethod}
-                                                                 dosage={item.dosage}
-                                                             />
-                                                         </div>
-                                                     )}
-                                                 </div>
-                                             </div>
-                                         ))}
-                                     </div>
-                                     <div className="order-summary-footer">
-                                         <div className="summary-row">
-                                             <span>Subtotal</span>
-                                             <span>₹{calculateSubtotal().toFixed(2)}</span>
-                                         </div>
-                                         <div className="summary-row">
-                                             <span>GST ({pharmacyConfig?.gstPercent || 0}%)</span>
-                                             <span>₹{calculateGst(calculateSubtotal()).toFixed(2)}</span>
-                                         </div>
-                                         <div className="summary-row">
-                                             <span>Platform Fee ({pharmacyConfig?.platformFeePercent || 0}%)</span>
-                                             <span>₹{calculatePlatformFee(calculateSubtotal()).toFixed(2)}</span>
-                                         </div>
-                                         <div className="summary-row">
-                                             <span>Delivery Fee</span>
-                                             {calculateDeliveryCharge(calculateSubtotal()) === 0 ? (
-                                                 <span className="free">FREE</span>
-                                             ) : (
-                                                 <span>₹{calculateDeliveryCharge(calculateSubtotal()).toFixed(2)}</span>
-                                             )}
-                                         </div>
-                                         <div className="total-row-shared">
-                                             <span>Total</span>
-                                             <span>₹{calculateTotal().toFixed(2)}</span>
-                                         </div>
-                                     </div>
-                                 </section>
+                                                    {showDosageMap[index] && (
+                                                        <div className="dosage-popover-shared">
+                                                            <SimplifyDosage
+                                                                frequency={item.frequency}
+                                                                time={item.time}
+                                                                foodRelation={item.foodRelation}
+                                                                intakeMethod={item.intakeMethod}
+                                                                dosage={item.dosage}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="order-summary-footer">
+                                        <div className="summary-row">
+                                            <span>Subtotal</span>
+                                            <span>₹{calculateSubtotal().toFixed(2)}</span>
+                                        </div>
+                                        <div className="summary-row">
+                                            <span>GST ({pharmacyConfig?.gstPercent || 0}%)</span>
+                                            <span>₹{calculateGst(calculateSubtotal()).toFixed(2)}</span>
+                                        </div>
+                                        <div className="summary-row">
+                                            <span>Platform Fee ({pharmacyConfig?.platformFeePercent || 0}%)</span>
+                                            <span>₹{calculatePlatformFee(calculateSubtotal()).toFixed(2)}</span>
+                                        </div>
+                                        <div className="summary-row">
+                                            <span>Delivery Fee</span>
+                                            {calculateDeliveryCharge(calculateSubtotal()) === 0 ? (
+                                                <span className="free">FREE</span>
+                                            ) : (
+                                                <span>₹{calculateDeliveryCharge(calculateSubtotal()).toFixed(2)}</span>
+                                            )}
+                                        </div>
+                                        <div className="total-row-shared">
+                                            <span>Total</span>
+                                            <span>₹{calculateTotal().toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                </section>
 
-                                 {/* 3. Payment or Approval Selection */}
-                                 <section className="pane-card payment-card">
-                                     <div className="card-header-p">
-                                         {prescription.approvalRequired && !prescription.userApproved ? <AlertCircle size={20} color="#f59e0b" /> : <CreditCard size={20} />}
-                                         <h3>{prescription.approvalRequired && !prescription.userApproved ? 'Action Required' : 'Payment Method'}</h3>
-                                     </div>
-                                     
-                                     {prescription.approvalRequired && !prescription.userApproved ? (
-                                         <div className="approval-warning-box">
-                                             <p style={{ fontSize: '13px', color: '#92400e', marginBottom: '15px', lineHeight: '1.5' }}>
-                                                 Some medicines in your order are currently out of stock. By approving this <strong>Provision Bill</strong>, we will pack and reserve your in-stock items while we wait for the remaining medicines to arrive.
-                                             </p>
-                                             <button 
-                                                type="button" 
-                                                className="btn-finalize-order" 
-                                                style={{ background: '#f59e0b' }} 
+                                {/* 3. Payment or Approval Selection */}
+                                <section className="pane-card payment-card">
+                                    <div className="card-header-p">
+                                        {prescription.approvalRequired && !prescription.userApproved ? <AlertCircle size={20} color="#f59e0b" /> : <CreditCard size={20} />}
+                                        <h3>{prescription.approvalRequired && !prescription.userApproved ? 'Action Required' : 'Payment Method'}</h3>
+                                    </div>
+
+                                    {prescription.approvalRequired && !prescription.userApproved ? (
+                                        <div className="approval-warning-box">
+                                            <p style={{ fontSize: '13px', color: '#92400e', marginBottom: '15px', lineHeight: '1.5' }}>
+                                                Some medicines in your order are currently out of stock. By approving this <strong>Provision Bill</strong>, we will pack and reserve your in-stock items while we wait for the remaining medicines to arrive.
+                                            </p>
+                                            <button
+                                                type="button"
+                                                className="btn-finalize-order"
+                                                style={{ background: '#f59e0b' }}
                                                 onClick={handleApproveProvision}
                                                 disabled={checkoutLoading}
-                                             >
-                                                 {checkoutLoading ? 'Processing...' : 'Approve Provision Bill'}
-                                             </button>
-                                         </div>
-                                     ) : (
-                                         <>
+                                            >
+                                                {checkoutLoading ? 'Processing...' : 'Approve Provision Bill'}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <>
                                             <div className="payment-options-shared">
                                                 <div className={`pay-opt ${paymentMethod === 'Online' ? 'active' : ''}`} onClick={() => setPaymentMethod('Online')}>
                                                     <div className="check-dot"></div>
@@ -598,10 +598,10 @@ const SharedCheckout = () => {
                                                 {checkoutLoading ? 'Processing...' : `Pay ₹${calculateTotal().toFixed(2)} &  Order`}
                                             </button>
                                             <p className="secure-p"><CheckCircle size={12} /> SSL Secure Transaction</p>
-                                         </>
-                                     )}
-                                 </section>
-                             </div>
+                                        </>
+                                    )}
+                                </section>
+                            </div>
                         </aside>
                     </div>
                 </form>
@@ -631,10 +631,10 @@ const SharedCheckout = () => {
                             <h3>How to Enable Location</h3>
                             <button className="close-help" onClick={() => setShowLocationHelp(false)}>✕</button>
                         </div>
-                        
+
                         <div className="help-body">
                             <p className="help-intro">For a faster checkout, please allow location access in your browser settings:</p>
-                            
+
                             <div className="instruction-image">
                                 <img src="/assets/images/location_guide.png" alt="Location Guide" />
                             </div>

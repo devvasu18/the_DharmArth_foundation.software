@@ -1,5 +1,6 @@
 const DoctorAvailability = require('../models/DoctorAvailability');
 const Doctor = require('../models/Doctor');
+const Setting = require('../models/Setting');
 
 // Helper to normalize any incoming date string/object to UTC midnight
 const getUTCMidnight = (dateInput) => {
@@ -501,6 +502,75 @@ exports.getAvailabilitySearch = async (req, res) => {
             return res.status(400).json({ message: 'date is required' });
         }
 
+        if (hospitalType === 'government') {
+            // Get today's local date string in India timezone (YYYY-MM-DD)
+            const options = { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' };
+            const formatter = new Intl.DateTimeFormat('en-CA', options);
+            const todayStr = formatter.format(new Date());
+
+            // Target date string from query (normalized to UTC Midnight)
+            const parsedTargetDate = getUTCMidnight(date);
+            if (!parsedTargetDate) {
+                return res.status(400).json({ message: 'Invalid date format' });
+            }
+            const queriedDateStr = parsedTargetDate.toISOString().substring(0, 10);
+
+            // Cleanup past government availability records (older than today)
+            // to keep the DB clean and prevent unwanted data accumulation
+            const todayMidnight = new Date(todayStr + 'T00:00:00.000Z');
+            await DoctorAvailability.deleteMany({
+                hospitalType: 'government',
+                date: { $lt: todayMidnight }
+            });
+
+            if (queriedDateStr === todayStr) {
+                // Fetch settings
+                const startSetting = await Setting.findOne({ key: 'doctorAvailabilityStartTime' });
+                const publishedSetting = await Setting.findOne({ key: 'doctorAvailabilityPublishedForDate' });
+
+                const startTime = startSetting ? startSetting.value : '08:00'; // Default 8:00 AM
+                const publishedForDate = publishedSetting ? publishedSetting.value : '';
+
+                const isPublishedToday = publishedForDate === todayStr;
+
+                if (!isPublishedToday) {
+                    // Check current local time in India (IST)
+                    const timeFormatter = new Intl.DateTimeFormat('en-US', {
+                        timeZone: 'Asia/Kolkata',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    });
+                    const currentTimeStr = timeFormatter.format(new Date()); // e.g. "13:19" or "07:30"
+
+                    if (currentTimeStr < startTime) {
+                        // Scenario B: Today's list not published and time is before start time
+                        return res.json({
+                            available: false,
+                            selectedDate: date,
+                            nextAvailableDate: null,
+                            doctors: [],
+                            status: 'NOT_PUBLISHED_BEFORE_START_TIME',
+                            doctorAvailabilityStartTime: startTime,
+                            message: `The doctor list will be updated after ${startTime}. Please check back later.`,
+                            message_hi: `डॉक्टरों की सूची ${startTime} बजे के बाद अपडेट की जाएगी। कृपया बाद में पुनः देखें।`
+                        });
+                    } else {
+                        // Scenario C: Current time is after start time but today's list is still not published
+                        return res.json({
+                            available: false,
+                            selectedDate: date,
+                            nextAvailableDate: null,
+                            doctors: [],
+                            status: 'NOT_PUBLISHED_AFTER_START_TIME',
+                            message: "Today's doctor list is being updated. Please check back later.",
+                            message_hi: "आज की डॉक्टर सूची अपडेट की जा रही है। कृपया कुछ समय बाद पुनः देखें।"
+                        });
+                    }
+                }
+            }
+        }
+
         // 1. Find all active doctors matching the category and hospital setting
         const doctorQuery = {
             isActive: true,
@@ -741,6 +811,45 @@ exports.toggleDailyAvailability = async (req, res) => {
         res.json(availability);
     } catch (error) {
         res.status(500).json({ message: 'Error toggling availability', error: error.message });
+    }
+};
+
+// Publish today's government availability list
+exports.publishAvailability = async (req, res) => {
+    try {
+        let { date } = req.body;
+        if (!date) {
+            const options = { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' };
+            const formatter = new Intl.DateTimeFormat('en-CA', options);
+            date = formatter.format(new Date());
+        }
+
+        await Setting.findOneAndUpdate(
+            { key: 'doctorAvailabilityPublishedForDate' },
+            { value: date },
+            { upsert: true, new: true }
+        );
+
+        await Setting.findOneAndUpdate(
+            { key: 'doctorAvailabilityLastPublishedAt' },
+            { value: new Date().toISOString() },
+            { upsert: true, new: true }
+        );
+
+        // Cleanup: remove past government availability records older than today
+        const todayMidnight = new Date(date + 'T00:00:00.000Z');
+        await DoctorAvailability.deleteMany({
+            hospitalType: 'government',
+            date: { $lt: todayMidnight }
+        });
+
+        res.json({
+            message: 'Doctor availability list published successfully',
+            publishedForDate: date,
+            lastPublishedAt: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error publishing availability', error: error.message });
     }
 };
 

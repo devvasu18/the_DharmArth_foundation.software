@@ -196,7 +196,7 @@ export default function DoctorsScreen() {
 
   const checkDoctorAvailability = (avail, targetDate) => {
     if (!avail) return { isAvailableNow: false, status: 'Absent', nextSlot: null, sortOrder: 999999 };
-    
+
     const timeSlots = avail.timeSlots || [];
     const now = new Date();
     const isToday = targetDate && targetDate.toDateString() === now.toDateString();
@@ -363,7 +363,11 @@ export default function DoctorsScreen() {
         <View style={styles.emptyContainer}>
           <Ionicons name="sad-outline" size={64} color="#cbd5e1" style={{ marginBottom: 16 }} />
           <Text style={styles.emptyTitle}>{t('doctors.noDoctors')}</Text>
-          <Text style={styles.emptyDesc}>{searchResult.message || t('doctors.noDoctorsDesc')}</Text>
+          <Text style={styles.emptyDesc}>
+            {locale === 'hi' 
+              ? (searchResult.message_hi || searchResult.message || t('doctors.noDoctorsDesc'))
+              : (searchResult.message || t('doctors.noDoctorsDesc'))}
+          </Text>
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
             <TouchableOpacity style={styles.secondaryButton} onPress={handleBackToTypeSelection}>
               <Text style={styles.secondaryButtonText}>{t('doctors.changeHospital')}</Text>
@@ -412,9 +416,9 @@ export default function DoctorsScreen() {
                   )}
                 </View>
               </View>
- 
+
               {doctorDesc && <Text style={styles.doctorDesc}>{doctorDesc}</Text>}
- 
+
               {selectedType !== 'clinic' && !isUpcoming && availabilityInfo && (
                 <View style={[
                   styles.statusBadge,
@@ -430,7 +434,7 @@ export default function DoctorsScreen() {
                   </Text>
                 </View>
               )}
- 
+
               {selectedType === 'clinic' ? (
                 <View style={styles.clinicInfoBox}>
                   {avail.timing && (
@@ -455,6 +459,16 @@ export default function DoctorsScreen() {
                       )}
                     </View>
                   </View>
+
+                  <TouchableOpacity
+                    style={styles.bookButton}
+                    onPress={() => Linking.openURL(`tel:${contactPhone}`)}
+                  >
+                    <Ionicons name="call" size={16} color="white" style={{ marginRight: 6 }} />
+                    <Text style={styles.bookButtonText}>
+                      {locale === 'hi' ? 'नाम लिखवाएं' : 'Book Now'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               ) : (
                 availabilityInfo?.status !== 'Absent' && (
@@ -490,6 +504,21 @@ export default function DoctorsScreen() {
     );
   }
 
+  const getFormattedDate = () => {
+    const today = new Date();
+    if (locale === 'hi') {
+      const days = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
+      const months = ['जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
+      return `${days[today.getDay()]}, ${today.getDate()} ${months[today.getMonth()]} ${today.getFullYear()}`;
+    }
+    return today.toLocaleDateString('en-IN', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
   const selectedCategoryName = searchCategoryId === 'all'
     ? t('doctors.allSpecialists')
     : searchCategoryId
@@ -497,27 +526,30 @@ export default function DoctorsScreen() {
       : t('doctors.specialistSearch');
 
   return (
-    <SafeAreaView style={styles.safeContainer} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom', 'left', 'right']}>
       <Stack.Screen
         options={{
-          headerShown: true,
-          headerStatusBarHeight: insets.top,
-          title: '',
-          headerTintColor: '#1e293b',
-          headerTitleStyle: { fontWeight: '900', fontSize: 16 },
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={{ paddingHorizontal: 12, paddingVertical: 8, marginLeft: -4 }}
-              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-            >
-              <Ionicons name="arrow-back" size={24} color="#1e293b" />
-            </TouchableOpacity>
-          )
+          headerShown: false
         }}
       />
 
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
+        <View style={styles.headerCard}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtnSquare}>
+              <Ionicons name="arrow-back" size={20} color="#1e293b" />
+            </TouchableOpacity>
+            <View style={styles.headerDivider} />
+            <View style={styles.headerInfo}>
+              <Text style={styles.headerTypeLabel}>
+                {locale === 'hi' ? 'डॉक्टरों की उपलब्धता' : 'Doctor Availability'}
+              </Text>
+              <Text style={styles.headerCatName}>
+                {getFormattedDate()}
+              </Text>
+            </View>
+          </View>
+        </View>
 
 
         {!selectedType ? (
@@ -716,5 +748,30 @@ const styles = StyleSheet.create({
   faqQuestion: { fontSize: 15, fontWeight: '700', color: '#1e293b', flex: 1, paddingRight: 16 },
   faqQuestionOpen: { color: '#00bfa5' },
   faqAnswerContainer: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
-  faqAnswer: { fontSize: 14, color: '#475569', lineHeight: 22 }
+  faqAnswer: { fontSize: 14, color: '#475569', lineHeight: 22 },
+  bookButton: {
+    backgroundColor: '#00bfa5',
+    borderRadius: 12,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 14,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#00bfa5',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  bookButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '800',
+  },
 });

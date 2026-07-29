@@ -324,8 +324,12 @@ const translations = {
       shareTitle: "Join The DharmArth Foundation",
       shareMessage: "Namaste! I am an official volunteer at The DharmArth Foundation. Join me in our noble cause. Support through my verified profile here: {shareUrl}",
       defaultWork: "Volunteer",
-      defaultBio: "Dedicated to supporting humanity and spreading kindness through The DharmArth Foundation.",
-      defaultLocation: "India"
+      defaultBio: "The greatest service to humanity is cooperation in health care. Let's us together build a healthy society.",
+      defaultLocation: "India",
+      donateNow: "Donate Now",
+      backToDashboard: "Back to Dashboard",
+      goToHome: "Go to Home",
+      joined: "Joined"
     },
     withdraw: {
       title: "Withdrawal",
@@ -580,7 +584,7 @@ const translations = {
       withdrawNow: "अभी निकालें",
       donateWallet: "वॉलेट से दान करें",
       shareEarn: "शेयर करें और कमाएं",
-      shareDesc: "अपने नेटवर्क के साथ इस व्यक्तिगत लिंक को साझा करें। जब कोई आपके लिंक का उपयोग करके दान करता है, तो आपको अपने वॉलेट में तुरंत 10% कमीशन प्राप्त होता है!",
+      shareDesc: "अपने मित्रों और परिचितों के साथ इस व्यक्तिगत लिंक को साझा करें। जब कोई आपके लिंक का उपयोग करके दान करता है, तो आपको अपने वॉलेट में तुरंत 10% कमीशन प्राप्त होता है!",
       referralCode: "रेफ़रल कोड:",
       copy: "कॉपी",
       copied: "लिंक कॉपी हो गया!",
@@ -729,8 +733,12 @@ const translations = {
       shareTitle: "धर्मार्थ फाउंडेशन से जुड़ें",
       shareMessage: "नमस्ते! मैं धर्मार्थ फाउंडेशन में एक आधिकारिक स्वयंसेवक हूँ। हमारे नेक काम में मेरे साथ जुड़ें। यहाँ मेरी सत्यापित प्रोफ़ाइल के माध्यम से समर्थन करें: {shareUrl}",
       defaultWork: "स्वयंसेवक",
-      defaultBio: "धर्मार्थ फाउंडेशन के माध्यम से मानवता का समर्थन करने और दयालुता फैलाने के लिए समर्पित।",
-      defaultLocation: "भारत"
+      defaultBio: "मानवता की सबसे बड़ी सेवा — स्वास्थ्य सेवा में सहयोग। आइए, मिलकर स्वस्थ और समान का निर्माण करें।",
+      defaultLocation: "भारत",
+      donateNow: "अभी दान करें",
+      backToDashboard: "डैशबोर्ड पर वापस जाएं",
+      goToHome: "होम पर जाएं",
+      joined: "जुड़े"
     },
     withdraw: {
       title: "निकासी",

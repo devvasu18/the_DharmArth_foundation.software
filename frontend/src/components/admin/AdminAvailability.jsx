@@ -38,6 +38,7 @@ const AdminAvailability = () => {
     const [activeTab, setActiveTab] = useState('government'); // 'government' or 'clinic'
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [lastPublishedInfo, setLastPublishedInfo] = useState({ publishedForDate: '', lastPublishedAt: '' });
 
     useEffect(() => {
         fetchDoctors();
@@ -45,6 +46,7 @@ const AdminAvailability = () => {
 
     useEffect(() => {
         fetchDailyAvailability();
+        fetchPublishStatus();
     }, [activeTab]);
 
     const fetchDoctors = async () => {
@@ -73,6 +75,49 @@ const AdminAvailability = () => {
             }
         } catch (error) {
             console.error('Failed to fetch daily availability', error);
+        }
+    };
+
+    const fetchPublishStatus = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/content/settings`);
+            if (response.ok) {
+                const data = await response.json();
+                setLastPublishedInfo({
+                    publishedForDate: data.doctorAvailabilityPublishedForDate || '',
+                    lastPublishedAt: data.doctorAvailabilityLastPublishedAt || ''
+                });
+            }
+        } catch (error) {
+            console.error('Failed to fetch publish status', error);
+        }
+    };
+
+    const handlePublishList = async () => {
+        try {
+            const options = { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' };
+            const formatter = new Intl.DateTimeFormat('en-CA', options);
+            const dateStr = formatter.format(new Date());
+
+            const response = await fetch(`${API_URL}/availability/publish`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ date: dateStr })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                toast.success("Today's doctor list published successfully!");
+                setLastPublishedInfo({
+                    publishedForDate: result.publishedForDate,
+                    lastPublishedAt: result.lastPublishedAt
+                });
+            } else {
+                const err = await response.json();
+                toast.error(err.message || 'Failed to publish doctor list');
+            }
+        } catch (error) {
+            toast.error('Error publishing doctor list');
         }
     };
 
@@ -154,8 +199,39 @@ const AdminAvailability = () => {
 
                     {/* Today indicator (Only for Government tab) */}
                     {activeTab === 'government' && (
-                        <div className="private-info-banner" style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af' }}>
-                            <span>📅</span> Daily availability is managed specifically for <strong>Today ({new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })})</strong>.
+                        <div className="private-info-banner" style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px', padding: '12px 20px' }}>
+                            <div>
+                                <span>📅</span> Daily availability is managed specifically for <strong>Today ({new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })})</strong>.
+                                <div style={{ marginTop: '5px', fontSize: '0.9rem' }}>
+                                    {lastPublishedInfo.publishedForDate === formatDateLocal(new Date()) ? (
+                                        <span style={{ color: '#16a34a', fontWeight: 'bold' }}>
+                                            ✓ Today's list is Published (at {new Date(lastPublishedInfo.lastPublishedAt).toLocaleTimeString()})
+                                        </span>
+                                    ) : (
+                                        <span style={{ color: '#dc2626', fontWeight: 'bold' }}>
+                                            ✗ Today's list is Not Published yet (Users will see a placeholder screen based on time)
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <button 
+                                onClick={handlePublishList}
+                                style={{
+                                    background: '#00bf9a',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    padding: '8px 16px',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    transition: 'background 0.2s'
+                                }}
+                            >
+                                📢 Publish Today's List
+                            </button>
                         </div>
                     )}
 

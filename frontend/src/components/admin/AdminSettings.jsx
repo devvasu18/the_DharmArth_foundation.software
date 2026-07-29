@@ -84,6 +84,10 @@ const AdminSettings = () => {
     const [bodyTestModalOpen, setBodyTestModalOpen] = useState(false);
     const [bodyTestMobile, setBodyTestMobile] = useState('');
 
+    // Doctor Availability Config State
+    const [doctorAvailabilityModalOpen, setDoctorAvailabilityModalOpen] = useState(false);
+    const [doctorAvailabilityStartTime, setDoctorAvailabilityStartTime] = useState('08:00');
+
     useEffect(() => {
         fetchSettings();
     }, []);
@@ -149,6 +153,9 @@ const AdminSettings = () => {
 
             // Body Test Mobile
             setBodyTestMobile(data.body_test_mobile || '');
+
+            // Doctor Availability Start Time
+            setDoctorAvailabilityStartTime(data.doctorAvailabilityStartTime || '08:00');
         } catch (error) {
             console.error("Failed to fetch settings", error);
         } finally {
@@ -403,6 +410,19 @@ const AdminSettings = () => {
         }
     };
 
+    const handleSaveDoctorAvailability = async () => {
+        try {
+            const updates = { doctorAvailabilityStartTime: doctorAvailabilityStartTime };
+            await api.put('/content/settings', updates);
+            setSettings({ ...settings, ...updates });
+            setDoctorAvailabilityModalOpen(false);
+            toast.success("Doctor Availability settings saved!");
+        } catch (error) {
+            console.error("Save failed", error);
+            toast.error("Failed to save doctor availability settings");
+        }
+    };
+
     if (loading) return <div>Loading settings...</div>;
 
     return (
@@ -586,6 +606,27 @@ const AdminSettings = () => {
                             <button
                                 className="btn btn-outline"
                                 onClick={() => setBodyTestModalOpen(true)}
+                            >
+                                Configure
+                            </button>
+                        </td>
+                    </tr>
+
+                    {/* Doctor Availability Config Row */}
+                    <tr>
+                        <td><strong>Doctor Availability Settings</strong> (Start Time & Publishing)</td>
+                        <td>
+                            <div><strong>Start Time:</strong> {settings.doctorAvailabilityStartTime || '08:00'}</div>
+                            <div style={{ marginTop: '5px' }}><strong>Published For Date:</strong> {settings.doctorAvailabilityPublishedForDate || <span style={{ color: '#999' }}>Not Published Today</span>}</div>
+                            <div style={{ marginTop: '5px' }}><strong>Last Published At:</strong> {settings.doctorAvailabilityLastPublishedAt ? new Date(settings.doctorAvailabilityLastPublishedAt).toLocaleString() : <span style={{ color: '#999' }}>Never</span>}</div>
+                        </td>
+                        <td>
+                            <button
+                                className="btn btn-outline"
+                                onClick={() => {
+                                    setDoctorAvailabilityStartTime(settings.doctorAvailabilityStartTime || '08:00');
+                                    setDoctorAvailabilityModalOpen(true);
+                                }}
                             >
                                 Configure
                             </button>
@@ -1562,6 +1603,63 @@ const AdminSettings = () => {
                             <button 
                                 className="btn bg-primary text-white" 
                                 onClick={handleSaveBodyTestMobile}
+                                style={{ borderRadius: '10px', background: '#00bfa5', display: 'flex', alignItems: 'center', gap: '8px', color: 'white', border: 'none', cursor: 'pointer' }}
+                            >
+                                <Save size={18} />
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Doctor Availability Config Modal */}
+            {doctorAvailabilityModalOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 2000
+                }}>
+                    <div style={{ background: 'white', padding: '2rem', borderRadius: '24px', minWidth: '400px', maxWidth: '90%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h4 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>Doctor Availability Settings</h4>
+                            <button onClick={() => setDoctorAvailabilityModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>
+                                    Doctor Availability Start Time (HH:mm)
+                                </label>
+                                <input
+                                    type="time"
+                                    className="form-input"
+                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                                    value={doctorAvailabilityStartTime}
+                                    onChange={(e) => setDoctorAvailabilityStartTime(e.target.value)}
+                                />
+                                <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '6px' }}>
+                                    Determines the start time before which unpublished government doctor lists will be hidden from users.
+                                </p>
+                            </div>
+
+                            <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                <div style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '6px' }}>
+                                    <strong>Published For Date (Read-only):</strong> {settings.doctorAvailabilityPublishedForDate || 'Not Published Today'}
+                                </div>
+                                <div style={{ fontSize: '0.85rem', color: '#475569' }}>
+                                    <strong>Last Published At (Read-only):</strong> {settings.doctorAvailabilityLastPublishedAt ? new Date(settings.doctorAvailabilityLastPublishedAt).toLocaleString() : 'Never'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+                            <button className="btn btn-outline" onClick={() => setDoctorAvailabilityModalOpen(false)} style={{ borderRadius: '10px' }}>Cancel</button>
+                            <button 
+                                className="btn bg-primary text-white" 
+                                onClick={handleSaveDoctorAvailability}
                                 style={{ borderRadius: '10px', background: '#00bfa5', display: 'flex', alignItems: 'center', gap: '8px', color: 'white', border: 'none', cursor: 'pointer' }}
                             >
                                 <Save size={18} />

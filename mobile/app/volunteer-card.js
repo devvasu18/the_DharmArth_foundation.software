@@ -7,9 +7,11 @@ import {
   ScrollView,
   Dimensions,
   TouchableOpacity,
-  Platform
+  Platform,
+  Linking
 } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
+import { useTranslation } from '../src/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 
@@ -21,13 +23,14 @@ const DEFAULT_AVATAR_URL = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1
 
 export default function VolunteerCardScreen() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
 
   const name = user?.name || 'Your Name';
   const mobile = user?.mobile || '0000000000';
-  const work = user?.work || 'Volunteer';
-  const bio = user?.bio || 'Dedicated to supporting humanity and spreading kindness through The DharmArth Foundation.';
-  const location = user?.city ? `${user.city}, ${user.state || ''}` : 'India';
+  const work = user?.work || t('shareEarn.defaultWork');
+  const bio = user?.bio || t('shareEarn.defaultBio');
+  const location = user?.city ? `${user.city}, ${user.state || ''}` : t('shareEarn.defaultLocation');
   const referralCode = user?.referralCode || 'DF0000';
   const profileImage = user?.profileImage || DEFAULT_AVATAR_URL;
   const joinedDate = user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '2026';
@@ -59,18 +62,15 @@ export default function VolunteerCardScreen() {
             </View>
 
             <View style={styles.brandArea}>
-              <Text style={styles.brandName}>DharmArth</Text>
-              <Text style={styles.brandSub}>Foundation</Text>
+              <Text style={styles.brandName}>The DharmArth</Text>
+              <Text style={styles.brandSub}>Medical Foundation</Text>
             </View>
           </View>
 
           {/* Right Section */}
           <View style={styles.rightPane}>
             <View style={styles.cardHeader}>
-              <View>
-                <Text style={styles.hindiName}>धर्मार्थ फाउंडेशन</Text>
-                <Text style={styles.tagline}>Spreading Hope</Text>
-              </View>
+              <Text style={[styles.userName, { flex: 1, marginRight: 8 }]} numberOfLines={2}>{name}</Text>
               <View style={styles.cardNoArea}>
                 <Text style={styles.cardNoLabel}>Reff Code</Text>
                 <Text style={styles.cardNoValue}>{referralCode}</Text>
@@ -78,15 +78,14 @@ export default function VolunteerCardScreen() {
             </View>
 
             <View style={styles.userInfo}>
-              <Text style={styles.userName} numberOfLines={2}>{name}</Text>
               <Text style={styles.userWork}>{work}</Text>
               <Text style={styles.userBio} numberOfLines={3}>"{bio}"</Text>
 
               <View style={styles.detailsGrid}>
-                <DetailItem icon="call" label="Contact" value={`+91 ${mobile}`} />
-                <DetailItem icon="location" label="Location" value={location} />
-                <DetailItem icon="calendar" label="Joined" value={joinedDate} />
-                <DetailItem icon="checkmark-circle" label="Status" value="Active" />
+                <DetailItem icon="call" label={t('shareEarn.contact')} value={`+91 ${mobile}`} />
+                <DetailItem icon="location" label={t('shareEarn.location')} value={location} />
+                <DetailItem icon="calendar" label={t('shareEarn.joined')} value={joinedDate} />
+                <DetailItem icon="checkmark-circle" label={t('shareEarn.status')} value={t('shareEarn.active')} />
               </View>
             </View>
 
@@ -102,11 +101,14 @@ export default function VolunteerCardScreen() {
       </View>
 
       <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.back()}
+        style={styles.donateButton}
+        onPress={() => Linking.openURL(`https://thedharmarth.com/donate?ref=${referralCode}`)}
       >
-        <Text style={styles.backButtonText}>Back to Dashboard</Text>
+        <Ionicons name="heart" size={18} color="white" style={{ marginRight: 8 }} />
+        <Text style={styles.donateButtonText}>{t('shareEarn.donateNow')}</Text>
       </TouchableOpacity>
+
+
 
       <View style={{ height: 40 }} />
     </ScrollView>
@@ -192,8 +194,9 @@ const styles = StyleSheet.create({
     width: '35%',
     backgroundColor: '#00bfa5',
     padding: 16,
+    paddingTop: 32,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   photoWrapper: {
     width: 100,
@@ -229,8 +232,9 @@ const styles = StyleSheet.create({
   },
   brandName: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '900',
+    textAlign: 'center',
   },
   brandSub: {
     color: 'white',
@@ -238,6 +242,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     opacity: 0.8,
     textTransform: 'uppercase',
+    textAlign: 'center',
   },
   rightPane: {
     flex: 1,
@@ -359,8 +364,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#475569',
   },
+  donateButton: {
+    marginHorizontal: 24,
+    marginTop: 24,
+    backgroundColor: '#ef4444',
+    padding: 16,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  donateButtonText: {
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 16,
+  },
   backButton: {
-    margin: 24,
+    marginHorizontal: 24,
+    marginTop: 12,
+    marginBottom: 24,
     backgroundColor: 'white',
     padding: 16,
     borderRadius: 16,
