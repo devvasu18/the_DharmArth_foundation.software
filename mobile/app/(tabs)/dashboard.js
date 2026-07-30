@@ -20,7 +20,7 @@ import { Stack, useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTranslation } from '../../src/context/LanguageContext';
 import api from '../../src/services/api';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
 
