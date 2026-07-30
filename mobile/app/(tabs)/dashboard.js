@@ -119,9 +119,20 @@ export default function DashboardScreen() {
 
   const handleDownloadFile = async (url, type, customFileName = null) => {
     try {
+      if (!url) {
+        Alert.alert('Error', `No download URL available for this ${type}`);
+        return;
+      }
+      
+      let fullUrl = url;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        const baseUrl = api.defaults.baseURL.replace('/api', '');
+        fullUrl = `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+      }
+      
       let fileName = customFileName;
       if (!fileName) {
-        fileName = url.substring(url.lastIndexOf('/') + 1);
+        fileName = fullUrl.substring(fullUrl.lastIndexOf('/') + 1);
         if (fileName.includes('?')) fileName = fileName.split('?')[0];
         if (!fileName) fileName = 'download.pdf';
       }
@@ -129,7 +140,7 @@ export default function DashboardScreen() {
       
       Alert.alert('Downloading', `Please wait while the ${type} is downloading...`);
       
-      const downloadRes = await FileSystem.downloadAsync(url, localUri);
+      const downloadRes = await FileSystem.downloadAsync(fullUrl, localUri);
       
       if (downloadRes.status === 200) {
         if (await Sharing.isAvailableAsync()) {
@@ -144,7 +155,7 @@ export default function DashboardScreen() {
       }
     } catch (error) {
       console.error("Download Error:", error);
-      Alert.alert('Error', `An error occurred while downloading the ${type}`);
+      Alert.alert('Error', `An error occurred while downloading the ${type}: ${error.message || error}`);
     }
   };
 
@@ -486,7 +497,7 @@ export default function DashboardScreen() {
                     {txn.isDonation && (txn.receiptUrl || txn.certificateUrl) && (
                       <TouchableOpacity
                         style={styles.actionPill}
-                        onPress={() => handleDownloadFile(`${api.defaults.baseURL.replace('/api', '')}${txn.receiptUrl || txn.certificateUrl}`, 'receipt')}
+                        onPress={() => handleDownloadFile(txn.receiptUrl || txn.certificateUrl, 'receipt')}
                       >
                         <Ionicons name="download-outline" size={12} color="#00bfa5" />
                         <Text style={styles.actionPillText}>{t('dashboard.receipt')}</Text>
@@ -497,7 +508,7 @@ export default function DashboardScreen() {
                     {txn.isDonation && txn.is80G && (
                       <TouchableOpacity
                         style={[styles.actionPill, { backgroundColor: '#f0fdf4', borderColor: '#dcfce7' }]}
-                        onPress={() => handleDownloadFile(`${api.defaults.baseURL.replace('/api', '')}${txn.receiptUrl || txn.certificateUrl}`, '80G receipt')}
+                        onPress={() => handleDownloadFile(txn.certificate80GUrl || txn.receiptUrl || txn.certificateUrl, '80G receipt')}
                       >
                         <Ionicons name="document-text-outline" size={12} color="#16a34a" />
                         <Text style={[styles.actionPillText, { color: '#16a34a' }]}>80G</Text>
