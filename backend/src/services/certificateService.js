@@ -235,7 +235,7 @@ class CertificateService {
                         taxBenefitPan: 'PAN No.: AANAT8534C',
                         verifyHeader: 'VERIFY THIS RECEIPT',
                         verifyText: 'Scan the QR code to verify this receipt online.',
-                        verifyUrl: 'tdmf.org.in/verify',
+                        verifyUrl: 'thedharmarth.com/verify',
                         receiptId: 'Receipt ID:',
                         authorizedSignatory: 'AUTHORIZED SIGNATORY',
                         presidentRole: 'President',
@@ -278,7 +278,7 @@ class CertificateService {
                         taxBenefitPan: 'पैन संख्या: AANAT8534C',
                         verifyHeader: 'इस रसीद को सत्यापित करें',
                         verifyText: 'इस रसीद को ऑनलाइन सत्यापित करने के लिए क्यूआर कोड स्कैन करें।',
-                        verifyUrl: 'tdmf.org.in/verify',
+                        verifyUrl: 'thedharmarth.com/verify',
                         receiptId: 'रसीद आईडी:',
                         authorizedSignatory: 'अधिकृत हस्ताक्षरकर्ता',
                         presidentRole: 'अध्यक्ष',
@@ -471,7 +471,7 @@ class CertificateService {
                 doc.roundedRect(25, bottomGridY, 260, cardHeightBottom, 4).lineWidth(0.5).strokeColor(borderGrey).stroke();
 
                 // QR Code generation
-                const verifyUrlString = `https://tdmf.org.in/verify?id=${receiptNo}`;
+                const verifyUrlString = `https://thedharmarth.com/verify?id=${receiptNo}`;
                 const qrBuffer = await QRCode.toBuffer(verifyUrlString, {
                     width: 140,
                     margin: 1
