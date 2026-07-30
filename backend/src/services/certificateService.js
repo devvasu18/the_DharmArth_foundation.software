@@ -238,7 +238,8 @@ class CertificateService {
                         verifyUrl: 'tdmf.org.in/verify',
                         receiptId: 'Receipt ID:',
                         authorizedSignatory: 'AUTHORIZED SIGNATORY',
-                        president: 'President',
+                        presidentRole: 'President',
+                        foundationName: 'The Dharmarth Medical Foundation',
                         digitalReceipt: '(Digital Receipt)',
                         footerTagline: 'Thank you for supporting healthcare, education and social welfare. Your contribution makes a difference.',
                         disclaimer: 'This is a computer-generated receipt and does not require a physical signature.',
@@ -280,7 +281,8 @@ class CertificateService {
                         verifyUrl: 'tdmf.org.in/verify',
                         receiptId: 'रसीद आईडी:',
                         authorizedSignatory: 'अधिकृत हस्ताक्षरकर्ता',
-                        president: 'अध्यक्ष',
+                        presidentRole: 'अध्यक्ष',
+                        foundationName: 'द धर्मार्थ मेडिकल फाउंडेशन',
                         digitalReceipt: '(डिजिटल रसीद)',
                         footerTagline: 'स्वास्थ्य सेवा, शिक्षा और सामाजिक कल्याण का समर्थन करने के लिए धन्यवाद। आपका योगदान बदलाव लाता है।',
                         disclaimer: 'यह एक कंप्यूटर जनित रसीद है और इसमें भौतिक हस्ताक्षर की आवश्यकता नहीं है।',
@@ -463,6 +465,10 @@ class CertificateService {
 
                 // 10. VERIFICATION QR CODE & SIGNATURE / SEAL SECTION
                 const bottomGridY = cardsY + cardHeight + 62 + yOffset;
+                const cardHeightBottom = 76;
+
+                // A. Left Card: Verify This Receipt
+                doc.roundedRect(25, bottomGridY, 260, cardHeightBottom, 4).lineWidth(0.5).strokeColor(borderGrey).stroke();
 
                 // QR Code generation
                 const verifyUrlString = `https://tdmf.org.in/verify?id=${receiptNo}`;
@@ -471,38 +477,133 @@ class CertificateService {
                     margin: 1
                 });
 
-                doc.image(qrBuffer, 28, bottomGridY, { width: 68, height: 68 });
+                doc.image(qrBuffer, 32, bottomGridY + 8, { width: 60, height: 60 });
 
                 // QR text labels
-                const qrLabelX = 104;
-                doc.fillColor(textDark).font('Poppins-Bold').fontSize(7.5).text(lang.verifyHeader, qrLabelX, bottomGridY + 4);
-                doc.fillColor(secondaryColor).font('Poppins-Regular').fontSize(6.8).text(lang.verifyText, qrLabelX, bottomGridY + 16, { width: 175 });
-                doc.fillColor('#16a34a').font('Poppins-Regular').fontSize(6.8).text(lang.verifyUrl, qrLabelX, bottomGridY + 36);
+                const qrLabelX = 102;
+                doc.fillColor(primaryColor).font('Poppins-Bold').fontSize(7.5).text(lang.verifyHeader, qrLabelX, bottomGridY + 8);
+                doc.fillColor(secondaryColor).font('Poppins-Regular').fontSize(6.5).text(lang.verifyText, qrLabelX, bottomGridY + 18, { width: 173 });
+                doc.fillColor('#16a34a').font('Poppins-Regular').fontSize(6.5).text(lang.verifyUrl, qrLabelX, bottomGridY + 38);
 
                 // Receipt ID Badge next to QR
-                doc.roundedRect(qrLabelX, bottomGridY + 47, 172, 14, 2).fill(primaryColor);
-                doc.fillColor('#ffffff').font('Poppins-Bold').fontSize(7).text(`${lang.receiptId} ${receiptNo}`, qrLabelX, bottomGridY + 51, { align: 'center', width: 172 });
+                const idBadgeWidth = 145;
+                doc.roundedRect(qrLabelX, bottomGridY + 49, idBadgeWidth, 14, 2).fill(primaryColor);
+                doc.fillColor('#ffffff').font('Poppins-Bold').fontSize(6.5).text(`${lang.receiptId} ${receiptNo}`, qrLabelX, bottomGridY + 53, { align: 'center', width: idBadgeWidth });
 
-                // Authorised Signatory details
-                const signX = 306;
-                doc.fillColor(secondaryColor).font('Poppins-Bold').fontSize(7.5).text(lang.authorizedSignatory, signX + 8, bottomGridY + 4);
+                // B. Right Card: Authorized Signatory & Seal
+                const signCardX = 295;
+                const signCardWidth = 275;
+                doc.roundedRect(signCardX, bottomGridY, signCardWidth, cardHeightBottom, 4).lineWidth(0.5).strokeColor(borderGrey).stroke();
 
-                // Handwritten Cursive Signature using AlexBrush
-                doc.fillColor('#002fbe').font('AlexBrush').fontSize(26).text('Mahesh Sharma', signX + 22, bottomGridY + 16);
+                // Card Title
+                doc.fillColor(primaryColor).font('Poppins-Bold').fontSize(7.5).text(lang.authorizedSignatory, signCardX + 12, bottomGridY + 8);
 
-                doc.fillColor(textDark).font('Poppins-Bold').fontSize(7.5).text('Mahesh Sharma', signX + 8, bottomGridY + 45);
-                doc.fillColor(secondaryColor).font('Poppins-Regular').fontSize(7).text(`${lang.president}, द धर्मार्थ मेडिकल फाउंडेशन`, signX + 8, bottomGridY + 56);
+                // Cursive Signature
+                doc.fillColor('#0f3ba8').font('AlexBrush').fontSize(22).text('Mahesh', signCardX + 16, bottomGridY + 15);
+
+                // Signatory Info
+                doc.fillColor(textDark).font('Poppins-Bold').fontSize(7.5).text('Mahesh Sharma', signCardX + 12, bottomGridY + 42);
+                doc.fillColor(secondaryColor).font('Poppins-Regular').fontSize(6.5).text(lang.presidentRole, signCardX + 12, bottomGridY + 52);
+                doc.fillColor(secondaryColor).font('Poppins-Regular').fontSize(6.5).text(lang.foundationName, signCardX + 12, bottomGridY + 62);
 
                 // Vector Stamp Seal
-                const sealX = 508;
-                const sealY = bottomGridY + 30;
-                doc.circle(sealX, sealY, 24).lineWidth(1).strokeColor('#002fbe').stroke();
-                doc.circle(sealX, sealY, 21).lineWidth(0.5).strokeColor('#002fbe').stroke();
+                const sealX = signCardX + signCardWidth - 38;
+                const sealY = bottomGridY + 38;
+                doc.circle(sealX, sealY, 32).lineWidth(1.2).strokeColor('#0f3ba8').stroke();
+                doc.circle(sealX, sealY, 30).lineWidth(0.5).strokeColor('#0f3ba8').stroke();
+                doc.circle(sealX, sealY, 20).lineWidth(0.5).strokeColor('#0f3ba8').stroke();
 
-                doc.fillColor('#002fbe').font('Poppins-Bold').fontSize(4.5);
-                doc.text('THE DHARMARTH', sealX - 20, sealY - 14, { align: 'center', width: 40 });
-                doc.text('★ TDMF ★', sealX - 20, sealY - 3, { align: 'center', width: 40 });
-                doc.text('MEDICAL FOUNDATION', sealX - 20, sealY + 6, { align: 'center', width: 40 });
+                // Setup font for seal to Times-Bold (Serif) to match reference seal
+                doc.fillColor('#0f3ba8').font('Times-Bold');
+
+                // Curved text helper (with proportional letter-width spacing)
+                const drawCurvedText = (text, cx, cy, radius, startAngleDegree, endAngleDegree, faceInwards, fontSize) => {
+                    doc.fontSize(fontSize);
+                    const chars = text.split('');
+                    
+                    // Calculate widths and total width
+                    const widths = chars.map(char => doc.widthOfString(char));
+                    const letterSpacing = 0.6; // spacing in points
+                    const totalWidth = widths.reduce((sum, w) => sum + w, 0) + (chars.length - 1) * letterSpacing;
+                    
+                    const totalAngle = totalWidth / radius; // in radians
+                    const midAngle = ((startAngleDegree + endAngleDegree) / 2) * Math.PI / 180;
+                    
+                    // For top text, angle increases clockwise. For bottom text, angle decreases clockwise.
+                    const isDecreasing = (startAngleDegree > endAngleDegree);
+                    
+                    const startAngle = isDecreasing ? (midAngle + totalAngle / 2) : (midAngle - totalAngle / 2);
+                    const totalAngleRange = isDecreasing ? -totalAngle : totalAngle;
+                    
+                    let currentWidth = 0;
+                    
+                    chars.forEach((char, i) => {
+                        const charWidth = widths[i];
+                        const charCenterOffset = currentWidth + charWidth / 2;
+                        
+                        const angle = startAngle + (charCenterOffset / totalWidth) * totalAngleRange;
+                        const x = cx + radius * Math.cos(angle);
+                        const y = cy + radius * Math.sin(angle);
+                        
+                        doc.save();
+                        doc.translate(x, y);
+                        if (faceInwards) {
+                            doc.rotate(angle - Math.PI / 2);
+                        } else {
+                            doc.rotate(angle + Math.PI / 2);
+                        }
+                        
+                        // Vertically center using baseline middle
+                        doc.text(char, -charWidth / 2, 0, { baseline: 'middle' });
+                        doc.restore();
+                        
+                        currentWidth += charWidth + letterSpacing;
+                    });
+                };
+
+                // 1. Top Curved Text: "THE DHARMARTH"
+                drawCurvedText("THE DHARMARTH", sealX, sealY, 25, -165, -15, false, 5.0);
+
+                // 2. Bottom Curved Text: "MEDICAL FOUNDATION"
+                drawCurvedText("MEDICAL FOUNDATION", sealX, sealY, 25, 165, 15, false, 4.2);
+
+                // 3. Center Text: "TDMF"
+                doc.fontSize(9.5);
+                doc.text("TDMF", sealX - 25, sealY - 4.75, { align: 'center', width: 50 });
+
+                // 4. Vector 5-pointed Star Helper
+                const drawVectorStar = (cx, cy, spikes, outerRadius, innerRadius) => {
+                    let rot = Math.PI / 2 * 3;
+                    let x = cx;
+                    let y = cy;
+                    let step = Math.PI / spikes;
+
+                    doc.moveTo(cx, cy - outerRadius);
+                    for (let i = 0; i < spikes; i++) {
+                        x = cx + Math.cos(rot) * outerRadius;
+                        y = cy + Math.sin(rot) * outerRadius;
+                        doc.lineTo(x, y);
+                        rot += step;
+
+                        x = cx + Math.cos(rot) * innerRadius;
+                        y = cy + Math.sin(rot) * innerRadius;
+                        doc.lineTo(x, y);
+                        rot += step;
+                    }
+                    doc.lineTo(cx, cy - outerRadius);
+                    doc.fill();
+                };
+
+                // Draw Left & Right Stars as vectors
+                doc.fillColor('#0f3ba8');
+                const drawStarAtAngle = (angleDegree) => {
+                    const angle = angleDegree * Math.PI / 180;
+                    const x = sealX + 25 * Math.cos(angle);
+                    const y = sealY + 25 * Math.sin(angle);
+                    drawVectorStar(x, y, 5, 2.0, 0.8);
+                };
+                drawStarAtAngle(-180);
+                drawStarAtAngle(0);
 
                 // 11. FOOTER SECTION
                 const footerY = bottomGridY + 84;

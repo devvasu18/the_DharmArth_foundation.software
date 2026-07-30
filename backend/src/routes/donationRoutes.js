@@ -785,4 +785,23 @@ router.post('/upload-80g/:id', protect, adminOnly, upload.single('certificate'),
     }
 });
 
+// @desc    Verify Receipt Publicly
+// @route   GET /api/donate/verify/:receiptNumber
+router.get('/verify/:receiptNumber', async (req, res) => {
+    try {
+        const donation = await Donation.findOne({ 
+            receiptNumber: req.params.receiptNumber,
+            status: 'success'
+        }).select('donorName donorMobile donorEmail amount createdAt receiptNumber is80G paymentMethod transactionId receiptUrl');
+        
+        if (!donation) {
+            return res.status(404).json({ message: 'Receipt not found or verification failed.' });
+        }
+        
+        res.json(donation);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;
