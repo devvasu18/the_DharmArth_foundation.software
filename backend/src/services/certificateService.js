@@ -27,10 +27,10 @@ class CertificateService {
         }
 
         const fonts = {
-            'Poppins-Regular.ttf': 'https://github.com/google/fonts/raw/main/ofl/poppins/static/Poppins-Regular.ttf',
-            'Poppins-Bold.ttf': 'https://github.com/google/fonts/raw/main/ofl/poppins/static/Poppins-Bold.ttf',
-            'Poppins-Italic.ttf': 'https://github.com/google/fonts/raw/main/ofl/poppins/static/Poppins-Italic.ttf',
-            'AlexBrush-Regular.ttf': 'https://github.com/google/fonts/raw/main/ofl/alexbrush/AlexBrush-Regular.ttf'
+            'Poppins-Regular.ttf': 'https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/Poppins-Regular.ttf',
+            'Poppins-Bold.ttf': 'https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/Poppins-Bold.ttf',
+            'Poppins-Italic.ttf': 'https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/Poppins-Italic.ttf',
+            'AlexBrush-Regular.ttf': 'https://raw.githubusercontent.com/google/fonts/main/ofl/alexbrush/AlexBrush-Regular.ttf'
         };
 
         for (const [name, url] of Object.entries(fonts)) {
@@ -181,12 +181,14 @@ class CertificateService {
 
                 if (hasPoppins) {
                     doc.registerFont('Poppins', path.join(fontDir, 'Poppins-Regular.ttf'));
+                    doc.registerFont('Poppins-Regular', path.join(fontDir, 'Poppins-Regular.ttf'));
                     doc.registerFont('Poppins-Bold', path.join(fontDir, 'Poppins-Bold.ttf'));
                     doc.registerFont('Poppins-Italic', path.join(fontDir, 'Poppins-Italic.ttf'));
                     doc.registerFont('AlexBrush', path.join(fontDir, 'AlexBrush-Regular.ttf'));
                 } else {
                     // Fallback to Helvetica
                     doc.registerFont('Poppins', 'Helvetica');
+                    doc.registerFont('Poppins-Regular', 'Helvetica');
                     doc.registerFont('Poppins-Bold', 'Helvetica-Bold');
                     doc.registerFont('Poppins-Italic', 'Helvetica-Oblique');
                     doc.registerFont('AlexBrush', 'Times-Roman');

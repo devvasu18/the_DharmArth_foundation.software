@@ -155,20 +155,14 @@ export default function TransactionsScreen() {
             )}
 
             {/* 80G */}
-            {txn.isDonation && (
-              txn.is80GUploaded && txn.certificate80GUrl ? (
-                <TouchableOpacity
-                  style={[styles.actionPill, { backgroundColor: '#f0fdf4', borderColor: '#dcfce7' }]}
-                  onPress={() => handleDownloadFile(`${api.defaults.baseURL.replace('/api', '')}${txn.certificate80GUrl}`, '80G certificate')}
-                >
-                  <Ionicons name="document-text-outline" size={12} color="#16a34a" />
-                  <Text style={[styles.actionPillText, { color: '#16a34a' }]}>80G</Text>
-                </TouchableOpacity>
-              ) : txn.is80G ? (
-                <View style={[styles.actionPill, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}>
-                  <Text style={[styles.actionPillText, { color: '#c2410c' }]}>80G Pending</Text>
-                </View>
-              ) : null
+            {txn.isDonation && txn.is80G && (
+              <TouchableOpacity
+                style={[styles.actionPill, { backgroundColor: '#f0fdf4', borderColor: '#dcfce7' }]}
+                onPress={() => handleDownloadFile(`${api.defaults.baseURL.replace('/api', '')}${txn.receiptUrl || txn.certificateUrl}`, '80G receipt')}
+              >
+                <Ionicons name="document-text-outline" size={12} color="#16a34a" />
+                <Text style={[styles.actionPillText, { color: '#16a34a' }]}>80G</Text>
+              </TouchableOpacity>
             )}
           </View>
         )}

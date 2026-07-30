@@ -883,34 +883,16 @@ const UserDashboard = () => {
                                                         )}
                                                     </td>
                                                     <td>
-                                                        {txn.isDonation ? (
-                                                            <>
-                                                                {txn.is80GUploaded && txn.certificate80GUrl ? (
-                                                                    <a
-                                                                        href={`${api.defaults.baseURL.replace('/api', '')}${txn.certificate80GUrl}`}
-                                                                        target="_blank"
-                                                                        rel="noreferrer"
-                                                                        className="btn-download-receipt"
-                                                                        style={{ background: '#f0fdf4', color: '#16a34a', border: '1px solid #dcfce7' }}
-                                                                        title="Download 80G Certificate"
-                                                                    >
-                                                                        <FilePdf size={12} /> 80G
-                                                                    </a>
-                                                                ) : txn.is80G ? (
-                                                                    <span
-                                                                        className="status-badge"
-                                                                        style={{ background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5', fontSize: '10px', padding: '2px 6px' }}
-                                                                    >
-                                                                        Pending
-                                                                    </span>
-                                                                ) : (
-                                                                    <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>No</span>
-                                                                )}
-                                                            </>
-                                                        ) : (
-                                                            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>-</span>
-                                                        )}
-                                                    </td>
+                                                         {txn.isDonation ? (
+                                                             txn.is80G ? (
+                                                                 <span style={{ color: '#16a34a', fontWeight: 'bold' }}>Yes</span>
+                                                             ) : (
+                                                                 <span style={{ color: '#94a3b8' }}>No</span>
+                                                             )
+                                                         ) : (
+                                                             <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>-</span>
+                                                         )}
+                                                     </td>
                                                 </tr>
                                             ))}
                                         </tbody>
