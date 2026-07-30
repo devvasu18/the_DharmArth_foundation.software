@@ -429,7 +429,7 @@ const LandingScreen = () => {
                   }}
                 >
                   <Ionicons name="flask-outline" size={28} color="#00bfa5" style={{ marginBottom: 6 }} />
-                  <Text style={styles.modalGridBtnText} numberOfLines={2}>
+                  <Text style={styles.modalGridBtnText} numberOfLines={3}>
                     {locale === 'hi' ? 'खून और पेशाब की जांच' : 'Blood & Urine Test'}
                   </Text>
                 </TouchableOpacity>
@@ -442,7 +442,7 @@ const LandingScreen = () => {
                   }}
                 >
                   <XRaySvg size={38} style={{ marginBottom: 6 }} />
-                  <Text style={styles.modalGridBtnText} numberOfLines={2}>
+                  <Text style={styles.modalGridBtnText} numberOfLines={3}>
                     {locale === 'hi' ? 'एक्स-रे और ईसीजी' : 'X-Ray & ECG'}
                   </Text>
                 </TouchableOpacity>
@@ -457,7 +457,7 @@ const LandingScreen = () => {
                   }}
                 >
                   <Ionicons name="body-outline" size={28} color="#00bfa5" style={{ marginBottom: 6 }} />
-                  <Text style={styles.modalGridBtnText} numberOfLines={2}>
+                  <Text style={styles.modalGridBtnText} numberOfLines={3}>
                     {locale === 'hi' ? 'फुल बॉडी चेकअप' : 'Full Body Checkup'}
                   </Text>
                 </TouchableOpacity>
@@ -470,7 +470,7 @@ const LandingScreen = () => {
                   }}
                 >
                   <Ionicons name="apps-outline" size={28} color="#00bfa5" style={{ marginBottom: 6 }} />
-                  <Text style={styles.modalGridBtnText} numberOfLines={2}>
+                  <Text style={styles.modalGridBtnText} numberOfLines={3}>
                     {locale === 'hi' ? 'सभी जांच' : 'All Tests'}
                   </Text>
                 </TouchableOpacity>
@@ -992,7 +992,6 @@ const styles = StyleSheet.create({
     color: '#334155',
     textAlign: 'center',
     marginTop: 4,
-    lineHeight: 14,
   },
 });
 

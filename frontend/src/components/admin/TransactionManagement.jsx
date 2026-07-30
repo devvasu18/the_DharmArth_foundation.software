@@ -31,7 +31,6 @@ const TransactionManagement = () => {
             commissionFilter: 'ALL',
             transactionType: 'ALL',
             is80G: false,
-            pending80G: false,
             locationQuery: '',
             sort: 'desc',
             limit: 20,
@@ -152,7 +151,6 @@ const TransactionManagement = () => {
                 page,
                 limit: filters.limit,
                 is80G: filters.is80G,
-                pending80G: filters.pending80G,
                 startDate: filters.dateRange.start,
                 endDate: filters.dateRange.end,
                 sort: filters.sort === 'asc' ? 'oldest' : 'newest',
@@ -326,7 +324,6 @@ const TransactionManagement = () => {
         if (key === 'comm') setFilters(prev => ({ ...prev, commissionFilter: 'ALL' }));
         if (key === 'type') setFilters(prev => ({ ...prev, transactionType: 'ALL' }));
         if (key === '80g') setFilters(prev => ({ ...prev, is80G: false }));
-        if (key === 'pending80g') setFilters(prev => ({ ...prev, pending80G: false }));
         if (key === 'date') setFilters(prev => ({ ...prev, dateRange: { start: '', end: '' } }));
         if (key === 'level') setFilters(prev => ({ ...prev, levelFilter: 'ALL', specificMotivatorIds: [] }));
         if (key === 'location') setFilters(prev => ({ ...prev, locationQuery: '' }));
@@ -695,20 +692,11 @@ const TransactionManagement = () => {
                 {/* 3. 80G Filter */}
                 <button
                     className={`filter-btn ${filters.is80G ? 'active' : ''}`}
-                    onClick={() => setFilters(prev => ({ ...prev, is80G: !prev.is80G, pending80G: false }))}
+                    onClick={() => setFilters(prev => ({ ...prev, is80G: !prev.is80G }))}
                 >
                     <FileText size={16} />
                     80G Donations
                     {filters.is80G && <CheckCircle size={14} />}
-                </button>
-
-                <button
-                    className={`filter-btn ${filters.pending80G ? 'active' : ''}`}
-                    onClick={() => setFilters(prev => ({ ...prev, pending80G: !prev.pending80G, is80G: false }))}
-                >
-                    <Upload size={16} />
-                    Pending 80G
-                    {filters.pending80G && <CheckCircle size={14} />}
                 </button>
 
                 {/* 3.5 Location Search Filter */}
@@ -886,7 +874,7 @@ const TransactionManagement = () => {
             </div>
 
             {/* Filter Chips */}
-            {(filters.searchUser || filters.is80G || filters.pending80G || filters.dateRange.start || filters.levelFilter !== 'ALL' || filters.specificMotivatorIds.length > 0 || filters.locationQuery) && (
+            {(filters.searchUser || filters.is80G || filters.dateRange.start || filters.levelFilter !== 'ALL' || filters.specificMotivatorIds.length > 0 || filters.locationQuery) && (
                 <div className="filter-chips">
                     {filters.searchUser && (
                         <span className="chip">User: {filters.searchUser.name} <X size={12} className="chip-remove" onClick={() => removeFilter('user')} /></span>
@@ -910,10 +898,7 @@ const TransactionManagement = () => {
                         </span>
                     )}
                     {filters.is80G && (
-                        <span className="chip">80G Uploaded <X size={12} className="chip-remove" onClick={() => removeFilter('80g')} /></span>
-                    )}
-                    {filters.pending80G && (
-                        <span className="chip">80G Pending <X size={12} className="chip-remove" onClick={() => removeFilter('pending80g')} /></span>
+                        <span className="chip">80G Donations <X size={12} className="chip-remove" onClick={() => removeFilter('80g')} /></span>
                     )}
                     {filters.dateRange.start && (
                         <span className="chip">Date Filter <X size={12} className="chip-remove" onClick={() => removeFilter('date')} /></span>
@@ -1004,41 +989,12 @@ const TransactionManagement = () => {
                                                 txn.level2UserId ? formatCurrency(txn.amount * 0.03) : <span className="status-badge badge-neutral">No</span>
                                             )}
                                         </td>
-                                        <td onClick={(e) => e.stopPropagation()}>
-                                            <div className="flex items-center gap-2">
-                                                {txn.is80G ? (
-                                                    <>
-                                                        {txn.is80GUploaded ? (
-                                                            <div className="flex items-center gap-1">
-                                                                <span className="status-badge badge-80g">Uploaded</span>
-                                                                <button
-                                                                    className="btn-txn-details text-blue-600 hover:bg-blue-50"
-                                                                    onClick={() => window.open(`${api.defaults.baseURL.replace('/api', '')}${txn.certificate80GUrl}`, '_blank')}
-                                                                    title="View 80G"
-                                                                >
-                                                                    <Eye size={14} />
-                                                                </button>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="flex items-center gap-1">
-                                                                <span className="status-badge badge-80g-pending">Pending</span>
-                                                                <button
-                                                                    className="btn-txn-details text-orange-600 hover:bg-orange-50"
-                                                                    onClick={() => {
-                                                                        setUploadingTxnId(txn._id);
-                                                                        fileInputRef.current.click();
-                                                                    }}
-                                                                    title="Upload 80G"
-                                                                >
-                                                                    <Upload size={14} />
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </>
-                                                ) : (
-                                                    <span className="status-badge badge-80g-no">No</span>
-                                                )}
-                                            </div>
+                                        <td>
+                                            {txn.is80G ? (
+                                                <span className="status-badge badge-80g">Yes</span>
+                                            ) : (
+                                                <span className="status-badge badge-80g-no">No</span>
+                                            )}
                                         </td>
                                         <td>
                                             <span className={`status-badge ${txn.status}`}>
@@ -1157,27 +1113,21 @@ const TransactionManagement = () => {
                                 {selectedTransaction.is80G && (
                                     <>
                                         <div className="breakdown-row pt-2 border-t border-slate-100 mt-2">
-                                             <span className="text-green-600 font-bold flex items-center gap-1">
+                                            <span className="text-green-600 font-bold flex items-center gap-1">
                                                 <CheckCircle size={14} /> 80G Benefit
                                             </span> 
-                                            {selectedTransaction.is80GUploaded ? (
-                                                <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
-                                                    <Lock size={10} /> CERTIFICATE ISSUED
-                                                </span>
-                                            ) : (
-                                                <button 
-                                                    className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"
-                                                    onClick={() => {
-                                                        setIsEditingTax(!isEditingTax);
-                                                        setEditTaxForm({
-                                                            panNumber: selectedTransaction.panNumber || '',
-                                                            aadhaarNumber: selectedTransaction.aadhaarNumber || ''
-                                                        });
-                                                    }}
-                                                >
-                                                    {isEditingTax ? 'Cancel' : <><Edit2 size={12} /> Edit Info</>}
-                                                </button>
-                                            )}
+                                            <button 
+                                                className="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1"
+                                                onClick={() => {
+                                                    setIsEditingTax(!isEditingTax);
+                                                    setEditTaxForm({
+                                                        panNumber: selectedTransaction.panNumber || '',
+                                                        aadhaarNumber: selectedTransaction.aadhaarNumber || ''
+                                                    });
+                                                }}
+                                            >
+                                                {isEditingTax ? 'Cancel' : <><Edit2 size={12} /> Edit Info</>}
+                                            </button>
                                         </div>
                                         
                                         {isEditingTax ? (

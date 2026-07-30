@@ -56,13 +56,8 @@ router.get('/', protect, adminOnly, async (req, res) => {
             filter.createdAt = { $gte: startDate, $lte: endDate };
         }
 
-        if (pending80G === 'true') {
+        if (is80G === 'true') {
             filter.is80G = true;
-            filter.is80GUploaded = { $ne: true };
-            filter.status = 'success';
-        } else if (is80G === 'true') {
-            filter.is80G = true;
-            filter.is80GUploaded = true;
             filter.status = 'success';
         }
 

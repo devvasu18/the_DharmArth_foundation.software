@@ -44,19 +44,10 @@ router.get('/dashboard', protect, adminOnly, async (req, res) => {
             };
         }
 
-        // 80G Filter (Strictly Uploaded)
+        // 80G Filter
         if (is80G === 'true') {
             andConditions.push({ 
-                is80G: true, 
-                is80GUploaded: true 
-            });
-        }
-
-        // Pending 80G Filter
-        if (pending80G === 'true') {
-            andConditions.push({ 
-                is80G: true, 
-                is80GUploaded: { $ne: true }
+                is80G: true
             });
         }
 
