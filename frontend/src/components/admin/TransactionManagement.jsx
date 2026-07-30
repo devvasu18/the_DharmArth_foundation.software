@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import api from '../../services/api';
+import api, { getPublicUrl } from '../../services/api';
 import {
     Search, Filter, Calendar, Download, ChevronDown, X,
     ArrowRight, User, CheckCircle, Wallet, FileText, Save, Upload, Eye, Edit2, Lock, MapPin
@@ -394,7 +394,7 @@ const TransactionManagement = () => {
             const res = await api.post(`/donate/regenerate-certificate/${id}`);
             toast.success("Certificate Regenerated");
             if (res.data.url) {
-                window.open(`${api.defaults.baseURL.replace('/api', '')}${res.data.url}`, '_blank');
+                window.open(getPublicUrl(res.data.url), '_blank');
             }
             fetchTransactions();
         } catch (err) {

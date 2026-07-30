@@ -7,6 +7,36 @@ if (API_BASE_URL.endsWith('/')) {
     API_BASE_URL = API_BASE_URL.slice(0, -1);
 }
 
+// Clean up API_BASE_URL if it doesn't start with protocol and is not relative
+if (API_BASE_URL && !API_BASE_URL.startsWith('http://') && !API_BASE_URL.startsWith('https://') && !API_BASE_URL.startsWith('/')) {
+    API_BASE_URL = `https://${API_BASE_URL}`;
+}
+
+const getPublicUrl = (path) => {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+    }
+    
+    let base = API_BASE_URL;
+    
+    // If it ends with /api, remove it so we point to the static file folder mount
+    if (base.endsWith('/api')) {
+        base = base.slice(0, -4);
+    }
+    
+    if (!base || base.startsWith('/')) {
+        base = window.location.origin;
+    }
+    
+    if (base.endsWith('/')) {
+        base = base.slice(0, -1);
+    }
+    
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${cleanPath}`;
+};
+
 console.log(`[API] Connected to Backend: ${API_BASE_URL}`);
 console.log(`[API] WhatsApp Gateway: ${import.meta.env.VITE_WHATSAPP_SERVICE_URL || 'Local (10000)'}`);
 
@@ -37,7 +67,7 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-export { API_BASE_URL };
+export { API_BASE_URL, getPublicUrl };
 
 
 // Handle global responses (like 401)

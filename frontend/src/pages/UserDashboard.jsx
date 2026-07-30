@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
-import api from '../services/api';
+import api, { getPublicUrl } from '../services/api';
 import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, Users, Network, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown, FileSpreadsheet, FileText as FilePdf, CheckCircle, AlertCircle, Award } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -870,7 +870,7 @@ const UserDashboard = () => {
                                                     <td>
                                                         {txn.isDonation && (txn.receiptUrl || txn.certificateUrl) ? (
                                                             <a
-                                                                href={`${api.defaults.baseURL.replace('/api', '')}${txn.receiptUrl || txn.certificateUrl}`}
+                                                                href={getPublicUrl(txn.receiptUrl || txn.certificateUrl)}
                                                                 target="_blank"
                                                                 rel="noreferrer"
                                                                 className="btn-download-receipt"
