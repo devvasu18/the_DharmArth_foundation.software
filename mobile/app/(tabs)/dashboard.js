@@ -126,7 +126,7 @@ export default function DashboardScreen() {
       
       let fullUrl = url;
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        const baseUrl = api.defaults.baseURL.replace('/api', '');
+        const baseUrl = api.defaults.baseURL.replace(/\/api$/, '');
         fullUrl = `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
       }
       
