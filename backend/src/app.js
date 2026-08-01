@@ -51,7 +51,40 @@ app.use('/api/', limiter);
 
 // Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
+const fs = require('fs');
 const path = require('path');
+app.get('/public/receipts/:fileName', async (req, res, next) => {
+    try {
+        const { fileName } = req.params;
+        const filePath = path.join(__dirname, '../public/receipts', fileName);
+        
+        // If file already exists, let next() (express.static) handle it
+        if (fs.existsSync(filePath)) {
+            return next();
+        }
+        
+        // Filename format: Receipt_D-YYYYMMDDXXXX.pdf
+        const match = fileName.match(/^Receipt_(.+)\.pdf$/);
+        if (match) {
+            const receiptNumber = match[1].replace(/_/g, '/');
+            const Donation = require('./models/Donation');
+            const donation = await Donation.findOne({ receiptNumber });
+            if (donation) {
+                const certificateService = require('./services/certificateService');
+                console.log(`[RECEIPT] Regenerating missing receipt ${receiptNumber} on the fly...`);
+                await certificateService.createCertificate(donation);
+                if (fs.existsSync(filePath)) {
+                    return res.sendFile(filePath);
+                }
+            }
+        }
+        next();
+    } catch (err) {
+        console.error("Error generating receipt on the fly:", err);
+        next();
+    }
+});
+
 app.use('/public', express.static(path.join(__dirname, '../public')));
 
 // Routes
