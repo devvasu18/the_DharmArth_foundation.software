@@ -11,7 +11,7 @@ export default function CapsuleSvg({ size = 38, color = '#FFFFFF', ...props }) {
       {...props}
     >
       {/* Capsule Group rotated and translated */}
-      <G transform="translate(190, 190) rotate(-45)">
+      <G transform="translate(210, 210) rotate(45)">
         {/* Outer Outline */}
         <Rect
           x="-65"
@@ -38,9 +38,9 @@ export default function CapsuleSvg({ size = 38, color = '#FFFFFF', ...props }) {
           fill={color}
         />
         
-        {/* Highlight Groove in the top-right cap */}
+        {/* Highlight Groove in the top-left cap */}
         <Path
-          d="M 12,-108 A 36,36 0 0,1 36,-84"
+          d="M -36,-84 A 36,36 0 0,1 -12,-108"
           stroke="#2b9ebb"
           strokeWidth="10"
           strokeLinecap="round"
@@ -50,15 +50,15 @@ export default function CapsuleSvg({ size = 38, color = '#FFFFFF', ...props }) {
       
       {/* Round Pill at bottom-right */}
       <Circle
-        cx="355"
-        cy="335"
+        cx="350"
+        cy="350"
         r="75"
         fill={color}
       />
       
       {/* Divider line/gap for the pill */}
       <Path
-        d="M 270,335 H 440"
+        d="M 265,350 H 435"
         stroke="#2b9ebb"
         strokeWidth="18"
         strokeLinecap="round"
