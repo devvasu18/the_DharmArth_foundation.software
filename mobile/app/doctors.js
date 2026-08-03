@@ -541,12 +541,14 @@ export default function DoctorsScreen() {
             </TouchableOpacity>
             <View style={styles.headerDivider} />
             <View style={styles.headerInfo}>
-              <Text style={styles.headerTypeLabel}>
+              <Text style={selectedType === 'clinic' ? styles.headerCatName : styles.headerTypeLabel}>
                 {locale === 'hi' ? 'डॉक्टरों की उपलब्धता' : 'Doctor Availability'}
               </Text>
-              <Text style={styles.headerCatName}>
-                {getFormattedDate()}
-              </Text>
+              {selectedType !== 'clinic' && (
+                <Text style={styles.headerCatName}>
+                  {getFormattedDate()}
+                </Text>
+              )}
             </View>
           </View>
         </View>

@@ -400,7 +400,7 @@ export default function TabLayout() {
                 </ScrollView>
 
                 <View style={styles.menuFooter}>
-                  <Text style={styles.footerBrand}>The DharmArth Foundation</Text>
+                  <Text style={styles.footerBrand}>The Dharmarth Foundation</Text>
                   <Text style={styles.footerVersion}>v1.0.0 Mirror Experience</Text>
                 </View>
               </View>

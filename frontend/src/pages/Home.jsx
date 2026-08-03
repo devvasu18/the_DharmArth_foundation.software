@@ -34,7 +34,7 @@ const Home = () => {
         };
         fetchContactInfo();
     }, []);
-    
+
     const organizationSchema = {
         "@context": "https://schema.org",
         "@type": "NGO",
@@ -64,9 +64,9 @@ const Home = () => {
 
     return (
         <div>
-            <SEO 
-                title="The DharmArth Foundation | Government Approved 80G Donation & NGO in India"
-                description="Donate online to The DharmArth Foundation, a government-approved NGO providing free medicine services, healthcare assistance, and blood donation support in Sujangarh, Churu District, Rajasthan, and across India. Claim tax exemption with our 80G tax saving donation options."
+            <SEO
+                title="The Dharmarth Medical Foundation | Government Approved 80G Donation & NGO in India"
+                description="Donate online to The Dharmarth Medical Foundation, a government approved NGO providing to provide better medicine, tests and better consultation at a lower cost in Rajasthan, India."
                 keywords="NGO, Donation, Online Donation, Donate in India, Government Approved Donation, 80G Donation, Tax Saving Donation, Charity Organization India, Medical Donation, Medicine Donation, Blood Donation, Healthcare NGO, Free Medicine Service, Medicine Delivery India, Medicine Ordering Rajasthan, Government Hospital Services, Doctor Availability, Health Checkup, Diagnostic Tests, Social Welfare, Community Healthcare, Emergency Medical Support, Sujangarh, Rajasthan, India"
                 jsonLd={organizationSchema}
             />

@@ -100,7 +100,7 @@ export default function DeleteAccountScreen() {
     Alert.alert(
       '⚠️ Final Confirmation',
       walletBalance > 0
-        ? `Your wallet balance of ₹${walletBalance} will be donated to The DharmArth Foundation.\n\nThis action is PERMANENT and cannot be undone. Are you absolutely sure?`
+        ? `Your wallet balance of ₹${walletBalance} will be donated to The Dharmarth Medical Foundation.\n\nThis action is PERMANENT and cannot be undone. Are you absolutely sure?`
         : `This action is PERMANENT and cannot be undone. Are you absolutely sure?`,
       [
         { text: 'Cancel', style: 'cancel' },
@@ -136,7 +136,7 @@ export default function DeleteAccountScreen() {
         </View>
         <Text style={styles.doneTitle}>Account Deleted</Text>
         <Text style={styles.doneSubtitle}>
-          Your account has been successfully deleted. Thank you for your time with The DharmArth Foundation. 🙏
+          Your account has been successfully deleted. Thank you for your time with The Dharmarth Medical Foundation. 🙏
         </Text>
         {walletBalance > 0 && (
           <View style={styles.donationNote}>
@@ -208,7 +208,7 @@ export default function DeleteAccountScreen() {
         <View style={styles.walletNotice}>
           <Ionicons name="wallet-outline" size={20} color="#7c3aed" />
           <Text style={styles.walletNoticeText}>
-            If your wallet has a balance, it will be <Text style={{ fontWeight: '800' }}>automatically donated</Text> to The DharmArth Foundation when you delete your account.
+            If your wallet has a balance, it will be <Text style={{ fontWeight: '800' }}>automatically donated</Text> to The Dharmarth Medical Foundation when you delete your account.
           </Text>
         </View>
       </View>

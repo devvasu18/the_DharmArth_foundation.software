@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  RefreshControl, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
   ActivityIndicator,
   Linking,
   Platform
@@ -57,21 +57,21 @@ export default function Referrals() {
     const motivatorName = user?.name || 'Your Motivator';
     const mobile = referral.donorMobile;
     const amount = referral.amount;
-    
+
     // Construct the re-donation link (pointing to the app's donate page)
-    const donationUrl = Linking.createURL('/donate', { 
-      queryParams: { 
-        motivator: user?.mobile, 
-        name: donorName, 
-        mobile: mobile, 
-        amount: amount 
-      } 
+    const donationUrl = Linking.createURL('/donate', {
+      queryParams: {
+        motivator: user?.mobile,
+        name: donorName,
+        mobile: mobile,
+        amount: amount
+      }
     });
 
-    const message = `Namaste ${donorName}, this is ${motivatorName} from The DharmArth Foundation. 🕉️\n\nYour monthly contribution of ₹${amount} has stopped. We invite you to continue your noble support.\n\nRestart here: ${donationUrl}`;
+    const message = `Namaste ${donorName}, this is ${motivatorName} from The Dharmarth Medical Foundation. 🕉️\n\nYour monthly contribution of ₹${amount} has stopped. We invite you to continue your noble support.\n\nRestart here: ${donationUrl}`;
 
     const whatsappUrl = `whatsapp://send?phone=91${mobile}&text=${encodeURIComponent(message)}`;
-    
+
     Linking.canOpenURL(whatsappUrl).then(supported => {
       if (supported) {
         Linking.openURL(whatsappUrl);
@@ -128,13 +128,13 @@ export default function Referrals() {
   return (
     <View style={styles.container}>
       <View style={styles.filterBar}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.filterTab, statusFilter === 'active' && styles.activeFilterTab]}
           onPress={() => setStatusFilter('active')}
         >
           <Text style={[styles.filterTabText, statusFilter === 'active' && styles.activeFilterTabText]}>Active</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.filterTab, statusFilter === 'inactive' && styles.activeFilterTab]}
           onPress={() => setStatusFilter('inactive')}
         >

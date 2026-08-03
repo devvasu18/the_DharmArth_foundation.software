@@ -15,7 +15,7 @@ const API_URL = `${API_BASE_URL}/api`;
 const synonymMap = {
     // Blood tests
     "blood": ["cbc", "blood count", "hemogram", "sugar", "glucose", "lipid", "cholesterol", "serum", "plasma", "haemoglobin", "hb", "platelet", "wbc", "rbc"],
-    "cbc": ["blood count", "hemogram", "blood test", "complete blood count", "haemoglobin", "hb"],
+    "cbc": ["blood count", "hemogram", "complete blood count", "haemoglobin", "hb"],
     "hemogram": ["cbc", "blood count", "complete blood count"],
     "haemoglobin": ["hb", "cbc", "blood count", "iron", "anemia"],
     "hb": ["haemoglobin", "cbc", "blood count", "iron", "anemia"],

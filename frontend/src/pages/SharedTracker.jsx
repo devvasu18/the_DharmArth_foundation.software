@@ -229,17 +229,17 @@ const SharedTracker = () => {
                                             </div>
                                         </div>
 
-                                        <button 
+                                        <button
                                             onClick={() => window.open(`${API_BASE_URL}/api/orders/public/${order._id}/invoice`, '_blank')}
-                                            style={{ 
-                                                width: '100%', 
-                                                marginTop: '20px', 
-                                                padding: '12px', 
-                                                borderRadius: '12px', 
-                                                background: '#fff', 
-                                                border: '1px solid #e2e8f0', 
-                                                color: '#475569', 
-                                                fontWeight: '700', 
+                                            style={{
+                                                width: '100%',
+                                                marginTop: '20px',
+                                                padding: '12px',
+                                                borderRadius: '12px',
+                                                background: '#fff',
+                                                border: '1px solid #e2e8f0',
+                                                color: '#475569',
+                                                fontWeight: '700',
                                                 fontSize: '12px',
                                                 display: 'flex',
                                                 alignItems: 'center',
@@ -262,7 +262,7 @@ const SharedTracker = () => {
                 </div>
 
                 <div className="modal-actions-premium" style={{ padding: '20px', background: '#f8fafc', textAlign: 'center', fontSize: '12px', color: '#94a3b8' }}>
-                    <p>© 2026 The DharmArth Foundation. Secure Health Logistics.</p>
+                    <p>© 2026 The Dharmarth Medical Foundation. Secure Health Logistics.</p>
                 </div>
             </div>
 

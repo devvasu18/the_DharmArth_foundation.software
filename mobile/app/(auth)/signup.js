@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  ActivityIndicator, 
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -28,7 +28,7 @@ export default function Signup() {
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const { locale, changeLanguage } = useTranslation();
   const router = useRouter();
@@ -98,9 +98,9 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/register', { 
-        name, 
-        mobile, 
+      const { data } = await api.post('/auth/register', {
+        name,
+        mobile,
         password,
         otp
       });
@@ -119,7 +119,7 @@ export default function Signup() {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
@@ -130,7 +130,7 @@ export default function Signup() {
             <Text style={styles.langText}>{locale === 'hi' ? 'English' : 'हिंदी'}</Text>
           </TouchableOpacity>
           <Text style={styles.title}>{locale === 'hi' ? 'खाता बनाएं' : 'Create Account'}</Text>
-          <Text style={styles.subtitle}>{locale === 'hi' ? 'धर्मअर्थ फाउंडेशन से जुड़ें' : 'Join the DharmArth Foundation'}</Text>
+          <Text style={styles.subtitle}>{locale === 'hi' ? 'धर्मअर्थ मेडिकल फाउंडेशन से जुड़ें' : 'Join the Dharmarth Medical Foundation'}</Text>
         </View>
 
         <View style={styles.card}>
@@ -187,14 +187,14 @@ export default function Signup() {
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                 />
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeIcon}
                 >
-                  <Ionicons 
-                    name={showPassword ? 'eye-off' : 'eye'} 
-                    size={20} 
-                    color="#64748b" 
+                  <Ionicons
+                    name={showPassword ? 'eye-off' : 'eye'}
+                    size={20}
+                    color="#64748b"
                   />
                 </TouchableOpacity>
               </View>
@@ -218,7 +218,7 @@ export default function Signup() {
             )}
 
             {!otpSent ? (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.signupButton, isClaiming && styles.claimButton]}
                 onPress={handleSendOTP}
                 disabled={otpLoading || checkingMobile}
@@ -232,7 +232,7 @@ export default function Signup() {
                 )}
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.signupButton, isClaiming && styles.claimButton]}
                 onPress={handleSignup}
                 disabled={loading || checkingMobile}
@@ -241,7 +241,7 @@ export default function Signup() {
                   <ActivityIndicator color="white" />
                 ) : (
                   <Text style={styles.signupButtonText}>
-                    {isClaiming 
+                    {isClaiming
                       ? (locale === 'hi' ? 'सत्यापित करें और खाता सेट करें' : 'Verify & Setup Account')
                       : (locale === 'hi' ? 'सत्यापित करें और खाता बनाएं' : 'Verify & Create Account')
                     }

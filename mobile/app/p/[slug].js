@@ -26,7 +26,7 @@ export default function DynamicCmsScreen() {
   const router = useRouter();
   const { locale, t } = useTranslation();
   const { user } = useAuth();
-  
+
   const [pageData, setPageData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -63,7 +63,7 @@ export default function DynamicCmsScreen() {
     const cleaned = text.replace(/<[^>]*>/g, '').trim().toLowerCase();
 
     if (cleaned.includes('become a mission partner')) return 'मिशन भागीदार बनें';
-    if (cleaned.includes('join the dharmarth foundation as a motivator')) return 'एक प्रेरक के रूप में द धर्मार्थ फाउंडेशन से जुड़ें। जीवन बदलने वाले कारणों से दाताओं को जोड़ने में हमारी मदद करें और अपने प्रभाव के लिए पारदर्शी प्रोत्साहन अर्जित करें।';
+    if (cleaned.includes('join the dharmarth Medical foundation as a motivator')) return 'एक प्रेरक के रूप में द धर्मार्थ फाउंडेशन से जुड़ें। जीवन बदलने वाले कारणों से दाताओं को जोड़ने में हमारी मदद करें और अपने प्रभाव के लिए पारदर्शी प्रोत्साहन अर्जित करें।';
     if (cleaned.includes('how it works')) return 'यह कैसे काम करता है';
     if (cleaned.includes('a simple, transparent process')) return 'एक प्रेरक के रूप में अपनी यात्रा शुरू करने की एक सरल, पारदर्शी प्रक्रिया।';
     if (cleaned.includes('create account')) return 'खाता बनाएं';
@@ -176,13 +176,13 @@ export default function DynamicCmsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
-      <Stack.Screen 
-        options={{ 
+      <Stack.Screen
+        options={{
           title: title || 'Page',
           headerTitleStyle: { fontWeight: '800', color: '#1e293b' },
           headerTintColor: '#00bfa5',
           headerStyle: { backgroundColor: 'white' }
-        }} 
+        }}
       />
       <ScrollView contentContainerStyle={{ paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         {pageData.components.map((component, idx) => {
@@ -211,7 +211,7 @@ export default function DynamicCmsScreen() {
                     }
 
                     return (
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         style={styles.videoCard}
                         activeOpacity={0.9}
                         onPress={() => Linking.openURL(videoUrl).catch(err => console.log(err))}
@@ -242,7 +242,7 @@ export default function DynamicCmsScreen() {
               const slideTitle = getLocalizedValue(slide, 'title');
               const slideSubtitle = getLocalizedValue(slide, 'subtitle');
               const buttonText = getLocalizedValue(slide, 'buttonText');
-              
+
               return (
                 <View key={`comp-${idx}`} style={styles.heroSection}>
                   {slide.image ? (
@@ -251,7 +251,7 @@ export default function DynamicCmsScreen() {
                         <Text style={styles.heroTitle}>{slideTitle}</Text>
                         <Text style={styles.heroSubtitle}>{slideSubtitle}</Text>
                         {buttonText !== '' && (
-                          <TouchableOpacity 
+                          <TouchableOpacity
                             style={styles.heroBtn}
                             onPress={() => handleCtaPress(slide.buttonLink)}
                           >
@@ -267,7 +267,7 @@ export default function DynamicCmsScreen() {
                         <Text style={[styles.heroTitle, { color: '#0f172a' }]}>{slideTitle}</Text>
                         <Text style={[styles.heroSubtitle, { color: '#475569' }]}>{slideSubtitle}</Text>
                         {buttonText !== '' && (
-                          <TouchableOpacity 
+                          <TouchableOpacity
                             style={styles.heroBtn}
                             onPress={() => handleCtaPress(slide.buttonLink)}
                           >
@@ -290,7 +290,7 @@ export default function DynamicCmsScreen() {
                 <View key={`comp-${idx}`} style={styles.section}>
                   <Text style={styles.sectionTitle}>{compTitle}</Text>
                   {compSubtitle !== '' && <Text style={styles.sectionSubtitle}>{compSubtitle}</Text>}
-                  
+
                   <View style={styles.processList}>
                     {steps.map((step, sIdx) => {
                       const stepTitle = getLocalizedValue(step, 'title');
@@ -347,7 +347,7 @@ export default function DynamicCmsScreen() {
                 <View key={`comp-${idx}`} style={styles.section}>
                   <Text style={styles.sectionTitle}>{compTitle}</Text>
                   {compSubtitle !== '' && <Text style={styles.sectionSubtitle}>{compSubtitle}</Text>}
-                  
+
                   <View style={styles.featuresList}>
                     {items.map((feat, fIdx) => {
                       const fTitle = getLocalizedValue(feat, 'title');
@@ -376,8 +376,8 @@ export default function DynamicCmsScreen() {
               return (
                 <View key={`comp-${idx}`} style={styles.section}>
                   <Text style={styles.sectionTitle}>{compTitle}</Text>
-                  <ScrollView 
-                    horizontal 
+                  <ScrollView
+                    horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.testimonialsScroll}
                   >
@@ -426,7 +426,7 @@ export default function DynamicCmsScreen() {
                       const isExpanded = !!expandedFaqs[fIdx];
                       return (
                         <View key={`faq-${fIdx}`} style={styles.faqCard}>
-                          <TouchableOpacity 
+                          <TouchableOpacity
                             style={styles.faqHeader}
                             activeOpacity={0.7}
                             onPress={() => toggleFaq(fIdx)}
@@ -455,7 +455,7 @@ export default function DynamicCmsScreen() {
                 <View key={`comp-${idx}`} style={styles.section}>
                   <Text style={styles.sectionTitle}>{compTitle}</Text>
                   {compSubtitle !== '' && <Text style={styles.sectionSubtitle}>{compSubtitle}</Text>}
-                  
+
                   <View style={styles.faqWrapper}>
                     {items.map((item, aIdx) => {
                       const rowTitle = getLocalizedValue(item, 'title');
@@ -463,7 +463,7 @@ export default function DynamicCmsScreen() {
                       const isExpanded = !!expandedAccordions[aIdx];
                       return (
                         <View key={`accordion-${aIdx}`} style={styles.faqCard}>
-                          <TouchableOpacity 
+                          <TouchableOpacity
                             style={styles.faqHeader}
                             activeOpacity={0.7}
                             onPress={() => toggleAccordion(aIdx)}
@@ -489,14 +489,14 @@ export default function DynamicCmsScreen() {
               const compSubtitle = getLocalizedValue(data, 'subtitle');
               const btnText = getLocalizedValue(data, 'buttonText');
               const btnLink = data.buttonLink || '';
-              
+
               return (
                 <View key={`comp-${idx}`} style={styles.section}>
                   <View style={styles.ctaCard}>
                     <Text style={styles.ctaTitle}>{compTitle}</Text>
                     {compSubtitle !== '' && <Text style={styles.ctaSubtitle}>{compSubtitle}</Text>}
                     {btnText !== '' && (
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         style={styles.ctaBtn}
                         onPress={() => handleCtaPress(btnLink)}
                       >
@@ -518,16 +518,16 @@ export default function DynamicCmsScreen() {
                     <Ionicons name="chatbubbles-outline" size={48} color="#00bfa5" style={{ marginBottom: 12 }} />
                     <Text style={styles.contactTitle}>{compTitle}</Text>
                     {compSubtitle !== '' && <Text style={styles.contactSubtitle}>{compSubtitle}</Text>}
-                    
+
                     <View style={styles.contactActions}>
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         style={styles.contactBtn}
                         onPress={() => Linking.openURL('tel:+918306305569')}
                       >
                         <Ionicons name="call" size={18} color="white" />
                         <Text style={styles.contactBtnText}>Call Helpline</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         style={[styles.contactBtn, { backgroundColor: '#475569' }]}
                         onPress={() => Linking.openURL('mailto:support@dharmarth.org')}
                       >
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 16,
   },
-  
+
   // Video styling
   videoCard: {
     borderRadius: 16,

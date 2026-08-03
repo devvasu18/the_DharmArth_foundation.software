@@ -86,7 +86,7 @@ export default function PublicVolunteerCardScreen() {
           <Ionicons name="shield-checkmark" size={16} color="#00bfa5" />
           <Text style={styles.verifiedText}>Verified Volunteer Identity</Text>
         </View>
-        <Text style={styles.foundationText}>The DharmArth Foundation</Text>
+        <Text style={styles.foundationText}>The Dharmarth Medical Foundation</Text>
       </View>
 
       {/* ID Card */}

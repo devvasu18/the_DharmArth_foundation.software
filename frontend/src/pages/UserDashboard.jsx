@@ -630,7 +630,7 @@ const UserDashboard = () => {
                                 </div>
 
                                 <p className="share-desc ">
-                                    Share this personalized link with your network. When someone donates using your link, you receive a <strong>10% commission</strong> instantly in your wallet!
+                                    Share this  link with your freinds by Whatsapp. When someone donates using your link, you receive a <strong>10% commission</strong> instantly in your wallet!
                                 </p>
 
                                 <div className="referral-code-label">
@@ -883,16 +883,16 @@ const UserDashboard = () => {
                                                         )}
                                                     </td>
                                                     <td>
-                                                         {txn.isDonation ? (
-                                                             txn.is80G ? (
-                                                                 <span style={{ color: '#16a34a', fontWeight: 'bold' }}>Yes</span>
-                                                             ) : (
-                                                                 <span style={{ color: '#94a3b8' }}>No</span>
-                                                             )
-                                                         ) : (
-                                                             <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>-</span>
-                                                         )}
-                                                     </td>
+                                                        {txn.isDonation ? (
+                                                            txn.is80G ? (
+                                                                <span style={{ color: '#16a34a', fontWeight: 'bold' }}>Yes</span>
+                                                            ) : (
+                                                                <span style={{ color: '#94a3b8' }}>No</span>
+                                                            )
+                                                        ) : (
+                                                            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>-</span>
+                                                        )}
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>

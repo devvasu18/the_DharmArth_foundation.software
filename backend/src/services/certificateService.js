@@ -226,13 +226,13 @@ class CertificateService {
                         amountInWords: 'Amount in Words',
                         paymentMode: 'Payment Mode',
                         transactionId: 'Transaction ID',
-                        utrNo: 'UTR / Reference No.',
+                        utrNo: 'UTR / Reference',
                         purpose: 'Purpose / For',
                         generalDonation: 'General Donation',
                         taxBenefitHeader: 'TAX BENEFIT UNDER SECTION 80G',
                         taxBenefitSubtext: 'Eligible for deduction under Section 80G of the Income Tax Act, 1961.',
-                        taxBenefitCert: '80G Certificate No.: AANAT8534F2025101',
-                        taxBenefitPan: 'PAN No.: AANAT8534C',
+                        taxBenefitCert: '80G Certificate No.: AAMCT5135CF2025101',
+                        taxBenefitPan: 'PAN No.: AAMCT5135C',
                         verifyHeader: 'VERIFY THIS RECEIPT',
                         verifyText: 'Scan the QR code to verify this receipt online.',
                         verifyUrl: 'thedharmarth.com/verify',
@@ -269,13 +269,13 @@ class CertificateService {
                         amountInWords: 'शब्दों में राशि',
                         paymentMode: 'भुगतान का प्रकार',
                         transactionId: 'लेनदेन आईडी',
-                        utrNo: 'यूटीआर / संदर्भ संख्या',
+                        utrNo: 'यूटीआर / संदर्भ',
                         purpose: 'उद्देश्य / के लिए',
                         generalDonation: 'सामान्य दान',
                         taxBenefitHeader: 'धारा 80G के तहत कर लाभ',
                         taxBenefitSubtext: 'आयकर अधिनियम, 1961 की धारा 80G के तहत कटौती के लिए पात्र।',
-                        taxBenefitCert: '80G प्रमाण पत्र संख्या: AANAT8534F2025101',
-                        taxBenefitPan: 'पैन संख्या: AANAT8534C',
+                        taxBenefitCert: '80G प्रमाण पत्र संख्या: AAMCT5135CF2025101',
+                        taxBenefitPan: 'पैन संख्या: AAMCT5135C',
                         verifyHeader: 'इस रसीद को सत्यापित करें',
                         verifyText: 'इस रसीद को ऑनलाइन सत्यापित करने के लिए क्यूआर कोड स्कैन करें।',
                         verifyUrl: 'thedharmarth.com/verify',
@@ -338,10 +338,10 @@ class CertificateService {
                 doc.text(lang.darpanId, 25 + 3 * regColWidth, regY + 3, { align: 'center', width: regColWidth });
 
                 doc.fillColor(textDark).font('Poppins-Bold').fontSize(7);
-                doc.text('COOP/2024/CHURU/201345', 25, regY + 12, { align: 'center', width: regColWidth });
-                doc.text('AANAT8534C', 25 + regColWidth, regY + 12, { align: 'center', width: regColWidth });
-                doc.text('AANAT8534F2025101', 25 + 2 * regColWidth, regY + 12, { align: 'center', width: regColWidth });
-                doc.text('RJ/2024/0456789', 25 + 3 * regColWidth, regY + 12, { align: 'center', width: regColWidth });
+                doc.text('U88900RJ2025NPL109195', 25, regY + 12, { align: 'center', width: regColWidth });
+                doc.text('AAMCT5135C', 25 + regColWidth, regY + 12, { align: 'center', width: regColWidth });
+                doc.text('AAMCT5135CF2025101', 25 + 2 * regColWidth, regY + 12, { align: 'center', width: regColWidth });
+                doc.text('RJ/2025/0914219', 25 + 3 * regColWidth, regY + 12, { align: 'center', width: regColWidth });
 
                 // Border enclosing registration info
                 doc.rect(25, regY, 545, 22).lineWidth(0.5).strokeColor(borderGrey).stroke();
@@ -520,31 +520,31 @@ class CertificateService {
                 const drawCurvedText = (text, cx, cy, radius, startAngleDegree, endAngleDegree, faceInwards, fontSize) => {
                     doc.fontSize(fontSize);
                     const chars = text.split('');
-                    
+
                     // Calculate widths and total width
                     const widths = chars.map(char => doc.widthOfString(char));
                     const letterSpacing = 0.6; // spacing in points
                     const totalWidth = widths.reduce((sum, w) => sum + w, 0) + (chars.length - 1) * letterSpacing;
-                    
+
                     const totalAngle = totalWidth / radius; // in radians
                     const midAngle = ((startAngleDegree + endAngleDegree) / 2) * Math.PI / 180;
-                    
+
                     // For top text, angle increases clockwise. For bottom text, angle decreases clockwise.
                     const isDecreasing = (startAngleDegree > endAngleDegree);
-                    
+
                     const startAngle = isDecreasing ? (midAngle + totalAngle / 2) : (midAngle - totalAngle / 2);
                     const totalAngleRange = isDecreasing ? -totalAngle : totalAngle;
-                    
+
                     let currentWidth = 0;
-                    
+
                     chars.forEach((char, i) => {
                         const charWidth = widths[i];
                         const charCenterOffset = currentWidth + charWidth / 2;
-                        
+
                         const angle = startAngle + (charCenterOffset / totalWidth) * totalAngleRange;
                         const x = cx + radius * Math.cos(angle);
                         const y = cy + radius * Math.sin(angle);
-                        
+
                         doc.save();
                         doc.translate(x, y);
                         if (faceInwards) {
@@ -552,11 +552,11 @@ class CertificateService {
                         } else {
                             doc.rotate(angle + Math.PI / 2);
                         }
-                        
+
                         // Vertically center using baseline middle
                         doc.text(char, -charWidth / 2, 0, { baseline: 'middle' });
                         doc.restore();
-                        
+
                         currentWidth += charWidth + letterSpacing;
                     });
                 };

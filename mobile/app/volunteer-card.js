@@ -44,7 +44,7 @@ export default function VolunteerCardScreen() {
           <Ionicons name="shield-checkmark" size={16} color="#00bfa5" />
           <Text style={styles.verifiedText}>Verified Volunteer Identity</Text>
         </View>
-        <Text style={styles.foundationText}>The DharmArth Foundation</Text>
+        <Text style={styles.foundationText}>The Dharmarth Medical Foundation</Text>
       </View>
 
       {/* ID Card */}
@@ -62,7 +62,7 @@ export default function VolunteerCardScreen() {
             </View>
 
             <View style={styles.brandArea}>
-              <Text style={styles.brandName}>The DharmArth</Text>
+              <Text style={styles.brandName}>The Dharmarth</Text>
               <Text style={styles.brandSub}>Medical Foundation</Text>
             </View>
           </View>
