@@ -287,18 +287,31 @@ const LandingScreen = () => {
               style={[
                 styles.quickLinkBtn,
                 {
-                  backgroundColor: '#1f5de2ff',
-                  paddingHorizontal: 20,
+                  backgroundColor: '#d1b485',
+                  paddingLeft: 24,
+                  paddingRight: 16,
                   justifyContent: 'flex-start',
+                  alignItems: 'center',
                   gap: 14,
                 }
               ]}
               onPress={() => router.push('/share-earn')}
             >
-              <Text style={[styles.quickLinkText, { fontSize: 18, flex: 0 }]}>
+              <Text
+                style={[
+                  styles.quickLinkText,
+                  {
+                    fontSize: 18,
+                    lineHeight: 26,
+                    flex: 0,
+                    paddingTop: 2,
+                    paddingBottom: 2,
+                  }
+                ]}
+              >
                 {locale === 'hi' ? 'शेयर करें और कमाएं' : 'Share and Earn'}
               </Text>
-              <Ionicons name="share-social" size={32} color="white" />
+              <Ionicons name="share-social" size={30} color="white" />
             </TouchableOpacity>
           </View>
         </View>

@@ -3,7 +3,7 @@
     "name": "The Dharmarth",
     "slug": "dharmarth-mobile",
     "scheme": "dharmarth",
-    "version": "1.0.11",
+    "version": "1.0.13",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.thedharmarth.foundation",
-      "buildNumber": "11",
+      "buildNumber": "13",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "We use your location to accurately fill in your address for donation receipts, billing details, and local community registration.",
@@ -34,7 +34,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.thedharmarth.foundation",
-      "versionCode": 11,
+      "versionCode": 13,
       "edgeToEdgeEnabled": true,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
