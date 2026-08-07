@@ -188,10 +188,6 @@ const LandingScreen = () => {
           <View style={styles.heroContent}>
             {textSlides[currentTextIndex] && (
               <View key={`hero-txt-${textSlides[currentTextIndex]._id || ''}-${currentTextIndex}`}>
-                <Text style={styles.heroDescription}>
-                  {locale === 'hi' && textSlides[currentTextIndex].subtitle_hi ? textSlides[currentTextIndex].subtitle_hi : (textSlides[currentTextIndex].subtitle || 'Empowering change through your generous contributions.')}
-                </Text>
-
                 <TouchableOpacity
                   style={styles.heroCta}
                   onPress={() => {
@@ -263,7 +259,7 @@ const LandingScreen = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.quickLinkBtn, { backgroundColor: '#2b9ebb', position: 'relative' }]}
+              style={[styles.quickLinkBtn, { backgroundColor: '#47b7d3ff', position: 'relative' }]}
               activeOpacity={1}
             >
               <View style={{
@@ -283,6 +279,18 @@ const LandingScreen = () => {
                 {locale === 'hi' ? 'ऑनलाइन\nदवा ऑर्डर करें' : 'Order Online\nMedicine'}
               </Text>
               <CapsuleSvg size={42} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.quickLinksRow}>
+            <TouchableOpacity
+              style={[styles.quickLinkBtn, { backgroundColor: '#1f5de2ff' }]}
+              onPress={() => router.push('/share-earn')}
+            >
+              <Text style={styles.quickLinkText}>
+                {locale === 'hi' ? 'शेयर करें और कमाएं' : 'Share and Earn'}
+              </Text>
+              <Ionicons name="share-social" size={38} color="white" />
             </TouchableOpacity>
           </View>
         </View>

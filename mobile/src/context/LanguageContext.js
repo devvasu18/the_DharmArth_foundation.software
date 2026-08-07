@@ -177,7 +177,7 @@ const translations = {
       withdrawNow: "Withdraw Now",
       donateWallet: "Donate From Wallet",
       shareEarn: "Share & Earn",
-      shareDesc: "Share this  link with your freinds by whatsapp. When someone donates using your link, you receive a 10% commission instantly in your wallet!",
+      shareDesc: "Share this  link with your friends by whatsapp. When someone donates using your link, you receive a 10% commission instantly in your wallet!",
       referralCode: "Referral Code:",
       copy: "Copy",
       copied: "Link Copied!",
@@ -409,6 +409,19 @@ const translations = {
       willRemindLater: "We'll remind you later!",
       oops: "Oops",
       somethingWentWrong: "Something went wrong, but you can still donate later!"
+    },
+    volunteerCard: {
+      screenTitle: "Volunteer Card",
+      identityTitle: "Identity Card",
+      verifiedIdentity: "Verified Volunteer Identity",
+      foundationName: "The Dharmarth Medical Foundation",
+      official: "Official",
+      brandName: "The Dharmarth",
+      brandSub: "Medical Foundation",
+      reffCode: "Reff Code",
+      officialID: "Official ID",
+      verified: "Verified",
+      trusted: "Trusted"
     }
   },
   hi: {
@@ -584,7 +597,7 @@ const translations = {
       withdrawNow: "अभी निकालें",
       donateWallet: "वॉलेट से दान करें",
       shareEarn: "शेयर करें और कमाएं",
-      shareDesc: "अपने मित्रों और परिचितों के साथ इस  लिंक को साझा करें। जब कोई आपके लिंक का उपयोग करके दान करता है, तो आपको अपने वॉलेट में तुरंत 10% कमीशन प्राप्त होता है!",
+      shareDesc: "अपने मित्रों और परिचितों के साथ इस  लिंक को व्हाट्सएप के द्वारा साझा करें। जब कोई आपके लिंक का उपयोग करके दान करता है, तो आपको अपने वॉलेट में तुरंत 10% कमीशन प्राप्त होता है!",
       referralCode: "रेफ़रल कोड:",
       copy: "कॉपी",
       copied: "लिंक कॉपी हो गया!",
@@ -818,6 +831,19 @@ const translations = {
       willRemindLater: "हम आपको बाद में याद दिलाएंगे!",
       oops: "उफ़",
       somethingWentWrong: "कुछ गलत हो गया, लेकिन आप बाद में दान कर सकते हैं!"
+    },
+    volunteerCard: {
+      screenTitle: "वोलंटियर कार्ड",
+      identityTitle: "पहचान पत्र",
+      verifiedIdentity: "सत्यापित स्वयंसेवक पहचान",
+      foundationName: "द धर्मार्थ मेडिकल फाउंडेशन",
+      official: "आधिकारिक",
+      brandName: "द धर्मार्थ",
+      brandSub: "मेडिकल फाउंडेशन",
+      reffCode: "रेफरल कोड",
+      officialID: "आधिकारिक ID",
+      verified: "सत्यापित",
+      trusted: "विश्वसनीय"
     }
   }
 };

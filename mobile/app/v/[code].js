@@ -79,14 +79,14 @@ export default function PublicVolunteerCardScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <Stack.Screen options={{ title: 'Volunteer Card', headerTitleAlign: 'center' }} />
+      <Stack.Screen options={{ title: t('volunteerCard.screenTitle'), headerTitleAlign: 'center' }} />
 
       <View style={styles.header}>
         <View style={styles.verifiedBadge}>
           <Ionicons name="shield-checkmark" size={16} color="#00bfa5" />
-          <Text style={styles.verifiedText}>Verified Volunteer Identity</Text>
+          <Text style={styles.verifiedText}>{t('volunteerCard.verifiedIdentity')}</Text>
         </View>
-        <Text style={styles.foundationText}>The Dharmarth Medical Foundation</Text>
+        <Text style={styles.foundationText}>{t('volunteerCard.foundationName')}</Text>
       </View>
 
       {/* ID Card */}
@@ -100,12 +100,12 @@ export default function PublicVolunteerCardScreen() {
 
             <View style={styles.officialBadge}>
               <Ionicons name="ribbon" size={14} color="#000" />
-              <Text style={styles.officialBadgeText}>Official</Text>
+              <Text style={styles.officialBadgeText}>{t('volunteerCard.official')}</Text>
             </View>
 
             <View style={styles.brandArea}>
-              <Text style={styles.brandName}>DharmArth</Text>
-              <Text style={styles.brandSub}>Foundation</Text>
+              <Text style={styles.brandName}>{t('volunteerCard.brandName')}</Text>
+              <Text style={styles.brandSub}>{t('volunteerCard.brandSub')}</Text>
             </View>
           </View>
 
@@ -114,7 +114,7 @@ export default function PublicVolunteerCardScreen() {
             <View style={styles.cardHeader}>
               <Text style={[styles.userName, { flex: 1, marginRight: 8 }]} numberOfLines={2}>{name}</Text>
               <View style={styles.cardNoArea}>
-                <Text style={styles.cardNoLabel}>Reff Code</Text>
+                <Text style={styles.cardNoLabel}>{t('volunteerCard.reffCode')}</Text>
                 <Text style={styles.cardNoValue}>{referralCode}</Text>
               </View>
             </View>
@@ -145,9 +145,9 @@ export default function PublicVolunteerCardScreen() {
       </View>
 
       <View style={styles.trustRow}>
-        <TrustItem icon="medal" label="Official ID" />
-        <TrustItem icon="shield-checkmark" label="Verified" />
-        <TrustItem icon="people" label="Trusted" />
+        <TrustItem icon="medal" label={t('volunteerCard.officialID')} />
+        <TrustItem icon="shield-checkmark" label={t('volunteerCard.verified')} />
+        <TrustItem icon="people" label={t('volunteerCard.trusted')} />
       </View>
 
       <TouchableOpacity
