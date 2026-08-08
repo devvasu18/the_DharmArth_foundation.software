@@ -37,8 +37,8 @@ const synonymMap = {
   "diabetes": ["sugar", "glucose", "hba1c", "blood sugar"],
   "hba1c": ["sugar", "diabetes", "glucose", "blood sugar"],
   "cholesterol": ["lipid", "fat", "triglycerides", "hdl", "ldl", "heart"],
-  "lipid": ["cholesterol", "fat", "triglycerides", "hdl", "ldl", "heart"],
-  "thyroid": ["t3", "t4", "tsh", "goiter", "hormone"],
+  "lipid": ["cholesterol", "fat", "triglycerides", "hdl", "ldl", "heart", "लिपिड", "कोलेस्ट्रॉल"],
+  "thyroid": ["t3", "t4", "tsh", "goiter", "hormone", "थायरॉइड", "थायराइड"],
   "tsh": ["thyroid", "t3", "t4", "hormone"],
 
   // Heart / Cardiorespiratory
@@ -58,7 +58,7 @@ const synonymMap = {
   "ct": ["ct scan", "scan", "radiology", "imaging"],
 
   // Urine / Kidney
-  "urine": ["urinalysis", "kidney", "renal", "rft", "lft", "kft"],
+  "urine": ["urinalysis", "kidney", "renal", "rft", "kft"],
   "kidney": ["renal", "kft", "rft", "urine", "creatinine", "urea"],
   "kft": ["kidney", "renal", "rft", "creatinine", "urea", "urine"],
   "rft": ["kidney", "renal", "kft", "creatinine", "urea", "urine"],
@@ -74,7 +74,73 @@ const synonymMap = {
   "मूत्र": ["urine", "पेशाब"],
   "किडनी": ["kidney", "गुर्दा", "kft"],
   "लिवर": ["liver", "यकृत", "lft"],
-  "एक्सरे": ["xray", "x-ray", "एक्स-रे"]
+  "एक्सरे": ["xray", "x-ray", "एक्स-रे"],
+  "थायरॉइड": ["thyroid", "t3", "t4", "tsh", "goiter", "hormone"],
+  "थायराइड": ["thyroid", "t3", "t4", "tsh", "goiter", "hormone"],
+  "लिपिड": ["lipid", "cholesterol", "fat", "triglycerides", "heart"]
+};
+
+const calculateRelevanceScore = (test, search) => {
+  if (!search || !search.trim()) return 0;
+  const query = search.toLowerCase().trim();
+  const queryWords = query.split(/\s+/).filter(Boolean);
+
+  let score = 0;
+
+  const testName = (test.name || '').toLowerCase();
+  const testNameHi = (test.name_hi || '').toLowerCase();
+  const category = (test.category || '').toLowerCase();
+  const categoryHi = (test.category_hi || '').toLowerCase();
+  const description = (test.description || '').toLowerCase();
+  const descriptionHi = (test.description_hi || '').toLowerCase();
+
+  // 1. Direct Name Exact Match
+  if (testName === query || testNameHi === query) {
+    return 1000;
+  }
+
+  // 2. Direct Name Starts With Query
+  if (testName.startsWith(query) || testNameHi.startsWith(query)) {
+    score = Math.max(score, 800);
+  }
+
+  // 3. Any Word in Name Starts With Query
+  const nameWords = testName.split(/[\s,()/\-]+/).concat(testNameHi.split(/[\s,()/\-]+/));
+  if (nameWords.some(w => w && w.startsWith(query))) {
+    score = Math.max(score, 700);
+  }
+
+  // 4. Direct Name Substring Match
+  if (testName.includes(query) || testNameHi.includes(query)) {
+    score = Math.max(score, 600);
+  }
+
+  // 5. Category Match
+  if (category.startsWith(query) || categoryHi.startsWith(query) || category.includes(query) || categoryHi.includes(query)) {
+    score = Math.max(score, 500);
+  }
+
+  // 6. Description Substring Match
+  if (description.includes(query) || descriptionHi.includes(query)) {
+    score = Math.max(score, 400);
+  }
+
+  // 7. Synonym Matches
+  for (const qWord of queryWords) {
+    const synonyms = synonymMap[qWord] || [];
+    for (const syn of synonyms) {
+      const synLower = syn.toLowerCase();
+      if (testName.includes(synLower) || testNameHi.includes(synLower)) {
+        score = Math.max(score, 300);
+      } else if (category.includes(synLower) || categoryHi.includes(synLower)) {
+        score = Math.max(score, 200);
+      } else if (description.includes(synLower) || descriptionHi.includes(synLower)) {
+        score = Math.max(score, 100);
+      }
+    }
+  }
+
+  return score;
 };
 
 export default function BodyTestsScreen() {
@@ -212,11 +278,19 @@ export default function BodyTestsScreen() {
     return false;
   });
 
-  // Sort alphabetically by default
+  // Sort by relevance score when searching, otherwise sort alphabetically
+  const isSearching = !!searchTerm.trim();
   const sortedFilteredTests = [...filteredTests].sort((a, b) => {
+    if (isSearching) {
+      const scoreA = calculateRelevanceScore(a, searchTerm);
+      const scoreB = calculateRelevanceScore(b, searchTerm);
+      if (scoreB !== scoreA) {
+        return scoreB - scoreA;
+      }
+    }
     const nameA = (locale === 'hi' && a.name_hi) ? a.name_hi : a.name;
     const nameB = (locale === 'hi' && b.name_hi) ? b.name_hi : b.name;
-    return nameA.localeCompare(nameB, locale === 'hi' ? 'hi' : 'en');
+    return (nameA || '').localeCompare(nameB || '', locale === 'hi' ? 'hi' : 'en');
   });
 
   const displayedTests = sortedFilteredTests.slice(0, page * itemsPerPage);
