@@ -22,7 +22,6 @@ import { useTranslation } from '../../src/context/LanguageContext';
 import api from '../../src/services/api';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
-import * as MediaLibrary from 'expo-media-library';
 
 const { width } = Dimensions.get('window');
 
@@ -288,12 +287,14 @@ export default function DashboardScreen() {
       const downloadRes = await FileSystem.downloadAsync(qrCodeUrl, localUri);
       
       if (downloadRes.status === 200) {
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        if (status === 'granted') {
-          await MediaLibrary.saveToLibraryAsync(downloadRes.uri);
-          Alert.alert('Success', 'QR Code saved to gallery successfully!');
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(downloadRes.uri, {
+            mimeType: 'image/png',
+            dialogTitle: 'Save or Share QR Code',
+            UTI: 'public.png'
+          });
         } else {
-          Alert.alert('Permission Required', 'We need permission to save the QR code to your device.');
+          Alert.alert('Success', 'QR Code downloaded successfully!');
         }
       } else {
         Alert.alert('Error', `Failed to download QR Code. Status: ${downloadRes.status}`);

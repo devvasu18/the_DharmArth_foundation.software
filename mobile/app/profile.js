@@ -9,7 +9,8 @@ import {
   Image, 
   ActivityIndicator, 
   Alert,
-  Dimensions
+  Dimensions,
+  Platform
 } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
 import { useTranslation } from '../src/context/LanguageContext';
@@ -45,10 +46,12 @@ export default function ProfileScreen() {
   };
 
   const handleImageUpload = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissionResult.granted === false) {
-      Alert.alert(t('profile.permissionRequired'), t('profile.permissionRequiredDesc'));
-      return;
+    if (Platform.OS === 'ios') {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permissionResult.granted === false) {
+        Alert.alert(t('profile.permissionRequired'), t('profile.permissionRequiredDesc'));
+        return;
+      }
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
