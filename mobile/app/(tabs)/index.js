@@ -288,14 +288,19 @@ const LandingScreen = () => {
                 styles.quickLinkBtn,
                 {
                   backgroundColor: '#d1b485',
-                  paddingLeft: 24,
-                  paddingRight: 16,
-                  justifyContent: 'flex-start',
+                  paddingHorizontal: 20,
+                  justifyContent: 'center',
                   alignItems: 'center',
                   gap: 14,
                 }
               ]}
-              onPress={() => router.push('/share-earn')}
+              onPress={() => {
+                if (!user) {
+                  router.push('/login');
+                } else {
+                  router.push('/share-earn');
+                }
+              }}
             >
               <Text
                 style={[
