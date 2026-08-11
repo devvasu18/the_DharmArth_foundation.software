@@ -99,16 +99,16 @@ const Events = () => {
     const eventsSchema = {
         "@context": "https://schema.org",
         "@type": "ItemList",
-        "name": "The DharmArth Foundation Events & Campaigns",
-        "description": "Browse active donation campaigns, healthcare checkup drives, and community welfare events by The DharmArth Foundation.",
+        "name": "The Dharmarth Medical Foundation Events & Campaigns",
+        "description": "Browse active donation campaigns, healthcare checkup drives, and community welfare events by The Dharmarth Medical Foundation.",
         "url": "https://thedharmarth.com/events"
     };
 
     return (
         <div className="events-page-container">
-            <SEO 
+            <SEO
                 title="Donation Campaigns & Healthcare Events"
-                description="Browse active donation campaigns, healthcare checkup camps, and community welfare drives by The DharmArth Foundation. Support medical crowdfunding in India."
+                description="Browse active donation campaigns, healthcare checkup camps, and community welfare drives by The Dharmarth Medical Foundation. Support medical crowdfunding in India."
                 keywords="Healthcare events, Diagnostic checkup camps, Donation campaigns, NGO events Sujangarh, Medical Crowdfunding, Support Charity"
                 jsonLd={eventsSchema}
             />

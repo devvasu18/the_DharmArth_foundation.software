@@ -9,10 +9,10 @@ import './PrivacyPolicy.css';
 const PrivacyPolicy = () => {
     return (
         <div className="privacy-page">
-            <SEO 
+            <SEO
                 title="Privacy Policy"
-                description="Read the Privacy Policy of The DharmArth Foundation regarding online donations, user registration, 80G tax exemptions, and pharmacy/medicine ordering safety."
-                keywords="Privacy Policy NGO, donation privacy, The DharmArth Foundation terms, medical data security, 80G tax exemption records"
+                description="Read the Privacy Policy of The Dharmarth Medical Foundation regarding online donations, user registration, 80G tax exemptions, and pharmacy/medicine ordering safety."
+                keywords="Privacy Policy NGO, donation privacy, The Dharmarth Medical Foundation terms, medical data security, 80G tax exemption records"
             />
             <Navbar />
             {/* Hero Section */}
@@ -63,7 +63,7 @@ const PrivacyPolicy = () => {
                         <main className="privacy-main">
                             <div className="privacy-intro">
                                 <p>
-                                    The DharmArth Foundation ("we", "our", or "us") operates the DharmArth Foundation
+                                    The Dharmarth Medical Foundation ("we", "our", or "us") operates The Dharmarth Medical Foundation
                                     mobile application and website at <strong>https://thedharmarth.com</strong>. This
                                     Privacy Policy explains how we collect, use, disclose, and safeguard your information
                                     when you use our services. Please read this policy carefully.

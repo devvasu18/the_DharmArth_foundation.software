@@ -83,7 +83,7 @@ export default function Contact() {
     const contactSchema = {
         "@context": "https://schema.org",
         "@type": "NGO",
-        "name": "The DharmArth Foundation",
+        "name": "The Dharmarth Medical Foundation",
         "url": "https://thedharmarth.com",
         "logo": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1783602963/the_dharmarth_foundation/logo.jpg",
         "contactPoint": {
@@ -104,14 +104,14 @@ export default function Contact() {
 
     return (
         <div className="contact-page-wrapper">
-            <SEO 
-                title="Contact The Dharmarth Foundation | NGO Office in Sujangarh, Rajasthan"
-                description="Get in touch with The DharmArth Foundation head office in Sujangarh. Contact us for 80G tax saving donation queries, free medicine service, blood donation, and emergency support."
-                keywords="NGO Contact, Sujangarh NGO office, The DharmArth Foundation address, Blood donation support Sujangarh, Contact NGO Rajasthan"
+            <SEO
+                title="Contact The Dharmarth Medical Foundation | NGO Office in Sujangarh, Rajasthan"
+                description="Get in touch with The Dharmarth Medical Foundation head office in Sujangarh. Contact us for 80G tax saving donation queries, free medicine service, blood donation, and emergency support."
+                keywords="NGO Contact, Sujangarh NGO office, The Dharmarth Medical Foundation address, Blood donation support Sujangarh, Contact NGO Rajasthan"
                 jsonLd={contactSchema}
             />
             <Navbar />
-            
+
             {/* Header Banner */}
             <div className="contact-hero-banner">
                 <div className="container hero-content">
@@ -120,9 +120,9 @@ export default function Contact() {
                         {i18n.language === 'hi' ? 'हम यहाँ सहायता के लिए हैं' : 'We are here to help'}
                     </span>
                     <h1>
-                        {i18n.language === 'hi' 
-                            ? 'द धर्मार्थ फाउंडेशन से संपर्क करें' 
-                            : 'Contact The Dharmarth Foundation'}
+                        {i18n.language === 'hi'
+                            ? 'द धर्मार्थ फाउंडेशन से संपर्क करें'
+                            : 'Contact The Dharmarth Medical Foundation'}
                     </h1>
                     <p>
                         {i18n.language === 'hi'

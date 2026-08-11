@@ -52,7 +52,7 @@ export default function DeleteAccount() {
           <div className="da-intro-icon">🗑️</div>
           <h2 className="da-section-title">Account &amp; Data Deletion</h2>
           <p className="da-intro-text">
-            We respect your right to control your personal data. If you have an account with The DharmArth Foundation
+            We respect your right to control your personal data. If you have an account with The Dharmarth Medical Foundation
             mobile app, you can request permanent deletion of your account and associated personal data at any time.
           </p>
         </div>
@@ -66,7 +66,7 @@ export default function DeleteAccount() {
             The easiest way to delete your account is directly from our mobile app:
           </p>
           <ol className="da-steps">
-            <li><strong>Open</strong> the DharmArth Foundation app</li>
+            <li><strong>Open</strong> The Dharmarth Medical Foundation app</li>
             <li>Tap the <strong>Profile</strong> tab from the bottom navigation</li>
             <li>Scroll down to find the <strong>"Danger Zone"</strong> section</li>
             <li>Tap <strong>"Delete My Account"</strong></li>
@@ -122,7 +122,7 @@ export default function DeleteAccount() {
             <strong>Wallet Balance on Deletion</strong>
             <p>
               If you have any remaining wallet balance at the time of account deletion, it will be automatically
-              donated to The DharmArth Foundation. You will be informed of this amount before confirming deletion.
+              donated to The Dharmarth Medical Foundation. You will be informed of this amount before confirming deletion.
             </p>
           </div>
         </div>
@@ -235,7 +235,7 @@ export default function DeleteAccount() {
         {/* Contact */}
         <div className="da-contact">
           <p>Questions? Email us at <a href="mailto:thedharmarth@gmail.com">thedharmarth@gmail.com</a></p>
-          <p className="da-contact-sub">The DharmArth Foundation · Registered Non-Profit · India</p>
+          <p className="da-contact-sub">The Dharmarth Medical Foundation · Registered Non-Profit · India</p>
         </div>
 
       </div>

@@ -35,15 +35,15 @@ const ComponentRenderer = ({ type, data, config }) => {
     // Helper to clean CMS text fields from wrapping or unwanted HTML tags
     const cleanCmsData = (key, val) => {
         if (typeof val !== 'string') return val;
-        
+
         // List of keys that are rendered as plain text in the components and must not contain any HTML at all
         const plainTextKeys = ['question', 'label', 'name', 'buttonText', 'description', 'value'];
-        
+
         if (plainTextKeys.includes(key)) {
             // Strip all HTML tags
             return val.replace(/<[^>]*>/g, '').trim();
         }
-        
+
         // For other rich keys (including title, subtitle, content, answer, text)
         // we strip the outer <p> and </p> if they wrap the entire text
         if (val.startsWith('<p>') && val.endsWith('</p>')) {
@@ -53,7 +53,7 @@ const ComponentRenderer = ({ type, data, config }) => {
                 return inner;
             }
         }
-        
+
         return val;
     };
 
@@ -65,7 +65,7 @@ const ComponentRenderer = ({ type, data, config }) => {
         if (cleanText.includes('become a mission partner')) {
             return 'मिशन भागीदार बनें';
         }
-        if (cleanText.includes('join the dharmarth foundation as a motivator')) {
+        if (cleanText.includes('join The Dharmarth Medical Foundation as a motivator')) {
             return 'एक प्रेरक के रूप में द धर्मार्थ फाउंडेशन से जुड़ें। जीवन बदलने वाले कारणों से दाताओं को जोड़ने में हमारी मदद करें और अपने प्रभाव के लिए पारदर्शी प्रोत्साहन अर्जित करें।';
         }
         if (cleanText.includes('how it works')) {
@@ -147,11 +147,11 @@ const ComponentRenderer = ({ type, data, config }) => {
     // Helper to translate data recursively and clean HTML wrappers from text fields
     const translateData = (obj) => {
         if (!obj || typeof obj !== 'object') return obj;
-        
+
         if (Array.isArray(obj)) {
             return obj.map(item => translateData(item));
         }
-        
+
         const result = { ...obj };
         Object.keys(obj).forEach(key => {
             // Skip keys that end with _hi to prevent redundant processing
@@ -167,23 +167,23 @@ const ComponentRenderer = ({ type, data, config }) => {
                     val = getTranslatedText(val);
                 }
             }
-            
+
             // Clean HTML tags if it's a string, or recurse if it's an object/array
             if (typeof val === 'string') {
                 val = cleanCmsData(key, val);
             } else if (typeof val === 'object' && val !== null) {
                 val = translateData(val);
             }
-            
+
             result[key] = val;
         });
-        
+
         return result;
     };
 
     const translatedData = translateData(data);
     const Component = componentsMap[type];
-    
+
     if (!Component) {
         return (
             <div className="p-12 border-2 border-dashed border-red-200 rounded-3xl bg-red-50 text-red-600 text-center">

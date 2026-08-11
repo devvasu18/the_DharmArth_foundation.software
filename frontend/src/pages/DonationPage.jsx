@@ -43,11 +43,11 @@ const DonationPage = () => {
     const donationSchema = {
         "@context": "https://schema.org",
         "@type": "DonateAction",
-        "name": "Donate to The DharmArth Foundation",
-        "description": "Support medical bills, healthcare services, and free medicine deliveries by donating to The DharmArth Foundation. Donations are eligible for 80G tax exemptions.",
+        "name": "Donate to The Dharmarth Medical Foundation",
+        "description": "Support medical bills, healthcare services, and free medicine deliveries by donating to The Dharmarth Medical Foundation. Donations are eligible for 80G tax exemptions.",
         "recipient": {
             "@type": "NGO",
-            "name": "The DharmArth Foundation",
+            "name": "The Dharmarth Medical Foundation",
             "url": "https://thedharmarth.com"
         }
     };
@@ -56,7 +56,7 @@ const DonationPage = () => {
         <div style={{ minHeight: '100vh', background: '#e6fffa', paddingBottom: '2rem' }}>
             <SEO
                 title="Dharmarth Foundation A Online Donation platform with 80G Tax Benefits | Donate in India"
-                description="Make a secure online donation to The DharmArth Foundation. Get 80G tax exemption benefits instantly for your charitable contribution. Help support healthcare NGO services, free medicines, and diagnostic tests in Rajasthan, India."
+                description="Make a secure online donation to The Dharmarth Medical Foundation. Get 80G tax exemption benefits instantly for your charitable contribution. Help support healthcare NGO services, free medicines, and diagnostic tests in Rajasthan, India."
                 keywords="80G Donation, Tax Saving Donation, Online Donation, Donate in India, Government Approved Donation, Charity Organization India, Medical Donation, Support NGO"
                 jsonLd={donationSchema}
             />

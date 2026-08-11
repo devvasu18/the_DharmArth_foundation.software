@@ -70,7 +70,7 @@ const MyReferrals = () => {
         const baseUrl = window.location.origin;
         const donationUrl = `${baseUrl}/donate?motivator=${user?.mobile}&name=${encodeURIComponent(donorName)}&mobile=${mobile}&amount=${amount}&is80G=${is80G}&pan=${pan}&aadhaar=${aadhaar}`;
 
-        const message = `Namaste ${donorName}, this is ${motivatorName} from The DharmArth Foundation. 🕉️\n\nYour monthly contribution of ₹${amount} has stopped. We invite you to continue your noble support for our mission. 🙏\n\nYou can restart your donation with just one click here: ${donationUrl}\n\nThank you for your kindness!`;
+        const message = `Namaste ${donorName}, this is ${motivatorName} from The Dharmarth Medical Foundation. 🕉️\n\nYour monthly contribution of ₹${amount} has stopped. We invite you to continue your noble support for our mission. 🙏\n\nYou can restart your donation with just one click here: ${donationUrl}\n\nThank you for your kindness!`;
 
         const whatsappUrl = `https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
@@ -174,7 +174,7 @@ const MyReferrals = () => {
                         <div className="filter-group">
                             <Filter size={18} className="filter-icon" />
                             <span className="filter-label">Status:</span>
-                            <select 
+                            <select
                                 className="status-select"
                                 value={statusFilter}
                                 onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
@@ -224,7 +224,7 @@ const MyReferrals = () => {
                                     <tbody>
                                         {referrals.map((ref) => (
                                             <tr key={ref._id}>
-                                                 <td>
+                                                <td>
                                                     <div className="donor-info-cell">
                                                         <div className="donor-avatar-small">
                                                             {ref.donorName.charAt(0).toUpperCase()}
@@ -300,7 +300,7 @@ const MyReferrals = () => {
                                             </div>
                                         </div>
                                         {statusFilter === 'inactive' && (
-                                            <button 
+                                            <button
                                                 className="mobile-action-btn rejoin"
                                                 onClick={() => handleRejoinWhatsApp(ref)}
                                             >

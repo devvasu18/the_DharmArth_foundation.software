@@ -36,7 +36,7 @@ const Footer = ({ variant = 'default' }) => {
                     <div className="footer-small-content">
                         <div className="footer-brand">
                             <h2>Dharmarth</h2>
-                            <p>© {new Date().getFullYear()} {t('footer.brand', 'The Dharmarth Foundation')}. {t('footer.allRightsReserved', 'All Rights Reserved.')}</p>
+                            <p>© {new Date().getFullYear()} {t('footer.brand', 'The Dharmarth Medical Foundation')}. {t('footer.allRightsReserved', 'All Rights Reserved.')}</p>
                         </div>
                         <div className="footer-small-links">
                             <Link to="/privacy-policy">{t('footer.privacyPolicy')}</Link>
@@ -73,7 +73,7 @@ const Footer = ({ variant = 'default' }) => {
                             <p><strong>Contact No: {contactInfo.phone}</strong></p>
                         </div>
                         <p style={{ fontSize: '0.85rem', color: '#888', marginTop: '1.5rem', lineHeight: '1.6', maxWidth: '300px' }}>
-                            The DharmArth Foundation is a government-approved NGO offering online donation options with 80G tax exemption benefits. We specialize in healthcare assistance, doctor availability updates in Sujangarh, blood donation support, and free medicine ordering and delivery across Rajasthan and India.
+                            The Dharmarth Medical Foundation is a government-approved NGO offering online donation options with 80G tax exemption benefits. We specialize in healthcare assistance, doctor availability updates in Sujangarh, blood donation support, and free medicine ordering and delivery across Rajasthan and India.
                         </p>
                     </div>
 

@@ -51,7 +51,7 @@ const EventDetail = () => {
         try {
             const res = await api.get(`/events/slug/${slug}`);
             setEvent(res.data);
-            document.title = (res.data.metaTitle || res.data.title) + " - The Dharmarth Foundation";
+            document.title = (res.data.metaTitle || res.data.title) + " - The Dharmarth Medical Foundation";
         } catch (error) {
             console.error('Failed to load event');
         } finally {
@@ -283,7 +283,7 @@ const EventDetail = () => {
                         <div className="article-footer">
                             <div className="author-info">
                                 <span className="label">Published By</span>
-                                <span className="value">The Dharmarth Foundation</span>
+                                <span className="value">The Dharmarth Medical Foundation</span>
                             </div>
                             <div className="publish-info">
                                 <Clock size={16} />

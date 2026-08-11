@@ -365,7 +365,7 @@ const DoctorAvailability = () => {
     const medicalBusinessSchema = {
         "@context": "https://schema.org",
         "@type": "MedicalBusiness",
-        "name": "The DharmArth Foundation Sujangarh Healthcare Services",
+        "name": "The Dharmarth Medical Foundation Sujangarh Healthcare Services",
         "description": "Check real-time doctor availability and government hospital service updates in Sujangarh, Churu District, Rajasthan. Get healthcare assistance and diagnostic test guides.",
         "url": "https://thedharmarth.com/doctors",
         "image": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1783602963/the_dharmarth_foundation/logo.jpg",
@@ -384,7 +384,7 @@ const DoctorAvailability = () => {
         <>
             <SEO
                 title="Doctor Availability & Government Hospital Services in Sujangarh"
-                description="Check live doctor availability and updates on government hospital services in Sujangarh, Churu District, Rajasthan. Get healthcare assistance and diagnostic test guides from The DharmArth Foundation."
+                description="Check live doctor availability and updates on government hospital services in Sujangarh, Churu District, Rajasthan. Get healthcare assistance and diagnostic test guides from The Dharmarth Medical Foundation."
                 keywords="Doctor Availability, Government Hospital Services, Sujangarh Hospital, Rajasthan Doctor Booking, Diagnostic Tests, Sujangarh doctors, Healthcare assistance Rajasthan"
                 jsonLd={medicalBusinessSchema}
             />
@@ -553,37 +553,37 @@ const DoctorAvailability = () => {
                                                                         <div className="available-dates-container" style={{ marginTop: '15px', padding: '10px 20px 15px 20px', borderTop: '1px dashed #e2e8f0' }}>
                                                                             <h4 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                                                 <Calendar size={14} style={{ color: '#00bf9a' }} />
-                                                                                {i18n.language === 'hi' 
-                                                                                    ? `उपलब्ध तिथियां (${new Date().toLocaleDateString('hi-IN', { month: 'long', year: 'numeric' })}):` 
+                                                                                {i18n.language === 'hi'
+                                                                                    ? `उपलब्ध तिथियां (${new Date().toLocaleDateString('hi-IN', { month: 'long', year: 'numeric' })}):`
                                                                                     : `Available Dates (${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}):`}
                                                                             </h4>
                                                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                                                            {avail.availableDates && avail.availableDates.length > 0 ? (
-                                                                                avail.availableDates.map(dayNum => (
-                                                                                    <span 
-                                                                                        key={dayNum} 
-                                                                                        style={{ 
-                                                                                            background: '#e6faf5', 
-                                                                                            color: '#00bf9a', 
-                                                                                            padding: '4px 10px', 
-                                                                                            borderRadius: '20px', 
-                                                                                            fontSize: '0.85rem', 
-                                                                                            fontWeight: '600',
-                                                                                            border: '1px solid #c2f4e8'
-                                                                                        }}
-                                                                                    >
-                                                                                        {dayNum}
+                                                                                {avail.availableDates && avail.availableDates.length > 0 ? (
+                                                                                    avail.availableDates.map(dayNum => (
+                                                                                        <span
+                                                                                            key={dayNum}
+                                                                                            style={{
+                                                                                                background: '#e6faf5',
+                                                                                                color: '#00bf9a',
+                                                                                                padding: '4px 10px',
+                                                                                                borderRadius: '20px',
+                                                                                                fontSize: '0.85rem',
+                                                                                                fontWeight: '600',
+                                                                                                border: '1px solid #c2f4e8'
+                                                                                            }}
+                                                                                        >
+                                                                                            {dayNum}
+                                                                                        </span>
+                                                                                    ))
+                                                                                ) : (
+                                                                                    <span style={{ color: '#94a3b8', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                                                                                        {i18n.language === 'hi' ? 'कोई उपलब्ध तिथि नहीं' : 'No available dates'}
                                                                                     </span>
-                                                                                ))
-                                                                            ) : (
-                                                                                <span style={{ color: '#94a3b8', fontSize: '0.8rem', fontStyle: 'italic' }}>
-                                                                                    {i18n.language === 'hi' ? 'कोई उपलब्ध तिथि नहीं' : 'No available dates'}
-                                                                                </span>
-                                                                            )}
+                                                                                )}
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                </>
-                                                            ) : (
+                                                                    </>
+                                                                ) : (
                                                                     <div className="time-slots">
                                                                         {avail.timeSlots.map((slot, idx) => (
                                                                             <div key={idx} className={`time-slot ${slot.status.toLowerCase().replace(' ', '-')}`}>
@@ -611,8 +611,8 @@ const DoctorAvailability = () => {
                                                     </div>
                                                     <h3>{i18n.language === 'hi' ? 'कोई डॉक्टर उपलब्ध नहीं है' : 'No Doctors Available'}</h3>
                                                     <p>
-                                                        {i18n.language === 'hi' 
-                                                            ? (searchResult.message_hi || searchResult.message || 'निकट भविष्य में इस श्रेणी के लिए कोई डॉक्टर निर्धारित नहीं हैं। कृपया एक अलग श्रेणी चुनें या अस्पताल सेटिंग बदलें।') 
+                                                        {i18n.language === 'hi'
+                                                            ? (searchResult.message_hi || searchResult.message || 'निकट भविष्य में इस श्रेणी के लिए कोई डॉक्टर निर्धारित नहीं हैं। कृपया एक अलग श्रेणी चुनें या अस्पताल सेटिंग बदलें।')
                                                             : (searchResult.message || 'There are no doctors scheduled for this category in the near future. Please select a different category or change the hospital setting.')}
                                                     </p>
                                                     <div className="blank-actions">
@@ -726,23 +726,23 @@ const DoctorAvailability = () => {
                                                 }}>
                                                     {(() => {
                                                         const lowerQuery = searchQuery.toLowerCase().trim();
-                                                        const showAllSpecialists = 
-                                                            lowerQuery === '' || 
-                                                            'all specialists'.includes(lowerQuery) || 
-                                                            'all'.includes(lowerQuery) || 
-                                                            'सभी विशेषज्ञ'.includes(lowerQuery) || 
+                                                        const showAllSpecialists =
+                                                            lowerQuery === '' ||
+                                                            'all specialists'.includes(lowerQuery) ||
+                                                            'all'.includes(lowerQuery) ||
+                                                            'सभी विशेषज्ञ'.includes(lowerQuery) ||
                                                             'सभी'.includes(lowerQuery);
 
                                                         // If "All Specialists" (or equivalent) is the search query, show all categories in the dropdown list
-                                                        const isAllSelected = 
-                                                            lowerQuery === '' || 
-                                                            lowerQuery === 'all' || 
-                                                            lowerQuery === 'all specialists' || 
-                                                            lowerQuery === 'सभी' || 
+                                                        const isAllSelected =
+                                                            lowerQuery === '' ||
+                                                            lowerQuery === 'all' ||
+                                                            lowerQuery === 'all specialists' ||
+                                                            lowerQuery === 'सभी' ||
                                                             lowerQuery === 'सभी विशेषज्ञ';
 
-                                                        const filteredCategories = isAllSelected 
-                                                            ? searchCategories 
+                                                        const filteredCategories = isAllSelected
+                                                            ? searchCategories
                                                             : searchCategories.filter(c => {
                                                                 const engName = c.name.toLowerCase();
                                                                 const hiName = (categoryTranslations[c.name] || '').toLowerCase();

@@ -141,7 +141,7 @@ const UserProfile = () => {
         if (deleteOtp.length !== 6) { toast.error('Please enter the 6-digit OTP.'); return; }
         if (!window.confirm(
             deleteWallet > 0
-                ? `Your wallet balance of ₹${deleteWallet} will be donated to The DharmArth Foundation.\n\nThis action is PERMANENT. Are you absolutely sure?`
+                ? `Your wallet balance of ₹${deleteWallet} will be donated to The Dharmarth Medical Foundation.\n\nThis action is PERMANENT. Are you absolutely sure?`
                 : 'This action is PERMANENT and cannot be undone. Are you absolutely sure?'
         )) return;
 
@@ -545,8 +545,8 @@ const UserProfile = () => {
             {/* Hidden capture area for downloads - FORCED VERTICAL 950x1200 */}
             <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
                 <div ref={downloadRef} className="download-capture-area" style={{ width: '950px', height: '1200px' }}>
-                    <VolunteerCard 
-                        userData={{ ...formData, mobile: user?.mobile, referralCode: user?.referralCode, createdAt: user?.createdAt }} 
+                    <VolunteerCard
+                        userData={{ ...formData, mobile: user?.mobile, referralCode: user?.referralCode, createdAt: user?.createdAt }}
                         forceVertical={true}
                     />
                 </div>

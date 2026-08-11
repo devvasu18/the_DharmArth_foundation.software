@@ -234,7 +234,7 @@ class WhatsappService {
             <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
                 <h2 style="color: #2c3e50; text-align: center;">🙏 Thank You, {name}!</h2>
                 <p>We have successfully received your donation of <strong>₹{amount}</strong>.</p>
-                <p>Your contribution to <strong>The DharmArth Foundation</strong> helps us continue our mission of serving the community.</p>
+                <p>Your contribution to <strong>The Dharmarth Medical Foundation</strong> helps us continue our mission of serving the community.</p>
                 <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
                 <p style="font-size: 0.9em; color: #777;">Transaction ID: {donation_id}</p>
             </div>
@@ -253,8 +253,8 @@ class WhatsappService {
         const lang = await this._getRecipientLanguage(donorMobile);
         const template = await this._getTemplate('whatsapp_donation_template', lang)
             || (lang === 'hi'
-                ? "नमस्ते {name}, The DharmArth Foundation को ₹{amount} का उदार दान देने के लिए धन्यवाद। आपका समर्थन हमें बड़ा बदलाव लाने में मदद करता है! 🙏"
-                : "Dear {name}, thank you for your generous donation of ₹{amount} to The DharmArth Foundation. Your support helps us make a big difference! 🙏");
+                ? "नमस्ते {name}, The Dharmarth Medical Foundation को ₹{amount} का उदार दान देने के लिए धन्यवाद। आपका समर्थन हमें बड़ा बदलाव लाने में मदद करता है! 🙏"
+                : "Dear {name}, thank you for your generous donation of ₹{amount} to The Dharmarth Medical Foundation. Your support helps us make a big difference! 🙏");
 
         const message = this._replacePlaceholders(template, { name: donorName, amount, donation_id: donationId });
         return this.sendMessage(donorMobile, message, { donationId });
@@ -361,7 +361,7 @@ class WhatsappService {
     async sendPayoutOTP(mobile, otp) {
         const lang = await this._getRecipientLanguage(mobile);
         const template = await this._getTemplate('whatsapp_payout_otp_template', lang)
-            || "Your OTP for The DharmArth Foundation *Withdrawal Authorization* is: *{otp}*. Valid for 10 minutes. Please do not share this code with anyone.";
+            || "Your OTP for The Dharmarth Medical Foundation *Withdrawal Authorization* is: *{otp}*. Valid for 10 minutes. Please do not share this code with anyone.";
 
         const message = this._replacePlaceholders(template, { otp });
         return this._sendWhatsAppNow(mobile, message, 1); // Direct send for time-critical OTP (Priority 1)
@@ -373,7 +373,7 @@ class WhatsappService {
     async sendCancelSubscriptionOTP(mobile, otp, amount) {
         const lang = await this._getRecipientLanguage(mobile);
         const template = await this._getTemplate('whatsapp_cancel_subscription_otp_template', lang)
-            || "Your OTP to authorize *Cancellation* of your ₹{amount} monthly donation at The DharmArth Foundation is: *{otp}*. Valid for 10 minutes.";
+            || "Your OTP to authorize *Cancellation* of your ₹{amount} monthly donation at The Dharmarth Medical Foundation is: *{otp}*. Valid for 10 minutes.";
 
         const message = this._replacePlaceholders(template, { otp, amount });
         return this._sendWhatsAppNow(mobile, message, 1); // Priority 1
@@ -385,7 +385,7 @@ class WhatsappService {
     async sendWalletDonationOTP(mobile, otp) {
         const lang = await this._getRecipientLanguage(mobile);
         const template = await this._getTemplate('whatsapp_wallet_otp_template', lang)
-            || (lang === 'hi' ? "The DharmArth Foundation वॉलेट दान के लिए आपका OTP है: *{otp}*। यह 10 मिनट के लिए मान्य है।" : "Your OTP for The DharmArth Foundation *Wallet Donation* is: *{otp}*. Valid for 10 minutes.");
+            || (lang === 'hi' ? "The Dharmarth Medical Foundation वॉलेट दान के लिए आपका OTP है: *{otp}*। यह 10 मिनट के लिए मान्य है।" : "Your OTP for The Dharmarth Medical Foundation *Wallet Donation* is: *{otp}*. Valid for 10 minutes.");
 
         const message = this._replacePlaceholders(template, { otp });
         return this._sendWhatsAppNow(mobile, message, 1); // Direct send for time-critical OTP (Priority 1)
@@ -397,7 +397,7 @@ class WhatsappService {
     async sendOTP(mobile, otp) {
         const lang = await this._getRecipientLanguage(mobile);
         const template = await this._getTemplate('whatsapp_login_otp_template', lang)
-            || "Your OTP for The DharmArth Foundation login is: *{otp}*. Valid for 10 minutes";
+            || "Your OTP for The Dharmarth Medical Foundation login is: *{otp}*. Valid for 10 minutes";
 
         const message = this._replacePlaceholders(template, { otp });
         return this._sendWhatsAppNow(mobile, message, 1); // Direct send for time-critical OTP (Priority 1)
@@ -410,8 +410,8 @@ class WhatsappService {
         const lang = await this._getRecipientLanguage(mobile);
         const template = await this._getTemplate('whatsapp_suspension_otp_template', lang)
             || (lang === 'hi'
-                ? "The DharmArth Foundation: यूजर सस्पेंड/एक्टिवेट करने के लिए आपका OTP है: *{otp}*। कृपया इसे किसी के साथ साझा न करें।"
-                : "The DharmArth Foundation: Your OTP for User Suspension/Activation is: *{otp}*. Please do not share this code with anyone.");
+                ? "The Dharmarth Medical Foundation: यूजर सस्पेंड/एक्टिवेट करने के लिए आपका OTP है: *{otp}*। कृपया इसे किसी के साथ साझा न करें।"
+                : "The Dharmarth Medical Foundation: Your OTP for User Suspension/Activation is: *{otp}*. Please do not share this code with anyone.");
 
         const message = this._replacePlaceholders(template, { otp });
         return this._sendWhatsAppNow(mobile, message, 1); // Priority 1
@@ -466,7 +466,7 @@ class WhatsappService {
             <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
                 <h2 style="color: #2c3e50; text-align: center;">Verification Code</h2>
                 <p>Hello {name},</p>
-                <p>Your OTP for The DharmArth Foundation login/password reset is:</p>
+                <p>Your OTP for The Dharmarth Medical Foundation login/password reset is:</p>
                 <div style="text-align: center; margin: 30px 0;">
                     <span style="font-size: 32px; font-weight: 800; letter-spacing: 5px; color: #00bfa5; padding: 10px 20px; border: 2px dashed #00bfa5; border-radius: 8px;">{otp}</span>
                 </div>
@@ -492,8 +492,8 @@ class WhatsappService {
 
         const template = await this._getTemplate('whatsapp_order_shipped_bus_template', lang)
             || (lang === 'hi'
-                ? "नमस्ते {name}, आपकी दवाएं {busName} ({busNumber}) बस में भेज दी गई हैं। 🚌\n\nआप अपने ऑर्डर को यहाँ ट्रैक कर सकते हैं: {url}\n\nधन्यवाद, The DharmArth Foundation"
-                : "Hello {name}, your medicine order has been shipped to the bus {busName} ({busNumber}). 🚌\n\nTrack your order here: {url}\n\nThank you, The DharmArth Foundation");
+                ? "नमस्ते {name}, आपकी दवाएं {busName} ({busNumber}) बस में भेज दी गई हैं। 🚌\n\nआप अपने ऑर्डर को यहाँ ट्रैक कर सकते हैं: {url}\n\nधन्यवाद, The Dharmarth Medical Foundation"
+                : "Hello {name}, your medicine order has been shipped to the bus {busName} ({busNumber}). 🚌\n\nTrack your order here: {url}\n\nThank you, The Dharmarth Medical Foundation");
 
         const message = this._replacePlaceholders(template, { name, busName, busNumber, url: trackUrl });
         return this.sendMessage(mobile, message, { type: 'order_shipped_bus', orderId });

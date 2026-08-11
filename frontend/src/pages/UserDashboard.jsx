@@ -650,7 +650,7 @@ const UserDashboard = () => {
                                     <button
                                         className="share-action-btn btn-whatsapp"
                                         onClick={() => {
-                                            const message = `Namaste! 🙏 Join me in making a difference with The DharmArth Foundation. 🕉️\n\nYour small contribution can bring big changes to someone's life. 🤝\n\n✨ Donate here: ${donationLink}\n📜 View my Volunteer Profile: ${profileLink}\n\nThank you for your support! ❤️`;
+                                            const message = `Namaste! 🙏 Join me in making a difference with The Dharmarth Medical Foundation. 🕉️\n\nYour small contribution can bring big changes to someone's life. 🤝\n\n✨ Donate here: ${donationLink}\n📜 View my Volunteer Profile: ${profileLink}\n\nThank you for your support! ❤️`;
                                             window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
                                         }}
                                     >
@@ -681,7 +681,7 @@ const UserDashboard = () => {
                                                 if (navigator.share) {
                                                     navigator.share({
                                                         title: 'My Volunteer Profile',
-                                                        text: 'Check out my verified volunteer profile at The DharmArth Foundation.',
+                                                        text: 'Check out my verified volunteer profile at The Dharmarth Medical Foundation.',
                                                         url: profileLink
                                                     }).catch(() => {
                                                         navigator.clipboard.writeText(profileLink);

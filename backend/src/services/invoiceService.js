@@ -16,13 +16,13 @@ class InvoiceService {
 
                 // --- Header Section ---
                 this.generateHeader(doc);
-                
+
                 // --- Invoice Info ---
                 this.generateCustomerInformation(doc, order);
-                
+
                 // --- Items Table ---
                 this.generateInvoiceTable(doc, order);
-                
+
                 // --- Footer ---
                 this.generateFooter(doc);
 
@@ -38,13 +38,13 @@ class InvoiceService {
         doc
             .fillColor('#444444')
             .fontSize(20)
-            .text('THE DHARMARTH FOUNDATION', 110, 57)
+            .text('THE DHARMARTH Medical FOUNDATION', 110, 57)
             .fontSize(10)
-            .text('DharmArth Bhawan, Main Road,', 200, 65, { align: 'right' })
-            .text('Nagaur, Rajasthan, India - 341001', 200, 80, { align: 'right' })
+            .text('Jadaw marg, Duliya bass ,', 200, 65, { align: 'right' })
+            .text('Sujangarh, Rajasthan, India - 334507', 200, 80, { align: 'right' })
             .text('Support: +91 8000 000 000', 200, 95, { align: 'right' })
             .moveDown();
-        
+
         // Draw a line
         doc.moveTo(50, 115).lineTo(550, 115).strokeColor('#eeeeee').stroke();
     }
@@ -94,12 +94,12 @@ class InvoiceService {
 
         for (i = 0; i < order.items.length; i++) {
             const item = order.items[i];
-            
+
             // Prevent overlapping at bottom
             if (position > 680) {
                 doc.addPage();
                 position = 50;
-                
+
                 doc.font('Helvetica-Bold');
                 this.generateTableRow(doc, position, 'Item', 'Dosage', 'Qty', 'Price', 'Total');
                 this.generateHr(doc, position + 20);
@@ -127,7 +127,7 @@ class InvoiceService {
                 if (item.margExpiry) detailsStr.push(`Exp: ${item.margExpiry.substring(0, 7)}`);
                 if (item.margBillNo) detailsStr.push(`VCN: ${item.margBillNo}`);
                 if (item.margPack && item.margPack > 1) {
-                    detailsStr.push(`Conv: ${Math.floor(item.quantity/item.margPack)} Strip, ${item.quantity%item.margPack} Tab`);
+                    detailsStr.push(`Conv: ${Math.floor(item.quantity / item.margPack)} Strip, ${item.quantity % item.margPack} Tab`);
                 }
                 doc.text(detailsStr.join(' | '), 50, position, { width: 450 });
                 doc.fillColor('#444444').fontSize(10);
@@ -155,7 +155,7 @@ class InvoiceService {
                 780,
                 { align: 'center', width: 500 }
             );
-        
+
         doc
             .fillColor('#10b981')
             .fontSize(12)

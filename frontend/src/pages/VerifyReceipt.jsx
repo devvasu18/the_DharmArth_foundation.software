@@ -41,7 +41,7 @@ const VerifyReceipt = () => {
 
     const trans = {
         en: {
-            title: "Certificate Verification | The DharmArth Foundation",
+            title: "Certificate Verification | The Dharmarth Medical Foundation",
             verifiedBadge: "Verified Authentic Donation",
             notFoundTitle: "Verification Failed",
             notFoundText: "We could not find any active donation receipt matching this ID. Please check the QR code or URL link.",

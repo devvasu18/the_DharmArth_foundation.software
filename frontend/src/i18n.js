@@ -63,7 +63,7 @@ i18n
                         "defaultSubtitle": "Every contribution brings us closer to a better world. Join our mission today."
                     },
                     "whyUs": {
-                        "title": "Why The Dharmarth Foundation?",
+                        "title": "Why The Dharmarth Medical Foundation?",
                         "items": [
                             { "text": "100% Transparent Donation Process" },
                             { "text": "Supported By a Growing Community of Donors" },
@@ -82,11 +82,11 @@ i18n
                         },
                         "s2": {
                             "title": "Support Medical Crowdfunding",
-                            "text": "Stop worrying about the helpless, and start supporting them with The Dharmarth Foundation. We are a Donation Platform dedicated to helping those in need. Crowdfunding is the easiest way to pool support from friends, family and compassionate individuals who are waiting to contribute funds."
+                            "text": "Stop worrying about the helpless, and start supporting them with The Dharmarth Medical Foundation. We are a Donation Platform dedicated to helping those in need. Crowdfunding is the easiest way to pool support from friends, family and compassionate individuals who are waiting to contribute funds."
                         },
                         "s3": {
                             "title": "Contribute to Medical Aid for those in Need",
-                            "text": "With The Dharmarth Foundation, you can make a quick, secure donation in minutes to support medical bills and healthcare costs for the underprivileged. You can also take on the role of spreading the word and bringing in support. Your contributions give hope to patients and families during their most difficult times."
+                            "text": "With The Dharmarth Medical Foundation, you can make a quick, secure donation in minutes to support medical bills and healthcare costs for the underprivileged. You can also take on the role of spreading the word and bringing in support. Your contributions give hope to patients and families during their most difficult times."
                         }
                     },
                     "app": {
@@ -101,12 +101,12 @@ i18n
                     "faq": {
                         "title": "Frequently Asked Questions",
                         "list": [
-                            { "q": "How do I make a donation on The Dharmarth Foundation?", "a": "Making a contribution is simple and secure. Click on the 'Donate' button, select the cause you wish to support, enter the amount, and complete the payment using your preferred method. Your support reaches those in need instantly." },
+                            { "q": "How do I make a donation on The Dharmarth Medical Foundation?", "a": "Making a contribution is simple and secure. Click on the 'Donate' button, select the cause you wish to support, enter the amount, and complete the payment using your preferred method. Your support reaches those in need instantly." },
                             { "q": "Is there a fee for donating?", "a": "We strive to ensure maximum impact. We do not charge any platform fee from donors. A small standard transaction processing fee may apply from the payment gateway provider, which is standard across all online payments." },
-                            { "q": "Do I get tax benefits for my donation?", "a": "Yes, all donations made to The Dharmarth Foundation are eligible for tax exemption under Section 80G of the Income Tax Act. You will receive a tax receipt instantly via email after your donation." },
+                            { "q": "Do I get tax benefits for my donation?", "a": "Yes, all donations made to The Dharmarth Medical Foundation are eligible for tax exemption under Section 80G of the Income Tax Act. You will receive a tax receipt instantly via email after your donation." },
                             { "q": "Is my donation safe?", "a": "Absolutely. We use industry-standard encryption and secure payment gateways to ensure your transaction is safe. We also verify the authenticity of every cause to ensure your money reaches the right beneficiaries." },
                             { "q": " Can I donate to a specific person or cause?", "a": "Yes, you can browse through our verified list of active cases and choose to support a specific individual, medical case, or social cause that resonates with you. Every contribution makes a difference." },
-                            { "q": "Does The Dharmarth Foundation support international currencies?", "a": "Yes, our platform supports contributions from around the world. We accept major international currencies and credit cards to help you get the maximum support for your cause." }
+                            { "q": "Does The Dharmarth Medical Foundation support international currencies?", "a": "Yes, our platform supports contributions from around the world. We accept major international currencies and credit cards to help you get the maximum support for your cause." }
                         ]
                     },
                     "footer": {
@@ -243,26 +243,26 @@ i18n
                         "impact": "Impact",
                         "learnMore": "Learn More",
                         "makingDifferenceTogether": "Making a Difference Together",
-                        "defaultTitle": "The Dharmarth Foundation",
+                        "defaultTitle": "The Dharmarth Medical Foundation",
                         "defaultSubtitle": "Empowering Communities. Changing Lives.",
                         "joinUs": "Join Us"
                     },
                     "volunteer": {
                         "notFound": "Volunteer profile not found",
-                        "officialVolunteer": "Official Volunteer at The DharmArth Foundation",
+                        "officialVolunteer": "Official Volunteer at The Dharmarth Medical Foundation",
                         "officialId": "Official ID",
                         "securedPortal": "Secured Portal",
                         "communityTrust": "Community Trust",
                         "supportMyCause": "Support My Cause",
-                        "supportDescription": "I am volunteering to help The DharmArth Foundation raise funds for healthcare, education, and social welfare. Every contribution matters.",
+                        "supportDescription": "I am volunteering to help The Dharmarth Medical Foundation raise funds for healthcare, education, and social welfare. Every contribution matters.",
                         "donateNowLink": "Donate Now via My Link",
                         "verifiedVolunteerTitle": "Verified Volunteer: {{name}}",
-                        "shareText": "Support The DharmArth Foundation through {{name}}'s verified profile.",
+                        "shareText": "Support The Dharmarth Medical Foundation through {{name}}'s verified profile.",
                         "linkCopied": "Profile link copied!",
                         "shareProfilePage": "Share Profile Page",
                         "foundationHome": "Foundation Home",
-                        "aboutFoundation": "About The DharmArth Foundation",
-                        "aboutDescription": "The DharmArth Foundation is dedicated to empowering communities through transparent and impactful social initiatives. By donating through this verified volunteer, you ensure that your contribution goes directly towards our ongoing humanitarian projects.",
+                        "aboutFoundation": "About The Dharmarth Medical Foundation",
+                        "aboutDescription": "The Dharmarth Medical Foundation is dedicated to empowering communities through transparent and impactful social initiatives. By donating through this verified volunteer, you ensure that your contribution goes directly towards our ongoing humanitarian projects.",
                         "backToMain": "Back to main website"
                     },
                     "leaderboard": {

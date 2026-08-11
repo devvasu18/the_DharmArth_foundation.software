@@ -8,7 +8,7 @@ const StartFundraiser = () => {
         "@context": "https://schema.org",
         "@type": "Action",
         "name": "Start a Fundraiser",
-        "description": "Start a crowdfunding campaign for medical emergencies and social welfare causes with The DharmArth Foundation.",
+        "description": "Start a crowdfunding campaign for medical emergencies and social welfare causes with The Dharmarth Medical Foundation.",
         "target": {
             "@type": "EntryPoint",
             "urlTemplate": "https://thedharmarth.com/start-fundraiser"
@@ -17,9 +17,9 @@ const StartFundraiser = () => {
 
     return (
         <>
-            <SEO 
+            <SEO
                 title="Start a Medical Fundraiser & Crowdfunding Campaign"
-                description="Raise funds for medical emergencies, diagnostic tests, surgeries, or social welfare projects. Start a free crowdfunding campaign with The DharmArth Foundation in India."
+                description="Raise funds for medical emergencies, diagnostic tests, surgeries, or social welfare projects. Start a free crowdfunding campaign with The Dharmarth Medical Foundation in India."
                 keywords="Start Fundraiser, Medical Crowdfunding, Raise money India, NGO fundraising, crowdfunding campaign, emergency medical funds"
                 jsonLd={fundraiserSchema}
             />

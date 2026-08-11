@@ -78,7 +78,7 @@ const PatientReportView = () => {
                 <header className="patient-report-header">
                     <div className="header-content-report">
                         <Link to="/" className="brand-logo-report">
-                            The Dharmarth Foundation
+                            The Dharmarth Medical Foundation
                         </Link>
                     </div>
                 </header>
@@ -110,7 +110,7 @@ const PatientReportView = () => {
                 <header className="patient-report-header">
                     <div className="header-content-report">
                         <Link to="/" className="brand-logo-report">
-                            The Dharmarth Foundation
+                            The Dharmarth Medical Foundation
                         </Link>
                     </div>
                 </header>
@@ -136,7 +136,7 @@ const PatientReportView = () => {
             <header className="patient-report-header">
                 <div className="header-content-report">
                     <Link to="/" className="brand-logo-report">
-                        The Dharmarth Foundation
+                        The Dharmarth Medical Foundation
                     </Link>
                     <a href={viewUrl} download={metadata.fileName || 'report.pdf'} className="btn-download-pdf-report">
                         <Download size={16} /> Download Report

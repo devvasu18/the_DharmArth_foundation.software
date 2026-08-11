@@ -109,20 +109,20 @@ const AdminSettings = () => {
 
             // WhatsApp Config
             setWhatsappConfig({
-                donationTemplate: data.whatsapp_donation_template || "Dear {name}, thank you for your generous donation of ₹{amount} to The DharmArth Foundation. Your support helps us make a big difference! 🙏",
-                donationTemplate_hi: data.whatsapp_donation_template_hi || "नमस्ते {name}, The DharmArth Foundation को ₹{amount} का  दान देने के लिए धन्यवाद। आपका समर्थन हमें बड़ा बदलाव लाने में मदद करता है! 🙏",
+                donationTemplate: data.whatsapp_donation_template || "Dear {name}, thank you for your generous donation of ₹{amount} to The Dharmarth Medical Foundation. Your support helps us make a big difference! 🙏",
+                donationTemplate_hi: data.whatsapp_donation_template_hi || "नमस्ते {name}, The Dharmarth Medical Foundation को ₹{amount} का  दान देने के लिए धन्यवाद। आपका समर्थन हमें बड़ा बदलाव लाने में मदद करता है! 🙏",
                 withdrawalTemplate: data.whatsapp_withdrawal_template || "Dear {name}, your payout request of ₹{amount} has been successfully processed and completed. The funds have been transferred as per your provided details. Thank you for your continued support! 🙏",
                 withdrawalTemplate_hi: data.whatsapp_withdrawal_template_hi || "नमस्ते {name}, आपके ₹{amount} के भुगतान के अनुरोध को सफलतापूर्वक संसाधित और पूरा कर लिया गया है। आपके द्वारा प्रदान किए गए विवरण के अनुसार धनराशि स्थानांतरित कर दी गई है। आपके निरंतर समर्थन के लिए धन्यवाद! 🙏",
                 l1MotivatorTemplate: data.whatsapp_motivator_l1_template || "Congratulations {motivator_name}! You received ₹{commission} commission for a donation of ₹{donation_amount} from {donor_name} ({donor_mobile}). Level: Directly Inspired Donor 🙏",
                 l1MotivatorTemplate_hi: data.whatsapp_motivator_l1_template_hi || "बधाई हो {motivator_name}! आपको {donor_name} ({donor_mobile}) से ₹{donation_amount} के दान के लिए ₹{commission} कमीशन प्राप्त हुआ। स्तर: प्रेरित दानवीर 🙏",
                 l2MotivatorTemplate: data.whatsapp_motivator_l2_template || "Partner-Inspired Bonus! {motivator_name}, you received ₹{commission} commission via {l1_motivator_name} ({l1_motivator_mobile}) for a donation from {donor_name} ({donor_mobile}). Level:Partner-Inspired Donor 🙏",
                 l2MotivatorTemplate_hi: data.whatsapp_motivator_l2_template_hi || "स्तर 2 बोनस! {motivator_name}, आपको {donor_name} ({donor_mobile}) से दान के लिए {l1_motivator_name} ({l1_motivator_mobile}) के माध्यम से ₹{commission} कमीशन प्राप्त हुआ। स्तर: साथी द्वारा प्रेरित दानवीर 🙏",
-                walletOtpTemplate: data.whatsapp_wallet_otp_template || "Your OTP for The DharmArth Foundation *Wallet Donation* is: *{otp}*. Valid for 10 minutes. Please do not share this code with anyone.",
-                walletOtpTemplate_hi: data.whatsapp_wallet_otp_template_hi || "The DharmArth Foundation वॉलेट दान के लिए आपका OTP है: *{otp}*। यह 10 मिनट के लिए मान्य है।",
+                walletOtpTemplate: data.whatsapp_wallet_otp_template || "Your OTP for The Dharmarth Medical Foundation *Wallet Donation* is: *{otp}*. Valid for 10 minutes. Please do not share this code with anyone.",
+                walletOtpTemplate_hi: data.whatsapp_wallet_otp_template_hi || "The Dharmarth Medical Foundation वॉलेट दान के लिए आपका OTP है: *{otp}*। यह 10 मिनट के लिए मान्य है।",
                 walletDonationTemplate: data.whatsapp_wallet_donation_template || "Dear {name}, thank you for your donation of ₹{amount} from your wallet.",
-                walletDonationTemplate_hi: data.whatsapp_wallet_donation_template_hi || "नमस्ते {name}, आपके वॉलेट से ₹{amount} के दान के लिए धन्यवाद।" ,
-                suspensionOtpTemplate: data.whatsapp_suspension_otp_template || "The DharmArth Foundation: Your OTP for User Suspension/Activation is: *{otp}*. Please do not share this code with anyone.",
-                suspensionOtpTemplate_hi: data.whatsapp_suspension_otp_template_hi || "The DharmArth Foundation: यूजर सस्पेंड/एक्टिवेट करने के लिए आपका OTP है: *{otp}*। कृपया इसे किसी के साथ साझा न करें।"
+                walletDonationTemplate_hi: data.whatsapp_wallet_donation_template_hi || "नमस्ते {name}, आपके वॉलेट से ₹{amount} के दान के लिए धन्यवाद।",
+                suspensionOtpTemplate: data.whatsapp_suspension_otp_template || "The Dharmarth Medical Foundation: Your OTP for User Suspension/Activation is: *{otp}*. Please do not share this code with anyone.",
+                suspensionOtpTemplate_hi: data.whatsapp_suspension_otp_template_hi || "The Dharmarth Medical Foundation: यूजर सस्पेंड/एक्टिवेट करने के लिए आपका OTP है: *{otp}*। कृपया इसे किसी के साथ साझा न करें।"
             });
 
             // Payout Config
@@ -1472,7 +1472,7 @@ const AdminSettings = () => {
                                 <X size={20} />
                             </button>
                         </div>
-                        
+
                         <div style={{ marginBottom: '1.5rem' }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#475569' }}>
                                 Admin OTP Mobile Number
@@ -1492,8 +1492,8 @@ const AdminSettings = () => {
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                             <button className="btn btn-outline" onClick={() => setSecurityModalOpen(false)}>Cancel</button>
-                            <button 
-                                className="btn bg-primary text-white" 
+                            <button
+                                className="btn bg-primary text-white"
                                 onClick={handleSaveSecurityConfig}
                                 style={{ background: '#00bfa5', display: 'flex', alignItems: 'center', gap: '8px' }}
                             >
@@ -1519,7 +1519,7 @@ const AdminSettings = () => {
                                 <X size={20} />
                             </button>
                         </div>
-                        
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             <div>
                                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>
@@ -1551,8 +1551,8 @@ const AdminSettings = () => {
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
                             <button className="btn btn-outline" onClick={() => setContactModalOpen(false)} style={{ borderRadius: '10px' }}>Cancel</button>
-                            <button 
-                                className="btn bg-primary text-white" 
+                            <button
+                                className="btn bg-primary text-white"
                                 onClick={handleSaveContactConfig}
                                 style={{ borderRadius: '10px', background: '#00bfa5', display: 'flex', alignItems: 'center', gap: '8px', color: 'white', border: 'none', cursor: 'pointer' }}
                             >
@@ -1578,7 +1578,7 @@ const AdminSettings = () => {
                                 <X size={20} />
                             </button>
                         </div>
-                        
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             <div>
                                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>
@@ -1600,8 +1600,8 @@ const AdminSettings = () => {
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
                             <button className="btn btn-outline" onClick={() => setBodyTestModalOpen(false)} style={{ borderRadius: '10px' }}>Cancel</button>
-                            <button 
-                                className="btn bg-primary text-white" 
+                            <button
+                                className="btn bg-primary text-white"
                                 onClick={handleSaveBodyTestMobile}
                                 style={{ borderRadius: '10px', background: '#00bfa5', display: 'flex', alignItems: 'center', gap: '8px', color: 'white', border: 'none', cursor: 'pointer' }}
                             >
@@ -1627,7 +1627,7 @@ const AdminSettings = () => {
                                 <X size={20} />
                             </button>
                         </div>
-                        
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             <div>
                                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 700, color: '#475569' }}>
@@ -1657,8 +1657,8 @@ const AdminSettings = () => {
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
                             <button className="btn btn-outline" onClick={() => setDoctorAvailabilityModalOpen(false)} style={{ borderRadius: '10px' }}>Cancel</button>
-                            <button 
-                                className="btn bg-primary text-white" 
+                            <button
+                                className="btn bg-primary text-white"
                                 onClick={handleSaveDoctorAvailability}
                                 style={{ borderRadius: '10px', background: '#00bfa5', display: 'flex', alignItems: 'center', gap: '8px', color: 'white', border: 'none', cursor: 'pointer' }}
                             >

@@ -130,7 +130,7 @@ const BodyTests = () => {
     const medicalBusinessSchema = {
         "@context": "https://schema.org",
         "@type": "MedicalBusiness",
-        "name": "The DharmArth Foundation Sujangarh Healthcare Services",
+        "name": "The Dharmarth Medical Foundation Sujangarh Healthcare Services",
         "description": "Book diagnostic checkup packages and medical tests at affordable prices in Sujangarh, Rajasthan.",
         "url": "https://thedharmarth.com/body-tests",
         "image": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1783602963/the_dharmarth_foundation/logo.jpg",
@@ -149,7 +149,7 @@ const BodyTests = () => {
         <>
             <SEO
                 title={isHindi ? "उपलब्ध मेडिकल टेस्ट और हेल्थ चेकअप पैकेज - सुजानगढ़" : "Available Medical Tests & Health Checkups in Sujangarh"}
-                description={isHindi ? "धर्मार्थ फाउंडेशन सुजानगढ़ में किफायती दरों पर प्रयोगशाला परीक्षणों और नैदानिक जांच पैकेजों की बुकिंग करें।" : "Book affordable diagnostic checkup packages and laboratory tests at Sujangarh. Professional health checkups from The DharmArth Foundation."}
+                description={isHindi ? "धर्मार्थ फाउंडेशन सुजानगढ़ में किफायती दरों पर प्रयोगशाला परीक्षणों और नैदानिक जांच पैकेजों की बुकिंग करें।" : "Book affordable diagnostic checkup packages and laboratory tests at Sujangarh. Professional health checkups from The Dharmarth Medical Foundation."}
                 keywords="Medical Tests Sujangarh, Diagnostic checkup, blood test Churu, Pathology Rajasthan, health checkup package"
                 jsonLd={medicalBusinessSchema}
             />
@@ -159,7 +159,7 @@ const BodyTests = () => {
                 <div className="tests-hero">
                     <div className="container">
                         <h1>{isHindi ? "चिकित्सीय परीक्षण एवं निदान सेवाएं" : "Medical Tests & Diagnostic Services"}</h1>
-                        <p>{isHindi ? "धर्मार्थ फाउंडेशन के माध्यम से किफायती और उच्च गुणवत्ता वाले टेस्ट बुक करें" : "Book affordable and high-quality tests through The DharmArth Foundation"}</p>
+                        <p>{isHindi ? "धर्मार्थ फाउंडेशन के माध्यम से किफायती और उच्च गुणवत्ता वाले टेस्ट बुक करें" : "Book affordable and high-quality tests through The Dharmarth Medical Foundation"}</p>
                     </div>
                 </div>
 
@@ -289,7 +289,7 @@ const BodyTests = () => {
                                                 {test.image ? (
                                                     <img
                                                         src={test.image.startsWith('http') ? test.image : `${API_BASE_URL}${test.image.startsWith('/') ? '' : '/'}${test.image}`}
-                                                        alt={`${(isHindi && test.name_hi) ? test.name_hi : test.name} Diagnostic Test Package - The DharmArth Foundation Sujangarh`}
+                                                        alt={`${(isHindi && test.name_hi) ? test.name_hi : test.name} Diagnostic Test Package - The Dharmarth Medical Foundation Sujangarh`}
                                                     />
                                                 ) : (
                                                     <div className="test-placeholder-image">🔬</div>
@@ -301,7 +301,7 @@ const BodyTests = () => {
                                                 <div className="test-meta">
                                                     <span>⏱️ {test.time}</span>
                                                     <span style={{ marginLeft: '10px' }}>
-                                                        🍽️ {test.beforeFood 
+                                                        🍽️ {test.beforeFood
                                                             ? (isHindi ? 'खाली पेट' : 'Before food')
                                                             : (isHindi ? 'भोजन के बाद' : 'After lunch')}
                                                     </span>
@@ -321,7 +321,7 @@ const BodyTests = () => {
                                                     onClick={() => {
                                                         if (window.innerWidth >= 1024) {
                                                             const testName = (isHindi && test.name_hi) ? test.name_hi : test.name;
-                                                            const message = isHindi 
+                                                            const message = isHindi
                                                                 ? `नमस्ते, मैं "${testName}" टेस्ट बुक करना चाहता/चाहती हूँ।`
                                                                 : `Hello, I would like to book the "${testName}" test.`;
                                                             window.open(`https://wa.me/${bodyTestMobile}?text=${encodeURIComponent(message)}`, '_blank');

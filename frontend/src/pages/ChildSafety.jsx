@@ -9,10 +9,10 @@ import './PrivacyPolicy.css'; // Reuses the premium styles of policy layouts
 const ChildSafety = () => {
     return (
         <div className="privacy-page">
-            <SEO 
+            <SEO
                 title="Child Safety Standards & CSAE Policy"
-                description="The DharmArth Foundation's child safety standards, CSAE zero-tolerance policy, and safety response rules to protect children and minors across our donation and medicine platforms."
-                keywords="Child Safety, CSAE Policy, Zero Tolerance Policy, NGO Safety Standards, The DharmArth Foundation compliance"
+                description="The Dharmarth Medical Foundation's child safety standards, CSAE zero-tolerance policy, and safety response rules to protect children and minors across our donation and medicine platforms."
+                keywords="Child Safety, CSAE Policy, Zero Tolerance Policy, NGO Safety Standards, The Dharmarth Medical Foundation compliance"
             />
             <Navbar />
             {/* Hero Section */}
@@ -59,14 +59,14 @@ const ChildSafety = () => {
                         <main className="privacy-main">
                             <div className="privacy-intro" style={{ background: 'linear-gradient(135deg, #fff0f2, #ffe5e8)', borderLeftColor: '#db3a34' }}>
                                 <p style={{ color: '#5f0f1a' }}>
-                                    <strong>IMPORTANT POLICY NOTICE:</strong> The DharmArth Foundation is committed to providing a safe, trustworthy, and supportive environment for patients, contributors, volunteers, and all users. We maintain a strict, absolute <strong>Zero-Tolerance Policy</strong> against any form of Child Sexual Abuse Material (CSAM) or Child Sexual Abuse and Exploitation (CSAE).
+                                    <strong>IMPORTANT POLICY NOTICE:</strong> The Dharmarth Medical Foundation is committed to providing a safe, trustworthy, and supportive environment for patients, contributors, volunteers, and all users. We maintain a strict, absolute <strong>Zero-Tolerance Policy</strong> against any form of Child Sexual Abuse Material (CSAM) or Child Sexual Abuse and Exploitation (CSAE).
                                 </p>
                             </div>
 
                             <section id="zero-tolerance" className="privacy-section">
                                 <h2>1. Zero Tolerance Policy</h2>
                                 <p>
-                                    At the DharmArth Foundation, we are committed to safeguarding minors and children across all our platforms, operations, and programs. We strictly prohibit the generation, transmission, sharing, requesting, or storage of any content that depicts, encourages, or facilitates Child Sexual Abuse Material (CSAM) or Child Sexual Abuse and Exploitation (CSAE).
+                                    At The Dharmarth Medical Foundation, we are committed to safeguarding minors and children across all our platforms, operations, and programs. We strictly prohibit the generation, transmission, sharing, requesting, or storage of any content that depicts, encourages, or facilitates Child Sexual Abuse Material (CSAM) or Child Sexual Abuse and Exploitation (CSAE).
                                 </p>
                                 <p>
                                     Any user, volunteer, or donor found violating this policy will face <strong>immediate account termination</strong>, a permanent platform ban, and an automatic referral to relevant national and international cyber law enforcement agencies.
@@ -114,7 +114,7 @@ const ChildSafety = () => {
                             <section id="law-cooperation" className="privacy-section">
                                 <h2>5. Cooperation with Law Enforcement</h2>
                                 <p>
-                                    The DharmArth Foundation cooperates directly with local, national, and global organizations dedicated to child protection:
+                                    The Dharmarth Medical Foundation cooperates directly with local, national, and global organizations dedicated to child protection:
                                 </p>
                                 <ul>
                                     <li><strong>International Authorities:</strong> Any discovered CSAM/CSAE material will be reported to the <strong>National Center for Missing & Exploited Children (NCMEC)</strong> and respective international law enforcement bodies.</li>
@@ -130,7 +130,7 @@ const ChildSafety = () => {
                                 </p>
                                 <ul>
                                     <li>We verify all partner pharmacy staff and delivery boys prior to onboarding.</li>
-                                    <li>We ensure that child welfare programs and fundraisers are managed directly by pre-verified, authenticated administrators of the DharmArth Foundation.</li>
+                                    <li>We ensure that child welfare programs and fundraisers are managed directly by pre-verified, authenticated administrators of The Dharmarth Medical Foundation.</li>
                                     <li>We educate volunteers and employees on child safety protocols to establish a secure medical environment for families.</li>
                                 </ul>
                             </section>

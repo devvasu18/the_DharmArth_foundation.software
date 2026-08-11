@@ -38,7 +38,7 @@ const Home = () => {
     const organizationSchema = {
         "@context": "https://schema.org",
         "@type": "NGO",
-        "name": "The DharmArth Foundation",
+        "name": "The Dharmarth Medical Foundation",
         "alternateName": "TDMF",
         "url": "https://thedharmarth.com",
         "logo": "https://res.cloudinary.com/dbe1ykvg8/image/upload/v1783602963/the_dharmarth_foundation/logo.jpg",
@@ -59,7 +59,7 @@ const Home = () => {
             "addressCountry": "IN"
         },
         "taxID": "80G Tax Exempted NGO",
-        "description": "The DharmArth Foundation is a government-approved charity organization offering 80G tax saving donation options, community healthcare assistance, free medicine service, and doctor availability in Sujangarh, Rajasthan, India."
+        "description": "The Dharmarth Medical Foundation is a government-approved charity organization offering 80G tax saving donation options, community healthcare assistance, free medicine service, and doctor availability in Sujangarh, Rajasthan, India."
     };
 
     return (

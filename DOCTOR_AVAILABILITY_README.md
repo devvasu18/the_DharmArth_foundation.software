@@ -1,6 +1,6 @@
 # Doctor Availability System
 
-A comprehensive doctor availability management system designed for The Dharmarth Foundation, featuring admin controls and a user-friendly public interface.
+A comprehensive doctor availability management system designed for The Dharmarth Medical Foundation, featuring admin controls and a user-friendly public interface.
 
 ## Features
 

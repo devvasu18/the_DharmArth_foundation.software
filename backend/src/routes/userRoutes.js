@@ -12,7 +12,7 @@ router.post('/admin/send-suspension-otp', protect, checkPermission('User Managem
     try {
         const Setting = require('../models/Setting');
         const whatsappService = require('../services/whatsappService');
-        
+
         const setting = await Setting.findOne({ key: 'admin_suspension_mobile' });
         const adminMobile = setting ? setting.value : process.env.ADMIN_MOBILE;
 
@@ -183,7 +183,7 @@ router.get('/profile', protect, async (req, res) => {
         const user = await User.findById(req.user._id)
             .select('-password')
             .populate('referredBy', 'name mobile referralCode');
-            
+
         if (user) {
             res.json(user);
         } else {
@@ -204,7 +204,7 @@ router.post('/profile/addresses', protect, async (req, res) => {
         if (!user) return res.status(404).json({ message: 'User not found' });
 
         const addressData = req.body;
-        
+
         if (addressData._id) {
             // Update existing
             const addrIndex = user.savedAddresses.findIndex(a => a._id.toString() === addressData._id);
@@ -220,7 +220,7 @@ router.post('/profile/addresses', protect, async (req, res) => {
             // Add new
             user.savedAddresses.push(addressData);
         }
-        
+
         await user.save();
         res.json(user.savedAddresses);
     } catch (error) {
@@ -431,14 +431,14 @@ router.put('/become-motivator', protect, async (req, res) => {
         console.log(`Starting motivator registration for user: ${user.mobile} (${user.name})`);
 
         // 1. Generate referralCode if not exists is now handled by User model pre('save') hook
-        
+
         user.isMotivator = true;
         user.payoutCredentials = {
             bankName: bankName || '',
             accountHolder: accountHolder || '',
             accountNumber: accountNumber || '',
             ifscCode: ifscCode || '',
-            isVerified: false 
+            isVerified: false
         };
 
         await user.save();
@@ -446,7 +446,7 @@ router.put('/become-motivator', protect, async (req, res) => {
 
         const sanitizedUser = user.toObject();
         delete sanitizedUser.password;
-        
+
 
 
         res.json({
@@ -456,9 +456,9 @@ router.put('/become-motivator', protect, async (req, res) => {
 
     } catch (error) {
         console.error("Become Motivator Error:", error);
-        res.status(500).json({ 
+        res.status(500).json({
             message: error.message,
-            detail: "Internal server error during motivator registration" 
+            detail: "Internal server error during motivator registration"
         });
     }
 });
@@ -483,10 +483,10 @@ router.put('/profile', protect, async (req, res) => {
         if (email) user.email = email;
 
         await user.save();
-        
+
         const sanitized = user.toObject();
         delete sanitized.password;
-        
+
         res.json({
             message: 'Profile updated successfully',
             user: sanitized
@@ -521,18 +521,18 @@ router.get('/guest-lookup/:mobile', async (req, res) => {
 // @access  Public
 router.get('/v/:referralCode', async (req, res) => {
     try {
-        const user = await User.findOne({ 
+        const user = await User.findOne({
             $or: [
                 { referralCode: req.params.referralCode.toUpperCase() },
                 { mobile: req.params.referralCode }
             ]
         })
             .select('name work bio profileImage city state mobile referralCode createdAt isMotivator');
-            
+
         if (!user) {
             return res.status(404).json({ message: 'Volunteer profile not found' });
         }
-        
+
         res.json(user);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -621,8 +621,8 @@ router.post('/delete-account/send-otp', protect, async (req, res) => {
             user.otpExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
             await user.save();
         } else {
-            otpSent = await whatsappService._sendWhatsAppNow(user.mobile, 
-                `Your OTP for *Account Deletion* at The DharmArth Foundation is: *${otp}*. Valid for 10 minutes. ⚠️ This action is permanent and cannot be undone.`
+            otpSent = await whatsappService._sendWhatsAppNow(user.mobile,
+                `Your OTP for *Account Deletion* at The Dharmarth Medical Foundation is: *${otp}*. Valid for 10 minutes. ⚠️ This action is permanent and cannot be undone.`
             );
         }
 
@@ -721,7 +721,7 @@ router.delete('/delete-account', protect, async (req, res) => {
                 amount: walletBalance,
                 type: 'debit',
                 reason: 'wallet_donation',
-                description: `Auto-donated ₹${walletBalance} to The DharmArth Foundation upon account deletion by ${userName} (${userMobile})`
+                description: `Auto-donated ₹${walletBalance} to The Dharmarth Medical Foundation upon account deletion by ${userName} (${userMobile})`
             });
             // Zero out the wallet balance
             wallet.balance = 0;
@@ -848,7 +848,7 @@ router.post('/request-account-deletion', async (req, res) => {
         // Send confirmation to requester (non-blocking)
         try {
             await whatsappService.sendMessage(cleanMobile,
-                `🙏 Dear ${name}, we have received your account deletion request for The DharmArth Foundation app.\n\n` +
+                `🙏 Dear ${name}, we have received your account deletion request for The Dharmarth Medical Foundation app.\n\n` +
                 `Our team will verify your identity and process it within *7 working days*.\n\n` +
                 `If you need urgent assistance, email us at thedharmarth@gmail.com`
             );
