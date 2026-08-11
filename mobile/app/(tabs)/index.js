@@ -288,6 +288,7 @@ const LandingScreen = () => {
                 styles.quickLinkBtn,
                 {
                   backgroundColor: '#d1b485',
+                  height: 65,
                   paddingHorizontal: 20,
                   justifyContent: 'center',
                   alignItems: 'center',
