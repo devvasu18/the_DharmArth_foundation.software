@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/layout/Navbar';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { User, Mail, Phone, Briefcase, Info, MapPin, Camera, Save, Download, Share2, ArrowLeft, Trash2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { User, Mail, Phone, Briefcase, Info, MapPin, Camera, Save, Download, Share2, ArrowLeft, Trash2, AlertTriangle, RefreshCw, ExternalLink, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +17,7 @@ const UserProfile = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const cardRef = useRef(null);
+    const isHindi = i18n.language?.startsWith('hi');
 
     // ── Delete Account State ────────────────────────────────
     const [deleteStep, setDeleteStep] = useState('idle'); // 'idle' | 'warning' | 'otp' | 'deleting'
@@ -97,7 +98,7 @@ const UserProfile = () => {
         try {
             const { data } = await api.put('/users/profile', formData);
             setUser(data.user);
-            toast.success("Profile updated successfully!");
+            toast.success(isHindi ? "प्रोफ़ाइल सफलतापूर्वक अपडेट हो गई!" : "Profile updated successfully!");
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to update profile");
         } finally {
@@ -239,8 +240,8 @@ const UserProfile = () => {
                     {/* Left Side: Form */}
                     <div className="form-section">
                         <div style={{ marginBottom: '2rem' }}>
-                            <h1 className="section-title">My Identity Profile</h1>
-                            <p className="section-subtitle">Complete your profile to generate your official Volunteer ID Card.</p>
+                            <h1 className="section-title">{isHindi ? 'मेरी पहचान प्रोफ़ाइल' : 'My Identity Profile'}</h1>
+                            <p className="section-subtitle">{isHindi ? 'अपना आधिकारिक स्वयंसेवक आईडी कार्ड बनाने के लिए अपनी प्रोफ़ाइल पूरी करें।' : 'Complete your profile to generate your official Volunteer ID Card.'}</p>
                         </div>
 
                         <form onSubmit={handleSubmit}>
@@ -267,43 +268,43 @@ const UserProfile = () => {
 
                             <div className="form-row">
                                 <div className="input-group">
-                                    <label className="input-label">Full Name</label>
+                                    <label className="input-label">{isHindi ? 'पूरा नाम' : 'Full Name'}</label>
                                     <div style={{ position: 'relative' }}>
                                         <User style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
                                         <input
                                             name="name" value={formData.name} onChange={handleInputChange}
                                             className="form-control with-icon"
-                                            placeholder="Enter full name"
+                                            placeholder={isHindi ? "पूरा नाम दर्ज करें" : "Enter full name"}
                                         />
                                     </div>
                                 </div>
                                 <div className="input-group">
-                                    <label className="input-label">Email Address</label>
+                                    <label className="input-label">{isHindi ? 'ईमेल पता' : 'Email Address'}</label>
                                     <div style={{ position: 'relative' }}>
                                         <Mail style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
                                         <input
                                             name="email" value={formData.email} onChange={handleInputChange}
                                             className="form-control with-icon"
-                                            placeholder="Enter email"
+                                            placeholder={isHindi ? "ईमेल दर्ज करें" : "Enter email"}
                                         />
                                     </div>
                                 </div>
                             </div>
 
                             <div className="input-group" style={{ marginBottom: '1.5rem' }}>
-                                <label className="input-label">Work / Profession</label>
+                                <label className="input-label">{isHindi ? 'कार्य / व्यवसाय' : 'Work / Profession'}</label>
                                 <div style={{ position: 'relative' }}>
                                     <Briefcase style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
                                     <input
                                         name="work" value={formData.work} onChange={handleInputChange}
                                         className="form-control with-icon"
-                                        placeholder="e.g. Software Engineer, Social Worker"
+                                        placeholder={isHindi ? "जैसे: सामाजिक कार्यकर्ता, डॉक्टर, इंजीनियर" : "e.g. Software Engineer, Social Worker"}
                                     />
                                 </div>
                             </div>
 
                             <div className="input-group" style={{ marginBottom: '1.5rem' }}>
-                                <label className="input-label">Bio / Vision</label>
+                                <label className="input-label">{isHindi ? 'बायो / विचार' : 'Bio / Vision'}</label>
                                 <div style={{ position: 'relative' }}>
                                     <Info style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8' }} size={18} />
                                     <textarea
@@ -312,7 +313,7 @@ const UserProfile = () => {
                                         onChange={handleInputChange}
                                         maxLength={100}
                                         className="form-control with-icon textarea"
-                                        placeholder="A short sentence about your mission..."
+                                        placeholder={isHindi ? "अपने मिशन के बारे में एक संक्षिप्त वाक्य..." : "A short sentence about your mission..."}
                                     />
                                     <div style={{
                                         position: 'absolute',
@@ -329,22 +330,22 @@ const UserProfile = () => {
 
                             <div className="form-row">
                                 <div className="input-group">
-                                    <label className="input-label">City</label>
+                                    <label className="input-label">{isHindi ? 'शहर' : 'City'}</label>
                                     <div style={{ position: 'relative' }}>
                                         <MapPin style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={18} />
                                         <input
                                             name="city" value={formData.city} onChange={handleInputChange}
                                             className="form-control with-icon"
-                                            placeholder="Enter city"
+                                            placeholder={isHindi ? "शहर दर्ज करें" : "Enter city"}
                                         />
                                     </div>
                                 </div>
                                 <div className="input-group">
-                                    <label className="input-label">State</label>
+                                    <label className="input-label">{isHindi ? 'राज्य' : 'State'}</label>
                                     <input
                                         name="state" value={formData.state} onChange={handleInputChange}
                                         className="form-control"
-                                        placeholder="Enter state"
+                                        placeholder={isHindi ? "राज्य दर्ज करें" : "Enter state"}
                                     />
                                 </div>
                             </div>
@@ -355,18 +356,29 @@ const UserProfile = () => {
                                 className="submit-btn"
                             >
                                 <Save size={20} />
-                                {isSaving ? "Saving..." : "Save Profile Details"}
+                                {isSaving ? (isHindi ? "सहेजा जा रहा है..." : "Saving...") : (isHindi ? "प्रोफ़ाइल सहेजें" : "Save Profile Details")}
                             </button>
                         </form>
+
+                        {/* Mobile Only: View Full Digital Card (Share & Earn) Button before Danger Zone */}
+                        <div className="mobile-view-card-banner">
+                            <button
+                                className="mobile-view-card-btn"
+                                onClick={() => navigate(`/v/${user?.referralCode || user?.mobile}`)}
+                            >
+                                <span>{isHindi ? 'डिजिटल आईडी कार्ड देखें (Share & Earn)' : 'View Full Digital Card (Share & Earn)'}</span>
+
+                            </button>
+                        </div>
 
                         {/* ─── DANGER ZONE ──────────────────────────── */}
                         <div className="danger-zone-box">
                             <div className="danger-zone-header">
                                 <AlertTriangle size={18} color="#e11d48" />
-                                <span className="danger-zone-title">Danger Zone</span>
+                                <span className="danger-zone-title">{isHindi ? 'खाता हटाएं (Danger Zone)' : 'Danger Zone'}</span>
                             </div>
                             <p className="danger-zone-desc">
-                                Permanently delete your account. This action cannot be undone.
+                                {isHindi ? 'अपना खाता स्थायी रूप से हटाएं। इस कार्रवाई को पूर्ववत नहीं किया जा सकता।' : 'Permanently delete your account. This action cannot be undone.'}
                             </p>
 
                             {deleteStep === 'idle' && (
@@ -376,7 +388,7 @@ const UserProfile = () => {
                                     onClick={() => setDeleteStep('warning')}
                                 >
                                     <Trash2 size={16} />
-                                    Delete My Account
+                                    {isHindi ? 'मेरा खाता हटाएं' : 'Delete My Account'}
                                 </button>
                             )}
 
@@ -384,35 +396,35 @@ const UserProfile = () => {
                                 <div className="delete-warning-panel">
                                     <div className="delete-impact-list">
                                         <div className="delete-impact-col delete-impact-col--red">
-                                            <span className="delete-impact-label">🗑️ Permanently Deleted</span>
+                                            <span className="delete-impact-label">{isHindi ? '🗑️ स्थायी रूप से हटाया जाएगा' : '🗑️ Permanently Deleted'}</span>
                                             <ul>
-                                                <li>Profile &amp; login access</li>
-                                                <li>Prescriptions &amp; medical records</li>
-                                                <li>Saved addresses &amp; notifications</li>
+                                                <li>{isHindi ? 'प्रोफ़ाइल एवं लॉगिन एक्सेस' : 'Profile & login access'}</li>
+                                                <li>{isHindi ? 'प्रिस्क्रिप्शन एवं मेडिकल रिकॉर्ड्स' : 'Prescriptions & medical records'}</li>
+                                                <li>{isHindi ? 'सहेजे गए पते और सूचनाएं' : 'Saved addresses & notifications'}</li>
                                             </ul>
                                         </div>
                                         <div className="delete-impact-col delete-impact-col--amber">
-                                            <span className="delete-impact-label">📋 Kept for Legal Records</span>
+                                            <span className="delete-impact-label">{isHindi ? '📋 कानूनी रिकॉर्ड के लिए रखा जाएगा' : '📋 Kept for Legal Records'}</span>
                                             <ul>
-                                                <li>Donation history (80G receipts)</li>
-                                                <li>Commission &amp; transaction records</li>
-                                                <li>Completed order history</li>
+                                                <li>{isHindi ? 'दान इतिहास (80G रसीदें)' : 'Donation history (80G receipts)'}</li>
+                                                <li>{isHindi ? 'कमीशन और लेन-देन रिकॉर्ड' : 'Commission & transaction records'}</li>
+                                                <li>{isHindi ? 'ऑर्डर इतिहास' : 'Completed order history'}</li>
                                             </ul>
                                         </div>
                                     </div>
 
                                     {deleteWallet > 0 && (
                                         <div className="delete-wallet-note">
-                                            💜 Your wallet balance of <strong>₹{deleteWallet}</strong> will be auto-donated to the Foundation.
+                                            {isHindi ? <>💜 आपकी वॉलेट शेष राशि <strong>₹{deleteWallet}</strong> स्वतः फाउंडेशन को दान कर दी जाएगी।</> : <>💜 Your wallet balance of <strong>₹{deleteWallet}</strong> will be auto-donated to the Foundation.</>}
                                         </div>
                                     )}
 
                                     <div style={{ marginBottom: '1rem' }}>
-                                        <label className="input-label">Reason for leaving (optional)</label>
+                                        <label className="input-label">{isHindi ? 'खाता हटाने का कारण (वैकल्पिक)' : 'Reason for leaving (optional)'}</label>
                                         <textarea
                                             className="form-control"
                                             style={{ minHeight: 70, resize: 'vertical', fontSize: '0.9rem' }}
-                                            placeholder="Tell us why..."
+                                            placeholder={isHindi ? "बताएं क्यों..." : "Tell us why..."}
                                             value={deleteReason}
                                             onChange={e => setDeleteReason(e.target.value)}
                                             maxLength={200}
@@ -431,7 +443,7 @@ const UserProfile = () => {
                                             className="delete-cancel-btn"
                                             onClick={() => { setDeleteStep('idle'); setDeleteBlocked(null); setDeleteReason(''); }}
                                         >
-                                            Cancel
+                                            {isHindi ? 'रद्द करें' : 'Cancel'}
                                         </button>
                                         <button
                                             type="button"
@@ -439,7 +451,7 @@ const UserProfile = () => {
                                             onClick={handleSendDeleteOtp}
                                             disabled={isSendingDeleteOtp}
                                         >
-                                            {isSendingDeleteOtp ? 'Sending...' : 'Send OTP to Confirm'}
+                                            {isSendingDeleteOtp ? (isHindi ? 'भेजा जा रहा है...' : 'Sending...') : (isHindi ? 'पुष्टि के लिए ओटीपी भेजें' : 'Send OTP to Confirm')}
                                         </button>
                                     </div>
                                 </div>
@@ -448,17 +460,17 @@ const UserProfile = () => {
                             {deleteStep === 'otp' && (
                                 <div className="delete-otp-panel">
                                     <p className="delete-otp-hint">
-                                        OTP sent to <strong>{deleteMasked}</strong> via WhatsApp.
+                                        {isHindi ? <>ओटीपी <strong>{deleteMasked}</strong> पर व्हाट्सएप द्वारा भेजा गया है।</> : <>OTP sent to <strong>{deleteMasked}</strong> via WhatsApp.</>}
                                     </p>
                                     {deleteWallet > 0 && (
                                         <div className="delete-wallet-note">
-                                            ⚠️ Wallet balance of <strong>₹{deleteWallet}</strong> will be donated to Foundation upon deletion.
+                                            {isHindi ? <>⚠️ खाते हटाने पर वॉलेट बैलेंस <strong>₹{deleteWallet}</strong> फाउंडेशन को दान कर दिया जाएगा।</> : <>⚠️ Wallet balance of <strong>₹{deleteWallet}</strong> will be donated to Foundation upon deletion.</>}
                                         </div>
                                     )}
                                     <input
                                         type="number"
                                         className="delete-otp-input"
-                                        placeholder="Enter 6-digit OTP"
+                                        placeholder={isHindi ? "6-अंकीय ओटीपी दर्ज करें" : "Enter 6-digit OTP"}
                                         value={deleteOtp}
                                         onChange={e => setDeleteOtp(e.target.value.slice(0, 6))}
                                         maxLength={6}
@@ -470,7 +482,7 @@ const UserProfile = () => {
                                             className="delete-cancel-btn"
                                             onClick={() => { setDeleteStep('warning'); setDeleteOtp(''); }}
                                         >
-                                            ← Back
+                                            {isHindi ? '← वापस' : '← Back'}
                                         </button>
                                         <button
                                             type="button"
@@ -480,7 +492,7 @@ const UserProfile = () => {
                                             disabled={isDeleting || deleteOtp.length !== 6}
                                         >
                                             <Trash2 size={14} />
-                                            {isDeleting ? 'Deleting...' : 'Yes, Delete My Account'}
+                                            {isDeleting ? (isHindi ? 'हटाया जा रहा है...' : 'Deleting...') : (isHindi ? 'हां, मेरा खाता हटाएं' : 'Yes, Delete My Account')}
                                         </button>
                                     </div>
                                     <button
@@ -490,7 +502,7 @@ const UserProfile = () => {
                                         disabled={deleteCountdown > 0 || isSendingDeleteOtp}
                                     >
                                         <RefreshCw size={13} />
-                                        {deleteCountdown > 0 ? `Resend OTP in ${deleteCountdown}s` : 'Resend OTP'}
+                                        {deleteCountdown > 0 ? (isHindi ? `${deleteCountdown}s में ओटीपी पुनः भेजें` : `Resend OTP in ${deleteCountdown}s`) : (isHindi ? 'ओटीपी पुनः भेजें' : 'Resend OTP')}
                                     </button>
                                 </div>
                             )}
@@ -499,44 +511,14 @@ const UserProfile = () => {
 
                     {/* Right Side: Card Preview & Actions */}
                     <div className="preview-section" ref={previewContainerRef}>
-                        <div className="preview-header">
 
-                            <div className="preview-actions">
-                                <button onClick={downloadCard} className="action-btn download">
-                                    <Download size={16} /> Download
-                                </button>
-
-                            </div>
-                        </div>
-
-                        <div className="public-link-box">
-                            <span className="link-label">Your Public Volunteer Page:</span>
-                            <div className="link-display">
-                                <span className="link-url">{window.location.origin}/v/{user?.referralCode || user?.mobile}</span>
-                                <button className="copy-icon-btn" onClick={handleShare}>
-                                    <Share2 size={14} />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* ID Card Display */}
+                        {/* Desktop ID Card Display */}
                         <div className="card-outer-wrapper" style={{ height: `${(window.innerWidth >= 1024 ? 600 : (window.innerWidth < 650 ? 1200 : 1100)) * cardScale}px` }}>
                             <div className="card-inner-scale" style={{ transform: `scale(${cardScale})` }}>
                                 <VolunteerCard userData={{ ...formData, mobile: user?.mobile, referralCode: user?.referralCode, createdAt: user?.createdAt }} cardRef={cardRef} />
                             </div>
                         </div>
 
-                        <div className="guidelines-box">
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <Info style={{ color: '#d97706', flexShrink: 0 }} size={20} />
-                                <div>
-                                    <p className="guide-title">Digital ID Guidelines</p>
-                                    <p className="guide-text">
-                                        Use a clear, passport-style photo for better recognition. This ID card can be shared digitally to build trust with donors.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                 </div>
@@ -1088,6 +1070,49 @@ const UserProfile = () => {
                     padding: 8px;
                 }
                 .delete-resend-btn:disabled { color: #94a3b8; cursor: not-allowed; }
+
+                .mobile-view-card-banner {
+                    display: none;
+                    margin-top: 24px;
+                    margin-bottom: 20px;
+                }
+
+                .mobile-view-card-btn {
+                    width: 100%;
+                    background: linear-gradient(135deg, #00bf9a 0%, #00897b 100%);
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 16px;
+                    padding: 15px 18px;
+                    font-size: 15px;
+                    font-weight: 800;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    box-shadow: 0 4px 14px rgba(0, 191, 154, 0.25);
+                    transition: transform 0.2s ease;
+                }
+
+                .mobile-view-card-btn:hover {
+                    transform: translateY(-1px);
+                }
+
+                @media (max-width: 768px) {
+                    .preview-section {
+                        display: none !important;
+                        height: 0 !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    .card-outer-wrapper {
+                        display: none !important;
+                    }
+                    .mobile-view-card-banner {
+                        display: block !important;
+                    }
+                }
 
             `}</style>
 

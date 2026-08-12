@@ -1,5 +1,6 @@
 import React from 'react';
-import { Quote, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
+import './Testimonials.css';
 
 const Testimonials = ({ data }) => {
     const items = data?.items || [];
@@ -7,35 +8,33 @@ const Testimonials = ({ data }) => {
     if (!items || items.length === 0) return null;
 
     return (
-        <section className="cms-section py-24 bg-teal-50/50">
+        <section className="cms-section testimonials-cms-section">
             <div className="cms-container">
-                <div className="text-center mb-16">
-                    <h2 className="cms-heading">{data?.title || 'What Our Donors Say'}</h2>
-                    <p className="cms-subheading mx-auto">{data?.subtitle || 'Join thousands of satisfied supporters making a real difference.'}</p>
+                <div className="section-header-box">
+                    <h2 className="cms-section-title">{data?.title || 'Voices of Change'}</h2>
+                    {data?.subtitle && <p className="cms-section-subtitle">{data.subtitle}</p>}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="testimonials-grid-container">
                     {items.map((item, index) => (
-                        <div key={index} className="cms-card border-none bg-white relative flex flex-col h-full shadow-md hover:shadow-xl">
-
-
-                            <div className="flex gap-1 mb-6">
+                        <div key={index} className="testimonial-card-box">
+                            <div className="stars-row">
                                 {[...Array(item.rating || 5)].map((_, i) => (
-                                    <Star key={i} size={16} fill="var(--primary)" className="text-primary" />
+                                    <Star key={i} size={15} fill="#f59e0b" color="#f59e0b" />
                                 ))}
                             </div>
 
-                            <p className="text-gray-700 italic leading-relaxed mb-8 flex-grow">
+                            <p className="testimonial-quote-text">
                                 "{item.text}"
                             </p>
 
-                            <div className="flex items-center gap-4 border-t border-gray-50 pt-6 mt-auto">
-                                <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-teal-100 shadow-sm">
-                                    <img src={item.photo || `https://i.pravatar.cc/150?u=${index}`} alt={item.name} className="w-full h-full object-cover" />
+                            <div className="testimonial-user-row">
+                                <div className="user-avatar-circle">
+                                    <img src={item.photo || `https://i.pravatar.cc/150?u=${index}`} alt={item.name} className="user-avatar-img" />
                                 </div>
-                                <div>
-                                    <h4 className="font-bold text-gray-900">{item.name}</h4>
-                                    <p className="text-xs text-teal-600 font-bold uppercase tracking-wider">Verified Donor</p>
+                                <div className="user-meta-col">
+                                    <h4 className="user-name-text">{item.name}</h4>
+                                    <span className="user-role-tag">Verified Supporter</span>
                                 </div>
                             </div>
                         </div>

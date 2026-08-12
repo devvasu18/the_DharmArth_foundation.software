@@ -1,0 +1,416 @@
+.share-earn-page {
+    min-height: 100vh;
+    background: #f8fafc;
+    padding-bottom: 60px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Mobile Screen Header Bar */
+.mobile-share-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    padding: 14px 18px;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #1e293b;
+    transition: all 0.2s ease;
+}
+
+.header-back-btn:hover {
+    background: #f1f5f9;
+    color: #00bf9a;
+}
+
+.header-title-text {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+}
+
+@media (min-width: 769px) {
+    .mobile-share-header-bar {
+        display: none;
+    }
+}
+
+.main-share-container {
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 24px 16px;
+}
+
+/* Page Title Section */
+.share-page-header {
+    margin-bottom: 24px;
+}
+
+.share-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.02em;
+}
+
+.share-subtitle {
+    font-size: 14px;
+    font-weight: 500;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.45;
+}
+
+/* ID Card Box (Image 1 style) */
+.share-id-card {
+    background: #ffffff;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e2e8f0;
+    margin-bottom: 24px;
+}
+
+.id-card-top-teal {
+    background: #00bf9a;
+    padding: 24px 22px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.id-photo-wrapper {
+    width: 95px;
+    height: 105px;
+    border-radius: 14px;
+    border: 3px solid #ffffff;
+    overflow: hidden;
+    background: #ffffff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.id-photo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.id-brand-title-box {
+    color: #ffffff;
+}
+
+.id-brand-name {
+    font-size: 24px;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+}
+
+.id-brand-sub {
+    font-size: 11px;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 1.2px;
+}
+
+.id-card-bottom-white {
+    padding: 22px;
+}
+
+.id-name-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.name-role-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.id-user-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 2px 0;
+    letter-spacing: -0.01em;
+}
+
+.id-user-role {
+    font-size: 12px;
+    font-weight: 800;
+    color: #00bf9a;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.volunteer-id-badge {
+    text-align: right;
+}
+
+.vol-id-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    display: block;
+    letter-spacing: 0.3px;
+}
+
+.vol-id-value {
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.id-user-quote {
+    font-style: italic;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.55;
+    margin: 12px 0 20px 0;
+}
+
+/* 4 Metadata Info Grid */
+.id-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 12px;
+    padding-top: 14px;
+    border-top: 1px stroke #f1f5f9;
+}
+
+.id-info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-icon {
+    color: #0f172a;
+    flex-shrink: 0;
+}
+
+.info-text-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 9px;
+    font-weight: 800;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+}
+
+.info-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+/* Section Box Styling */
+.share-section-box {
+    margin-bottom: 24px;
+}
+
+.section-label-small {
+    font-size: 11px;
+    font-weight: 800;
+    color: #64748b;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.share-link-input-wrapper {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 6px 6px 6px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.share-link-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    background: transparent;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.copy-icon-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: #e6faf5;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.copy-icon-btn:hover {
+    background: #ccfbf1;
+}
+
+/* Action Share Buttons */
+.share-btns-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.btn-share-whatsapp {
+    background: #25d366;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 800;
+    padding: 13px;
+    border-radius: 14px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+    transition: transform 0.2s ease;
+}
+
+.btn-share-whatsapp:hover {
+    background: #20bd5a;
+    transform: translateY(-1px);
+}
+
+.btn-share-more {
+    background: #00bf9a;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 800;
+    padding: 13px;
+    border-radius: 14px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 191, 154, 0.25);
+    transition: transform 0.2s ease;
+}
+
+.btn-share-more:hover {
+    background: #00a887;
+    transform: translateY(-1px);
+}
+
+/* Impact Stat Card Box */
+.impact-card-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.impact-stat-item {
+    flex: 1;
+    text-align: center;
+}
+
+.impact-number {
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 2px 0;
+}
+
+.impact-number.green {
+    color: #00bf9a;
+}
+
+.impact-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.impact-divider {
+    width: 1px;
+    height: 40px;
+    background: #e2e8f0;
+}
+
+/* How it works info box */
+.how-it-works-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.how-it-works-icon-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #e6faf5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.how-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 6px 0;
+}
+
+.how-desc {
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    line-height: 1.55;
+    margin: 0;
+}

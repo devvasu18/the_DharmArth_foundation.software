@@ -146,7 +146,7 @@ const AdminAvailability = () => {
             ? (doctor.type === 'government' || doctor.type === 'both')
             : (doctor.type === 'clinic' || doctor.type === 'both');
 
-        const matchesSearch = 
+        const matchesSearch =
             (doctor.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
             (doctor.title || '').toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -214,7 +214,7 @@ const AdminAvailability = () => {
                                     )}
                                 </div>
                             </div>
-                            <button 
+                            <button
                                 onClick={handlePublishList}
                                 style={{
                                     background: '#00bf9a',
@@ -238,7 +238,7 @@ const AdminAvailability = () => {
                     {/* Auto-Enabled Banner (Only for Private Clinic Tab) */}
                     {activeTab === 'clinic' && (
                         <div className="private-info-banner">
-                            <span>⚡</span> Private clinic availability is automatically active for the entire month as long as the doctor status is active.
+                            <span>⚡</span> The Dharmarth Medical availability is automatically active for the entire month as long as the doctor status is active.
                         </div>
                     )}
                 </div>
@@ -262,21 +262,21 @@ const AdminAvailability = () => {
                                 </tr>
                             ) : (
                                 filteredDoctors.map((doctor) => {
-                                    const isDailyAvailable = activeTab === 'government' 
-                                        ? getDailyStatusForDoctor(doctor._id) 
+                                    const isDailyAvailable = activeTab === 'government'
+                                        ? getDailyStatusForDoctor(doctor._id)
                                         : true;
 
                                     return (
-                                        <tr 
-                                            key={doctor._id} 
+                                        <tr
+                                            key={doctor._id}
                                             className={!doctor.isActive ? 'inactive-row' : ''}
                                         >
                                             <td>
                                                 <div className="doctor-profile-cell">
                                                     {doctor.photo ? (
-                                                        <img 
-                                                            src={doctor.photo.startsWith('http') ? doctor.photo : `${API_BASE_URL}${doctor.photo.startsWith('/') ? '' : '/'}${doctor.photo}`} 
-                                                            alt={doctor.name} 
+                                                        <img
+                                                            src={doctor.photo.startsWith('http') ? doctor.photo : `${API_BASE_URL}${doctor.photo.startsWith('/') ? '' : '/'}${doctor.photo}`}
+                                                            alt={doctor.name}
                                                             className="doctor-avatar-mini"
                                                         />
                                                     ) : (
@@ -310,7 +310,7 @@ const AdminAvailability = () => {
                                                             />
                                                             <span className="slider round"></span>
                                                         </label>
-                                                        <span 
+                                                        <span
                                                             className={`status-text ${!doctor.isActive ? 'disabled' : isDailyAvailable ? 'active' : 'inactive'}`}
                                                         >
                                                             {!doctor.isActive ? 'Disabled (Doctor Inactive)' : isDailyAvailable ? 'Available' : 'Unavailable'}

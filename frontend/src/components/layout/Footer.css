@@ -7,7 +7,7 @@
 
 .footer-container {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
     gap: var(--spacing-8);
     margin-bottom: var(--spacing-8);
 }
@@ -58,7 +58,6 @@
     font-weight: 700;
     margin-bottom: var(--spacing-4);
     color: #a7f3d0;
-    /* Light green accent */
 }
 
 .footer-links {
@@ -104,6 +103,44 @@
     font-size: 0.7rem;
 }
 
+.footer-small {
+    padding: 20px 0;
+    margin-top: auto;
+}
+
+.footer-small-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.footer-small-content .footer-brand h2 {
+    margin-bottom: 5px;
+}
+
+.footer-small-content .footer-brand p {
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.footer-small-links {
+    display: flex;
+    gap: 30px;
+}
+
+.footer-small-links a {
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.footer-small-links a:hover {
+    color: white;
+}
+
 @media (max-width: 900px) {
     .footer-container {
         grid-template-columns: 1fr 1fr;
@@ -114,18 +151,10 @@
     }
 }
 
-@media (max-width: 600px) {
-    .footer-container {
-        grid-template-columns: 1fr;
-    }
-
-    .footer-brand {
-        grid-column: span 1;
-    }
-
-    .footer-bottom {
-        flex-direction: column;
-        text-align: center;
+/* Hide Footer on Small Mobile Screens */
+@media (max-width: 768px) {
+    .footer,
+    .footer-small {
+        display: none !important;
     }
 }
-.footer-small { padding: 20px 0; margin-top: auto; } .footer-small-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; } .footer-small-content .footer-brand h2 { margin-bottom: 5px; } .footer-small-content .footer-brand p { color: #94a3b8; font-size: 0.85rem; } .footer-small-links { display: flex; gap: 30px; } .footer-small-links a { color: #cbd5e1; text-decoration: none; font-size: 0.9rem; transition: color 0.2s; } .footer-small-links a:hover { color: white; } @media (max-width: 768px) { .footer-small-content { flex-direction: column; text-align: center; } .footer-small-links { justify-content: center; gap: 15px; } }

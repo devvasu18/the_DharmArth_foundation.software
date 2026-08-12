@@ -116,7 +116,7 @@ const AdminDoctors = () => {
             const method = editingDoctor ? 'PUT' : 'POST';
 
             const finalFormData = { ...formData };
-            
+
             // Map selectedClinicDates and singleClinicSlot into dateSpecificTimeSlots
             if (formData.type === 'clinic' || formData.type === 'both') {
                 const governmentOverrides = (formData.dateSpecificTimeSlots || [])
@@ -557,7 +557,7 @@ const AdminDoctors = () => {
                     <div className="stat-icon">🏨</div>
                     <div className="stat-info">
                         <h3>{doctors.filter(d => d.type === 'clinic' || d.type === 'both').length}</h3>
-                        <p>In Private Clinic</p>
+                        <p>In The Dharmarth</p>
                     </div>
                 </div>
             </div>
@@ -601,7 +601,7 @@ const AdminDoctors = () => {
                                 <div className="priority-badge">⭐ Priority {doctor.priority}</div>
                             )}
 
-                             <div className="doctor-status">
+                            <div className="doctor-status">
                                 <span className={`status-indicator ${doctor.isActive ? 'active' : 'inactive'}`}>
                                     {doctor.isActive ? '✓ Active' : '✗ Inactive'}
                                 </span>
@@ -704,7 +704,7 @@ const AdminDoctors = () => {
                                                 required
                                             >
                                                 <option value="government">Government Hospital</option>
-                                                <option value="clinic">Private Clinic</option>
+                                                <option value="clinic">The dharmarth</option>
                                                 <option value="both">Works in Both</option>
                                             </select>
                                         </div>
@@ -1003,7 +1003,7 @@ const AdminDoctors = () => {
                                     <div className="date-override-panel" style={{ marginTop: '20px' }}>
                                         <div className="override-status-banner active-override">
                                             <div>
-                                                <strong>Private Clinic Time Slot:</strong> This single slot configuration applies to all selected dates.
+                                                <strong>The Dharmarth Time Slot:</strong> This single slot configuration applies to all selected dates.
                                             </div>
                                         </div>
 

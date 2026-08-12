@@ -259,12 +259,313 @@
 /* Wallet Card - Premium Gradient */
 .wallet-card {
     background: linear-gradient(135deg, #00bfa5 0%, #00695c 100%);
-    /* Deeper, richer teal */
     color: white;
     border: none;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+}
+
+/* Mobile App Style Wallet Card */
+.mobile-style-wallet {
+    background: #00bf9a !important;
+    border-radius: 28px !important;
+    padding: 30px 24px !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 12px 30px rgba(0, 191, 154, 0.25) !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.wallet-label-top {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.wallet-balance-huge {
+    font-size: 46px;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1.1;
+    margin-bottom: 12px;
+}
+
+.wallet-earned-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px 16px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    width: fit-content;
+    margin-bottom: 24px;
+    backdrop-filter: blur(4px);
+}
+
+.donor-counter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 16px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 20px;
+}
+
+.donor-counter-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+}
+
+.counter-val-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.counter-num {
+    font-size: 24px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.btn-eye-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.22);
+    border: none;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-eye-icon:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.counter-lbl {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.85);
+    text-transform: uppercase;
+}
+
+.counter-divider {
+    width: 1px;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.network-tree-link-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.view-tree-link-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    opacity: 0.95;
+    transition: opacity 0.2s ease;
+}
+
+.view-tree-link-pill:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+.wallet-action-buttons-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.btn-white-action {
+    width: 100%;
+    background: #ffffff !important;
+    color: #00897b !important;
+    border: none !important;
+    padding: 15px !important;
+    border-radius: 16px !important;
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1) !important;
+    letter-spacing: 0.5px !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.btn-white-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15) !important;
+}
+
+.btn-white-action:active {
+    transform: translateY(0);
+}
+
+/* Mobile Transaction Cards Styling */
+.mobile-txn-cards-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.mobile-txn-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 16px 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mobile-txn-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+}
+
+.txn-card-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.txn-icon-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.txn-icon-circle.credit {
+    background: #e6faf5;
+}
+
+.txn-icon-circle.debit {
+    background: #0f172a;
+}
+
+.txn-info-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.txn-desc-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.txn-sub-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.txn-date-str {
+    font-size: 13px;
+    font-weight: 500;
+    color: #94a3b8;
+}
+
+.txn-category-tag {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.txn-amount-text {
+    font-size: 16px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.txn-amount-text.credit-green {
+    color: #00bf9a;
+}
+
+.txn-amount-text.debit-dark {
+    color: #0f172a;
+}
+
+.txn-card-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    gap: 10px;
+}
+
+.btn-receipt-pill {
+    background: #e6faf5;
+    color: #00bf9a;
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+
+.btn-receipt-pill:hover {
+    background: #ccfbf1;
+}
+
+.btn-details-pill {
+    background: #f1f5f9;
+    color: #475569;
+    border: none;
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-details-pill:hover {
+    background: #e2e8f0;
 }
 
 /* Wallet Card Background Pattern */

@@ -9,15 +9,15 @@ exports.createLead = async (req, res) => {
             return res.status(400).json({ message: 'Mobile number is required' });
         }
 
-        // Basic validation for 10 digit number (if not already handled by frontend)
-        // Adjust regex as needed for strict Indian mobile validation
-        const mobileRegex = /^[0-9]{10}$/;
-        if (!mobileRegex.test(mobile)) {
-            return res.status(400).json({ message: 'Invalid mobile number format' });
+        const cleanedMobile = String(mobile).replace(/\D/g, '');
+        const validMobile = cleanedMobile.length > 10 ? cleanedMobile.slice(-10) : cleanedMobile;
+
+        if (!validMobile || validMobile.length !== 10) {
+            return res.status(400).json({ message: 'Invalid mobile number format. Must be a 10-digit number.' });
         }
 
         const newLead = new Lead({
-            mobile,
+            mobile: validMobile,
             language,
             chatHistory,
             userId,

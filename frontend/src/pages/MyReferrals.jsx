@@ -12,7 +12,11 @@ import 'jspdf-autotable';
 
 const MyReferrals = () => {
     const { user } = useAuth();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const userSession = JSON.parse(localStorage.getItem('user') || '{}');
+    const currentLang = i18n.language || userSession?.language || localStorage.getItem('i18nextLng') || 'hi';
+    const isHindi = currentLang.startsWith('hi');
+
     const [referrals, setReferrals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('active'); // active, inactive
@@ -44,7 +48,7 @@ const MyReferrals = () => {
             }
         } catch (error) {
             console.error('Error fetching referrals:', error);
-            toast.error('Failed to load referrals');
+            toast.error(isHindi ? 'रेफरल लोड करने में विफल' : 'Failed to load referrals');
         } finally {
             setLoading(false);
         }
@@ -59,7 +63,7 @@ const MyReferrals = () => {
 
     const handleRejoinWhatsApp = (referral) => {
         const donorName = referral.donorName;
-        const motivatorName = user?.name || 'Your Motivator';
+        const motivatorName = user?.name || (isHindi ? 'आपके प्रेरक' : 'Your Motivator');
         const mobile = referral.donorMobile;
         const amount = referral.amount;
         const is80G = referral.donorUserId?.pan ? 'true' : 'false';
@@ -70,7 +74,9 @@ const MyReferrals = () => {
         const baseUrl = window.location.origin;
         const donationUrl = `${baseUrl}/donate?motivator=${user?.mobile}&name=${encodeURIComponent(donorName)}&mobile=${mobile}&amount=${amount}&is80G=${is80G}&pan=${pan}&aadhaar=${aadhaar}`;
 
-        const message = `Namaste ${donorName}, this is ${motivatorName} from The Dharmarth Medical Foundation. 🕉️\n\nYour monthly contribution of ₹${amount} has stopped. We invite you to continue your noble support for our mission. 🙏\n\nYou can restart your donation with just one click here: ${donationUrl}\n\nThank you for your kindness!`;
+        const message = isHindi
+            ? `नमस्ते ${donorName}, मैं द धर्मअर्थ मेडिकल फाउंडेशन से ${motivatorName} बोल रहा/रही हूँ। 🕉️\n\nआपका ₹${amount} का मासिक योगदान रुक गया है। हम आपको हमारे मिशन के लिए अपना महान समर्थन जारी रखने के लिए आमंत्रित करते हैं। 🙏\n\nआप केवल एक क्लिक में अपना दान फिर से शुरू कर सकते हैं: ${donationUrl}\n\nआपकी दयालुता के लिए धन्यवाद!`
+            : `Namaste ${donorName}, this is ${motivatorName} from The Dharmarth Medical Foundation. 🕉️\n\nYour monthly contribution of ₹${amount} has stopped. We invite you to continue your noble support for our mission. 🙏\n\nYou can restart your donation with just one click here: ${donationUrl}\n\nThank you for your kindness!`;
 
         const whatsappUrl = `https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
@@ -89,22 +95,22 @@ const MyReferrals = () => {
             }
 
             const worksheetData = dataToExport.map(ref => ({
-                'Donor Name': ref.donorName,
-                'Mobile': ref.donorMobile,
-                'Amount': ref.amount,
-                'Status': ref.status.toUpperCase(),
-                'Started On': new Date(ref.createdAt).toLocaleDateString(),
-                'User Code': ref.donorUserId?.referralCode || 'N/A',
-                'Email': ref.donorUserId?.email || 'N/A'
+                [isHindi ? 'दाता नाम' : 'Donor Name']: ref.donorName,
+                [isHindi ? 'मोबाइल' : 'Mobile']: ref.donorMobile,
+                [isHindi ? 'राशि' : 'Amount']: ref.amount,
+                [isHindi ? 'स्थिति' : 'Status']: ref.status.toUpperCase(),
+                [isHindi ? 'प्रारंभ तिथि' : 'Started On']: new Date(ref.createdAt).toLocaleDateString(),
+                [isHindi ? 'यूजर कोड' : 'User Code']: ref.donorUserId?.referralCode || 'N/A',
+                [isHindi ? 'ईमेल' : 'Email']: ref.donorUserId?.email || 'N/A'
             }));
 
             const ws = XLSX.utils.json_to_sheet(worksheetData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Referrals');
             XLSX.writeFile(wb, `Referrals_${statusFilter}_${new Date().toLocaleDateString()}.xlsx`);
-            toast.success('Excel exported successfully');
+            toast.success(isHindi ? 'एक्सेल सफलतापूर्वक एक्सपोर्ट हो गया' : 'Excel exported successfully');
         } catch (err) {
-            toast.error('Export failed');
+            toast.error(isHindi ? 'एक्सपोर्ट विफल' : 'Export failed');
         } finally {
             setIsExporting(false);
         }
@@ -124,12 +130,12 @@ const MyReferrals = () => {
 
             const doc = new jsPDF();
             doc.setFontSize(18);
-            doc.text(`My Referrals (${statusFilter.toUpperCase()})`, 14, 22);
+            doc.text(`${isHindi ? 'मेरे रेफरल्स' : 'My Referrals'} (${statusFilter.toUpperCase()})`, 14, 22);
             doc.setFontSize(11);
             doc.setTextColor(100);
             doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
 
-            const tableColumn = ["Donor", "Mobile", "Amount", "Started On", "Status"];
+            const tableColumn = [isHindi ? 'दाता' : 'Donor', isHindi ? 'मोबाइल' : 'Mobile', isHindi ? 'राशि' : 'Amount', isHindi ? 'प्रारंभ तिथि' : 'Started On', isHindi ? 'स्थिति' : 'Status'];
             const tableRows = dataToExport.map(ref => [
                 ref.donorName,
                 ref.donorMobile,
@@ -147,9 +153,9 @@ const MyReferrals = () => {
             });
 
             doc.save(`Referrals_${statusFilter}_${new Date().toLocaleDateString()}.pdf`);
-            toast.success('PDF exported successfully');
+            toast.success(isHindi ? 'पीडीएफ सफलतापूर्वक एक्सपोर्ट हो गया' : 'PDF exported successfully');
         } catch (err) {
-            toast.error('Export failed');
+            toast.error(isHindi ? 'एक्सपोर्ट विफल' : 'Export failed');
         } finally {
             setIsExporting(false);
         }
@@ -163,9 +169,9 @@ const MyReferrals = () => {
                     <div className="header-content">
                         <h1>
                             <Users className="header-icon" />
-                            My Referrals
+                            {isHindi ? 'मेरे रेफरल्स' : 'My Referrals'}
                         </h1>
-                        <p>Track donors motivated by you and help them stay connected.</p>
+                        <p>{isHindi ? 'आपके द्वारा प्रेरित दाताओं को ट्रैक करें और सहायता में बने रहने में मदद करें।' : 'Track donors motivated by you and help them stay connected.'}</p>
                     </div>
                 </header>
 
@@ -173,21 +179,21 @@ const MyReferrals = () => {
                     <div className="status-filter-wrapper">
                         <div className="filter-group">
                             <Filter size={18} className="filter-icon" />
-                            <span className="filter-label">Status:</span>
+                            <span className="filter-label">{isHindi ? 'स्थिति:' : 'Status:'}</span>
                             <select
                                 className="status-select"
                                 value={statusFilter}
                                 onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
                             >
-                                <option value="active">Active Donors</option>
-                                <option value="inactive">Inactive Donors</option>
+                                <option value="active">{isHindi ? 'सक्रिय दाता' : 'Active Donors'}</option>
+                                <option value="inactive">{isHindi ? 'निष्क्रिय दाता' : 'Inactive Donors'}</option>
                             </select>
                         </div>
                     </div>
 
                     <div className="export-actions">
                         <div className="export-group">
-                            <span className="export-label">Export All:</span>
+                            <span className="export-label">{isHindi ? 'सभी एक्सपोर्ट करें:' : 'Export All:'}</span>
                             <button className="btn-export-all excel" onClick={() => exportToExcel(true)} disabled={isExporting}>
                                 Excel
                             </button>
@@ -200,12 +206,12 @@ const MyReferrals = () => {
 
                 <div className="referrals-list">
                     {loading ? (
-                        <div className="loading-state">Loading your referrals...</div>
+                        <div className="loading-state">{isHindi ? 'आपके रेफरल लोड हो रहे हैं...' : 'Loading your referrals...'}</div>
                     ) : referrals.length === 0 ? (
                         <div className="empty-state">
                             <Users size={48} />
-                            <h3>No {statusFilter} referrals found</h3>
-                            <p>Share your referral code to motivate more people!</p>
+                            <h3>{isHindi ? `कोई ${statusFilter === 'active' ? 'सक्रिय' : 'निष्क्रिय'} रेफरल नहीं मिले` : `No ${statusFilter} referrals found`}</h3>
+                            <p>{isHindi ? 'अधिक लोगों को प्रेरित करने के लिए अपना रेफरल कोड शेयर करें!' : 'Share your referral code to motivate more people!'}</p>
                         </div>
                     ) : (
                         <>
@@ -213,12 +219,12 @@ const MyReferrals = () => {
                                 <table className="referral-table">
                                     <thead>
                                         <tr>
-                                            <th>Donor</th>
-                                            <th>Mobile</th>
-                                            <th>Contribution</th>
-                                            <th>Started On</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
+                                            <th>{isHindi ? 'दाता' : 'Donor'}</th>
+                                            <th>{isHindi ? 'मोबाइल' : 'Mobile'}</th>
+                                            <th>{isHindi ? 'योगदान' : 'Contribution'}</th>
+                                            <th>{isHindi ? 'प्रारंभ तिथि' : 'Started On'}</th>
+                                            <th>{isHindi ? 'स्थिति' : 'Status'}</th>
+                                            <th>{isHindi ? 'कार्रवाइयां' : 'Actions'}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -241,12 +247,12 @@ const MyReferrals = () => {
                                                 </td>
                                                 <td>{ref.donorMobile}</td>
                                                 <td>
-                                                    <span className="amount-text">₹{ref.amount}/mo</span>
+                                                    <span className="amount-text">₹{ref.amount}{isHindi ? '/महीना' : '/mo'}</span>
                                                 </td>
                                                 <td>{new Date(ref.createdAt).toLocaleDateString()}</td>
                                                 <td>
                                                     <div className={`status-pill-small ${ref.status}`}>
-                                                        {ref.status.toUpperCase()}
+                                                        {ref.status === 'active' ? (isHindi ? 'सक्रिय' : 'ACTIVE') : (isHindi ? 'निष्क्रिय' : ref.status.toUpperCase())}
                                                     </div>
                                                 </td>
                                                 <td>
@@ -256,10 +262,10 @@ const MyReferrals = () => {
                                                             onClick={() => handleRejoinWhatsApp(ref)}
                                                         >
                                                             <Send size={14} />
-                                                            Re-invite
+                                                            {isHindi ? 'पुनः आमंत्रित करें' : 'Re-invite'}
                                                         </button>
                                                     ) : (
-                                                        <span className="active-label">Active</span>
+                                                        <span className="active-label">{isHindi ? 'सक्रिय' : 'Active'}</span>
                                                     )}
                                                 </td>
                                             </tr>
@@ -286,16 +292,16 @@ const MyReferrals = () => {
                                                 </div>
                                             </div>
                                             <div className={`status-badge ${ref.status}`}>
-                                                {ref.status.toUpperCase()}
+                                                {ref.status === 'active' ? (isHindi ? 'सक्रिय' : 'ACTIVE') : (isHindi ? 'निष्क्रिय' : ref.status.toUpperCase())}
                                             </div>
                                         </div>
                                         <div className="card-details">
                                             <div className="detail-item">
-                                                <span className="label">Monthly Contribution</span>
+                                                <span className="label">{isHindi ? 'मासिक योगदान' : 'Monthly Contribution'}</span>
                                                 <span className="value primary">₹{ref.amount}</span>
                                             </div>
                                             <div className="detail-item">
-                                                <span className="label">Started On</span>
+                                                <span className="label">{isHindi ? 'प्रारंभ तिथि' : 'Started On'}</span>
                                                 <span className="value">{new Date(ref.createdAt).toLocaleDateString()}</span>
                                             </div>
                                         </div>
@@ -305,7 +311,7 @@ const MyReferrals = () => {
                                                 onClick={() => handleRejoinWhatsApp(ref)}
                                             >
                                                 <Send size={16} />
-                                                Send Re-invite on WhatsApp
+                                                {isHindi ? 'व्हाट्सएप पर पुनः आमंत्रित करें' : 'Send Re-invite on WhatsApp'}
                                             </button>
                                         )}
                                     </div>
@@ -316,7 +322,10 @@ const MyReferrals = () => {
                             {totalPages > 1 && (
                                 <div className="referral-pagination">
                                     <div className="pagination-info">
-                                        Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords} donors
+                                        {isHindi
+                                            ? `${totalRecords} दाताओं में से ${(currentPage - 1) * limit + 1} से ${Math.min(currentPage * limit, totalRecords)} दिख रहे हैं`
+                                            : `Showing ${(currentPage - 1) * limit + 1} to ${Math.min(currentPage * limit, totalRecords)} of ${totalRecords} donors`
+                                        }
                                     </div>
                                     <div className="pagination-buttons">
                                         <button
@@ -324,7 +333,7 @@ const MyReferrals = () => {
                                             disabled={currentPage === 1}
                                             onClick={() => handlePageChange(currentPage - 1)}
                                         >
-                                            Previous
+                                            {isHindi ? 'पिछला' : 'Previous'}
                                         </button>
 
                                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
@@ -357,7 +366,7 @@ const MyReferrals = () => {
                                             disabled={currentPage === totalPages}
                                             onClick={() => handlePageChange(currentPage + 1)}
                                         >
-                                            Next
+                                            {isHindi ? 'अगला' : 'Next'}
                                         </button>
                                     </div>
                                 </div>

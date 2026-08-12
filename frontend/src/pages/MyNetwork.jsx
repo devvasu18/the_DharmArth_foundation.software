@@ -3,10 +3,16 @@ import { createPortal } from 'react-dom';
 import { Users, User, Network, Maximize2, X, ChevronRight, TrendingUp, Wallet, ShieldCheck, Heart } from 'lucide-react';
 import api from '../services/api';
 import Navbar from '../components/layout/Navbar';
+import { useTranslation } from 'react-i18next';
 import './MyNetwork.css';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MyNetwork = () => {
+    const { t, i18n } = useTranslation();
+    const userSession = JSON.parse(localStorage.getItem('user') || '{}');
+    const currentLang = i18n.language || userSession?.language || localStorage.getItem('i18nextLng') || 'hi';
+    const isHindi = currentLang.startsWith('hi');
+
     const [referralTree, setReferralTree] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -29,7 +35,7 @@ const MyNetwork = () => {
             setReferralTree(data);
         } catch (err) {
             console.error('Error fetching network:', err);
-            setError('Failed to load your network structure.');
+            setError(isHindi ? 'नेटवर्क संरचना लोड करने में विफल।' : 'Failed to load your network structure.');
         } finally {
             setLoading(false);
         }
@@ -37,7 +43,7 @@ const MyNetwork = () => {
 
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('en-IN', {
+        return new Date(dateString).toLocaleDateString(isHindi ? 'hi-IN' : 'en-IN', {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
@@ -71,7 +77,7 @@ const MyNetwork = () => {
                     {/* MOTIVATOR NODE (UP) */}
                     {referralTree.user.referredBy && (
                         <div className="motivator-node-wrapper">
-                            <div className="motivator-label">My Motivator</div>
+                            <div className="motivator-label">{isHindi ? 'मेरे प्रेरक (Motivator)' : 'My Motivator'}</div>
                             <div className="tree-node root-node motivator-node">
                                 <div className="node-content">
                                     <ShieldCheck size={24} className="node-icon" />
@@ -90,9 +96,9 @@ const MyNetwork = () => {
                         <div className="node-content">
 
                             <div className="node-info">
-                                <h5>You ({referralTree.user.name})</h5>
+                                <h5>{isHindi ? `आप (${referralTree.user.name})` : `You (${referralTree.user.name})`}</h5>
                                 <p>{referralTree.user.mobile}</p>
-                                <span className="node-date">Member since {formatDate(referralTree.user.createdAt)}</span>
+                                <span className="node-date">{isHindi ? `सदस्यता तिथि: ${formatDate(referralTree.user.createdAt)}` : `Member since ${formatDate(referralTree.user.createdAt)}`}</span>
                             </div>
                         </div>
                         <div className="connector-vertical"></div>
@@ -111,7 +117,7 @@ const MyNetwork = () => {
                         {referralTree.level1Users.length === 0 ? (
                             <div className="empty-network-tree">
                                 <Users size={48} />
-                                <p>No direct referrals yet. Start sharing your link to build your network!</p>
+                                <p>{isHindi ? 'अभी कोई डायरेक्ट रेफरल नहीं है। अपना नेटवर्क बनाने के लिए अपना लिंक शेयर करना शुरू करें!' : 'No direct referrals yet. Start sharing your link to build your network!'}</p>
                             </div>
                         ) : (
                             referralTree.level1Users.map(l1User => {
@@ -170,7 +176,7 @@ const MyNetwork = () => {
             <Navbar />
             <div className="loading-spinner-container">
                 <div className="spinner"></div>
-                <p>Building your network map...</p>
+                <p>{isHindi ? 'आपका नेटवर्क मैप तैयार हो रहा है...' : 'Building your network map...'}</p>
             </div>
         </div>
     );
@@ -182,17 +188,14 @@ const MyNetwork = () => {
             <div className="my-network-container">
                 <header className="network-header">
                     <div className="header-left">
-                        <div className="header-text">
-                            <h1>My Referral Network</h1>
 
-                        </div>
 
                         <div className="network-stats-row">
                             <div className="mini-stat">
                                 <Users size={20} />
                                 <div>
                                     <span className="val">{referralTree?.level1Users.length || 0}</span>
-                                    <span className="lbl">Direct Referrals (L1)</span>
+                                    <span className="lbl">{isHindi ? 'डायरेक्ट रेफरल (L1)' : 'Direct Referrals (L1)'}</span>
                                 </div>
                             </div>
                             <div className="mini-stat">
@@ -201,7 +204,7 @@ const MyNetwork = () => {
                                     <span className="val">
                                         {referralTree?.level2Data.reduce((sum, g) => sum + g.level2Users.length, 0) || 0}
                                     </span>
-                                    <span className="lbl">Indirect Referrals (L2)</span>
+                                    <span className="lbl">{isHindi ? 'इनडायरेक्ट रेफरल (L2)' : 'Indirect Referrals (L2)'}</span>
                                 </div>
                             </div>
                         </div>
@@ -209,7 +212,7 @@ const MyNetwork = () => {
 
                     <div className="header-actions">
                         <button className="expand-btn" onClick={() => setIsTreeFullScreen(true)}>
-                            <Maximize2 size={18} /> Full Screen
+                            <Maximize2 size={18} /> {isHindi ? 'फ़ुल स्क्रीन' : 'Full Screen'}
                         </button>
                     </div>
                 </header>

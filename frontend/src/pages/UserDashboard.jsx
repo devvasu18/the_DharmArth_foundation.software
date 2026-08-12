@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import api, { getPublicUrl } from '../services/api';
-import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, Users, Network, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown, FileSpreadsheet, FileText as FilePdf, CheckCircle, AlertCircle, Award } from 'lucide-react';
+import { Wallet, Share2, TrendingUp, Clock, Copy, Check, Banknote, Building, User, Users, Network, CreditCard, ShieldCheck, Send, ArrowRight, Download, Eye, ExternalLink, Info, X, ChevronDown, FileSpreadsheet, FileText as FilePdf, CheckCircle, AlertCircle, Award, Heart, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -18,6 +18,7 @@ import SubscriptionList from '../components/donation/SubscriptionList';
 const UserDashboard = () => {
     const { t, i18n } = useTranslation();
     const { user, setUser } = useAuth();
+    const isHindi = i18n.language?.startsWith('hi');
     const [wallet, setWallet] = useState(null);
     const [isLoadingWallet, setIsLoadingWallet] = useState(true);
 
@@ -422,14 +423,11 @@ const UserDashboard = () => {
 
             <div className="dashboard-container">
                 <div className="dashboard-header">
-                    <div className="header-info">
-                        <h1 className="dashboard-title">Motivator Dashboard</h1>
-                        <p className="dashboard-subtitle">Manage your earnings, payouts, and referrals</p>
-                    </div>
+
 
                     {user?.isMotivator && user?.referralCode && (
                         <div className="motivator-id-badge">
-                            Motivator ID: <strong>{user.referralCode}</strong>
+                            {isHindi ? 'मोटिवेटर आईडी:' : 'Motivator ID:'} <strong>{user.referralCode}</strong>
                         </div>
                     )}
                 </div>
@@ -439,22 +437,15 @@ const UserDashboard = () => {
                     <>
                         <div className="dashboard-grid">
 
-                            {/* WALLET CARD */}
+                            {/* WALLET CARD (Matching Mobile App Screenshot) */}
                             <motion.div
-                                className="dashboard-card wallet-card"
+                                className="dashboard-card wallet-card mobile-style-wallet"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <div className="wallet-bg-pattern">
-                                    <Wallet className="wallet-float w-icon-1" strokeWidth={1} />
-                                    <Wallet className="wallet-float w-icon-2" strokeWidth={1} />
-                                    <Wallet className="wallet-float w-icon-3" strokeWidth={1} />
-                                    <Wallet className="wallet-float w-icon-4" strokeWidth={1} />
-                                </div>
-
-                                <div className="wallet-label">My Wallet Balance</div>
-                                <div className="wallet-balance">
+                                <div className="wallet-label-top">{isHindi ? 'मेरा वॉलेट बैलेंस' : 'MY WALLET BALANCE'}</div>
+                                <div className="wallet-balance-huge">
                                     {isLoadingWallet ? (
                                         <div className="balance-skeleton animate-pulse"></div>
                                     ) : (
@@ -462,141 +453,78 @@ const UserDashboard = () => {
                                     )}
                                 </div>
 
-                                <div className="wallet-stats">
-                                    <div className="stat-row">
-                                        <TrendingUp size={16} />
-                                        {isLoadingWallet ? (
-                                            <div className="stat-skeleton animate-pulse"></div>
-                                        ) : (
-                                            <span>Total Earned: ₹ {wallet?.totalEarned?.toLocaleString() || 0}</span>
-                                        )}
-                                    </div>
-                                    <div className="stat-row secondary">
-                                        <div className="stat-item">
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                {isLoadingWallet ? (
-                                                    <div className="stat-item-skeleton animate-pulse"></div>
-                                                ) : (
-                                                    <span className="stat-val">{stats.l1Donors || 0}</span>
-                                                )}
-                                                <button
-                                                    className="btn-view-l1"
-                                                    onClick={fetchL1Donors}
-                                                    title="View L1 Donors"
-                                                >
-                                                    <Eye size={14} />
-                                                </button>
-                                            </div>
-                                            <span className="stat-lbl">{t('userDashboard.l1Donors')}</span>
+                                <div className="wallet-earned-pill">
+                                    <TrendingUp size={15} />
+                                    {isLoadingWallet ? (
+                                        <div className="stat-skeleton animate-pulse"></div>
+                                    ) : (
+                                        <span>{isHindi ? 'कुल कमाई:' : 'Total Earned:'} ₹{wallet?.totalEarned?.toLocaleString() || 0}</span>
+                                    )}
+                                </div>
+
+                                {/* Donor Counter Stats Row */}
+                                <div className="donor-counter-row">
+                                    <div className="donor-counter-item">
+                                        <div className="counter-val-group">
+                                            <span className="counter-num">{stats.l1Donors || 0}</span>
+                                            <button className="btn-eye-icon" onClick={fetchL1Donors} title={isHindi ? 'डायरेक्ट दाता देखें' : 'View L1 Donors'}>
+                                                <Eye size={15} />
+                                            </button>
                                         </div>
-                                        <div className="stat-item">
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                {isLoadingWallet ? (
-                                                    <div className="stat-item-skeleton animate-pulse"></div>
-                                                ) : (
-                                                    <span className="stat-val">{stats.l2Donors || 0}</span>
-                                                )}
-                                                <button
-                                                    className="btn-view-l1"
-                                                    onClick={() => fetchL2Donors()}
-                                                    title="View L2 Donors"
-                                                >
-                                                    <Eye size={14} />
-                                                </button>
-                                            </div>
-                                            <span className="stat-lbl">{t('userDashboard.l2Donors')}</span>
-                                        </div>
+                                        <span className="counter-lbl">{isHindi ? 'डायरेक्ट प्रेरित दाता' : 'DIRECTLY INSPIRED DONOR'}</span>
                                     </div>
-                                    <div className="stat-row" style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem' }}>
-                                        <Link to="/my-network" className="view-tree-link" style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '8px',
-                                            color: 'white',
-                                            fontSize: '0.9rem',
-                                            fontWeight: '600',
-                                            textDecoration: 'none',
-                                            opacity: 0.9
-                                        }}>
-                                            <Network size={16} />
-                                            View Network Tree
-                                            <ArrowRight size={14} />
-                                        </Link>
+
+                                    <div className="counter-divider"></div>
+
+                                    <div className="donor-counter-item">
+                                        <div className="counter-val-group">
+                                            <span className="counter-num">{stats.l2Donors || 0}</span>
+                                            <button className="btn-eye-icon" onClick={() => fetchL2Donors()} title={isHindi ? 'पार्टनर प्रेरित दाता देखें' : 'View L2 Donors'}>
+                                                <Eye size={15} />
+                                            </button>
+                                        </div>
+                                        <span className="counter-lbl">{isHindi ? 'पार्टनर प्रेरित दाता' : 'PARTNER-INSPIRED DONOR'}</span>
                                     </div>
                                 </div>
 
+                                {/* View Network Tree Link */}
+                                <div className="network-tree-link-wrapper">
+                                    <Link to="/my-network" className="view-tree-link-pill">
+                                        <Network size={16} />
+                                        <span>{isHindi ? 'नेटवर्क ट्री देखें' : 'View Network Tree'}</span>
+                                        <ArrowRight size={15} />
+                                    </Link>
+                                </div>
 
-                                <motion.button
-                                    className="payout-btn"
-                                    onClick={() => {
-                                        const hasPayoutDetails = user?.payoutCredentials && user?.payoutCredentials.accountNumber;
-                                        if (!user?.isMotivator || !hasPayoutDetails) {
-                                            setIsOnboardingModalOpen(true);
-                                            toast("Please register your Payout Details (Bank) to continue.", { icon: 'ℹ️' });
-                                        } else {
-                                            setIsPayoutModalOpen(true);
-                                        }
-                                    }}
-                                    whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.2)' }}
-                                    whileTap={{ scale: 0.98 }}
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px',
-                                        borderRadius: '12px',
-                                        border: '1px solid rgba(255,255,255,0.3)',
-                                        background: 'rgba(255,255,255,0.1)',
-                                        color: 'white',
-                                        fontWeight: '700',
-                                        cursor: 'pointer',
-                                        transition: 'background 0.2s',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '8px',
-                                        position: 'relative',
-                                        zIndex: 2,
-                                        textTransform: 'uppercase',
-                                        fontSize: '1.2rem'
-                                    }}
-                                >
-                                    Withdraw Now
-                                </motion.button>
+                                {/* Action Buttons Group */}
+                                <div className="wallet-action-buttons-group">
+                                    <button
+                                        className="btn-white-action withdraw-btn"
+                                        onClick={() => {
+                                            const hasPayoutDetails = user?.payoutCredentials && user?.payoutCredentials.accountNumber;
+                                            if (!user?.isMotivator || !hasPayoutDetails) {
+                                                setIsOnboardingModalOpen(true);
+                                                toast(isHindi ? "जारी रखने के लिए कृपया बैंक विवरण दर्ज करें।" : "Please register your Payout Details (Bank) to continue.", { icon: 'ℹ️' });
+                                            } else {
+                                                setIsPayoutModalOpen(true);
+                                            }
+                                        }}
+                                    >
+                                        {isHindi ? 'पैसे निकालें' : 'WITHDRAW NOW'}
+                                    </button>
 
-                                {wallet?.balance > 0 && (
-                                    <motion.button
-                                        className="wallet-donate-btn"
+                                    <button
+                                        className="btn-white-action donate-wallet-btn"
                                         onClick={() => {
                                             setIsWalletDonationModalOpen(true);
                                             const balance = wallet?.balance || 0;
                                             setDonationAmount(balance.toFixed(2));
                                         }}
-                                        whileHover={{ scale: 1.02, backgroundColor: '#ffffff' }}
-                                        whileTap={{ scale: 0.98 }}
-                                        style={{
-                                            marginTop: '12px',
-                                            width: '100%',
-                                            background: 'white',
-                                            color: '#00695c',
-                                            border: 'none',
-                                            padding: '1rem',
-                                            borderRadius: '12px',
-                                            fontWeight: '800',
-                                            fontSize: '1.2rem',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '0.5rem',
-                                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.5px'
-                                        }}
                                     >
-                                        <Banknote size={18} />
-                                        {i18n.language === 'hi' ? walletSettings.btnText_hi : walletSettings.btnText}
-                                    </motion.button>
-                                )}
+                                        <Heart size={18} fill="#00897b" color="#00897b" />
+                                        <span>{isHindi ? 'वॉलेट से दान करें' : 'DONATE FROM WALLET'}</span>
+                                    </button>
+                                </div>
                             </motion.div>
 
                             {/* SHARE CARD */}
@@ -626,15 +554,19 @@ const UserDashboard = () => {
 
                                 <div className="share-header">
                                     <Share2 size={24} color="#667eea" />
-                                    <h3 className="share-title">Share & Earn</h3>
+                                    <h3 className="share-title">{isHindi ? 'शेयर करें और कमाएं' : 'Share & Earn'}</h3>
                                 </div>
 
                                 <p className="share-desc ">
-                                    Share this  link with your freinds by Whatsapp. When someone donates using your link, you receive a <strong>10% commission</strong> instantly in your wallet!
+                                    {isHindi ? (
+                                        <>इस लिंक को अपने व्हाट्सएप मित्रों के साथ शेयर करें। जब कोई आपके लिंक से दान करता है, तो आपको तुरंत अपने वॉलेट में <strong>10% कमीशन</strong> प्राप्त होता है!</>
+                                    ) : (
+                                        <>Share this link with your friends by WhatsApp. When someone donates using your link, you receive a <strong>10% commission</strong> instantly in your wallet!</>
+                                    )}
                                 </p>
 
                                 <div className="referral-code-label">
-                                    <span>Referral Code: </span>
+                                    <span>{isHindi ? 'रेफरल कोड:' : 'Referral Code:'} </span>
                                     <strong>{user?.mobile} / {user?.referralCode}</strong>
                                 </div>
 
@@ -642,7 +574,7 @@ const UserDashboard = () => {
                                     <span className="share-link">{donationLink}</span>
                                     <button onClick={handleCopy} className="copy-btn">
                                         {copied ? <Check size={14} /> : <Copy size={14} />}
-                                        {copied ? 'Copied' : 'Copy'}
+                                        {copied ? (isHindi ? 'कॉपी हो गया' : 'Copied') : (isHindi ? 'कॉपी करें' : 'Copy')}
                                     </button>
                                 </div>
 
@@ -650,7 +582,9 @@ const UserDashboard = () => {
                                     <button
                                         className="share-action-btn btn-whatsapp"
                                         onClick={() => {
-                                            const message = `Namaste! 🙏 Join me in making a difference with The Dharmarth Medical Foundation. 🕉️\n\nYour small contribution can bring big changes to someone's life. 🤝\n\n✨ Donate here: ${donationLink}\n📜 View my Volunteer Profile: ${profileLink}\n\nThank you for your support! ❤️`;
+                                            const message = isHindi
+                                                ? `नमस्ते! 🙏 द धर्मअर्थ मेडिकल फाउंडेशन के साथ जुड़कर एक बदलाव लाएं। 🕉️\n\nआपका छोटा सा योगदान किसी के जीवन में बड़ा बदलाव ला सकता है। 🤝\n\n✨ यहाँ दान करें: ${donationLink}\n📜 मेरी स्वयंसेवक प्रोफ़ाइल देखें: ${profileLink}\n\nआपके समर्थन के लिए धन्यवाद! ❤️`
+                                                : `Namaste! 🙏 Join me in making a difference with The Dharmarth Medical Foundation. 🕉️\n\nYour small contribution can bring big changes to someone's life. 🤝\n\n✨ Donate here: ${donationLink}\n📜 View my Volunteer Profile: ${profileLink}\n\nThank you for your support! ❤️`;
                                             window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
                                         }}
                                     >
@@ -666,7 +600,7 @@ const UserDashboard = () => {
 
                                 <div className="id-card-actions" style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
                                     <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#475569', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Award size={16} color="#00bfa5" /> Volunteer Identity Card
+                                        <Award size={16} color="#00bfa5" /> {isHindi ? 'स्वयंसेवक पहचान पत्र (ID Card)' : 'Volunteer Identity Card'}
                                     </h4>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                                         <button
@@ -674,28 +608,28 @@ const UserDashboard = () => {
                                             className="share-action-btn"
                                             style={{ background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' }}
                                         >
-                                            <User size={14} /> Edit Profile
+                                            <User size={14} /> {isHindi ? 'प्रोफ़ाइल एडिट करें' : 'Edit Profile'}
                                         </button>
                                         <button
                                             onClick={() => {
                                                 if (navigator.share) {
                                                     navigator.share({
-                                                        title: 'My Volunteer Profile',
-                                                        text: 'Check out my verified volunteer profile at The Dharmarth Medical Foundation.',
+                                                        title: isHindi ? 'मेरी स्वयंसेवक प्रोफ़ाइल' : 'My Volunteer Profile',
+                                                        text: isHindi ? 'द धर्मअर्थ मेडिकल फाउंडेशन पर मेरी सत्यापित स्वयंसेवक प्रोफ़ाइल देखें।' : 'Check out my verified volunteer profile at The Dharmarth Medical Foundation.',
                                                         url: profileLink
                                                     }).catch(() => {
                                                         navigator.clipboard.writeText(profileLink);
-                                                        toast.success("Profile link copied!");
+                                                        toast.success(isHindi ? "प्रोफ़ाइल लिंक कॉपी हो गया!" : "Profile link copied!");
                                                     });
                                                 } else {
                                                     navigator.clipboard.writeText(profileLink);
-                                                    toast.success("Profile link copied!");
+                                                    toast.success(isHindi ? "प्रोफ़ाइल लिंक कॉपी हो गया!" : "Profile link copied!");
                                                 }
                                             }}
                                             className="share-action-btn"
                                             style={{ background: '#00bfa5', color: 'white' }}
                                         >
-                                            <Share2 size={14} /> Share Profile
+                                            <Share2 size={14} /> {isHindi ? 'प्रोफ़ाइल शेयर करें' : 'Share Profile'}
                                         </button>
                                     </div>
                                 </div>
@@ -714,7 +648,7 @@ const UserDashboard = () => {
                             key="transactions"
                         >
                             <div className="section-header-row">
-                                <h3 className="section-title">Transaction History</h3>
+                                <h3 className="section-title">{isHindi ? 'लेन-देन का इतिहास (Transaction History)' : 'Transaction History'}</h3>
                                 <div className="txn-filters">
                                     <select
                                         className="filter-select"
@@ -724,9 +658,9 @@ const UserDashboard = () => {
                                             setCommissionLevelFilter('All');
                                         }}
                                     >
-                                        <option value="All">All Transactions</option>
-                                        <option value="Donation">Donation by Me</option>
-                                        <option value="Commission">Commission</option>
+                                        <option value="All">{isHindi ? 'सभी लेन-देन' : 'All Transactions'}</option>
+                                        <option value="Donation">{isHindi ? 'मेरे द्वारा दान' : 'Donation by Me'}</option>
+                                        <option value="Commission">{isHindi ? 'कमीशन' : 'Commission'}</option>
                                     </select>
 
                                     {txnTypeFilter === 'Commission' && (
@@ -735,9 +669,9 @@ const UserDashboard = () => {
                                             value={commissionLevelFilter}
                                             onChange={(e) => setCommissionLevelFilter(e.target.value)}
                                         >
-                                            <option value="All">All Commissions</option>
-                                            <option value="Direct">Direct </option>
-                                            <option value="Indirect">Indirect </option>
+                                            <option value="All">{isHindi ? 'सभी कमीशन' : 'All Commissions'}</option>
+                                            <option value="Direct">{isHindi ? 'डायरेक्ट (L1)' : 'Direct'}</option>
+                                            <option value="Indirect">{isHindi ? 'इनडायरेक्ट (L2)' : 'Indirect'}</option>
                                         </select>
                                     )}
 
@@ -746,10 +680,10 @@ const UserDashboard = () => {
                                         value={selectedMonth}
                                         onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
                                     >
-                                        <option value={0}>All Months</option>
+                                        <option value={0}>{isHindi ? 'सभी महीने' : 'All Months'}</option>
                                         {Array.from({ length: 12 }, (_, i) => (
                                             <option key={i + 1} value={i + 1}>
-                                                {new Date(0, i).toLocaleString('default', { month: 'long' })}
+                                                {new Date(0, i).toLocaleString(isHindi ? 'hi-IN' : 'default', { month: 'long' })}
                                             </option>
                                         ))}
                                     </select>
@@ -787,116 +721,97 @@ const UserDashboard = () => {
                             {transactions.length === 0 ? (
                                 <div className="empty-state">
                                     <Clock size={40} style={{ margin: '0 auto', marginBottom: '1rem', opacity: 0.3 }} />
-                                    <p>No transactions yet.</p>
+                                    <p>{isHindi ? 'अभी तक कोई लेन-देन नहीं है।' : 'No transactions yet.'}</p>
                                 </div>
                             ) : (
-                                <div className="txn-table-container">
-                                    <table className="txn-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Date</th>
-                                                <th>Description</th>
-                                                <th>Amount</th>
-                                                <th>Status</th>
-                                                <th>Receipt</th>
-                                                <th>80G Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {transactions.filter(txn => {
-                                                if (txnTypeFilter === 'Donation') return txn.isDonation || txn.reason === 'wallet_donation';
-                                                if (txnTypeFilter === 'Commission') {
-                                                    if (txn.type !== 'credit') return false;
-                                                    if (commissionLevelFilter === 'Direct') return !txn.description?.toLowerCase().includes('l2');
-                                                    if (commissionLevelFilter === 'Indirect') return txn.description?.toLowerCase().includes('l2');
-                                                    return true;
-                                                }
-                                                return true;
-                                            }).map((txn, index) => (
-                                                <tr key={txn._id} ref={index === transactions.length - 1 ? lastTxnRef : null}>
-                                                    <td style={{ color: 'var(--primary)', fontWeight: '600', fontSize: '0.9rem' }}>
-                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                            <span>{new Date(txn.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
-                                                            <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '500' }}>
-                                                                {new Date(txn.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div style={{ fontWeight: 500 }}>{txn.description}</div>
-                                                    </td>
-                                                    <td className="amount-positive">
-                                                        {txn.type === 'credit' ? '+' : ''} ₹{txn.amount}
-                                                    </td>
-                                                    <td>
-                                                        <div className="status-cell">
-                                                            <span className={`status-badge ${txn.reason === 'payout' && txn.status === 'pending' ? 'badge-processing' :
-                                                                txn.status === 'failed' ? 'badge-rejected' :
-                                                                    txn.reason === 'payout' && (txn.status === 'success' || txn.status === 'completed') ? 'badge-completed' :
-                                                                        txn.type === 'credit' || txn.isDonation || txn.reason === 'wallet_donation' ? 'badge-credit' : 'badge-debit'
-                                                                }`}>
-                                                                {txn.reason === 'payout' && txn.status === 'pending' ? 'IN PROCESS' :
-                                                                    txn.status === 'failed' ? 'FAILED' :
-                                                                        txn.isHelpResolved ? 'HELP RESOLVED' :
-                                                                            txn.type === 'credit' ? 'Commission' :
-                                                                                (txn.isDonation || txn.reason === 'wallet_donation' ? 'Donation' :
-                                                                                    (txn.reason === 'payout' ? (txn.status === 'failed' ? 'FAILED' : 'COMPLETED') : txn.type.toUpperCase()))}
-                                                            </span>
+                                <div className="mobile-txn-cards-wrapper">
+                                    {transactions.filter(txn => {
+                                        if (txnTypeFilter === 'Donation') return txn.isDonation || txn.reason === 'wallet_donation';
+                                        if (txnTypeFilter === 'Commission') {
+                                            if (txn.type !== 'credit') return false;
+                                            if (commissionLevelFilter === 'Direct') return !txn.description?.toLowerCase().includes('l2');
+                                            if (commissionLevelFilter === 'Indirect') return txn.description?.toLowerCase().includes('l2');
+                                            return true;
+                                        }
+                                        return true;
+                                    }).map((txn, index) => {
+                                        const isCredit = txn.type === 'credit';
+                                        const isDonation = txn.isDonation || txn.reason === 'wallet_donation';
+                                        const categoryLabel = isCredit ? 'Commission' : (isDonation ? 'Donation' : (txn.reason === 'payout' ? 'Payout' : txn.type.toUpperCase()));
+                                        const receiptUrl = txn.receiptUrl || txn.certificateUrl;
 
-                                                            {txn.reason === 'payout' && (
-                                                                <button
-                                                                    className="btn-txn-details"
-                                                                    onClick={async () => {
-                                                                        try {
-                                                                            const res = await api.get(`/payouts/my`);
-                                                                            const payout = res.data.find(p => p._id === txn.referenceId || txn.description.includes(p._id.toString().slice(-6).toUpperCase()));
-                                                                            if (payout) {
-                                                                                setSelectedTxnDetails(payout);
-                                                                                setIsDetailsModalOpen(true);
-                                                                            } else {
-                                                                                toast.error("Payout details not found");
-                                                                            }
-                                                                        } catch (err) {
-                                                                            toast.error("Failed to load details");
-                                                                        }
-                                                                    }}
-                                                                    title="View Details"
-                                                                >
-                                                                    <Eye size={14} />
-                                                                </button>
-                                                            )}
+                                        return (
+                                            <div
+                                                key={txn._id}
+                                                className="mobile-txn-card"
+                                                ref={index === transactions.length - 1 ? lastTxnRef : null}
+                                            >
+                                                <div className="txn-card-top">
+                                                    <div className={`txn-icon-circle ${isCredit ? 'credit' : 'debit'}`}>
+                                                        {isCredit ? (
+                                                            <ArrowDownLeft size={18} color="#00bf9a" />
+                                                        ) : (
+                                                            <ArrowUpRight size={18} color="#ffffff" />
+                                                        )}
+                                                    </div>
+
+                                                    <div className="txn-info-body">
+                                                        <h4 className="txn-desc-title" title={txn.description}>{txn.description}</h4>
+                                                        <div className="txn-sub-meta">
+                                                            <span className="txn-date-str">
+                                                                {new Date(txn.createdAt).toLocaleDateString('en-GB')}
+                                                            </span>
+                                                            <span className="txn-category-tag">{categoryLabel}</span>
                                                         </div>
-                                                    </td>
-                                                    <td>
-                                                        {txn.isDonation && (txn.receiptUrl || txn.certificateUrl) ? (
+                                                    </div>
+
+                                                    <div className={`txn-amount-text ${isCredit ? 'credit-green' : 'debit-dark'}`}>
+                                                        {isCredit ? '+' : ''}₹{txn.amount}
+                                                    </div>
+                                                </div>
+
+                                                {(receiptUrl || txn.reason === 'payout') && (
+                                                    <div className="txn-card-actions">
+                                                        {receiptUrl && (
                                                             <a
-                                                                href={getPublicUrl(txn.receiptUrl || txn.certificateUrl)}
+                                                                href={getPublicUrl(receiptUrl)}
                                                                 target="_blank"
                                                                 rel="noreferrer"
-                                                                className="btn-download-receipt"
-                                                                title="Download Receipt"
+                                                                className="btn-receipt-pill"
                                                             >
-                                                                <Download size={12} /> Receipt
+                                                                <Download size={13} />
+                                                                <span>{isHindi ? 'रसीद' : 'Receipt'}</span>
                                                             </a>
-                                                        ) : (
-                                                            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>-</span>
                                                         )}
-                                                    </td>
-                                                    <td>
-                                                        {txn.isDonation ? (
-                                                            txn.is80G ? (
-                                                                <span style={{ color: '#16a34a', fontWeight: 'bold' }}>Yes</span>
-                                                            ) : (
-                                                                <span style={{ color: '#94a3b8' }}>No</span>
-                                                            )
-                                                        ) : (
-                                                            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>-</span>
+
+                                                        {txn.reason === 'payout' && (
+                                                            <button
+                                                                className="btn-details-pill"
+                                                                onClick={async () => {
+                                                                    try {
+                                                                        const res = await api.get(`/payouts/my`);
+                                                                        const payout = res.data.find(p => p._id === txn.referenceId || txn.description.includes(p._id.toString().slice(-6).toUpperCase()));
+                                                                        if (payout) {
+                                                                            setSelectedTxnDetails(payout);
+                                                                            setIsDetailsModalOpen(true);
+                                                                        } else {
+                                                                            toast.error(isHindi ? "पेआउट विवरण नहीं मिला" : "Payout details not found");
+                                                                        }
+                                                                    } catch (err) {
+                                                                        toast.error(isHindi ? "विवरण लोड करने में विफल" : "Failed to load details");
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Eye size={13} />
+                                                                <span>{isHindi ? 'विवरण' : 'Details'}</span>
+                                                            </button>
                                                         )}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+
                                     {isLoadingMore && (
                                         <div style={{ padding: '1.5rem', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>
                                             <motion.div
@@ -906,14 +821,15 @@ const UserDashboard = () => {
                                             >
                                                 <Clock size={16} />
                                             </motion.div>
-                                            Loading more history...
+                                            {isHindi ? 'और इतिहास लोड हो रहा है...' : 'Loading more history...'}
                                         </div>
                                     )}
                                     {!hasMore && transactions.length > 0 && (
                                         <div style={{ padding: '1.5rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem', fontWeight: 500 }}>
-                                            You've reached the end of your history.
+                                            {isHindi ? 'आप अपने इतिहास के अंत तक पहुँच चुके हैं।' : "You've reached the end of your history."}
                                         </div>
                                     )}
+
                                 </div>
                             )}
                         </motion.div>
@@ -1126,7 +1042,7 @@ const UserDashboard = () => {
                                         }}
                                         onClick={() => setIsDisputeModalOpen(false)}
                                     >
-                                        Cancel
+                                        {isHindi ? 'रद्द करें' : 'Cancel'}
                                     </button>
                                     <button
                                         className="btn-proceed"
@@ -1134,7 +1050,7 @@ const UserDashboard = () => {
                                         onClick={handleDisputeSubmit}
                                         disabled={isDisputeSubmitting}
                                     >
-                                        {isDisputeSubmitting ? 'Submitting...' : 'Submit Request'}
+                                        {isDisputeSubmitting ? (isHindi ? 'सबमिट हो रहा है...' : 'Submitting...') : (isHindi ? 'सबमिट करें' : 'Submit Request')}
                                     </button>
                                 </div>
                             </div>
@@ -1160,20 +1076,20 @@ const UserDashboard = () => {
                             <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)', paddingBottom: '1.5rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
                                     <User size={28} color="white" />
-                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>Directly Inspired Donor</h2>
+                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>{isHindi ? 'डायरेक्ट प्रेरित दाता' : 'Directly Inspired Donor'}</h2>
                                 </div>
-                                <p style={{ margin: '5px 0 0', opacity: 0.9 }}>Track your direct referrals and earnings</p>
+                                <p style={{ margin: '5px 0 0', opacity: 0.9 }}>{isHindi ? 'अपने डायरेक्ट रेफरल और कमाई को ट्रैक करें' : 'Track your direct referrals and earnings'}</p>
                             </div>
 
                             <div style={{ background: '#f8fafc', padding: '1.25rem', borderBottom: '1px solid #e2e8f0' }}>
                                 {/* Summary Stats */}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '1.25rem' }}>
                                     <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderLeft: '4px solid #00bfa5' }}>
-                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Lifetime </p>
+                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>{isHindi ? 'कुल कमाई' : 'Lifetime'}</p>
                                         <p style={{ margin: '4px 0 0', fontSize: '1.2rem', fontWeight: 800, color: '#1e293b' }}>₹{l1Summary.lifetimeEarning.toFixed(2)}</p>
                                     </div>
                                     <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderLeft: '4px solid #f59e0b' }}>
-                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Last Month</p>
+                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>{isHindi ? 'पिछले महीने' : 'Last Month'}</p>
                                         <p style={{ margin: '4px 0 0', fontSize: '1.2rem', fontWeight: 800, color: '#1e293b' }}>₹{l1Summary.prevMonthEarning.toFixed(2)}</p>
                                     </div>
                                 </div>
@@ -1190,7 +1106,7 @@ const UserDashboard = () => {
                                             }}
                                             style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', appearance: 'none', background: 'white' }}
                                         >
-                                            <option value={0}>Lifetime View</option>
+                                            <option value={0}>{isHindi ? 'कुल देखें' : 'Lifetime View'}</option>
                                             {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((m, i) => (
                                                 <option key={m} value={i + 1}>{m}</option>
                                             ))}
@@ -1226,20 +1142,20 @@ const UserDashboard = () => {
                                         >
                                             <Clock size={32} />
                                         </motion.div>
-                                        <p>Loading donors list...</p>
+                                        <p>{isHindi ? 'दाता सूची लोड हो रही है...' : 'Loading donors list...'}</p>
                                     </div>
                                 ) : l1DonorsList.length === 0 ? (
                                     <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
                                         <User size={40} style={{ opacity: 0.2, marginBottom: '1rem' }} />
-                                        <p>No direct donors found yet.</p>
+                                        <p>{isHindi ? 'अभी कोई डायरेक्ट दाता नहीं मिले।' : 'No direct donors found yet.'}</p>
                                     </div>
                                 ) : (
                                     <div className="l1-donors-list" style={{ maxHeight: '60vh', overflowY: 'auto', width: '100%' }}>
                                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                             <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
                                                 <tr>
-                                                    <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Donor Name</th>
-                                                    <th style={{ textAlign: 'right', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Your Earning</th>
+                                                    <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>{isHindi ? 'दाता नाम' : 'Donor Name'}</th>
+                                                    <th style={{ textAlign: 'right', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>{isHindi ? 'आपकी कमाई' : 'Your Earning'}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1251,7 +1167,7 @@ const UserDashboard = () => {
                                                                 {donor.donorMobile}
                                                             </div>
                                                             <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
-                                                                Last Donation: {new Date(donor.lastDonation || donor.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                                {isHindi ? 'अंतिम दान:' : 'Last Donation:'} {new Date(donor.lastDonation || donor.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                             </div>
                                                         </td>
                                                         <td style={{ padding: '12px 20px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>
@@ -1266,7 +1182,7 @@ const UserDashboard = () => {
                             </div>
 
                             <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9', padding: '1.25rem' }}>
-                                <button className="btn-proceed" style={{ margin: 0, width: '100%' }} onClick={() => setIsL1ModalOpen(false)}>Close</button>
+                                <button className="btn-proceed" style={{ margin: 0, width: '100%' }} onClick={() => setIsL1ModalOpen(false)}>{isHindi ? 'बंद करें' : 'Close'}</button>
                             </div>
                         </motion.div>
                     </div>
@@ -1290,20 +1206,20 @@ const UserDashboard = () => {
                             <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)', paddingBottom: '1.5rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
                                     <Users size={28} color="white" />
-                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>Partner-Inspired Donor</h2>
+                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>{isHindi ? 'पार्टनर प्रेरित दाता' : 'Partner-Inspired Donor'}</h2>
                                 </div>
-                                <p style={{ margin: '5px 0 0', opacity: 0.9 }}>Track your indirect referrals and earnings</p>
+                                <p style={{ margin: '5px 0 0', opacity: 0.9 }}>{isHindi ? 'अपने इनडायरेक्ट रेफरल और कमाई को ट्रैक करें' : 'Track your indirect referrals and earnings'}</p>
                             </div>
 
                             <div style={{ background: '#f8fafc', padding: '1.25rem', borderBottom: '1px solid #e2e8f0' }}>
                                 {/* Summary Stats */}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '1.25rem' }}>
                                     <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderLeft: '4px solid #6366f1' }}>
-                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Lifetime </p>
+                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>{isHindi ? 'कुल कमाई' : 'Lifetime'}</p>
                                         <p style={{ margin: '4px 0 0', fontSize: '1.2rem', fontWeight: 800, color: '#1e293b' }}>₹{l2Summary.lifetimeEarning.toFixed(2)}</p>
                                     </div>
                                     <div style={{ background: 'white', padding: '12px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderLeft: '4px solid #f59e0b' }}>
-                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Last Month</p>
+                                        <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>{isHindi ? 'पिछले महीने' : 'Last Month'}</p>
                                         <p style={{ margin: '4px 0 0', fontSize: '1.2rem', fontWeight: 800, color: '#1e293b' }}>₹{l2Summary.prevMonthEarning.toFixed(2)}</p>
                                     </div>
                                 </div>
@@ -1320,7 +1236,7 @@ const UserDashboard = () => {
                                             }}
                                             style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', appearance: 'none', background: 'white' }}
                                         >
-                                            <option value={0}>Lifetime View</option>
+                                            <option value={0}>{isHindi ? 'कुल देखें' : 'Lifetime View'}</option>
                                             {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((m, i) => (
                                                 <option key={m} value={i + 1}>{m}</option>
                                             ))}
@@ -1356,20 +1272,20 @@ const UserDashboard = () => {
                                         >
                                             <Clock size={32} />
                                         </motion.div>
-                                        <p>Loading donors list...</p>
+                                        <p>{isHindi ? 'दाता सूची लोड हो रही है...' : 'Loading donors list...'}</p>
                                     </div>
                                 ) : l2DonorsList.length === 0 ? (
                                     <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
                                         <Users size={40} style={{ opacity: 0.2, marginBottom: '1rem' }} />
-                                        <p>No indirect donors found yet.</p>
+                                        <p>{isHindi ? 'अभी कोई इनडायरेक्ट दाता नहीं मिले।' : 'No indirect donors found yet.'}</p>
                                     </div>
                                 ) : (
                                     <div className="l1-donors-list" style={{ maxHeight: '60vh', overflowY: 'auto', width: '100%' }}>
                                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                             <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
                                                 <tr>
-                                                    <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Donor Name</th>
-                                                    <th style={{ textAlign: 'right', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>Your Earning</th>
+                                                    <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>{isHindi ? 'दाता नाम' : 'Donor Name'}</th>
+                                                    <th style={{ textAlign: 'right', padding: '12px 20px', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>{isHindi ? 'आपकी कमाई' : 'Your Earning'}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1381,10 +1297,10 @@ const UserDashboard = () => {
                                                                 {donor.donorMobile}
                                                             </div>
                                                             <div style={{ fontSize: '0.75rem', color: '#6366f1', fontWeight: 600, marginTop: '4px' }}>
-                                                                via {donor.referredBy}
+                                                                {isHindi ? 'द्वारा' : 'via'} {donor.referredBy}
                                                             </div>
                                                             <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '4px' }}>
-                                                                Last Donation: {new Date(donor.lastDonation || donor.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                                {isHindi ? 'अंतिम दान:' : 'Last Donation:'} {new Date(donor.lastDonation || donor.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                             </div>
                                                         </td>
                                                         <td style={{ padding: '12px 20px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>
@@ -1399,7 +1315,7 @@ const UserDashboard = () => {
                             </div>
 
                             <div className="modal-footer" style={{ borderTop: '1px solid #f1f5f9', padding: '1.25rem' }}>
-                                <button className="btn-proceed" style={{ margin: 0, width: '100%' }} onClick={() => setIsL2ModalOpen(false)}>Close</button>
+                                <button className="btn-proceed" style={{ margin: 0, width: '100%' }} onClick={() => setIsL2ModalOpen(false)}>{isHindi ? 'बंद करें' : 'Close'}</button>
                             </div>
                         </motion.div>
                     </div>
@@ -1433,18 +1349,18 @@ const UserDashboard = () => {
                             <div className="payout-modal-header" style={{ background: 'linear-gradient(135deg, #00bfa5 0%, #00695c 100%)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center', marginBottom: '8px' }}>
                                     <Wallet size={28} color="white" />
-                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>Donate from Wallet</h2>
+                                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.5rem' }}>{isHindi ? 'वॉलेट से दान करें' : 'Donate from Wallet'}</h2>
                                 </div>
-                                <p style={{ margin: 0, opacity: 0.9 }}>Support the foundation using your balance.</p>
+                                <p style={{ margin: 0, opacity: 0.9 }}>{isHindi ? 'अपने बैलेंस का उपयोग करके फाउंडेशन का समर्थन करें।' : 'Support the foundation using your balance.'}</p>
                             </div>
 
                             <div className="conditions-container" style={{ padding: '1.5rem', background: '#ffffff', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                     <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
-                                        Donation Amount (₹)
+                                        {isHindi ? 'दान राशि (₹)' : 'Donation Amount (₹)'}
                                     </label>
                                     <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#00bfa5', background: '#f0fdfa', padding: '2px 8px', borderRadius: '6px' }}>
-                                        Wallet Balance: ₹{(wallet?.balance || 0).toFixed(2)}
+                                        {isHindi ? 'वॉलेट बैलेंस:' : 'Wallet Balance:'} ₹{(wallet?.balance || 0).toFixed(2)}
                                     </span>
                                 </div>
                                 <div style={{ position: 'relative' }}>
@@ -1452,7 +1368,7 @@ const UserDashboard = () => {
                                     <input
                                         type="number"
                                         className="modern-amount-input"
-                                        placeholder="Enter amount"
+                                        placeholder={isHindi ? "राशि दर्ज करें" : "Enter amount"}
                                         value={donationAmount}
                                         max={wallet?.balance || 0}
                                         onChange={(e) => {
@@ -1470,11 +1386,9 @@ const UserDashboard = () => {
                                 </div>
                                 {donationAmount > (wallet?.balance || 0) && (
                                     <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '6px', fontWeight: 600, textAlign: 'center' }}>
-                                        Amount exceeds available balance
+                                        {isHindi ? 'राशि उपलब्ध बैलेंस से अधिक है' : 'Amount exceeds available balance'}
                                     </p>
                                 )}
-
-
 
                                 {isOtpSent && (
                                     <motion.div
@@ -1483,7 +1397,7 @@ const UserDashboard = () => {
                                         style={{ marginTop: '0.5rem', padding: '1.25rem', background: '#f0fdfa', borderRadius: '16px', border: '1px solid #ccfbf1' }}
                                     >
                                         <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>
-                                            6-Digit OTP (WhatsApp)
+                                            {isHindi ? '6-अंकीय ओटीपी (WhatsApp)' : '6-Digit OTP (WhatsApp)'}
                                         </label>
                                         <div style={{ position: 'relative' }}>
                                             <ShieldCheck style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} size={20} color="#0d9488" />
@@ -1504,7 +1418,7 @@ const UserDashboard = () => {
                                                 disabled={otpTimer > 0 || isSendingOtp}
                                                 style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                                             >
-                                                {otpTimer > 0 ? `Resend in ${otpTimer}s` : 'Resend OTP'}
+                                                {otpTimer > 0 ? (isHindi ? `${otpTimer}s में पुनः भेजें` : `Resend in ${otpTimer}s`) : (isHindi ? 'ओटीपी पुनः भेजें' : 'Resend OTP')}
                                             </button>
                                             <button
                                                 className="text-slate-500 font-bold text-xs hover:underline"
@@ -1514,7 +1428,7 @@ const UserDashboard = () => {
                                                 }}
                                                 style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                                             >
-                                                Change Amount
+                                                {isHindi ? 'राशि बदलें' : 'Change Amount'}
                                             </button>
                                         </div>
                                     </motion.div>
@@ -1539,7 +1453,7 @@ const UserDashboard = () => {
                                         }}
                                         disabled={isDonating || isSendingOtp}
                                     >
-                                        Cancel
+                                        {isHindi ? 'रद्द करें' : 'Cancel'}
                                     </button>
                                     {!isOtpSent ? (
                                         <button

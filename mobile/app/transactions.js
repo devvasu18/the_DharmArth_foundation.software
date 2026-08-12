@@ -74,20 +74,20 @@ export default function TransactionsScreen() {
         Alert.alert('Error', `No download URL available for this ${type}`);
         return;
       }
-      
+
       let fullUrl = url;
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         const baseUrl = api.defaults.baseURL.replace(/\/api$/, '');
         fullUrl = `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
       }
-      
+
       const fileName = fullUrl.substring(fullUrl.lastIndexOf('/') + 1) || 'receipt.pdf';
       const localUri = FileSystem.cacheDirectory + fileName;
-      
+
       Alert.alert('Downloading', `Please wait while the ${type} is downloading...`);
-      
+
       const downloadRes = await FileSystem.downloadAsync(fullUrl, localUri);
-      
+
       if (downloadRes.status === 200) {
         if (await Sharing.isAvailableAsync()) {
           const mimeType = fileName.endsWith('.png') ? 'image/png' : 'application/pdf';
@@ -215,29 +215,7 @@ export default function TransactionsScreen() {
           </TouchableOpacity>
         </ScrollView>
 
-        <View style={styles.dateFilters}>
-          <View style={styles.datePicker}>
-            <Ionicons name="calendar-outline" size={14} color="#64748b" />
-            <TextInput
-              style={styles.dateInput}
-              value={selectedMonth.toString()}
-              onChangeText={(t) => setSelectedMonth(parseInt(t) || 0)}
-              keyboardType="number-pad"
-              maxLength={2}
-            />
-            <Text style={styles.dateLabel}>MM</Text>
-          </View>
-          <View style={styles.datePicker}>
-            <TextInput
-              style={styles.dateInput}
-              value={selectedYear.toString()}
-              onChangeText={(t) => setSelectedYear(parseInt(t) || 0)}
-              keyboardType="number-pad"
-              maxLength={4}
-            />
-            <Text style={styles.dateLabel}>YYYY</Text>
-          </View>
-        </View>
+
       </View>
 
       <FlatList

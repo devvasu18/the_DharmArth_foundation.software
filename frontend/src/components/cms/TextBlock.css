@@ -1,0 +1,31 @@
+.text-cms-section {
+    padding: 24px 16px;
+    background: transparent;
+}
+
+.text-block-box {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.text-block-box.align-center {
+    text-align: center;
+}
+
+.text-block-box.align-right {
+    text-align: right;
+}
+
+.text-block-box.align-left {
+    text-align: left;
+}
+
+.text-block-content {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.65;
+}
+
+.text-block-content p {
+    margin-bottom: 12px;
+}

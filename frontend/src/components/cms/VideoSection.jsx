@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Share2, Clock, ExternalLink } from 'lucide-react';
+import { Play, Share2, Clock } from 'lucide-react';
 import './VideoSection.css';
 
 const VideoSection = ({ data }) => {
@@ -17,70 +17,68 @@ const VideoSection = ({ data }) => {
     const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
 
     return (
-        <section className="cms-section py-24 bg-white">
+        <section className="cms-section video-cms-section">
             <div className="cms-container">
-                <div className="max-w-5xl mx-auto">
-                    <div className="text-center mb-16">
-                        <h2 className="cms-heading">{data?.title || 'Watch Our Story'}</h2>
-                        <p className="cms-subheading mx-auto">{data?.subtitle}</p>
-                    </div>
-                    
-                    <div 
-                        className={`video-embed-container ${isPlaying ? 'playing' : ''}`}
-                        onClick={() => !isPlaying && setIsPlaying(true)}
-                    >
-                        {!isPlaying ? (
-                            <>
-                                <img src={thumbnailUrl} alt={data.title} className="video-thumbnail" />
-                                <div className="video-overlay">
-                                    <div className="video-header">
-                                        <div className="channel-icon">
-                                            <img src="/logo192.png" alt="Channel" className="w-full h-full object-cover" />
-                                        </div>
-                                        <div className="video-title-info">
-                                            <h4>{data.title || 'Dharmarth Foundation | Impact Video'}</h4>
-                                            <span className="channel-name">ॐ नाम OM NAAM</span>
-                                        </div>
-                                    </div>
+                <div className="section-header-box">
+                    <h2 className="cms-section-title">{data?.title || 'Watch Our Story'}</h2>
+                    {data?.subtitle && <p className="cms-section-subtitle">{data.subtitle}</p>}
+                </div>
 
-                                    <div className="play-button-wrapper">
-                                        <div className="play-button">
-                                            <Play size={40} fill="white" />
-                                        </div>
+                <div
+                    className={`video-embed-container ${isPlaying ? 'playing' : ''}`}
+                    onClick={() => !isPlaying && setIsPlaying(true)}
+                >
+                    {!isPlaying ? (
+                        <>
+                            <img src={thumbnailUrl} alt={data.title || 'Video Thumbnail'} className="video-thumbnail" />
+                            <div className="video-overlay">
+                                <div className="video-header">
+                                    <div className="channel-icon">
+                                        <img src="/logo192.png" alt="Channel" className="channel-img" />
                                     </div>
-
-                                    <div className="video-footer">
-                                        <div className="footer-left-actions">
-                                            <div className="action-icon">
-                                                <Share2 size={20} />
-                                            </div>
-                                            <div className="action-icon">
-                                                <Clock size={20} />
-                                            </div>
-                                        </div>
-                                        <a 
-                                            href={data.videoUrl} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer" 
-                                            className="watch-on-youtube"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            Watch on <span className="youtube-logo">YouTube</span>
-                                        </a>
+                                    <div className="video-title-info">
+                                        <h4>{data.title || 'Dharmarth Foundation | Impact Video'}</h4>
+                                        <span className="channel-name">The Dharmarth Medical Foundation</span>
                                     </div>
                                 </div>
-                            </>
-                        ) : (
-                            <iframe 
-                                className="video-iframe"
-                                src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-                                title={data.title}
-                                frameBorder="0" 
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                allowFullScreen
-                            ></iframe>
-                        )}
-                    </div>
+
+                                <div className="play-button-wrapper">
+                                    <div className="play-button">
+                                        <Play size={36} fill="white" />
+                                    </div>
+                                </div>
+
+                                <div className="video-footer">
+                                    <div className="footer-left-actions">
+                                        <div className="action-icon" title="Share">
+                                            <Share2 size={18} color="white" />
+                                        </div>
+                                        <div className="action-icon" title="Watch Later">
+                                            <Clock size={18} color="white" />
+                                        </div>
+                                    </div>
+                                    <a
+                                        href={data.videoUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="watch-on-youtube"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        Watch on <span className="youtube-logo">YouTube</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <iframe
+                            className="video-iframe"
+                            src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                            title={data.title || 'Video Player'}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        ></iframe>
+                    )}
                 </div>
             </div>
         </section>
@@ -88,4 +86,3 @@ const VideoSection = ({ data }) => {
 };
 
 export default VideoSection;
-

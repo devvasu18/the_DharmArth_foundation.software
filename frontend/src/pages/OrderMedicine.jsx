@@ -783,7 +783,7 @@ const OrderMedicine = () => {
         "telephone": contactPhone,
         "address": {
             "@type": "PostalAddress",
-            "streetAddress": "Jadaw Marg, Duliya Bypass",
+            "streetAddress": "Jadaw Marg, Duliya Bass",
             "addressLocality": "Sujangarh",
             "addressRegion": "Rajasthan",
             "postalCode": "331507",

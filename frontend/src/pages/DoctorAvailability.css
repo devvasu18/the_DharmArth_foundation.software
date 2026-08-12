@@ -2458,3 +2458,178 @@
     border: 1.5px dashed #bbf7d0;
     width: fit-content;
 }
+
+/* Small screen mobile optimizations matching Mobile App UI */
+@media (max-width: 768px) {
+    .availability-hero {
+        display: none !important;
+    }
+
+    .category-options {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+
+    .category-card {
+        padding: 1.25rem !important;
+        border-radius: 16px !important;
+    }
+
+    .doctors-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+
+    .doctor-availability-card {
+        border-radius: 16px !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .days-horizontal-scroll {
+        padding-bottom: 6px;
+    }
+
+    .day-tab-chip {
+        flex-shrink: 0;
+    }
+}
+
+/* Image 2 Top Header Card & Empty Card Styling */
+.doc-avail-header-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 16px 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    margin-bottom: 16px;
+}
+
+.doc-header-back-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.doc-header-back-btn:hover {
+    background: #f1f5f9;
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.doc-header-divider {
+    width: 1px;
+    height: 30px;
+    background: #e2e8f0;
+    flex-shrink: 0;
+}
+
+.doc-header-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.doc-header-subtitle {
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 2px;
+}
+
+.doc-header-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.25;
+}
+
+/* Empty Card (Image 2) */
+.doc-avail-empty-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    padding: 48px 24px;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.empty-frown-circle {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: #f8fafc;
+    border: 3px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.empty-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 10px 0;
+}
+
+.empty-desc {
+    font-size: 15px;
+    font-weight: 500;
+    color: #64748b;
+    line-height: 1.6;
+    max-width: 320px;
+    margin: 0;
+    white-space: pre-line;
+}
+
+/* Compact Spacing Optimization for Clinic Cards */
+.doctor-availability-card.clinic .doctor-photo {
+    height: 180px;
+}
+
+.doctor-availability-card.clinic .doctor-details {
+    padding: 12px 16px;
+}
+
+.doctor-availability-card.clinic .doctor-description-text {
+    margin: 6px 0;
+    padding: 6px 10px;
+    font-size: 0.82rem;
+}
+
+.doctor-availability-card.clinic .clinic-timing-row {
+    padding: 0 16px !important;
+    margin: 8px 0 0 0 !important;
+}
+
+.doctor-availability-card.clinic .available-dates-container {
+    margin-top: 8px !important;
+    padding: 8px 16px 10px 16px !important;
+}
+
+.doctor-availability-card.clinic .clinic-book-btn {
+    margin: 8px 16px 12px 16px !important;
+    padding: 8px 14px !important;
+}
+
+@media (max-width: 768px) {
+    .doctor-availability-card .doctor-photo {
+        height: 160px;
+    }
+}

@@ -23,7 +23,7 @@ const PrivacyPolicy = () => {
                         <Shield size={48} />
                     </div>
                     <h1>Privacy Policy</h1>
-                    <p>DharmArth Foundation — Committed to protecting your privacy</p>
+                    <p>The Dharmarth Medical Foundation — Committed to protecting your privacy</p>
                     <span className="privacy-last-updated">Last updated: May 31, 2025</span>
                 </div>
             </div>
@@ -217,7 +217,7 @@ const PrivacyPolicy = () => {
                                     </a>
                                 </div>
                                 <div className="privacy-address">
-                                    <p><strong>DharmArth Foundation</strong></p>
+                                    <p><strong>The Dharmarth Medical Foundation</strong></p>
                                     <p>Website: <a href="https://thedharmarth.com" target="_blank" rel="noreferrer">https://thedharmarth.com</a></p>
                                 </div>
                             </section>

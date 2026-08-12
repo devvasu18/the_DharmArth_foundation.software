@@ -52,7 +52,7 @@ const Home = () => {
         },
         "address": {
             "@type": "PostalAddress",
-            "streetAddress": "Jadaw Marg, Duliya Bypass",
+            "streetAddress": "Jadaw Marg, Duliya Bass",
             "addressLocality": "Sujangarh",
             "addressRegion": "Rajasthan",
             "postalCode": "331507",
@@ -114,7 +114,7 @@ const Home = () => {
             <AppDownloadSection />
             <WhyUsSection />
             <FAQSection />
-            <MonthlyGivingSection />
+
             <Footer />
         </div >
     );

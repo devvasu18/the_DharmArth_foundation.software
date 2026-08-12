@@ -23,7 +23,7 @@ const ChildSafety = () => {
                         <Shield size={48} />
                     </div>
                     <h1>Child Safety Standards</h1>
-                    <p>DharmArth Foundation — Protect and prevent Child Sexual Abuse and Exploitation (CSAE)</p>
+                    <p>The Dharmarth Medical Foundation — Protect and prevent Child Sexual Abuse and Exploitation (CSAE)</p>
                     <span className="privacy-last-updated">Effective Date: June 1, 2026</span>
                 </div>
             </div>

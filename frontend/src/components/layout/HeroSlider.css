@@ -1,28 +1,24 @@
 .hero-section {
     position: relative;
     width: 100%;
-    min-height: 500px;
-    /* Reduced min-height slightly */
+    min-height: 520px;
     background-color: #bcf4fcea;
     overflow: hidden;
     display: flex;
-    align-items: flex-start;
-    /* Changed from center to move content up */
-    padding-top: 0px;
-    /* Add specific top padding instead of auto-centering */
+    align-items: center;
     justify-content: center;
     font-family: 'Inter', sans-serif;
+    padding: 2.5rem 0;
 }
 
 .hero-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
     width: 100%;
-    max-width: 1280px;
+    max-width: 1380px;
     margin: 0 auto;
     padding: 0 2rem;
-    gap: 4rem;
-    /* Increased gap from 2rem to 4rem */
+    gap: 5.5rem;
     height: 100%;
     align-items: center;
 }
@@ -30,46 +26,49 @@
 /* Left Side - Image Dial */
 .hero-visuals {
     position: relative;
-    height: 450px;
+    height: 520px;
     display: flex;
     align-items: center;
     justify-content: center;
     perspective: 1000px;
-    /* For 3D feel */
-    transform: translateX(-200px);
-    /* Shifted further left */
+    transform: none;
 }
 
 .hero-card {
     position: absolute;
-    width: 260px;
-    height: 360px;
+    width: 520px;
+    height: 346px;
     background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.05);
+    border-radius: 18px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.06);
     overflow: hidden;
     border: 8px solid white;
     top: 50%;
     left: 50%;
-    /* Transformation handled by Framer Motion */
+    margin-left: -260px;
+    margin-top: -173px;
 }
 
 .hero-card img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    border-radius: 4px;
+    object-fit: contain;
+    object-position: center;
+    background-color: #ffffff;
+    border-radius: 6px;
 }
 
 /* Right Side - Text Content */
 .hero-content {
-    padding: 2rem;
+    padding: 1.5rem 0 1.5rem 5rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
     z-index: 20;
-    padding-left: 2rem;
+    margin-left: auto;
+    width: 100%;
+    max-width: 620px;
 }
 
 .hero-text-wrapper {
@@ -99,18 +98,17 @@
 .stat-item h3 {
     font-size: 2.5rem;
     font-weight: 800;
-    color: #395c42;
-    /* Green color */
+    color: #00a887;
     margin: 0;
 }
 
 .stat-item p {
-    font-size: 1.1rem;
-    color: #058323;
+    font-size: 1rem;
+    color: #1e293b;
     margin: 0;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 700;
+    letter-spacing: 0.6px;
+    font-weight: 800;
 }
 
 .hero-description {
@@ -121,7 +119,7 @@
 }
 
 .hero-cta-btn {
-    background-color: #00b8b8;
+    background-color: #ff0707;
     /* Teal */
     color: white;
     padding: 1rem 2rem;
@@ -158,25 +156,31 @@
 
 /* Responsive adjustments */
 @media (max-width: 1024px) {
+    .hero-section {
+        padding: 1rem 0;
+        min-height: auto;
+    }
+
     .hero-container {
         grid-template-columns: 1fr;
-        padding-top: 2rem;
-        padding-bottom: 2rem;
+        padding-top: 0.5rem;
+        padding-bottom: 1rem;
+        gap: 1.5rem;
     }
 
     .hero-visuals {
-        height: 400px;
-        /* Reduced height on stack */
+        height: 250px;
         order: 1;
-        transform: translateX(-130px);
-        /* Half of 260px card width */
+        transform: none;
     }
 
     .hero-content {
         order: 2;
         align-items: center;
         text-align: center;
-        padding: 0;
+        padding: 0 1rem;
+        margin-left: 0;
+        max-width: 100%;
     }
 
     .hero-text-wrapper {
@@ -187,28 +191,44 @@
 
     .hero-stats {
         justify-content: center;
+        margin-bottom: 1rem;
     }
 
     .hero-title {
-        font-size: 2.25rem;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .hero-description {
+        margin-bottom: 1.25rem;
     }
 }
 
 @media (max-width: 640px) {
+    .hero-section {
+        padding: 0.5rem 0 1.25rem 0;
+    }
+
+    .hero-container {
+        padding: 0 1rem;
+        gap: 1rem;
+    }
+
     .hero-visuals {
-        height: 320px;
-        transform: translateX(-100px);
-        /* Half of 200px card width */
+        height: 270px;
+        transform: none;
     }
 
     .hero-card {
-        width: 200px;
-        height: 280px;
+        width: 330px;
+        height: 220px;
+        margin-left: -165px;
+        margin-top: -110px;
     }
 
     .hero-section .hero-title {
-        font-size: 1.55rem;
-        line-height: 1.4;
+        font-size: 1.45rem;
+        line-height: 1.35;
         margin-bottom: 0.75rem;
     }
 
@@ -217,13 +237,199 @@
         gap: 1.5rem;
         flex-wrap: nowrap;
         justify-content: center;
+        margin-bottom: 1rem;
     }
 
     .stat-item h3 {
-        font-size: 1.75rem;
+        font-size: 1.6rem;
     }
 
     .stat-item p {
-        font-size: 0.8rem;
+        font-size: 0.78rem;
+    }
+
+    .hero-description {
+        font-size: 0.95rem;
+        margin-bottom: 1.25rem;
+    }
+}
+
+/* Mobile Hero Controls & Quick Action Grid Styles */
+.mobile-hero-controls {
+    display: none;
+}
+
+.mobile-action-grid-wrapper {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .hero-container {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        padding-top: 1rem !important;
+        padding-bottom: 1.5rem !important;
+        gap: 0.75rem !important;
+    }
+
+    .hero-visuals {
+        order: 1 !important;
+        height: 290px !important;
+        transform: none !important;
+    }
+
+    .hero-card {
+        width: 350px !important;
+        height: 234px !important;
+        margin-left: -175px !important;
+        margin-top: -117px !important;
+    }
+
+    .mobile-hero-controls {
+        order: 2 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        width: 100% !important;
+        margin-top: 0.5rem !important;
+        gap: 1rem !important;
+        z-index: 20 !important;
+    }
+
+    .hero-content {
+        display: none !important;
+    }
+
+    .hero-dots {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .hero-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background-color: #a5f3fc;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .hero-dot.active {
+        width: 24px;
+        border-radius: 12px;
+        background-color: #00b8b8;
+    }
+
+    .mobile-red-donate-btn {
+        background: #ff0d0d;
+        color: white;
+        font-weight: 800;
+        font-size: 1.15rem;
+        padding: 13px 40px;
+        border-radius: 50px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        box-shadow: 0 10px 25px rgba(255, 13, 13, 0.35);
+        transition: transform 0.2s ease;
+        letter-spacing: 0.2px;
+    }
+
+    .mobile-red-donate-btn:active {
+        transform: scale(0.96);
+    }
+
+    .mobile-action-grid-wrapper {
+        display: block;
+        width: 100%;
+        background-color: #ffffff;
+        padding: 1.5rem 1rem 2rem 1rem;
+    }
+
+    .mobile-action-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    .mobile-card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.2rem 1rem;
+        border-radius: 18px;
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.95rem;
+        line-height: 1.25;
+        min-height: 92px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        transition: transform 0.2s ease;
+    }
+
+    .mobile-card:active {
+        transform: scale(0.97);
+    }
+
+    .mobile-card.full-width {
+        grid-column: span 2;
+        justify-content: center;
+        gap: 12px;
+        min-height: 60px;
+        font-size: 1.05rem;
+    }
+
+    .mobile-card-text {
+        flex: 1;
+        padding-right: 6px;
+    }
+
+    .mobile-card-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.95;
+    }
+
+    .card-orange {
+        background-color: #e8924a;
+    }
+
+    .card-purple {
+        background-color: #a888b5;
+    }
+
+    .card-green {
+        background-color: #72c19b;
+    }
+
+    .card-cyan {
+        background-color: #3eb4d1;
+    }
+
+    .card-gold {
+        background-color: #d4b788;
+    }
+
+    .card-badge {
+        position: absolute;
+        top: 8px;
+        left: 10px;
+        background-color: #ff4747;
+        color: white;
+        font-size: 9px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
     }
 }

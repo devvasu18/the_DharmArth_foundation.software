@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  ActivityIndicator, 
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -34,7 +34,7 @@ export default function Login() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [showResetPassword, setShowResetPassword] = useState(false);
-  
+
   const { login } = useAuth();
   const { locale, changeLanguage } = useTranslation();
   const router = useRouter();
@@ -66,7 +66,7 @@ export default function Login() {
       Alert.alert('Error', 'Please enter your mobile number');
       return;
     }
-    
+
     if (identifier.replace(/\D/g, '').length !== 10) {
       Alert.alert('Error', 'Please enter a valid 10-digit mobile number');
       return;
@@ -120,10 +120,10 @@ export default function Login() {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/reset-password', { identifier, otp, newPassword });
-      
+
       await login(data);
       Alert.alert('Success', 'Password reset successful! Welcome back.');
-      
+
       // Reset states
       setIsForgotPassword(false);
       setResetStep(1);
@@ -140,7 +140,7 @@ export default function Login() {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
@@ -151,12 +151,12 @@ export default function Login() {
             <Text style={styles.langText}>{locale === 'hi' ? 'English' : 'हिंदी'}</Text>
           </TouchableOpacity>
           <View style={styles.logoCircle}>
-             <Ionicons name="heart" size={40} color="#00bfa5" />
+            <Ionicons name="heart" size={40} color="#00bfa5" />
           </View>
-          <Text style={styles.title}>{locale === 'hi' ? 'धर्मअर्थ फाउंडेशन' : 'DharmArth Foundation'}</Text>
+          <Text style={styles.title}>{locale === 'hi' ? 'द धर्मअर्थ मेडिकल फाउंडेशन' : 'The Dharmarth Medical Foundation'}</Text>
           <Text style={styles.subtitle}>
-            {isForgotPassword 
-              ? (locale === 'hi' ? 'पासवर्ड रीसेट करें' : 'Reset Password') 
+            {isForgotPassword
+              ? (locale === 'hi' ? 'पासवर्ड रीसेट करें' : 'Reset Password')
               : (locale === 'hi' ? 'वापसी पर स्वागत है!' : 'Welcome back!')}
           </Text>
         </View>
@@ -175,14 +175,14 @@ export default function Login() {
                 onChangeText={setNewPassword}
                 secureTextEntry={!showResetPassword}
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setShowResetPassword(!showResetPassword)}
                 style={styles.eyeIcon}
               >
-                <Ionicons 
-                  name={showResetPassword ? 'eye-off' : 'eye'} 
-                  size={20} 
-                  color="#64748b" 
+                <Ionicons
+                  name={showResetPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color="#64748b"
                 />
               </TouchableOpacity>
             </View>
@@ -196,19 +196,19 @@ export default function Login() {
                 onChangeText={setConfirmNewPassword}
                 secureTextEntry={!showResetPassword}
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setShowResetPassword(!showResetPassword)}
                 style={styles.eyeIcon}
               >
-                <Ionicons 
-                  name={showResetPassword ? 'eye-off' : 'eye'} 
-                  size={20} 
-                  color="#64748b" 
+                <Ionicons
+                  name={showResetPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color="#64748b"
                 />
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.loginButton}
               onPress={handleResetPassword}
               disabled={loading}
@@ -220,7 +220,7 @@ export default function Login() {
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.skipButton}
               onPress={() => {
                 setIsForgotPassword(false);
@@ -286,19 +286,19 @@ export default function Login() {
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
                   />
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => setShowPassword(!showPassword)}
                     style={styles.eyeIcon}
                   >
-                    <Ionicons 
-                      name={showPassword ? 'eye-off' : 'eye'} 
-                      size={20} 
-                      color="#64748b" 
+                    <Ionicons
+                      name={showPassword ? 'eye-off' : 'eye'}
+                      size={20}
+                      color="#64748b"
                     />
                   </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.forgotBtn}
                   onPress={() => {
                     setIsForgotPassword(true);
@@ -328,7 +328,7 @@ export default function Login() {
 
             {loginMethod === 'otp' ? (
               !otpSent ? (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.loginButton}
                   onPress={handleSendOTP}
                   disabled={otpLoading}
@@ -340,7 +340,7 @@ export default function Login() {
                   )}
                 </TouchableOpacity>
               ) : (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.loginButton}
                   onPress={isForgotPassword ? () => setResetStep(2) : handleVerifyOTP}
                   disabled={loading}
@@ -349,15 +349,15 @@ export default function Login() {
                     <ActivityIndicator color="white" />
                   ) : (
                     <Text style={styles.loginButtonText}>
-                      {isForgotPassword 
-                        ? (locale === 'hi' ? 'OTP सत्यापित करें' : 'Verify OTP') 
+                      {isForgotPassword
+                        ? (locale === 'hi' ? 'OTP सत्यापित करें' : 'Verify OTP')
                         : (locale === 'hi' ? 'सत्यापित करें और लॉगिन करें' : 'Verify & Login')}
                     </Text>
                   )}
                 </TouchableOpacity>
               )
             ) : (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.loginButton}
                 onPress={handleLogin}
                 disabled={loading}
@@ -379,22 +379,22 @@ export default function Login() {
                   setOtp('');
                 }}
               >
-                <Ionicons 
-                  name={loginMethod === 'otp' ? 'key-outline' : 'phone-portrait-outline'} 
-                  size={18} 
-                  color="#00bfa5" 
+                <Ionicons
+                  name={loginMethod === 'otp' ? 'key-outline' : 'phone-portrait-outline'}
+                  size={18}
+                  color="#00bfa5"
                   style={{ marginRight: 8 }}
                 />
                 <Text style={styles.toggleMethodText}>
-                  {loginMethod === 'otp' 
-                    ? (locale === 'hi' ? 'पासवर्ड से लॉगिन करें' : 'Login via Password') 
+                  {loginMethod === 'otp'
+                    ? (locale === 'hi' ? 'पासवर्ड से लॉगिन करें' : 'Login via Password')
                     : (locale === 'hi' ? 'OTP से लॉगिन करें' : 'Login via OTP')}
                 </Text>
               </TouchableOpacity>
             )}
 
             {isForgotPassword && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.skipButton}
                 onPress={() => {
                   setIsForgotPassword(false);
@@ -409,7 +409,7 @@ export default function Login() {
 
             {!isForgotPassword && (
               <>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.skipButton}
                   onPress={() => router.replace('/')}
                   disabled={loading}

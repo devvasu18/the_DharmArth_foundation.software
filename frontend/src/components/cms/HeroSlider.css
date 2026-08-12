@@ -1,0 +1,202 @@
+.cms-hero-slider-section {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background-color: #0f172a;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.cms-hero-viewport {
+    position: relative;
+    width: 100%;
+    min-height: 540px;
+    display: flex;
+    align-items: center;
+}
+
+@media (min-width: 768px) {
+    .cms-hero-viewport {
+        min-height: 650px;
+    }
+}
+
+.cms-hero-slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+    transform: scale(1.03);
+}
+
+.cms-hero-slide.active {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+    z-index: 2;
+}
+
+.cms-slide-bg-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.85;
+}
+
+.cms-slide-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.65) 50%, rgba(15, 23, 42, 0.95) 100%);
+}
+
+.cms-slide-container {
+    position: relative;
+    z-index: 10;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px;
+    width: 100%;
+    color: #ffffff;
+}
+
+.cms-slide-brand-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #ffffff;
+    margin-bottom: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cms-slide-title {
+    font-size: 32px;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    margin: 0 0 16px 0;
+}
+
+@media (min-width: 768px) {
+    .cms-slide-title {
+        font-size: 52px;
+    }
+}
+
+.cms-slide-divider {
+    width: 60px;
+    height: 4px;
+    background: #00bf9a;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.cms-slide-subtitle {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.6;
+    letter-spacing: 0.5px;
+    margin: 0 0 28px 0;
+    max-width: 680px;
+}
+
+@media (min-width: 768px) {
+    .cms-slide-subtitle {
+        font-size: 17px;
+    }
+}
+
+.cms-slide-buttons-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.cms-btn-primary {
+    background: #00bf9a;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 800;
+    padding: 14px 28px;
+    border-radius: 14px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(0, 191, 154, 0.35);
+    transition: transform 0.2s ease, background 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cms-btn-primary:hover {
+    background: #00a887;
+    transform: translateY(-2px);
+}
+
+.cms-btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 14px 24px;
+    border-radius: 14px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(4px);
+    transition: background 0.2s ease, transform 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cms-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Dots Indicator */
+.cms-slider-dots {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 20;
+}
+
+.cms-dot-btn {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cms-dot-btn.active {
+    background: #00bf9a;
+    width: 28px;
+    border-radius: 10px;
+}

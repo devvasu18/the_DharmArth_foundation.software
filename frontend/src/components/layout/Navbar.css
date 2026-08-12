@@ -18,10 +18,6 @@
 }
 
 .navbar-logo {
-    font-family: var(--font-family);
-    font-weight: 700;
-    font-size: var(--text-2xl);
-    color: var(--primary);
     display: flex;
     align-items: center;
     text-decoration: none;
@@ -29,9 +25,75 @@
 }
 
 .logo-img {
-    height: 45px;
+    height: 48px;
     width: auto;
     border-radius: 4px;
+    object-fit: contain;
+}
+
+.brand-logo-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1;
+    user-select: none;
+}
+
+/* English Top Label "THE" */
+.brand-top-en {
+    font-size: 10px;
+    font-weight: 800;
+    color: #00b8b8;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    line-height: 1;
+    margin-bottom: 1px;
+}
+
+/* English Main Title "Dharmarth" */
+.brand-title-en {
+    font-size: 19px;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.05;
+    letter-spacing: -0.3px;
+}
+
+/* Hindi Main Title "द धर्मार्थ" */
+.brand-title-hi {
+    font-size: 19px;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.1;
+    letter-spacing: -0.2px;
+}
+
+/* Horizontal Line Divider */
+.brand-line {
+    height: 1.5px;
+    background-color: #cbd5e1;
+    width: 100%;
+    margin: 2px 0 3px 0;
+    border-radius: 1px;
+}
+
+/* English Subtitle "MEDICAL FOUNDATION" */
+.brand-sub-en {
+    font-size: 9px;
+    font-weight: 800;
+    color: #00b8b8;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+/* Hindi Subtitle "मेडिकल फाउंडेशन" */
+.brand-sub-hi {
+    font-size: 11px;
+    font-weight: 800;
+    color: #00b8b8;
+    line-height: 1;
+    letter-spacing: 0.2px;
 }
 
 .navbar-links {
@@ -202,8 +264,9 @@
 
 @media (max-width: 768px) {
     .notif-dropdown {
-        right: -100px;
-        width: 280px;
+        right: -25px;
+        width: 320px;
+        max-width: calc(100vw - 24px);
     }
 }
 
@@ -242,11 +305,7 @@
     display: none;
 }
 
-.mobile-toggle {
-    display: none;
-}
-
-.show-mobile {
+.mobile-header-right {
     display: none;
 }
 
@@ -259,9 +318,25 @@
         display: flex !important;
     }
 
+    .mobile-header-right {
+        display: flex !important;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .mobile-header-right .notif-bell-container {
+        margin: 0;
+    }
+
     .mobile-toggle {
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: var(--text-main);
+        background: transparent;
+        border: none;
+        padding: 4px;
+        cursor: pointer;
     }
 
     .mobile-menu {
@@ -269,14 +344,73 @@
         top: 70px;
         left: 0;
         width: 100%;
-        background: var(--bg-white);
-        padding: var(--spacing-4);
-        box-shadow: var(--shadow-md);
-        flex-direction: column;
+        background: #ffffff;
+        padding: 0.75rem 1rem 1.5rem 1rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         display: flex;
-        gap: var(--spacing-4);
-        padding-bottom: 20px;
+        flex-direction: column;
         z-index: 1500;
+        border-bottom: 1px solid #f1f5f9;
+        max-height: calc(100vh - 135px);
+        overflow-y: auto;
+    }
+
+    .mobile-menu-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        width: 100%;
+    }
+
+    .mobile-menu-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        border-radius: 10px;
+        color: #334155;
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .mobile-menu-item:hover,
+    .mobile-menu-item.active {
+        background-color: #f8fafc;
+        color: var(--primary);
+    }
+
+    .mobile-menu-item:hover .menu-icon,
+    .mobile-menu-item.active .menu-icon {
+        color: var(--primary);
+    }
+
+    .menu-item-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .menu-icon {
+        color: #64748b;
+        transition: color 0.2s ease;
+    }
+
+    .menu-arrow {
+        color: #cbd5e1;
+    }
+
+    .logout-item {
+        border-top: 1px solid #f1f5f9;
+        margin-top: 6px;
+        padding-top: 14px;
+    }
+
+    .menu-icon.red,
+    .red-text {
+        color: #ef4444 !important;
     }
 
     /* Bottom Navbar Styles */

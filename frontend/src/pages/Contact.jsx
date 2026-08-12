@@ -51,13 +51,21 @@ export default function Contact() {
             return;
         }
 
+        const cleanedMobile = (formData.phone || '').replace(/\D/g, '');
+        const validMobile = cleanedMobile.length > 10 ? cleanedMobile.slice(-10) : cleanedMobile;
+
+        if (!validMobile || validMobile.length !== 10) {
+            toast.error(i18n.language === 'hi' ? 'कृपया 10 अंकों का वैध मोबाइल नंबर दर्ज करें।' : 'Please enter a valid 10-digit mobile number.');
+            return;
+        }
+
         setLoading(true);
         try {
             // Post leads to dynamic backend contact receiver
             await api.post('/leads', {
                 name: formData.name,
                 email: formData.email,
-                mobile: formData.phone,
+                mobile: validMobile,
                 notes: `Subject: ${formData.subject || 'General Inquiry'}\nMessage: ${formData.message}`,
                 type: 'contact',
                 source: 'web_contact_page'
@@ -70,10 +78,11 @@ export default function Contact() {
             setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
         } catch (err) {
             console.error(err);
+            const serverMsg = err.response?.data?.message;
             toast.error(
-                i18n.language === 'hi'
+                serverMsg || (i18n.language === 'hi'
                     ? 'संदेश भेजने में विफल। कृपया पुन: प्रयास करें।'
-                    : 'Failed to send message. Please try again.'
+                    : 'Failed to send message. Please try again.')
             );
         } finally {
             setLoading(false);
@@ -94,7 +103,7 @@ export default function Contact() {
         },
         "address": {
             "@type": "PostalAddress",
-            "streetAddress": "Jadaw Marg, Duliya Bypass",
+            "streetAddress": "Jadaw Marg, Duliya Bass",
             "addressLocality": "Sujangarh",
             "addressRegion": "Rajasthan",
             "postalCode": "331507",
@@ -172,7 +181,7 @@ export default function Contact() {
                             <p className="secondary-text" style={{ fontSize: '0.9rem', lineHeight: '1.4' }}>
                                 {i18n.language === 'hi'
                                     ? 'जादव मार्ग, डुलिया बाईपास, सुजानगढ़, चूरू जिला, राजस्थान, भारत - 331507'
-                                    : 'Jadaw Marg, Duliya Bypass, Sujangarh, Churu District, Rajasthan, India - 331507'}
+                                    : 'Jadaw Marg, Duliya Bass, Sujangarh, Churu District, Rajasthan, India - 331507'}
                             </p>
                         </div>
                     </div>

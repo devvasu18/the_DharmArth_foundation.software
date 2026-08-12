@@ -6,7 +6,7 @@ import Footer from '../components/layout/Footer';
 import { API_BASE_URL } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Stethoscope, Search, Hospital, Building2, Calendar, Filter, RotateCw, ChevronDown, User, BadgeCheck, X } from 'lucide-react';
+import { ArrowLeft, Stethoscope, Search, Hospital, Building2, Calendar, Filter, RotateCw, ChevronDown, User, BadgeCheck, X, Frown } from 'lucide-react';
 import './DoctorAvailability.css';
 import SEO from '../components/common/SEO';
 
@@ -133,11 +133,39 @@ const DoctorAvailability = () => {
         }
     };
 
+    const triggerSearch = async (type, categoryId, dateObj) => {
+        try {
+            setSearching(true);
+            setSearchPerformed(true);
+            setShowSearchModal(false);
+
+            let url = `${API_URL}/availability/search?hospitalType=${type}&categoryId=${categoryId || 'all'}`;
+            if (type !== 'clinic') {
+                const dateStr = getLocalDateString(dateObj || searchDate);
+                url += `&date=${dateStr}`;
+            }
+
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Search failed');
+            }
+
+            const data = await response.json();
+            setSearchResult(data);
+        } catch (error) {
+            console.error('Error during search:', error);
+            toast.error('Search failed. Please try again.');
+            setSearchResult(null);
+        } finally {
+            setSearching(false);
+        }
+    };
+
     const handleTypeSelect = (type) => {
         setSelectedType(type);
         setSearchCategoryId('all');
         setSearchQuery(i18n.language === 'hi' ? 'सभी विशेषज्ञ' : 'All Specialists');
-        setShowSearchModal(true);
+        triggerSearch(type, 'all', searchDate);
     };
 
     const handleCloseSearchModal = () => {
@@ -153,34 +181,7 @@ const DoctorAvailability = () => {
             toast.error('Please select a specialist category');
             return;
         }
-
-        try {
-            setSearching(true);
-            setSearchPerformed(true);
-            setShowSearchModal(false);
-
-            let url = `${API_URL}/availability/search?hospitalType=${selectedType}&categoryId=${searchCategoryId}`;
-            if (selectedType !== 'clinic') {
-                // Format date to YYYY-MM-DD locally to avoid timezone shifts
-                const dateStr = getLocalDateString(searchDate);
-                url += `&date=${dateStr}`;
-            }
-
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                throw new Error('Search failed');
-            }
-
-            const data = await response.json();
-            setSearchResult(data);
-        } catch (error) {
-            console.error('Error during search:', error);
-            toast.error('Search failed. Please try again.');
-            setSearchResult(null);
-        } finally {
-            setSearching(false);
-        }
+        triggerSearch(selectedType, searchCategoryId, searchDate);
     };
 
     const handleBackToTypeSelection = () => {
@@ -372,7 +373,7 @@ const DoctorAvailability = () => {
         "telephone": contactPhone,
         "address": {
             "@type": "PostalAddress",
-            "streetAddress": "Jadaw Marg, Duliya Bypass",
+            "streetAddress": "Jadaw Marg, Duliya Bass",
             "addressLocality": "Sujangarh",
             "addressRegion": "Rajasthan",
             "postalCode": "331507",
@@ -438,7 +439,7 @@ const DoctorAvailability = () => {
                                             onClick={() => handleTypeSelect('clinic')}
                                         >
                                             <div className="category-icon">🏨</div>
-                                            <h3>{i18n.language === 'hi' ? 'निजी क्लिनिक' : 'Private Clinic'}</h3>
+                                            <h3>{i18n.language === 'hi' ? 'द धर्मार्थ मेडिकल फाउन्डेशन' : 'The Dharmarth'}</h3>
                                             <p>{i18n.language === 'hi' ? 'उच्च उपलब्धता वाले डॉक्टर' : 'High availability doctors'}</p>
                                             <div className="category-badge priority">{i18n.language === 'hi' ? 'उच्च उपलब्धता' : 'High Availability'}</div>
                                         </div>
@@ -449,6 +450,37 @@ const DoctorAvailability = () => {
                             {/* Doctor Cards View */}
                             {selectedType && (
                                 <div className="doctors-view">
+                                    {/* Top Header Card (Image 2 style) */}
+                                    <div className="doc-avail-header-card">
+                                        <button className="doc-header-back-btn" onClick={handleBackToTypeSelection}>
+                                            <ArrowLeft size={20} />
+                                        </button>
+                                        <div className="doc-header-divider" />
+                                        <div className="doc-header-text">
+                                            <span className="doc-header-subtitle">
+                                                {i18n.language === 'hi' ? 'डॉक्टर उपलब्धता' : 'Doctor Availability'}
+                                            </span>
+                                            <h2 className="doc-header-title">
+                                                {searchDate.toLocaleDateString(i18n.language === 'hi' ? 'hi-IN' : 'en-US', {
+                                                    weekday: 'long',
+                                                    day: 'numeric',
+                                                    month: 'long',
+                                                    year: 'numeric'
+                                                })}
+                                            </h2>
+                                        </div>
+                                    </div>
+
+                                    {/* Filters Row */}
+                                    <div className="doctors-view-controls" style={{ margin: '14px 0 20px 0' }}>
+                                        <div className="controls-top-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+                                            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#00bf9a', background: '#e6faf5', padding: '6px 14px', borderRadius: '20px', border: '1px solid #c2f4e8' }}>
+                                                {selectedType === 'government' ? '🏥 ' + (i18n.language === 'hi' ? 'सरकारी अस्पताल' : 'Government Hospital') : '🏨 ' + (i18n.language === 'hi' ? 'द धर्मार्थ मेडिकल फाउन्डेशन' : 'The Dharmarth Medical Foundation')}
+                                            </span>
+
+
+                                        </div>
+                                    </div>
 
 
                                     {searching ? (
@@ -582,6 +614,34 @@ const DoctorAvailability = () => {
                                                                                 )}
                                                                             </div>
                                                                         </div>
+
+                                                                        <a
+                                                                            href={`tel:${(contactPhone || '8306305569').replace(/\s+/g, '')}`}
+                                                                            className="clinic-book-btn"
+                                                                            onClick={(e) => {
+                                                                                const phoneNum = (contactPhone || '8306305569').replace(/\s+/g, '');
+                                                                                window.location.href = `tel:${phoneNum}`;
+                                                                            }}
+                                                                            style={{
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                gap: '8px',
+                                                                                margin: '12px 20px 16px 20px',
+                                                                                padding: '10px 16px',
+                                                                                background: '#00bf9a',
+                                                                                color: '#ffffff',
+                                                                                borderRadius: '10px',
+                                                                                fontWeight: '700',
+                                                                                fontSize: '0.95rem',
+                                                                                textDecoration: 'none',
+                                                                                textAlign: 'center',
+                                                                                boxShadow: '0 4px 12px rgba(0, 191, 154, 0.25)'
+                                                                            }}
+                                                                        >
+                                                                            <span>📞</span>
+                                                                            <span>{i18n.language === 'hi' ? 'नाम लिखवाएं' : 'Book Now'}</span>
+                                                                        </a>
                                                                     </>
                                                                 ) : (
                                                                     <div className="time-slots">
@@ -605,15 +665,17 @@ const DoctorAvailability = () => {
                                                     })}
                                                 </div>
                                             ) : (
-                                                <div className="no-availability-premium">
-                                                    <div className="premium-blank-illustration">
-                                                        <span className="illustration-emoji">😔</span>
+                                                <div className="doc-avail-empty-card">
+                                                    <div className="empty-frown-circle">
+                                                        <Frown size={48} style={{ color: '#94a3b8' }} />
                                                     </div>
-                                                    <h3>{i18n.language === 'hi' ? 'कोई डॉक्टर उपलब्ध नहीं है' : 'No Doctors Available'}</h3>
-                                                    <p>
+                                                    <h3 className="empty-title">
+                                                        {i18n.language === 'hi' ? 'कोई डॉक्टर उपलब्ध नहीं है' : 'No Doctors Available'}
+                                                    </h3>
+                                                    <p className="empty-desc">
                                                         {i18n.language === 'hi'
-                                                            ? (searchResult.message_hi || searchResult.message || 'निकट भविष्य में इस श्रेणी के लिए कोई डॉक्टर निर्धारित नहीं हैं। कृपया एक अलग श्रेणी चुनें या अस्पताल सेटिंग बदलें।')
-                                                            : (searchResult.message || 'There are no doctors scheduled for this category in the near future. Please select a different category or change the hospital setting.')}
+                                                            ? (searchResult?.message_hi || searchResult?.message || 'डॉक्टर सूची 08:00 के बाद अपडेट की जाएगी।\nकृपया बाद में पुनः प्रयास करें।')
+                                                            : (searchResult?.message || 'The doctor list will be updated after 08:00.\nPlease check back later.')}
                                                     </p>
                                                     <div className="blank-actions">
                                                         <button className="btn-primary-modern" onClick={() => setShowSearchModal(true)}>

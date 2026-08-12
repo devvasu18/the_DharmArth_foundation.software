@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Search, ChevronDown, Menu, X, Heart, Calendar, Stethoscope, User as UserIcon, Home, Languages } from 'lucide-react';
+import { Bell, Search, ChevronDown, Menu, X, Heart, Calendar, Stethoscope, User as UserIcon, Home, Languages, Globe, Trophy, Wallet, CreditCard, Network, Users, Share2, Info, Mail, LogOut, ChevronRight, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -217,7 +217,22 @@ const Navbar = () => {
             <div className="container navbar-container">
                 <Link to="/" className="navbar-logo" onClick={() => setIsOpen(false)}>
                     <img src="https://res.cloudinary.com/dbe1ykvg8/image/upload/v1783602963/the_dharmarth_foundation/logo.jpg" alt="The Dharmarth Medical Foundation Logo - Healthcare NGO & Donation Platform in Rajasthan, India" className="logo-img" />
-                    <span className="logo-text">{t('navbar.brand')}</span>
+                    <div className="brand-logo-text">
+                        {i18n.language && i18n.language.startsWith('hi') ? (
+                            <>
+                                <span className="brand-title-hi">द धर्मार्थ</span>
+                                <div className="brand-line" />
+                                <span className="brand-sub-hi">मेडिकल फाउंडेशन</span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="brand-top-en">THE</span>
+                                <span className="brand-title-en">Dharmarth</span>
+                                <div className="brand-line" />
+                                <span className="brand-sub-en">MEDICAL FOUNDATION</span>
+                            </>
+                        )}
+                    </div>
                 </Link>
 
                 {/* Desktop Menu */}
@@ -301,59 +316,211 @@ const Navbar = () => {
                     )}
                 </div>
 
-                {/* Mobile Notification Bell */}
-                {user && !user.isSuperAdmin && (!user.roles || user.roles.length === 0) && (
-                    <div className="notif-bell-container show-mobile" ref={notificationRef}>
-                        <button
-                            className={`notif-bell-btn ${unreadCount > 0 ? 'has-unread' : ''}`}
-                            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                        >
-                            <Bell size={20} />
-                            {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
-                        </button>
-                        {renderNotificationDropdown()}
-                    </div>
-                )}
+                {/* Mobile Header Right Controls (Bell + Toggle) */}
+                <div className="mobile-header-right show-mobile">
+                    {user && !user.isSuperAdmin && (!user.roles || user.roles.length === 0) && (
+                        <div className="notif-bell-container" ref={notificationRef}>
+                            <button
+                                className={`notif-bell-btn ${unreadCount > 0 ? 'has-unread' : ''}`}
+                                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                            >
+                                <Bell size={20} />
+                                {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
+                            </button>
+                            {renderNotificationDropdown()}
+                        </div>
+                    )}
 
-                {/* Mobile Toggle */}
-                <button className="mobile-toggle" onClick={() => setIsOpen(!isOpen)}>
-                    {isOpen ? <X /> : <Menu />}
-                </button>
+                    <button className="mobile-toggle" onClick={() => setIsOpen(!isOpen)}>
+                        {isOpen ? <X /> : <Menu />}
+                    </button>
+                </div>
             </div>
 
             {/* Mobile Menu */}
             {isOpen && (
                 <div className="mobile-menu">
-                    {renderLanguageToggle(true)}
-                    {!isDeliveryPartner && (
-                        <>
-                            <NavLink to="/doctors" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.doctorAvailability')}</NavLink>
-                            <NavLink to="/body-tests" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.bodyTests')}</NavLink>
-                        </>
-                    )}
+                    <div className="mobile-menu-list">
+                        {/* 1. Change Language */}
+                        <div
+                            className="mobile-menu-item"
+                            onClick={() => {
+                                setIsLangModalOpen(true);
+                                setIsOpen(false);
+                            }}
+                        >
+                            <div className="menu-item-left">
+                                <Globe size={20} className="menu-icon" />
+                                <span>{t('navbar.changeLanguage')}</span>
+                            </div>
+                            <ChevronRight size={18} className="menu-arrow" />
+                        </div>
 
-                    {user && user.isSuperAdmin && <NavLink to="/admin" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.admin')}</NavLink>}
+                        {/* 2. Leaderboard */}
+                        <NavLink
+                            to="/leaderboard"
+                            className={({ isActive }) => `mobile-menu-item ${isActive ? 'active' : ''}`}
+                            onClick={() => setIsOpen(false)}
+                        >
+                            <div className="menu-item-left">
+                                <Trophy size={20} className="menu-icon" />
+                                <span>{t('navbar.leaderboard')}</span>
+                            </div>
+                            <ChevronRight size={18} className="menu-arrow" />
+                        </NavLink>
 
-                    {isDeliveryPartner && (
-                        <NavLink to="/delivery-boy" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.deliveryFeed')}</NavLink>
-                    )}
-                    {user && !user.isSuperAdmin && !isDeliveryPartner && (
-                        <>
-                            <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.myEarnings')}</NavLink>
-                            <NavLink to="/profile" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.profile')}</NavLink>
-                            <NavLink to="/my-subscriptions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.subscriptions') || 'My Subscriptions'}</NavLink>
-                            <NavLink to="/my-referrals" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.myReferrals')}</NavLink>
-                            <NavLink to="/my-network" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.myNetwork')}</NavLink>
-                            <NavLink to={`/v/${user.referralCode || user.mobile}`} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.shareAndEarn')}</NavLink>
-                        </>
-                    )}
-                    {!user ? (
-                        <NavLink to="/login" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen(false)}>{t('navbar.signIn')}</NavLink>
-                    ) : (
-                        <span className="nav-link" onClick={() => { handleLogout(); setIsOpen(false); }} style={{ color: 'red' }}>{t('navbar.logout')}</span>
-                    )}
+                        {/* User Logged-in Items */}
+                        {user && !user.isSuperAdmin && !isDeliveryPartner && (
+                            <>
+                                {/* 3. My Earnings */}
+                                <NavLink
+                                    to="/dashboard"
+                                    className={({ isActive }) => `mobile-menu-item ${isActive ? 'active' : ''}`}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <div className="menu-item-left">
+                                        <Wallet size={20} className="menu-icon" />
+                                        <span>{t('navbar.myEarnings')}</span>
+                                    </div>
+                                    <ChevronRight size={18} className="menu-arrow" />
+                                </NavLink>
 
-                    {!isDeliveryPartner && <Link to="/donate" className="btn btn-outline" style={{ width: '100%', textAlign: 'center' }} onClick={() => setIsOpen(false)}>{t('navbar.donate')}</Link>}
+                                {/* 4. My Profile */}
+                                <NavLink
+                                    to="/profile"
+                                    className={({ isActive }) => `mobile-menu-item ${isActive ? 'active' : ''}`}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <div className="menu-item-left">
+                                        <UserIcon size={20} className="menu-icon" />
+                                        <span>{t('navbar.profile', 'My Profile')}</span>
+                                    </div>
+                                    <ChevronRight size={18} className="menu-arrow" />
+                                </NavLink>
+
+                                {/* 5. My Subscriptions */}
+                                <NavLink
+                                    to="/my-subscriptions"
+                                    className={({ isActive }) => `mobile-menu-item ${isActive ? 'active' : ''}`}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <div className="menu-item-left">
+                                        <CreditCard size={20} className="menu-icon" />
+                                        <span>{t('navbar.subscriptions', 'My Subscriptions')}</span>
+                                    </div>
+                                    <ChevronRight size={18} className="menu-arrow" />
+                                </NavLink>
+
+                                {/* 6. My Network */}
+                                <NavLink
+                                    to="/my-network"
+                                    className={({ isActive }) => `mobile-menu-item ${isActive ? 'active' : ''}`}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <div className="menu-item-left">
+                                        <Network size={20} className="menu-icon" />
+                                        <span>{t('navbar.myNetwork')}</span>
+                                    </div>
+                                    <ChevronRight size={18} className="menu-arrow" />
+                                </NavLink>
+
+                                {/* 7. My Referrals */}
+                                <NavLink
+                                    to="/my-referrals"
+                                    className={({ isActive }) => `mobile-menu-item ${isActive ? 'active' : ''}`}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <div className="menu-item-left">
+                                        <Users size={20} className="menu-icon" />
+                                        <span>{t('navbar.myReferrals')}</span>
+                                    </div>
+                                    <ChevronRight size={18} className="menu-arrow" />
+                                </NavLink>
+
+                                {/* 8. Share & Earn */}
+                                <NavLink
+                                    to={`/v/${user.referralCode || user.mobile}`}
+                                    className={({ isActive }) => `mobile-menu-item ${isActive ? 'active' : ''}`}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <div className="menu-item-left">
+                                        <Share2 size={20} className="menu-icon" />
+                                        <span>{t('navbar.shareAndEarn')}</span>
+                                    </div>
+                                    <ChevronRight size={18} className="menu-arrow" />
+                                </NavLink>
+                            </>
+                        )}
+
+                        {/* Admin Panel Link */}
+                        {user && user.isSuperAdmin && (
+                            <NavLink
+                                to="/admin"
+                                className={({ isActive }) => `mobile-menu-item ${isActive ? 'active' : ''}`}
+                                onClick={() => setIsOpen(false)}
+                            >
+                                <div className="menu-item-left">
+                                    <UserIcon size={20} className="menu-icon" />
+                                    <span>{t('navbar.admin')}</span>
+                                </div>
+                                <ChevronRight size={18} className="menu-arrow" />
+                            </NavLink>
+                        )}
+
+                        {/* 9. About Us */}
+                        <NavLink
+                            to="/p/about-us"
+                            className={({ isActive }) => `mobile-menu-item ${isActive ? 'active' : ''}`}
+                            onClick={() => setIsOpen(false)}
+                        >
+                            <div className="menu-item-left">
+                                <Info size={20} className="menu-icon" />
+                                <span>{t('navbar.aboutUs')}</span>
+                            </div>
+                            <ChevronRight size={18} className="menu-arrow" />
+                        </NavLink>
+
+                        {/* 10. Contact Us */}
+                        <NavLink
+                            to="/contact"
+                            className={({ isActive }) => `mobile-menu-item ${isActive ? 'active' : ''}`}
+                            onClick={() => setIsOpen(false)}
+                        >
+                            <div className="menu-item-left">
+                                <Mail size={20} className="menu-icon" />
+                                <span>Contact Us</span>
+                            </div>
+                            <ChevronRight size={18} className="menu-arrow" />
+                        </NavLink>
+
+                        {/* 11. Logout / Sign In */}
+                        {user ? (
+                            <div
+                                className="mobile-menu-item logout-item"
+                                onClick={() => {
+                                    handleLogout();
+                                    setIsOpen(false);
+                                }}
+                            >
+                                <div className="menu-item-left">
+                                    <LogOut size={20} className="menu-icon red" />
+                                    <span className="red-text">{t('navbar.logout')}</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <NavLink
+                                to="/login"
+                                className={({ isActive }) => `mobile-menu-item ${isActive ? 'active' : ''}`}
+                                onClick={() => setIsOpen(false)}
+                            >
+                                <div className="menu-item-left">
+                                    <LogIn size={20} className="menu-icon" />
+                                    <span>{t('navbar.signIn')}</span>
+                                </div>
+                                <ChevronRight size={18} className="menu-arrow" />
+                            </NavLink>
+                        )}
+                    </div>
                 </div>
             )}
             {/* Mobile Bottom Navigation */}

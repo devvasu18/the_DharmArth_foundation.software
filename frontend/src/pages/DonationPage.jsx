@@ -55,7 +55,7 @@ const DonationPage = () => {
     return (
         <div style={{ minHeight: '100vh', background: '#e6fffa', paddingBottom: '2rem' }}>
             <SEO
-                title="Dharmarth Foundation A Online Donation platform with 80G Tax Benefits | Donate in India"
+                title="The Dharmarth Medical Foundation A Online Donation platform with 80G Tax Benefits | Donate in India"
                 description="Make a secure online donation to The Dharmarth Medical Foundation. Get 80G tax exemption benefits instantly for your charitable contribution. Help support healthcare NGO services, free medicines, and diagnostic tests in Rajasthan, India."
                 keywords="80G Donation, Tax Saving Donation, Online Donation, Donate in India, Government Approved Donation, Charity Organization India, Medical Donation, Support NGO"
                 jsonLd={donationSchema}

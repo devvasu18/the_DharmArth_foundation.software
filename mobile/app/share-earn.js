@@ -98,7 +98,7 @@ export default function ShareEarn() {
                 <Image source={{ uri: profileImage }} style={styles.photo} />
               </View>
               <View style={styles.topBrandArea}>
-                <Text style={styles.topBrandName}>{locale === 'hi' ? 'द धर्मार्थ' : 'The DharmArth'}</Text>
+                <Text style={styles.topBrandName}>{locale === 'hi' ? 'द धर्मार्थ' : 'The Dharmarth'}</Text>
                 <Text style={styles.topBrandTag}>{locale === 'hi' ? 'मेडिकल फाउंडेशन' : 'Medical FOUNDATION'}</Text>
               </View>
             </View>

@@ -1,0 +1,67 @@
+.timeline-cms-section {
+    padding: 24px 16px;
+    background: transparent;
+}
+
+.timeline-vertical-wrapper {
+    position: relative;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.timeline-line {
+    position: absolute;
+    top: 18px;
+    bottom: 18px;
+    left: 35px;
+    width: 2px;
+    background: #ccfbf1;
+    z-index: 1;
+}
+
+.timeline-step-row {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.step-badge-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid #00bf9a;
+    background: #ffffff;
+    color: #00bf9a;
+    font-size: 13px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0, 191, 154, 0.15);
+}
+
+.step-content-box {
+    flex: 1;
+    padding-top: 4px;
+}
+
+.step-item-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.01em;
+}
+
+.step-item-desc {
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0;
+}

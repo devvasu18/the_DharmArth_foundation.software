@@ -3,11 +3,17 @@ import { Calendar, CreditCard, XCircle, CheckCircle, Clock, AlertTriangle, Searc
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useConfirm } from '../../context/ConfirmContext';
+import { useTranslation } from 'react-i18next';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 const SubscriptionList = ({ isAdmin = false }) => {
+    const { t, i18n } = useTranslation();
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const currentLang = i18n.language || user?.language || localStorage.getItem('i18nextLng') || 'hi';
+    const isHindi = currentLang.startsWith('hi');
+
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [amountFilter, setAmountFilter] = useState('');
@@ -290,24 +296,24 @@ const SubscriptionList = ({ isAdmin = false }) => {
 
         switch (status) {
             case 'active':
-                return <span className="status-badge active"><CheckCircle size={14} /> Active</span>;
+                return <span className="status-badge active"><CheckCircle size={14} /> {isHindi ? 'सक्रिय' : 'Active'}</span>;
             case 'cancelled':
                 return (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-                        <span className="status-badge cancelled"><XCircle size={14} /> Cancelled</span>
+                        <span className="status-badge cancelled"><XCircle size={14} /> {isHindi ? 'रद्द किया गया' : 'Cancelled'}</span>
                         {isCancelledByAdmin && (
                             <span style={{ fontSize: '0.6rem', color: '#ef4444', fontWeight: 700, textTransform: 'uppercase', background: '#fee2e2', padding: '2px 6px', borderRadius: '4px', border: '1px solid #fecaca' }}>
-                                Cancelled by Admin
+                                {isHindi ? 'व्यवस्थापक द्वारा रद्द' : 'Cancelled by Admin'}
                             </span>
                         )}
                     </div>
                 );
             case 'failed':
-                return <span className="status-badge failed"><AlertTriangle size={14} /> Failed</span>;
+                return <span className="status-badge failed"><AlertTriangle size={14} /> {isHindi ? 'विफल' : 'Failed'}</span>;
             case 'created':
-                return <span className="status-badge created"><Clock size={14} /> Pending First Payment</span>;
+                return <span className="status-badge created"><Clock size={14} /> {isHindi ? 'प्रथम भुगतान लंबित' : 'Pending First Payment'}</span>;
             case 'paused':
-                return <span className="status-badge paused"><AlertTriangle size={14} /> Paused</span>;
+                return <span className="status-badge paused"><AlertTriangle size={14} /> {isHindi ? 'स्थगित' : 'Paused'}</span>;
             default:
                 return <span className="status-badge">{status}</span>;
         }
@@ -421,7 +427,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
             ) : subscriptions.length === 0 ? (
                 <div className="empty-state">
                     <CreditCard size={48} className="empty-icon" />
-                    <p>{searchTerm || statusFilter || amountFilter ? "No subscriptions match your filters." : "No monthly donations found."}</p>
+                    <p>{searchTerm || statusFilter || amountFilter ? (isHindi ? "आपकी फ़िल्टर से कोई सदस्यता मेल नहीं खाती।" : "No subscriptions match your filters.") : (isHindi ? "कोई मासिक दान नहीं मिला।" : "No monthly donations found.")}</p>
                     {(searchTerm || statusFilter || amountFilter) && (
                         <button
                             className="btn-link"
@@ -432,7 +438,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                                 setAmountFilter('');
                             }}
                         >
-                            Clear all filters
+                            {isHindi ? 'सभी फ़िल्टर हटाएं' : 'Clear all filters'}
                         </button>
                     )}
                 </div>
@@ -445,12 +451,12 @@ const SubscriptionList = ({ isAdmin = false }) => {
                                 <table className="user-sub-table">
                                     <thead>
                                         <tr>
-                                            <th>Contribution</th>
-                                            <th>Reference ID</th>
-                                            <th>Started On</th>
-                                            <th>Next Billing</th>
-                                            <th>Status</th>
-                                            <th className="text-right">Actions</th>
+                                            <th>{isHindi ? 'योगदान' : 'Contribution'}</th>
+                                            <th>{isHindi ? 'रेफरेंस आईडी' : 'Reference ID'}</th>
+                                            <th>{isHindi ? 'प्रारंभ तिथि' : 'Started On'}</th>
+                                            <th>{isHindi ? 'अगला बिलिंग' : 'Next Billing'}</th>
+                                            <th>{isHindi ? 'स्थिति' : 'Status'}</th>
+                                            <th className="text-right">{isHindi ? 'कार्रवाइयां' : 'Actions'}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -459,7 +465,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                                                 <td>
                                                     <div className="user-amount-cell">
                                                         <strong>₹{sub.amount.toLocaleString()}</strong>
-                                                        <span className="freq">/ month</span>
+                                                        <span className="freq">{isHindi ? '/ महीना' : '/ month'}</span>
                                                     </div>
                                                 </td>
                                                 <td>
@@ -479,7 +485,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                                                                 className="btn-cancel-small"
                                                                 onClick={() => handleCancel(sub)}
                                                             >
-                                                                Cancel
+                                                                {isHindi ? 'रद्द करें' : 'Cancel'}
                                                             </button>
                                                         )}
                                                         {sub.status === 'failed' && (
@@ -488,13 +494,13 @@ const SubscriptionList = ({ isAdmin = false }) => {
                                                                     className="btn-retry-small"
                                                                     onClick={() => handleRetry(sub)}
                                                                 >
-                                                                    Retry
+                                                                    {isHindi ? 'पुनः प्रयास' : 'Retry'}
                                                                 </button>
                                                                 <button
                                                                     className="btn-cancel-small"
                                                                     onClick={() => handleCancel(sub)}
                                                                 >
-                                                                    Cancel
+                                                                    {isHindi ? 'रद्द करें' : 'Cancel'}
                                                                 </button>
                                                             </>
                                                         )}
@@ -513,22 +519,22 @@ const SubscriptionList = ({ isAdmin = false }) => {
                                         <div className="card-header">
                                             <div className="amount-info">
                                                 <span className="amount">₹{sub.amount.toLocaleString()}</span>
-                                                <span className="freq">/ monthly</span>
+                                                <span className="freq">{isHindi ? '/ महीना' : '/ monthly'}</span>
                                             </div>
                                             <div className="status">{getStatusBadge(sub)}</div>
                                         </div>
                                         <div className="card-body">
                                             <div className="info-row">
-                                                <span className="label">ID:</span>
+                                                <span className="label">No.</span>
                                                 <code className="value">{sub.subscriptionId}</code>
                                             </div>
                                             <div className="info-row">
-                                                <span className="label">Started:</span>
+                                                <span className="label">{isHindi ? 'प्रारंभ तिथि:' : 'Started:'}</span>
                                                 <span className="value">{new Date(sub.createdAt).toLocaleDateString()}</span>
                                             </div>
                                             {sub.status === 'active' && sub.nextBillingDate && (
                                                 <div className="info-row">
-                                                    <span className="label">Next Billing:</span>
+                                                    <span className="label">{isHindi ? 'अगला बिलिंग:' : 'Next Billing:'}</span>
                                                     <span className="value highlight">{new Date(sub.nextBillingDate).toLocaleDateString()}</span>
                                                 </div>
                                             )}
@@ -536,16 +542,16 @@ const SubscriptionList = ({ isAdmin = false }) => {
                                         <div className="card-footer">
                                             {sub.status === 'active' && (
                                                 <button className="mobile-action-btn cancel" onClick={() => handleCancel(sub)}>
-                                                    <XCircle size={16} /> Cancel Subscription
+                                                    <XCircle size={16} /> {isHindi ? 'सदस्यता रद्द करें' : 'Cancel Subscription'}
                                                 </button>
                                             )}
                                             {sub.status === 'failed' && (
                                                 <div className="button-group">
                                                     <button className="mobile-action-btn retry" onClick={() => handleRetry(sub)}>
-                                                        <CreditCard size={16} /> Retry Payment
+                                                        <CreditCard size={16} /> {isHindi ? 'पुनः भुगतान प्रयास' : 'Retry Payment'}
                                                     </button>
                                                     <button className="mobile-action-btn cancel" onClick={() => handleCancel(sub)}>
-                                                        Cancel
+                                                        {isHindi ? 'रद्द करें' : 'Cancel'}
                                                     </button>
                                                 </div>
                                             )}
@@ -636,7 +642,10 @@ const SubscriptionList = ({ isAdmin = false }) => {
             {subscriptions.length > 0 && totalPages > 1 && (
                 <div className="list-pagination">
                     <div className="pagination-info">
-                        Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords} {isAdmin ? 'subscriptions' : 'records'}
+                        {isHindi
+                            ? `${totalRecords} रिकॉर्ड्स में से ${(currentPage - 1) * limit + 1} से ${Math.min(currentPage * limit, totalRecords)} दिख रहे हैं`
+                            : `Showing ${(currentPage - 1) * limit + 1} to ${Math.min(currentPage * limit, totalRecords)} of ${totalRecords} ${isAdmin ? 'subscriptions' : 'records'}`
+                        }
                     </div>
                     <div className="pagination-buttons">
                         <button
@@ -644,7 +653,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                             disabled={currentPage === 1}
                             onClick={() => handlePageChange(currentPage - 1)}
                         >
-                            Previous
+                            {isHindi ? 'पिछला' : 'Previous'}
                         </button>
 
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
@@ -676,7 +685,7 @@ const SubscriptionList = ({ isAdmin = false }) => {
                             disabled={currentPage === totalPages}
                             onClick={() => handlePageChange(currentPage + 1)}
                         >
-                            Next
+                            {isHindi ? 'अगला' : 'Next'}
                         </button>
                     </div>
                 </div>
@@ -686,8 +695,8 @@ const SubscriptionList = ({ isAdmin = false }) => {
             {otpModalOpen && (
                 <div className="otp-overlay">
                     <div className="otp-modal-box">
-                        <h3>Authorize Cancellation</h3>
-                        <p>Enter the 6-digit code sent to <strong>{selectedSub?.donorMobile}</strong></p>
+                        <h3>{isHindi ? 'रद्दीकरण स्वीकृत करें' : 'Authorize Cancellation'}</h3>
+                        <p>{isHindi ? <><strong>{selectedSub?.donorMobile}</strong> पर भेजा गया 6-अंकीय कोड दर्ज करें</> : <>Enter the 6-digit code sent to <strong>{selectedSub?.donorMobile}</strong></>}</p>
 
                         <input
                             type="text"
@@ -699,13 +708,13 @@ const SubscriptionList = ({ isAdmin = false }) => {
                         />
 
                         <div className="otp-modal-footer">
-                            <button className="btn-secondary" onClick={() => setOtpModalOpen(false)}>Cancel</button>
+                            <button className="btn-secondary" onClick={() => setOtpModalOpen(false)}>{isHindi ? 'रद्द करें' : 'Cancel'}</button>
                             <button
                                 className="btn-primary"
                                 onClick={() => handleCancel(selectedSub, otpValue)}
                                 disabled={otpValue.length !== 6 || verifyingOtp}
                             >
-                                {verifyingOtp ? 'Verifying...' : 'Confirm Cancellation'}
+                                {verifyingOtp ? (isHindi ? 'सत्यापित हो रहा है...' : 'Verifying...') : (isHindi ? 'रद्दीकरण की पुष्टि करें' : 'Confirm Cancellation')}
                             </button>
                         </div>
                     </div>

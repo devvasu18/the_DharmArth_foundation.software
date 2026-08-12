@@ -155,7 +155,7 @@ export default function ContactScreen() {
                 <Text style={styles.infoSubtext}>
                   {locale === 'hi'
                     ? 'जादव मार्ग, डुलिया बाईपास, सुजानगढ़, चूरू जिला, राजस्थान, भारत - 331507'
-                    : 'Jadaw Marg, Duliya Bypass, Sujangarh, Churu District, Rajasthan, India - 331507'}
+                    : 'Jadaw Marg, Duliya Bass, Sujangarh, Churu District, Rajasthan, India - 331507'}
                 </Text>
               </View>
             </View>

@@ -40,7 +40,7 @@ class InvoiceService {
             .fontSize(20)
             .text('THE DHARMARTH Medical FOUNDATION', 110, 57)
             .fontSize(10)
-            .text('Jadaw marg, Duliya bass ,', 200, 65, { align: 'right' })
+            .text('Jadaw marg, Duliya Bass ,', 200, 65, { align: 'right' })
             .text('Sujangarh, Rajasthan, India - 334507', 200, 80, { align: 'right' })
             .text('Support: +91 8000 000 000', 200, 95, { align: 'right' })
             .moveDown();

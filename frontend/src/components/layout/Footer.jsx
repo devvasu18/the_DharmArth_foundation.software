@@ -78,54 +78,31 @@ const Footer = ({ variant = 'default' }) => {
                     </div>
 
                     <div className="footer-col">
-                        <h3>{t('footer.causes')}</h3>
+                        <h3>{t('navbar.fundraiseFor', 'Events & Donations')}</h3>
                         <ul className="footer-links">
-                            <li><Link to="/events">{t('footer.c1')}</Link></li>
-                            <li><Link to="/events">{t('footer.c2')}</Link></li>
-                            <li><Link to="/events">{t('footer.c3')}</Link></li>
-                            <li><Link to="/events">{t('footer.c4')}</Link></li>
-                            <li><Link to="/events">{t('footer.c5')}</Link></li>
-                            <li><Link to="/events">{t('footer.c6')}</Link></li>
-                            <li><Link to="/events">{t('footer.c7')}</Link></li>
+                            <li><Link to="/events">{t('navbar.fundraiseFor', 'Events')}</Link></li>
+                            <li><Link to="/doctors">{t('navbar.doctorAvailability', 'Doctor Availability')}</Link></li>
+                            <li><Link to="/order-medicine">{t('navbar.orderMedicine', 'Order Medicine')}</Link></li>
+                            <li><Link to="/body-tests">{t('navbar.bodyTests', 'Medical Tests')}</Link></li>
+                            <li><Link to="/leaderboard">{t('navbar.leaderboard', 'Leaderboard')}</Link></li>
                         </ul>
                     </div>
 
                     <div className="footer-col">
-                        <h3>{t('footer.howItWorks')}</h3>
+                        <h3>{t('navbar.aboutUs', 'About Us')}</h3>
                         <ul className="footer-links">
-                            <li><Link to="/start-fundraiser">{t('footer.h1')}</Link></li>
-                            <li><Link to="/donate">{t('footer.h2')}</Link></li>
-                            <li><Link to="/start-fundraiser">{t('footer.h3')}</Link></li>
-                            <li><Link to="/events">{t('footer.h4')}</Link></li>
-                            <li><Link to="/p/join-and-earn">{t('footer.h5')}</Link></li>
-                            <li><Link to="/dashboard">{t('footer.h6')}</Link></li>
-                            <li><Link to="/donate">{t('footer.h7')}</Link></li>
+                            <li><Link to="/p/about-us">{t('navbar.aboutUs', 'About Dharmarth')}</Link></li>
+                            <li><Link to="/p/join-and-earn">{t('navbar.shareAndEarn', 'Share & Earn')}</Link></li>
+                            <li><Link to="/contact">Contact Us</Link></li>
                         </ul>
                     </div>
 
                     <div className="footer-col">
-                        <h3>{t('footer.aboutUs')}</h3>
+                        <h3>Policy & Support</h3>
                         <ul className="footer-links">
-                            <li><Link to="/p/about-us">{t('footer.a1')}</Link></li>
-                            <li><Link to="/p/about-us">{t('footer.a2')}</Link></li>
-                            <li><Link to="/p/about-us">{t('footer.a3')}</Link></li>
-                            <li><Link to="/p/about-us">{t('footer.a4')}</Link></li>
-                            <li><Link to="/p/about-us">{t('footer.a5')}</Link></li>
-                            <li><Link to="/p/about-us">{t('footer.a6')}</Link></li>
-                            <li><Link to="/p/about-us">{t('footer.a7')}</Link></li>
-                        </ul>
-                    </div>
-
-                    <div className="footer-col">
-                        <h3>{t('footer.support')}</h3>
-                        <ul className="footer-links">
-                            <li><Link to="/order-medicine">{t('footer.s1')}</Link></li>
-                            <li><Link to="/doctors">{t('footer.s2')}</Link></li>
-                            <li><Link to="/p/about-us">{t('footer.s3')}</Link></li>
-                            <li><Link to="/events">{t('footer.s4')}</Link></li>
-                            <li><Link to="/privacy-policy">{t('footer.s5')}</Link></li>
-                            <li><Link to="/p/join-and-earn">{t('footer.s6')}</Link></li>
-                            <li><Link to="/contact">{t('footer.s7')}</Link></li>
+                            <li><Link to="/privacy-policy">Privacy Policy</Link></li>
+                            <li><Link to="/child-safety">Child Safety Standards</Link></li>
+                            <li><Link to="/delete-account">Delete Account</Link></li>
                         </ul>
                     </div>
                 </div>
