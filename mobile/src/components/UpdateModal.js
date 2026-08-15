@@ -16,7 +16,7 @@ const UpdateModal = ({ isOpen, forceUpdate, playStoreUrl, onClose }) => {
   const handleUpdatePress = async () => {
     try {
       const defaultUrl = Platform.OS === 'ios'
-        ? 'https://apps.apple.com/app/id6780563745'
+        ? 'https://apps.apple.com/us/app/dharmarth-foundation/id6780563745'
         : 'https://play.google.com/store/apps/details?id=com.thedharmarth.foundation';
       const url = playStoreUrl || defaultUrl;
       const supported = await Linking.canOpenURL(url);

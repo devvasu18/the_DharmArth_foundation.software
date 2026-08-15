@@ -75,7 +75,7 @@ export const checkAndRunUpdates = async (setUpdateInfo) => {
     if (Platform.OS === 'ios') {
       currentVersionCode = parseInt(Constants.expoConfig?.ios?.buildNumber || '1', 10);
       remoteVersionCode = remoteConfig.latestVersionCodeIos || remoteConfig.latestVersionCode || 1;
-      storeUrl = remoteConfig.appStoreUrl || 'https://apps.apple.com/app/id6780563745';
+      storeUrl = remoteConfig.appStoreUrl || 'https://apps.apple.com/us/app/dharmarth-foundation/id6780563745';
     }
     
     console.log(`[UpdateHandler] Fallback check comparisons: Local Code [${currentVersionCode}], Remote Code [${remoteVersionCode}]`);

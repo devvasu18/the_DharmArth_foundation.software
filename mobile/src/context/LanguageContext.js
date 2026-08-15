@@ -29,7 +29,8 @@ const translations = {
       findDoctor: "Find a Doctor",
       leaderboard: "Leaderboard",
       aboutUs: "About Us",
-      contactUs: "Contact Us"
+      contactUs: "Contact Us",
+      shareApp: "Share App"
     },
     bodyTests: {
       title: "Medical Tests & Diagnostic Services",
@@ -422,6 +423,19 @@ const translations = {
       officialID: "Official ID",
       verified: "Verified",
       trusted: "Trusted"
+    },
+    shareApp: {
+      title: "Share App",
+      shareDharmarth: "Share DharmArth",
+      subtitle: "Help us reach more people in need by sharing our app. 💚",
+      forAndroid: "For Android Users",
+      shareOnPlayStoreDesc: "Share our app on Google Play Store",
+      shareOnPlayStore: "Share on Play Store",
+      forIphone: "For iPhone Users",
+      shareOnAppStoreDesc: "Share our app on App Store",
+      shareOnAppStore: "Share on App Store",
+      googlePlayStore: "Google Play Store",
+      appStore: "App Store"
     }
   },
   hi: {
@@ -449,7 +463,8 @@ const translations = {
       findDoctor: "एक डॉक्टर खोजें",
       leaderboard: "लीडरबोर्ड",
       aboutUs: "हमारे बारे में",
-      contactUs: "संपर्क करें"
+      contactUs: "संपर्क करें",
+      shareApp: "ऐप शेयर करें"
     },
     bodyTests: {
       title: "चिकित्सीय परीक्षण एवं निदान सेवाएं",
@@ -844,6 +859,19 @@ const translations = {
       officialID: "आधिकारिक ID",
       verified: "सत्यापित",
       trusted: "विश्वसनीय"
+    },
+    shareApp: {
+      title: "ऐप शेयर करें",
+      shareDharmarth: "धर्मार्थ शेयर करें",
+      subtitle: "हमारे ऐप को शेयर करके अधिक जरूरतमंद लोगों तक पहुंचने में हमारी मदद करें। 💚",
+      forAndroid: "एंड्रॉइड उपयोगकर्ताओं के लिए",
+      shareOnPlayStoreDesc: "गूगल प्ले स्टोर पर हमारा ऐप शेयर करें",
+      shareOnPlayStore: "प्ले स्टोर पर शेयर करें",
+      forIphone: "आईफोन उपयोगकर्ताओं के लिए",
+      shareOnAppStoreDesc: "ऐप स्टोर पर हमारा ऐप शेयर करें",
+      shareOnAppStore: "ऐप स्टोर पर शेयर करें",
+      googlePlayStore: "गूगल प्ले स्टोर",
+      appStore: "ऐप स्टोर"
     }
   }
 };

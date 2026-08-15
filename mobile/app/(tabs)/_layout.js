@@ -99,7 +99,8 @@ export default function TabLayout() {
     { label: t('navbar.myReferrals'), icon: 'people-outline', route: '/my-referrals' },
     { label: t('navbar.shareAndEarn'), icon: 'share-social-outline', route: '/share-earn' },
     { label: t('navbar.aboutUs'), icon: 'information-circle-outline', route: '/p/about-us', public: true },
-    { label: t('navbar.contactUs'), icon: 'mail-outline', route: '/contact', public: true }
+    { label: t('navbar.contactUs'), icon: 'mail-outline', route: '/contact', public: true },
+    { label: t('navbar.shareApp') || 'Share App', icon: 'share-outline', route: '/share-app', public: true }
   ];
 
   const handleLogout = () => {

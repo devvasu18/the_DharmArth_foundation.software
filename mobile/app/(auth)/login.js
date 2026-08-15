@@ -155,7 +155,7 @@ export default function Login() {
           <Text style={styles.subtitle}>
             {isForgotPassword
               ? (locale === 'hi' ? 'पासवर्ड रीसेट करें' : 'Reset Password')
-              : (locale === 'hi' ? ' पर स्वागत है!' : 'Welcome ')}
+              : (locale === 'hi' ? 'स्वागत है!' : 'Welcome')}
           </Text>
         </View>
 
@@ -445,13 +445,14 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
+    marginTop: 10,
     marginBottom: 40,
     position: 'relative',
     width: '100%',
   },
   langToggle: {
     position: 'absolute',
-    top: -10,
+    top: 0,
     left: 0,
     flexDirection: 'row',
     alignItems: 'center',
@@ -486,6 +487,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#1e293b',
     marginBottom: 8,
+    textAlign: 'center',
+    marginTop: 36,
   },
   subtitle: {
     fontSize: 16,

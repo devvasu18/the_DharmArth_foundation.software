@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   },
   langToggle: {
     position: 'absolute',
-    top: -10,
+    top: 0,
     left: 0,
     flexDirection: 'row',
     alignItems: 'center',
@@ -292,6 +292,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
+    zIndex: 10,
   },
   langText: {
     marginLeft: 6,
@@ -305,7 +306,7 @@ const styles = StyleSheet.create({
     color: '#1e293b',
     marginBottom: 8,
     textAlign: 'center',
-    marginTop: 30
+    marginTop: 36
   },
   subtitle: {
     fontSize: 16,

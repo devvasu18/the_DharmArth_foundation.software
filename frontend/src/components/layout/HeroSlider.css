@@ -370,14 +370,14 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0.8rem 0.75rem !important;
-        border-radius: 14px !important;
+        padding: 1rem 0.85rem !important;
+        border-radius: 16px !important;
         color: white;
         text-decoration: none;
         font-weight: 700;
-        font-size: 0.88rem !important;
+        font-size: 0.92rem !important;
         line-height: 1.25;
-        min-height: 72px !important;
+        min-height: 95px !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
         transition: transform 0.2s ease;
     }
@@ -390,9 +390,9 @@
         grid-column: span 2;
         justify-content: center;
         gap: 10px;
-        min-height: 48px !important;
-        padding: 0.65rem 1rem !important;
-        font-size: 0.95rem !important;
+        min-height: 58px !important;
+        padding: 0.85rem 1rem !important;
+        font-size: 0.98rem !important;
     }
 
     .mobile-card-text {

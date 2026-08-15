@@ -85,22 +85,22 @@ const getAppVersionConfig = async () => {
     if (!config) {
         // Return defaults
         return {
-            latestVersion: "1.0.0",
-            latestVersionCode: 1,
-            latestVersionCodeIos: 1,
+            latestVersion: "1.0.19",
+            latestVersionCode: 19,
+            latestVersionCodeIos: 19,
             forceUpdate: false,
             playStoreUrl: "https://play.google.com/store/apps/details?id=com.thedharmarth.foundation",
-            appStoreUrl: "https://apps.apple.com/app/id6780563745"
+            appStoreUrl: "https://apps.apple.com/us/app/dharmarth-foundation/id6780563745"
         };
     }
     // Ensure all fields have defaults if they don't exist
     return {
-        latestVersion: "1.0.0",
-        latestVersionCode: 1,
-        latestVersionCodeIos: 1,
+        latestVersion: "1.0.19",
+        latestVersionCode: 19,
+        latestVersionCodeIos: 19,
         forceUpdate: false,
         playStoreUrl: "https://play.google.com/store/apps/details?id=com.thedharmarth.foundation",
-        appStoreUrl: "https://apps.apple.com/app/id6780563745",
+        appStoreUrl: "https://apps.apple.com/us/app/dharmarth-foundation/id6780563745",
         ...config.value
     };
 };
