@@ -102,7 +102,7 @@ export default function VolunteerCardScreen() {
 
       <TouchableOpacity
         style={styles.donateButton}
-        onPress={() => Linking.openURL(`https://thedharmarth.com/donate?ref=${referralCode}`)}
+        onPress={() => router.push({ pathname: '/(tabs)/donate', params: { ref: referralCode, motivator: referralCode } })}
       >
         <Ionicons name="heart" size={18} color="white" style={{ marginRight: 8 }} />
         <Text style={styles.donateButtonText}>{t('shareEarn.donateNow')}</Text>

@@ -17,7 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import LocationModal from '../../src/components/LocationModal';
-import { Stack, useRouter, useFocusEffect } from 'expo-router';
+import { Stack, useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTranslation } from '../../src/context/LanguageContext';
 import api from '../../src/services/api';
@@ -32,6 +32,7 @@ export default function DonateScreen() {
   const { t, locale } = useTranslation();
   const { user: authUser } = useAuth();
   const router = useRouter();
+  const routeParams = useLocalSearchParams();
 
   // Form State
   const [amount, setAmount] = useState(1000);
@@ -119,21 +120,30 @@ export default function DonateScreen() {
   useFocusEffect(
     React.useCallback(() => {
       fetchSettings();
+
+      const urlMotivator = routeParams?.motivator || routeParams?.ref;
+      if (urlMotivator && !isMotivatorLocked) {
+        setMotivatorMobile(urlMotivator.toString());
+        setIsMotivatorLocked(true);
+      }
+
       if (authUser) {
         setFullName(authUser.name || '');
         setMobile(authUser.mobile || '');
         setEmail(authUser.email || '');
 
-        if (authUser.referredBy) {
-          // Directly referred — highest priority
-          setMotivatorMobile(authUser.referredBy.mobile || authUser.referredBy.referralCode || '');
-          setMotivatorName(authUser.referredBy.name || '');
-          setIsMotivatorLocked(true);
-        } else if (authUser.lastMotivatorMobile) {
-          // Previously used motivator — auto-lock
-          setMotivatorMobile(authUser.lastMotivatorMobile);
-          if (authUser.lastMotivatorName) setMotivatorName(authUser.lastMotivatorName);
-          setIsMotivatorLocked(true);
+        if (!urlMotivator) {
+          if (authUser.referredBy) {
+            // Directly referred — highest priority
+            setMotivatorMobile(authUser.referredBy.mobile || authUser.referredBy.referralCode || '');
+            setMotivatorName(authUser.referredBy.name || '');
+            setIsMotivatorLocked(true);
+          } else if (authUser.lastMotivatorMobile) {
+            // Previously used motivator — auto-lock
+            setMotivatorMobile(authUser.lastMotivatorMobile);
+            if (authUser.lastMotivatorName) setMotivatorName(authUser.lastMotivatorName);
+            setIsMotivatorLocked(true);
+          }
         }
       }
 
@@ -144,7 +154,7 @@ export default function DonateScreen() {
 
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
       return () => subscription.remove();
-    }, [authUser])
+    }, [authUser, routeParams])
   );
 
   const fetchSettings = async () => {

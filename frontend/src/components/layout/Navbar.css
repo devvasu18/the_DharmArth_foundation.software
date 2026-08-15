@@ -310,6 +310,22 @@
 }
 
 @media (max-width: 768px) {
+    .navbar {
+        height: 58px;
+    }
+
+    .logo-img {
+        height: 38px;
+    }
+
+    .brand-title-en, .brand-title-hi {
+        font-size: 16px;
+    }
+
+    .brand-top-en, .brand-sub-en, .brand-sub-hi {
+        font-size: 8px;
+    }
+
     .hidden-mobile {
         display: none !important;
     }
@@ -341,7 +357,7 @@
 
     .mobile-menu {
         position: absolute;
-        top: 70px;
+        top: 58px;
         left: 0;
         width: 100%;
         background: #ffffff;

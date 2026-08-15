@@ -130,7 +130,7 @@ export default function Signup() {
             <Text style={styles.langText}>{locale === 'hi' ? 'English' : 'हिंदी'}</Text>
           </TouchableOpacity>
           <Text style={styles.title}>{locale === 'hi' ? 'खाता बनाएं' : 'Create Account'}</Text>
-          <Text style={styles.subtitle}>{locale === 'hi' ? 'धर्मअर्थ मेडिकल फाउंडेशन से जुड़ें' : 'Join the Dharmarth Medical Foundation'}</Text>
+          <Text style={styles.subtitle}>{locale === 'hi' ? 'द धर्मअर्थ मेडिकल फाउंडेशन से जुड़ें' : 'Join the Dharmarth Medical Foundation'}</Text>
         </View>
 
         <View style={styles.card}>
@@ -149,7 +149,7 @@ export default function Signup() {
               <View style={styles.inputContainer}>
                 <Ionicons name="person-outline" size={20} color="#64748b" style={styles.inputIcon} />
                 <TextInput
-                  style={styles.input}
+                  style={styles.flexInput}
                   placeholder={locale === 'hi' ? "अपना पूरा नाम दर्ज करें" : "Enter your full name"}
                   value={name}
                   onChangeText={setName}
@@ -164,14 +164,14 @@ export default function Signup() {
               <View style={styles.inputContainer}>
                 <Text style={styles.prefix}>+91</Text>
                 <TextInput
-                  style={styles.input}
+                  style={styles.flexInput}
                   placeholder="00000 00000"
                   keyboardType="numeric"
                   maxLength={10}
                   value={mobile}
                   onChangeText={handleMobileChange}
                 />
-                {checkingMobile && <ActivityIndicator size="small" color="#00bfa5" style={{ marginLeft: 10 }} />}
+                {checkingMobile && <ActivityIndicator size="small" color="#00bfa5" style={{ marginLeft: 10, marginRight: 10 }} />}
               </View>
             </View>
 
@@ -206,7 +206,7 @@ export default function Signup() {
                 <View style={styles.inputContainer}>
                   <Ionicons name="keypad-outline" size={20} color="#64748b" style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={styles.flexInput}
                     placeholder={locale === 'hi' ? '6-अंकीय OTP दर्ज करें' : 'Enter 6-digit OTP'}
                     value={otp}
                     onChangeText={(val) => setOtp(val.replace(/\D/g, ''))}
@@ -360,6 +360,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e2e8f0',
+  },
+  inputIcon: {
+    marginLeft: 14,
+  },
+  prefix: {
+    paddingLeft: 14,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e293b',
   },
   flexInput: {
     flex: 1,

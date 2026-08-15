@@ -414,3 +414,196 @@
     line-height: 1.55;
     margin: 0;
 }
+
+/* Public Visitor Actions (Non-Owner View) */
+.public-visitor-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.btn-donate-now-red {
+    width: 100%;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 800;
+    padding: 16px 20px;
+    border-radius: 16px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.35);
+    transition: all 0.25s ease;
+}
+
+.btn-donate-now-red:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(220, 38, 38, 0.45);
+}
+
+.btn-donate-now-red:active {
+    transform: translateY(0);
+}
+
+.btn-go-home {
+    width: 100%;
+    background: #ffffff;
+    color: #1e293b;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 14px 20px;
+    border-radius: 16px;
+    border: 1px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s ease;
+}
+
+.btn-go-home:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+    transform: translateY(-1px);
+}
+
+/* Mobile Screen Spacing Optimization */
+@media (max-width: 600px) {
+    .share-earn-page {
+        padding-bottom: 24px;
+    }
+
+    .main-share-container {
+        padding: 10px 12px;
+    }
+
+    .share-page-header {
+        margin-bottom: 12px;
+    }
+
+    .share-title {
+        font-size: 19px;
+        margin-bottom: 4px;
+    }
+
+    .share-subtitle {
+        font-size: 12px;
+        line-height: 1.35;
+    }
+
+    .share-id-card {
+        margin-bottom: 12px;
+        border-radius: 16px;
+    }
+
+    .id-card-top-teal {
+        padding: 14px 14px;
+        gap: 12px;
+    }
+
+    .id-photo-wrapper {
+        width: 76px;
+        height: 86px;
+        border-radius: 10px;
+    }
+
+    .id-brand-name {
+        font-size: 20px;
+    }
+
+    .id-brand-sub {
+        font-size: 10px;
+    }
+
+    .id-card-bottom-white {
+        padding: 14px;
+    }
+
+    .id-name-row {
+        margin-bottom: 6px;
+    }
+
+    .id-user-name {
+        font-size: 18px;
+    }
+
+    .id-user-role {
+        font-size: 11px;
+    }
+
+    .vol-id-value {
+        font-size: 14px;
+    }
+
+    .id-user-quote {
+        margin: 6px 0 10px 0;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    .id-info-grid {
+        gap: 8px 6px;
+        padding-top: 8px;
+    }
+
+    .info-val {
+        font-size: 12px;
+        max-width: 110px;
+    }
+
+    .share-section-box {
+        margin-bottom: 12px;
+    }
+
+    .share-link-input-wrapper {
+        padding: 4px 4px 4px 12px;
+        margin-bottom: 10px;
+        border-radius: 12px;
+    }
+
+    .share-btns-row {
+        gap: 8px;
+    }
+
+    .btn-share-whatsapp, .btn-share-more {
+        padding: 10px;
+        font-size: 14px;
+        border-radius: 12px;
+    }
+
+    .impact-card-box {
+        padding: 12px 10px;
+        border-radius: 14px;
+    }
+
+    .impact-number {
+        font-size: 20px;
+    }
+
+    .how-it-works-box {
+        padding: 12px;
+        border-radius: 14px;
+        gap: 10px;
+    }
+
+    .public-visitor-actions {
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .btn-donate-now-red, .btn-go-home {
+        padding: 12px 14px;
+        font-size: 15px;
+        border-radius: 12px;
+    }
+}
+

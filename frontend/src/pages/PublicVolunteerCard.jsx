@@ -6,8 +6,9 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import SEO from '../components/common/SEO';
-import { ArrowLeft, Copy, Check, Phone, MapPin, Calendar, ShieldCheck, Share2, Info } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Phone, MapPin, Calendar, ShieldCheck, Share2, Info, Heart, Home } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 import './PublicVolunteerCard.css';
 
 const DEFAULT_AVATAR = 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1778152272/dharmarth_foundation/default_guest_avatar.jpg';
@@ -23,6 +24,7 @@ const PublicVolunteerCard = () => {
     const { referralCode } = useParams();
     const navigate = useNavigate();
     const { i18n } = useTranslation();
+    const { user } = useAuth();
     const [volunteer, setVolunteer] = useState(null);
     const [loading, setLoading] = useState(true);
     const [copied, setCopied] = useState(false);
@@ -48,6 +50,14 @@ const PublicVolunteerCard = () => {
 
     if (loading) return <LoadingSpinner />;
     if (!volunteer) return null;
+
+    const isOwner = Boolean(
+        user && volunteer && (
+            (user._id && volunteer._id && String(user._id) === String(volunteer._id)) ||
+            (user.referralCode && volunteer.referralCode && user.referralCode.toUpperCase() === volunteer.referralCode.toUpperCase()) ||
+            (user.mobile && volunteer.mobile && user.mobile === volunteer.mobile)
+        )
+    );
 
     const fullShareUrl = `https://thedharmarth.com/v/${volunteer.referralCode || volunteer.mobile || referralCode}`;
 
@@ -77,6 +87,11 @@ const PublicVolunteerCard = () => {
         }
     };
 
+    const handleDonateClick = () => {
+        const motivatorCode = volunteer.referralCode || volunteer.mobile || referralCode;
+        navigate(`/donate?motivator=${encodeURIComponent(motivatorCode)}`);
+    };
+
     return (
         <>
             <SEO
@@ -90,18 +105,30 @@ const PublicVolunteerCard = () => {
                     <button className="header-back-btn" onClick={() => navigate(-1)}>
                         <ArrowLeft size={20} />
                     </button>
-                    <h2 className="header-title-text">{isHindi ? 'साझा करें और कमाएं' : 'Share & Earn'}</h2>
+                    <h2 className="header-title-text">
+                        {isOwner
+                            ? (isHindi ? 'साझा करें और कमाएं' : 'Share & Earn')
+                            : (isHindi ? 'स्वयंसेवक प्रोफ़ाइल' : 'Volunteer Profile')}
+                    </h2>
                     <div style={{ width: 40 }} />
                 </div>
 
                 <div className="container main-share-container">
                     {/* Header Title Section */}
                     <div className="share-page-header">
-                        <h1 className="share-title">{isHindi ? 'आपकी डिजिटल पहचान' : 'Your Digital Identity'}</h1>
+                        <h1 className="share-title">
+                            {isOwner
+                                ? (isHindi ? 'आपकी डिजिटल पहचान' : 'Your Digital Identity')
+                                : (isHindi ? 'सत्यापित स्वयंसेवक प्रोफ़ाइल' : 'Verified Volunteer Profile')}
+                        </h1>
                         <p className="share-subtitle">
-                            {isHindi
-                                ? 'अपने नेटवर्क को बढ़ाने और प्रोत्साहन कमाने के लिए अपनी सत्यापित स्वयंसेवक प्रोफ़ाइल साझा करें।'
-                                : 'Share your verified volunteer profile to grow your network and earn commissions.'}
+                            {isOwner
+                                ? (isHindi
+                                    ? 'अपने नेटवर्क को बढ़ाने और प्रोत्साहन कमाने के लिए अपनी सत्यापित स्वयंसेवक प्रोफ़ाइल साझा करें।'
+                                    : 'Share your verified volunteer profile to grow your network and earn commissions.')
+                                : (isHindi
+                                    ? `${volunteer.name} द धर्मार्थ मेडिकल फाउंडेशन के साथ सत्यापित मिशन पार्टनर हैं।`
+                                    : `${volunteer.name} is a verified Mission Partner with The Dharmarth Medical Foundation.`)}
                         </p>
                     </div>
 
@@ -185,68 +212,83 @@ const PublicVolunteerCard = () => {
                         </div>
                     </div>
 
-                    {/* Section 2: Unique Sharing Link */}
-                    <div className="share-section-box">
-                        <span className="section-label-small">
-                            {isHindi ? 'आपका अनूठा शेयरिंग लिंक' : 'YOUR UNIQUE SHARING LINK'}
-                        </span>
-                        <div className="share-link-input-wrapper">
-                            <input
-                                type="text"
-                                readOnly
-                                value={fullShareUrl}
-                                className="share-link-input"
-                            />
-                            <button className="copy-icon-btn" onClick={handleCopyLink} title="Copy link">
-                                {copied ? <Check size={18} color="#00bf9a" /> : <Copy size={18} color="#00bf9a" />}
-                            </button>
-                        </div>
+                    {isOwner ? (
+                        <>
+                            {/* Section 2: Unique Sharing Link */}
+                            <div className="share-section-box">
+                                <span className="section-label-small">
+                                    {isHindi ? 'आपका अनूठा शेयरिंग लिंक' : 'YOUR UNIQUE SHARING LINK'}
+                                </span>
+                                <div className="share-link-input-wrapper">
+                                    <input
+                                        type="text"
+                                        readOnly
+                                        value={fullShareUrl}
+                                        className="share-link-input"
+                                    />
+                                    <button className="copy-icon-btn" onClick={handleCopyLink} title="Copy link">
+                                        {copied ? <Check size={18} color="#00bf9a" /> : <Copy size={18} color="#00bf9a" />}
+                                    </button>
+                                </div>
 
-                        {/* WhatsApp & Share More Buttons */}
-                        <div className="share-btns-row">
-                            <button className="btn-share-whatsapp" onClick={handleWhatsAppShare}>
-                                <WhatsAppIcon />
-                                <span>WhatsApp</span>
-                            </button>
-                            <button className="btn-share-more" onClick={handleShareMore}>
-                                <Share2 size={18} />
-                                <span>{isHindi ? 'और साझा करें' : 'Share More'}</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Section 3: Your Impact */}
-                    <div className="share-section-box">
-                        <span className="section-label-small">
-                            {isHindi ? 'आपका प्रभाव' : 'YOUR IMPACT'}
-                        </span>
-                        <div className="impact-card-box">
-                            <div className="impact-stat-item">
-                                <h3 className="impact-number">{volunteer.referralCount || 0}</h3>
-                                <span className="impact-label">{isHindi ? 'रेफरल' : 'Referrals'}</span>
+                                {/* WhatsApp & Share More Buttons */}
+                                <div className="share-btns-row">
+                                    <button className="btn-share-whatsapp" onClick={handleWhatsAppShare}>
+                                        <WhatsAppIcon />
+                                        <span>WhatsApp</span>
+                                    </button>
+                                    <button className="btn-share-more" onClick={handleShareMore}>
+                                        <Share2 size={18} />
+                                        <span>{isHindi ? 'और साझा करें' : 'Share More'}</span>
+                                    </button>
+                                </div>
                             </div>
-                            <div className="impact-divider"></div>
-                            <div className="impact-stat-item">
-                                <h3 className="impact-number green">₹{volunteer.totalEarnings || 0}</h3>
-                                <span className="impact-label">{isHindi ? 'कमाए' : 'Earned'}</span>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Section 4: How it works? */}
-                    <div className="how-it-works-box">
-                        <div className="how-it-works-icon-circle">
-                            <Info size={18} color="#00bf9a" />
+                            {/* Section 3: Your Impact */}
+                            <div className="share-section-box">
+                                <span className="section-label-small">
+                                    {isHindi ? 'आपका प्रभाव' : 'YOUR IMPACT'}
+                                </span>
+                                <div className="impact-card-box">
+                                    <div className="impact-stat-item">
+                                        <h3 className="impact-number">{volunteer.referralCount || 0}</h3>
+                                        <span className="impact-label">{isHindi ? 'रेफरल' : 'Referrals'}</span>
+                                    </div>
+                                    <div className="impact-divider"></div>
+                                    <div className="impact-stat-item">
+                                        <h3 className="impact-number green">₹{volunteer.totalEarnings || 0}</h3>
+                                        <span className="impact-label">{isHindi ? 'कमाए' : 'Earned'}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section 4: How it works? */}
+                            <div className="how-it-works-box">
+                                <div className="how-it-works-icon-circle">
+                                    <Info size={18} color="#00bf9a" />
+                                </div>
+                                <div className="how-it-works-text">
+                                    <h4 className="how-title">{isHindi ? 'यह कैसे काम करता है?' : 'How it works?'}</h4>
+                                    <p className="how-desc">
+                                        {isHindi
+                                            ? 'जब कोई आपके लिंक पर क्लिक करता है और दान करता है, तो वे स्वचालित रूप से आपके नेटवर्क में जुड़ जाते हैं। आप अपने लिंक से किए गए प्रत्येक सफल दान पर कमीशन कमाते हैं!'
+                                            : 'When someone clicks your link and makes a donation, they are automatically added to your network. You earn commissions on every successful donation made through your link!'}
+                                    </p>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="public-visitor-actions">
+                            <button className="btn-donate-now-red" onClick={handleDonateClick}>
+                                <Heart size={20} className="btn-icon" />
+                                <span>{isHindi ? 'अभी दान करें' : 'Donate Now'}</span>
+                            </button>
+                            <button className="btn-go-home" onClick={() => navigate('/')}>
+                                <Home size={20} className="btn-icon" />
+                                <span>{isHindi ? 'मुख्य पृष्ठ पर जाएं' : 'Go to Home'}</span>
+                            </button>
                         </div>
-                        <div className="how-it-works-text">
-                            <h4 className="how-title">{isHindi ? 'यह कैसे काम करता है?' : 'How it works?'}</h4>
-                            <p className="how-desc">
-                                {isHindi
-                                    ? 'जब कोई आपके लिंक पर क्लिक करता है और दान करता है, तो वे स्वचालित रूप से आपके नेटवर्क में जुड़ जाते हैं। आप अपने लिंक से किए गए प्रत्येक सफल दान पर कमीशन कमाते हैं!'
-                                    : 'When someone clicks your link and makes a donation, they are automatically added to your network. You earn commissions on every successful donation made through your link!'}
-                            </p>
-                        </div>
-                    </div>
+                    )}
                 </div>
             </div>
             <Footer />
@@ -255,3 +297,4 @@ const PublicVolunteerCard = () => {
 };
 
 export default PublicVolunteerCard;
+

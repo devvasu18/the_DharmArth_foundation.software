@@ -150,14 +150,12 @@ export default function Login() {
             <Ionicons name="language" size={20} color="#00bfa5" />
             <Text style={styles.langText}>{locale === 'hi' ? 'English' : 'हिंदी'}</Text>
           </TouchableOpacity>
-          <View style={styles.logoCircle}>
-            <Ionicons name="heart" size={40} color="#00bfa5" />
-          </View>
+
           <Text style={styles.title}>{locale === 'hi' ? 'द धर्मअर्थ मेडिकल फाउंडेशन' : 'The Dharmarth Medical Foundation'}</Text>
           <Text style={styles.subtitle}>
             {isForgotPassword
               ? (locale === 'hi' ? 'पासवर्ड रीसेट करें' : 'Reset Password')
-              : (locale === 'hi' ? 'वापसी पर स्वागत है!' : 'Welcome back!')}
+              : (locale === 'hi' ? ' पर स्वागत है!' : 'Welcome ')}
           </Text>
         </View>
 
@@ -248,9 +246,10 @@ export default function Login() {
 
             <Text style={styles.label}>{locale === 'hi' ? 'मोबाइल नंबर' : 'Mobile Number'}</Text>
             <View style={styles.inputContainer}>
+              <Text style={styles.prefix}>+91</Text>
               <TextInput
                 style={styles.flexInput}
-                placeholder={locale === 'hi' ? '10-अंकीय मोबाइल दर्ज करें' : 'Enter 10-digit Mobile'}
+                placeholder="00000 00000"
                 value={identifier}
                 onChangeText={(val) => {
                   const numericVal = val.replace(/\D/g, '');
@@ -279,6 +278,7 @@ export default function Login() {
               <>
                 <Text style={styles.label}>{locale === 'hi' ? 'पासवर्ड' : 'Password'}</Text>
                 <View style={styles.passwordContainer}>
+                  <Ionicons name="lock-closed-outline" size={20} color="#64748b" style={styles.inputIcon} />
                   <TextInput
                     style={styles.passwordInput}
                     placeholder={locale === 'hi' ? 'पासवर्ड दर्ज करें' : 'Enter Password'}
@@ -297,7 +297,6 @@ export default function Login() {
                     />
                   </TouchableOpacity>
                 </View>
-
                 <TouchableOpacity
                   style={styles.forgotBtn}
                   onPress={() => {
@@ -525,6 +524,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e2e8f0',
+  },
+  inputIcon: {
+    marginLeft: 14,
+  },
+  prefix: {
+    paddingLeft: 14,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e293b',
   },
   flexInput: {
     flex: 1,

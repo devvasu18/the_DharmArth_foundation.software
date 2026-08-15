@@ -131,15 +131,7 @@ export default function PublicVolunteerCardScreen() {
               </View>
             </View>
 
-            <View style={styles.cardFooter}>
-              <View style={styles.footerWeb}>
-                <Ionicons name="globe-outline" size={14} color="#00bfa5" />
-                <Text style={styles.webText}>dharmarth.com</Text>
-              </View>
-              <View style={styles.qrPlaceholder}>
-                <Ionicons name="qr-code-outline" size={24} color="#1e293b" />
-              </View>
-            </View>
+
           </View>
         </View>
       </View>
@@ -152,7 +144,7 @@ export default function PublicVolunteerCardScreen() {
 
       <TouchableOpacity
         style={styles.donateButton}
-        onPress={() => Linking.openURL(`https://thedharmarth.com/donate?ref=${referralCode}`)}
+        onPress={() => router.push({ pathname: '/(tabs)/donate', params: { ref: referralCode, motivator: referralCode } })}
       >
         <Ionicons name="heart" size={18} color="white" style={{ marginRight: 8 }} />
         <Text style={styles.donateButtonText}>{t('shareEarn.donateNow')}</Text>

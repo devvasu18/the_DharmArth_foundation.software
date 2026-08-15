@@ -115,7 +115,7 @@ i18n
                         "aboutUs": "About Us",
                         "support": "Support",
                         "queries": "For any queries",
-                        "copyright": "Copyright © 2026 Dharmarth Online Ventures Pvt Ltd. All Rights Reserved.",
+                        "copyright": "Copyright © 2026 The Dharmarth Medical Foundation. All Rights Reserved.",
                         "privacyPolicy": "Privacy Policy",
                         "termsOfUse": "Terms of Use",
                         "contactSupport": "Contact Support",

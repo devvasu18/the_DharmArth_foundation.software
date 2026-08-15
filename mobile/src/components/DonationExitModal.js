@@ -9,7 +9,8 @@ import {
   Animated,
   KeyboardAvoidingView,
   Platform,
-  Alert
+  Alert,
+  ScrollView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
@@ -81,101 +82,109 @@ const DonationExitModal = ({ isOpen, onClose, onConfirmNavigation }) => {
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.container}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.overlay}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          <View style={styles.modalContent}>
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-              <Ionicons name="close" size={24} color="#64748b" />
-            </TouchableOpacity>
+          <View style={styles.container}>
+            <View style={styles.modalContent}>
+              <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+                <Ionicons name="close" size={24} color="#64748b" />
+              </TouchableOpacity>
 
-            {phase === 1 ? (
-              <View style={styles.phaseContainer}>
-                <View style={styles.iconWrapper}>
-                  <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-                    <Ionicons name="heart" size={54} color="#ef4444" />
-                  </Animated.View>
-                </View>
-                <Text style={styles.title}>{t('exitModal.titleGiveUp')}</Text>
-                <Text style={styles.description}>
-                  {t('exitModal.descGiveUp')}
-                </Text>
+              {phase === 1 ? (
+                <View style={styles.phaseContainer}>
+                  <View style={styles.iconWrapper}>
+                    <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                      <Ionicons name="heart" size={54} color="#ef4444" />
+                    </Animated.View>
+                  </View>
+                  <Text style={styles.title}>{t('exitModal.titleGiveUp')}</Text>
+                  <Text style={styles.description}>
+                    {t('exitModal.descGiveUp')}
+                  </Text>
 
-                <View style={styles.actions}>
-                  <TouchableOpacity style={styles.btnStay} onPress={onClose}>
-                    <Text style={styles.btnStayText}>{t('exitModal.contributeNow')}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.btnLater} onPress={() => setPhase(2)}>
-                    <Text style={styles.btnLaterText}>{t('exitModal.remindLater')}</Text>
-                    <Ionicons name="arrow-forward" size={16} color="#64748b" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-              <View style={styles.phaseContainer}>
-                <View style={[styles.iconWrapper, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
-                  <Ionicons name="call" size={38} color="#3b82f6" />
-                </View>
-                <Text style={styles.title}>{t('exitModal.titleRemind')}</Text>
-                <Text style={styles.description}>
-                  {t('exitModal.descRemind')}
-                </Text>
-
-                <View style={styles.formGroup}>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons name="person-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder={t('exitModal.yourName')}
-                      value={formData.name}
-                      onChangeText={(text) => setFormData({ ...formData, name: text })}
-                    />
+                  <View style={styles.actions}>
+                    <TouchableOpacity style={styles.btnStay} onPress={onClose}>
+                      <Text style={styles.btnStayText}>{t('exitModal.contributeNow')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.btnLater} onPress={() => setPhase(2)}>
+                      <Text style={styles.btnLaterText}>{t('exitModal.remindLater')}</Text>
+                      <Ionicons name="arrow-forward" size={16} color="#64748b" />
+                    </TouchableOpacity>
                   </View>
                 </View>
-
-                <View style={styles.formGroup}>
-                  <View style={styles.inputWrapper}>
-                    <Ionicons name="call-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder={t('exitModal.mobileNumber')}
-                      keyboardType="phone-pad"
-                      maxLength={10}
-                      value={formData.mobile}
-                      onChangeText={(text) => setFormData({ ...formData, mobile: text.replace(/[^0-9]/g, '') })}
-                    />
+              ) : (
+                <View style={styles.phaseContainer}>
+                  <View style={[styles.iconWrapper, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
+                    <Ionicons name="call" size={38} color="#3b82f6" />
                   </View>
+                  <Text style={styles.title}>{t('exitModal.titleRemind')}</Text>
+                  <Text style={styles.description}>
+                    {t('exitModal.descRemind')}
+                  </Text>
+
+                  <View style={styles.formGroup}>
+                    <View style={styles.inputWrapper}>
+                      <Ionicons name="person-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder={t('exitModal.yourName')}
+                        value={formData.name}
+                        onChangeText={(text) => setFormData({ ...formData, name: text })}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <View style={styles.inputWrapper}>
+                      <Ionicons name="call-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder={t('exitModal.mobileNumber')}
+                        keyboardType="phone-pad"
+                        maxLength={10}
+                        value={formData.mobile}
+                        onChangeText={(text) => setFormData({ ...formData, mobile: text.replace(/[^0-9]/g, '') })}
+                      />
+                    </View>
+                  </View>
+
+                  <TouchableOpacity style={styles.btnSubmit} onPress={handleSubmit} disabled={loading}>
+                    <Text style={styles.btnSubmitText}>{loading ? t('exitModal.saving') : t('exitModal.btnRemindLater')}</Text>
+                    {!loading && <Ionicons name="paper-plane" size={16} color="white" />}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={styles.btnLeave} onPress={onConfirmNavigation}>
+                    <Text style={styles.btnLeaveText}>{t('exitModal.backDashboard')}</Text>
+                  </TouchableOpacity>
                 </View>
-
-                <TouchableOpacity style={styles.btnSubmit} onPress={handleSubmit} disabled={loading}>
-                  <Text style={styles.btnSubmitText}>{loading ? t('exitModal.saving') : t('exitModal.btnRemindLater')}</Text>
-                  {!loading && <Ionicons name="paper-plane" size={16} color="white" />}
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.btnLeave} onPress={onConfirmNavigation}>
-                  <Text style={styles.btnLeaveText}>{t('exitModal.backDashboard')}</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+              )}
+            </View>
           </View>
-        </KeyboardAvoidingView>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.6)',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    paddingVertical: 20
   },
   container: {
     width: '100%',
-    padding: 20,
+    paddingHorizontal: 20,
     alignItems: 'center'
   },
   modalContent: {

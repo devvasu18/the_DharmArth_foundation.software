@@ -264,26 +264,33 @@
 }
 
 @media (max-width: 768px) {
+    .hero-slider-section {
+        padding: 0 !important;
+        min-height: auto !important;
+    }
+
     .hero-container {
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
-        padding-top: 1rem !important;
-        padding-bottom: 1.5rem !important;
-        gap: 0.75rem !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.75rem !important;
+        gap: 0.4rem !important;
     }
 
     .hero-visuals {
         order: 1 !important;
-        height: 290px !important;
+        height: 225px !important;
         transform: none !important;
     }
 
     .hero-card {
-        width: 350px !important;
-        height: 234px !important;
-        margin-left: -175px !important;
-        margin-top: -117px !important;
+        width: 320px !important;
+        height: 213px !important;
+        margin-left: -160px !important;
+        margin-top: -106px !important;
+        border-width: 4px !important;
+        border-radius: 14px !important;
     }
 
     .mobile-hero-controls {
@@ -292,8 +299,8 @@
         flex-direction: column !important;
         align-items: center !important;
         width: 100% !important;
-        margin-top: 0.5rem !important;
-        gap: 1rem !important;
+        margin-top: 0.2rem !important;
+        gap: 0.6rem !important;
         z-index: 20 !important;
     }
 
@@ -305,12 +312,12 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 6px;
     }
 
     .hero-dot {
-        width: 9px;
-        height: 9px;
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
         background-color: #a5f3fc;
         transition: all 0.3s ease;
@@ -318,8 +325,8 @@
     }
 
     .hero-dot.active {
-        width: 24px;
-        border-radius: 12px;
+        width: 20px;
+        border-radius: 10px;
         background-color: #00b8b8;
     }
 
@@ -327,14 +334,14 @@
         background: #ff0d0d;
         color: white;
         font-weight: 800;
-        font-size: 1.15rem;
-        padding: 13px 40px;
+        font-size: 1.05rem;
+        padding: 10px 32px;
         border-radius: 50px;
         display: inline-flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         text-decoration: none;
-        box-shadow: 0 10px 25px rgba(255, 13, 13, 0.35);
+        box-shadow: 0 6px 18px rgba(255, 13, 13, 0.3);
         transition: transform 0.2s ease;
         letter-spacing: 0.2px;
     }
@@ -347,13 +354,13 @@
         display: block;
         width: 100%;
         background-color: #ffffff;
-        padding: 1.5rem 1rem 2rem 1rem;
+        padding: 0.75rem 0.75rem 1.25rem 0.75rem !important;
     }
 
     .mobile-action-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1rem;
+        gap: 0.6rem !important;
         max-width: 480px;
         margin: 0 auto;
     }
@@ -363,15 +370,15 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 1.2rem 1rem;
-        border-radius: 18px;
+        padding: 0.8rem 0.75rem !important;
+        border-radius: 14px !important;
         color: white;
         text-decoration: none;
         font-weight: 700;
-        font-size: 0.95rem;
+        font-size: 0.88rem !important;
         line-height: 1.25;
-        min-height: 92px;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        min-height: 72px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
         transition: transform 0.2s ease;
     }
 
@@ -382,9 +389,10 @@
     .mobile-card.full-width {
         grid-column: span 2;
         justify-content: center;
-        gap: 12px;
-        min-height: 60px;
-        font-size: 1.05rem;
+        gap: 10px;
+        min-height: 48px !important;
+        padding: 0.65rem 1rem !important;
+        font-size: 0.95rem !important;
     }
 
     .mobile-card-text {
@@ -421,14 +429,14 @@
 
     .card-badge {
         position: absolute;
-        top: 8px;
-        left: 10px;
+        top: 6px;
+        left: 8px;
         background-color: #ff4747;
         color: white;
-        font-size: 9px;
+        font-size: 8px;
         font-weight: 700;
-        padding: 2px 7px;
-        border-radius: 6px;
+        padding: 2px 6px;
+        border-radius: 5px;
         text-transform: uppercase;
         letter-spacing: 0.3px;
     }
