@@ -227,10 +227,14 @@ const EventDetail = () => {
         }
     };
 
-    const youtubeCoverId = getYouTubeVideoId(event.coverImage);
+    const youtubeCoverId = getYouTubeVideoId(event.coverImage)
+        || (event.heroImages && event.heroImages.length > 0 && getYouTubeVideoId(event.heroImages[0]))
+        || (event.youtubeUrl && getYouTubeVideoId(event.youtubeUrl))
+        || (event.videoUrl && getYouTubeVideoId(event.videoUrl));
+    const defaultCover = getEventCoverUrl(event) || '/placeholder.jpg';
     const heroImages = (event.heroImages && event.heroImages.length > 0)
         ? event.heroImages
-        : [youtubeCoverId ? `https://img.youtube.com/vi/${youtubeCoverId}/hqdefault.jpg` : (event.coverImage || '/placeholder.jpg')];
+        : [defaultCover];
 
     return (
         <div className="event-detail-page-premium">
@@ -238,13 +242,31 @@ const EventDetail = () => {
 
             {/* Cinematic Hero Slider */}
             <header className="premium-hero">
-                {heroImages.map((img, idx) => (
-                    <div
-                        key={idx}
-                        className={`hero-slide-bg ${idx === currentHeroSlide ? 'active' : ''}`}
-                        style={{ backgroundImage: `url(${img.startsWith('http') ? img : `${API_BASE_URL}${img.startsWith('/') ? '' : '/'}${img}`})` }}
-                    />
-                ))}
+                {heroImages.map((rawImg, idx) => {
+                    const ytId = getYouTubeVideoId(rawImg);
+                    const imgUrl = ytId
+                        ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
+                        : (rawImg.startsWith('http') ? rawImg : `${API_BASE_URL}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`);
+
+                    return (
+                        <div
+                            key={idx}
+                            className={`hero-slide-item ${idx === currentHeroSlide ? 'active' : ''}`}
+                        >
+                            <div className="hero-media-wrapper">
+                                <div
+                                    className="hero-blur-bg"
+                                    style={{ backgroundImage: `url(${imgUrl})` }}
+                                />
+                                <img
+                                    src={imgUrl}
+                                    alt={event.title || 'Event Cover'}
+                                    className="hero-image-fg"
+                                />
+                            </div>
+                        </div>
+                    );
+                })}
                 <div className="hero-overlay-gradient"></div>
 
                 <div className="hero-content-layer container">

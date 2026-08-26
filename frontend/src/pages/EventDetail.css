@@ -41,31 +41,88 @@
 /* 2. Cinematic Hero Section */
 .premium-hero {
     position: relative;
-    height: 65vh;
-    /* Just right height */
-    min-height: 500px;
     width: 100%;
+    height: 480px;
+    max-height: 60vh;
+    min-height: 340px;
     overflow: hidden;
     color: white;
+    background: #0b1320;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-.hero-slide-bg {
+@media (max-width: 768px) {
+    .premium-hero {
+        height: 360px;
+        min-height: 260px;
+    }
+    .hero-content-layer {
+        padding-bottom: 20px;
+    }
+    .back-link {
+        top: 80px;
+    }
+}
+
+.hero-slide-item {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-size: cover;
-    background-position: center;
     opacity: 0;
-    transition: opacity 1.5s ease-in-out, transform 8s ease;
-    transform: scale(1.05);
+    transition: opacity 0.8s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 1;
 }
 
-.hero-slide-bg.active {
+.hero-slide-item.active {
     opacity: 1;
-    transform: scale(1);
+    z-index: 2;
+}
+
+.hero-media-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 0;
+}
+
+.hero-blur-bg {
+    position: absolute;
+    top: -40px;
+    left: -40px;
+    right: -40px;
+    bottom: -40px;
+    width: calc(100% + 80px);
+    height: calc(100% + 80px);
+    background-size: cover;
+    background-position: center;
+    object-fit: cover;
+    filter: blur(30px) brightness(0.45);
+    transform: scale(1.15);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.hero-image-fg {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    object-position: center;
+    z-index: 1;
 }
 
 .hero-overlay-gradient {
@@ -74,18 +131,20 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(0deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.4) 50%, rgba(15, 23, 42, 0.3) 100%);
-    z-index: 1;
+    background: linear-gradient(0deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.3) 50%, rgba(15, 23, 42, 0.35) 100%);
+    z-index: 3;
+    pointer-events: none;
 }
 
 .hero-content-layer {
     position: relative;
-    z-index: 2;
+    z-index: 4;
     height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    padding-bottom: 60px;
+    padding-bottom: 40px;
+    pointer-events: auto;
 }
 
 /* Back Link */
@@ -191,12 +250,19 @@
 }
 
 .hero-location {
-    font-size: 1.25rem;
-    display: flex;
+    font-size: 1.1rem;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: #cbd5e0;
+    color: #f1f5f9;
     font-weight: 500;
+    margin-top: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 6px 14px;
+    border-radius: 20px;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    width: fit-content;
 }
 
 /* Slider Controls */
@@ -256,8 +322,8 @@
 .premium-body-content {
     position: relative;
     z-index: 10;
-    margin-top: -60px;
-    /* Overlap Hero */
+    margin-top: 0;
+    padding-top: 40px;
     padding-bottom: 80px;
 }
 
