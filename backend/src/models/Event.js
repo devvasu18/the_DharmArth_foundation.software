@@ -27,6 +27,8 @@ const eventSchema = new mongoose.Schema({
     location_hi: { type: String },
     shortDescription: { type: String },
     shortDescription_hi: { type: String },
+    description: { type: String },
+    description_hi: { type: String },
     status: {
         type: String,
         enum: ['upcoming', 'ongoing', 'completed'],

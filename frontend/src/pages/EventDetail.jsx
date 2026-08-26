@@ -9,6 +9,13 @@ import Footer from '../components/layout/Footer';
 import './EventDetail.css';
 import DOMPurify from 'dompurify';
 
+const getYouTubeVideoId = (url) => {
+    if (!url || typeof url !== 'string') return null;
+    const regExp = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = url.match(regExp);
+    return match ? match[1] : null;
+};
+
 const EventDetail = () => {
     const { slug } = useParams();
     const [event, setEvent] = useState(null);
@@ -139,10 +146,12 @@ const EventDetail = () => {
     const renderBlock = (block, index) => {
         switch (block.type) {
             case 'text':
-                const htmlContent = (i18n.language === 'hi' && block.content.htmlHi) ? block.content.htmlHi : block.content.html;
+                const textContent = (i18n.language === 'hi' && block.content?.htmlHi)
+                    ? block.content.htmlHi
+                    : (block.content?.html || block.content?.text || '');
                 return (
                     <div key={index} className="detail-block text-block animate-up">
-                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlContent) }} />
+                        <div style={{ whiteSpace: 'pre-line' }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(textContent) }} />
                     </div>
                 );
             case 'image':
@@ -207,7 +216,10 @@ const EventDetail = () => {
         }
     };
 
-    const heroImages = (event.heroImages && event.heroImages.length > 0) ? event.heroImages : [event.coverImage];
+    const youtubeCoverId = getYouTubeVideoId(event.coverImage);
+    const heroImages = (event.heroImages && event.heroImages.length > 0)
+        ? event.heroImages
+        : [youtubeCoverId ? `https://img.youtube.com/vi/${youtubeCoverId}/hqdefault.jpg` : (event.coverImage || '/placeholder.jpg')];
 
     return (
         <div className="event-detail-page-premium">
@@ -226,7 +238,7 @@ const EventDetail = () => {
 
                 <div className="hero-content-layer container">
                     <Link to="/events" className="back-link">
-                        <ArrowLeft size={18} /> Back to Events
+                        <ArrowLeft size={18} /> {i18n.language === 'hi' ? 'कार्यक्रमों पर वापस जाएं' : 'Back to Events'}
                     </Link>
 
                     <div className="hero-text-content">
@@ -269,6 +281,21 @@ const EventDetail = () => {
 
                     {/* LEFT COLUMN: Main Articles */}
                     <article className="main-article-column">
+                        {/* Featured Video Embed if coverImage is YouTube */}
+                        {youtubeCoverId && (
+                            <div className="detail-block video-block animate-up" style={{ marginBottom: '2rem' }}>
+                                <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '16px', boxShadow: '0 8px 30px rgba(0,0,0,0.12)' }}>
+                                    <iframe
+                                        src={`https://www.youtube-nocookie.com/embed/${youtubeCoverId}?rel=0&modestbranding=1&enablejsapi=1`}
+                                        title={event.title || 'Event Video'}
+                                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allowFullScreen
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                         {/* Intro / Lead */}
                         {(event.shortDescription || event.shortDescription_hi) && (
                             <div className="article-lead">
@@ -277,32 +304,26 @@ const EventDetail = () => {
                         )}
 
                         <div className="article-blocks">
-                            {event.blocks && event.blocks.map((block, index) => renderBlock(block, index))}
+                            {event.blocks && event.blocks.length > 0 ? (
+                                event.blocks.map((block, index) => renderBlock(block, index))
+                            ) : (event.description || event.description_hi) ? (
+                                <div className="detail-block text-block animate-up">
+                                    <div style={{ whiteSpace: 'pre-line' }} dangerouslySetInnerHTML={{
+                                        __html: DOMPurify.sanitize(
+                                            (i18n.language === 'hi' && event.description_hi) ? event.description_hi : (event.description || '')
+                                        )
+                                    }} />
+                                </div>
+                            ) : null}
                         </div>
 
-                        <div className="article-footer">
-                            <div className="author-info">
-                                <span className="label">Published By</span>
-                                <span className="value">The Dharmarth Medical Foundation</span>
-                            </div>
-                            <div className="publish-info">
-                                <Clock size={16} />
-                                <span>{new Date(event.createdAt).toLocaleDateString()}</span>
-                            </div>
 
-                            <button className="share-btn-large" onClick={() => {
-                                navigator.clipboard.writeText(window.location.href);
-                                toast.success('Link copied to clipboard!');
-                            }}>
-                                <Share2 size={18} /> Share Event
-                            </button>
-                        </div>
                     </article>
 
                     {/* RIGHT COLUMN: Sidebar */}
                     <aside className="sidebar-column">
                         <div className="sidebar-widget">
-                            <h3>Upcoming Events</h3>
+                            <h3>{i18n.language === 'hi' ? 'आगामी कार्यक्रम' : 'Upcoming Events'}</h3>
                             <div className="widget-content">
                                 {recentEvents.length > 0 ? (
                                     <div className="sidebar-events-list">
@@ -325,27 +346,9 @@ const EventDetail = () => {
                             </div>
                         </div>
 
-                        <div className="sidebar-widget highlight">
-                            <h3>{(i18n.language === 'hi' ? 'इस कार्यक्रम में रुचि है?' : 'Interested in this event?')}</h3>
-                            <p>{(i18n.language === 'hi' ? 'पंजीकरण करें और जब यह शुरू हो तो एक अनुस्मारक प्राप्त करें।' : 'Register and get a reminder when it starts.')}</p>
-                            <button
-                                className="sidebar-donate-btn"
-                                onClick={() => setIsRegisterModalOpen(true)}
-                                style={{ border: 'none', width: '100%' }}
-                            >
-                                {(i18n.language === 'hi' ? 'अभी पंजीकरण करें' : 'Register Interest')}
-                            </button>
-                        </div>
 
-                        <div className="sidebar-widget">
-                            <h3>Share This</h3>
-                            <div className="sidebar-share-row">
-                                <button className="side-share-icon fb" onClick={() => {
-                                    navigator.clipboard.writeText(window.location.href);
-                                    toast.success('Link copied to clipboard!');
-                                }}><Share2 size={18} /></button>
-                            </div>
-                        </div>
+
+
                     </aside>
 
                 </div>
@@ -375,19 +378,7 @@ const EventDetail = () => {
                     </section>
                 )}
 
-                {/* --- NEW SECTION: CTA Banner --- */}
-                <section className="detail-cta-banner container">
-                    <div className="cta-banner-card">
-                        <div className="cta-text">
-                            <h2>Inspired by what you read?</h2>
-                            <p>Join our mission. Whether you contribute your time or money, every bit helps us bring change.</p>
-                        </div>
-                        <div className="cta-actions">
-                            <Link to="/donate" className="btn-banner primary">Donate Now</Link>
-                            <Link to="/volunteer" className="btn-banner outline">Become a Volunteer</Link>
-                        </div>
-                    </div>
-                </section>
+
 
             </main>
 

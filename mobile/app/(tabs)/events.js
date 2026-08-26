@@ -14,10 +14,18 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, Link, useFocusEffect, useRouter } from 'expo-router';
+import YoutubeIframe from 'react-native-youtube-iframe';
 import api from '../../src/services/api';
 import { useTranslation } from '../../src/context/LanguageContext';
 
 const { width } = Dimensions.get('window');
+
+const getYouTubeVideoId = (url) => {
+  if (!url || typeof url !== 'string') return null;
+  const regExp = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(regExp);
+  return match ? match[1] : null;
+};
 
 export default function EventsScreen() {
   const { t, locale } = useTranslation();
@@ -148,41 +156,56 @@ export default function EventsScreen() {
                 }}
                 scrollEventThrottle={16}
               >
-                {headerSlides.map((slide, index) => (
-                  <View key={`event-head-${slide._id || ''}-${index}`} style={{ width }}>
-                    <Image source={{ uri: slide.url }} style={styles.headerImage} resizeMode="cover" />
-                    <View style={styles.headerOverlay} />
-                    <View style={styles.headerContent}>
-                      <Text style={styles.headerTitle}>
-                        {locale === 'hi' && slide.title_hi ? slide.title_hi : slide.title}
-                      </Text>
-                      <Text style={styles.headerSubtitle}>
-                        {locale === 'hi' && slide.subtitle_hi ? slide.subtitle_hi : slide.subtitle}
-                      </Text>
-                      {slide.ctaLink && (
-                        <TouchableOpacity 
-                          style={styles.headerCta} 
-                          onPress={() => {
-                            const link = slide.ctaLink || '';
-                            if (link.startsWith('/p/')) {
-                              router.push(link);
-                            } else if (link === '/donate' || link.endsWith('/donate')) {
-                              router.push('/donate');
-                            } else if (link.startsWith('/')) {
-                              router.push(link);
-                            } else {
-                              Linking.openURL(link.startsWith('http') ? link : `https://thedharmarth.com${link}`).catch(err => console.log(err));
-                            }
-                          }}
-                        >
-                          <Text style={styles.headerCtaText}>
-                            {locale === 'hi' && slide.ctaText_hi ? slide.ctaText_hi : (slide.ctaText || 'Learn More')}
+                {headerSlides.map((slide, index) => {
+                  const ytId = getYouTubeVideoId(slide.url);
+                  return (
+                    <View key={`event-head-${slide._id || ''}-${index}`} style={{ width }}>
+                      {ytId ? (
+                        <View style={{ width: '100%', height: 200, backgroundColor: '#000' }}>
+                          <YoutubeIframe
+                            height={200}
+                            videoId={ytId}
+                            play={currentSlide === index}
+                          />
+                        </View>
+                      ) : (
+                        <Image source={{ uri: slide.url }} style={styles.headerImage} resizeMode="cover" />
+                      )}
+                      {!ytId && <View style={styles.headerOverlay} />}
+                      {!ytId && (
+                        <View style={styles.headerContent}>
+                          <Text style={styles.headerTitle}>
+                            {locale === 'hi' && slide.title_hi ? slide.title_hi : slide.title}
                           </Text>
-                        </TouchableOpacity>
+                          <Text style={styles.headerSubtitle}>
+                            {locale === 'hi' && slide.subtitle_hi ? slide.subtitle_hi : slide.subtitle}
+                          </Text>
+                          {slide.ctaLink && (
+                            <TouchableOpacity 
+                              style={styles.headerCta} 
+                              onPress={() => {
+                                const link = slide.ctaLink || '';
+                                if (link.startsWith('/p/')) {
+                                  router.push(link);
+                                } else if (link === '/donate' || link.endsWith('/donate')) {
+                                  router.push('/donate');
+                                } else if (link.startsWith('/')) {
+                                  router.push(link);
+                                } else {
+                                  Linking.openURL(link.startsWith('http') ? link : `https://thedharmarth.com${link}`).catch(err => console.log(err));
+                                }
+                              }}
+                            >
+                              <Text style={styles.headerCtaText}>
+                                {locale === 'hi' && slide.ctaText_hi ? slide.ctaText_hi : (slide.ctaText || 'Learn More')}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
                       )}
                     </View>
-                  </View>
-                ))}
+                  );
+                })}
               </ScrollView>
               <View style={styles.pagination}>
                 {headerSlides.map((_, i) => (
@@ -294,23 +317,7 @@ export default function EventsScreen() {
             {locale === 'hi' ? 'वह बदलाव बनें जो आप देखना चाहते हैं' : 'Be The Change You Want To See'}
           </Text>
           
-          <View style={styles.ctaCard}>
-            <View style={[styles.iconBox, { backgroundColor: '#fef2f2' }]}>
-              <Ionicons name="heart" size={32} color="#ef4444" />
-            </View>
-            <Text style={styles.ctaTitle}>
-              {locale === 'hi' ? 'स्वयंसेवक बनें' : 'Become a Volunteer'}
-            </Text>
-            <Text style={styles.ctaDesc}>
-              {locale === 'hi' ? 'हमारी जमीनी टीम से जुड़ें और सीधे देने की खुशी का अनुभव करें।' : 'Join our on-ground team and experience the joy of giving firsthand.'}
-            </Text>
-            <TouchableOpacity style={styles.ctaBtn} onPress={() => router.push('/donate')}>
-              <Text style={styles.ctaBtnText}>
-                {locale === 'hi' ? 'अभी जुड़ें' : 'Join Now'}
-              </Text>
-              <Ionicons name="arrow-forward" size={16} color="white" />
-            </TouchableOpacity>
-          </View>
+         
 
           <View style={styles.ctaCard}>
             <View style={[styles.iconBox, { backgroundColor: '#f0fdfa' }]}>

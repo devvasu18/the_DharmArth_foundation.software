@@ -3,6 +3,13 @@ import api, { API_BASE_URL } from '../../services/api';
 import { Plus, Edit, Trash2, Eye, Video, Image as ImageIcon, RefreshCw, Layers, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const getYouTubeVideoId = (url) => {
+    if (!url || typeof url !== 'string') return null;
+    const regExp = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = url.match(regExp);
+    return match ? match[1] : null;
+};
+
 const AdminEventHeaders = () => {
     const [headers, setHeaders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -156,8 +163,8 @@ const AdminEventHeaders = () => {
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px' }}>
-                    <button 
-                        className="btn-secondary" 
+                    <button
+                        className="btn-secondary"
                         onClick={fetchHeaders}
                         style={{
                             display: 'flex',
@@ -176,9 +183,9 @@ const AdminEventHeaders = () => {
                         <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                         Refresh
                     </button>
-                    
-                    <button 
-                        className="btn-secondary" 
+
+                    <button
+                        className="btn-secondary"
                         onClick={handleSeed}
                         style={{
                             display: 'flex',
@@ -199,7 +206,7 @@ const AdminEventHeaders = () => {
                     </button>
 
                     {!isEditing && (
-                        <button 
+                        <button
                             onClick={() => setIsEditing(true)}
                             style={{
                                 display: 'flex',
@@ -246,48 +253,60 @@ const AdminEventHeaders = () => {
                                             type="radio" name="type" value="video"
                                             checked={formData.type === 'video'}
                                             onChange={() => setFormData({ ...formData, type: 'video' })}
-                                        /> Video
+                                        /> Video / YouTube
                                     </label>
                                 </div>
                             </div>
 
                             <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                <label style={{ display: 'block', marginBottom: 5, fontWeight: 500 }}>Media URL / Upload</label>
+                                <label style={{ display: 'block', marginBottom: 5, fontWeight: 500 }}>Media URL (Image / Video / YouTube Link) / Upload</label>
                                 <div style={{ display: 'flex', gap: 10 }}>
                                     <input
                                         type="text" className="form-control"
-                                        placeholder={formData.type === 'video' ? 'Video URL' : 'Image URL'}
+                                        placeholder={formData.type === 'video' ? 'Paste YouTube video link (watch/shorts/youtu.be) or MP4 URL' : 'Image URL or YouTube video link'}
                                         style={{ flex: 1, padding: 8, border: '1px solid #ddd', borderRadius: 4 }}
                                         value={formData.url}
-                                        onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const isYt = !!getYouTubeVideoId(val);
+                                            setFormData({
+                                                ...formData,
+                                                url: val,
+                                                type: isYt ? 'video' : formData.type
+                                            });
+                                        }}
                                         required
                                     />
                                     <input type="file" onChange={handleFileUpload} style={{ width: 100 }} />
                                 </div>
-                                <small style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Maximum upload size: 4MB</small>
-                                {formData.type === 'image' && formData.url && (
-                                    <img src={formData.url} alt="Preview" style={{ height: 100, marginTop: 10, borderRadius: 4 }} />
+                                <small style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Supports YouTube video links (watch, shorts, youtu.be), MP4 videos, or image uploads up to 4MB</small>
+                                {formData.url && (
+                                    <div style={{ marginTop: 10 }}>
+                                        {getYouTubeVideoId(formData.url) ? (
+                                            <div style={{ maxWidth: 420, borderRadius: 8, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                                                <iframe
+                                                    width="100%"
+                                                    height="235"
+                                                    src={`https://www.youtube-nocookie.com/embed/${getYouTubeVideoId(formData.url)}?rel=0&modestbranding=1&enablejsapi=1`}
+                                                    title="YouTube Preview"
+                                                    frameBorder="0"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    allowFullScreen
+                                                    style={{ border: 'none', display: 'block' }}
+                                                />
+                                            </div>
+                                        ) : formData.type === 'video' ? (
+                                            <video src={formData.url.startsWith('http') ? formData.url : `${API_BASE_URL}${formData.url.startsWith('/') ? '' : '/'}${formData.url}`} controls style={{ height: 140, borderRadius: 4 }} />
+                                        ) : (
+                                            <img src={formData.url.startsWith('http') ? formData.url : `${API_BASE_URL}${formData.url.startsWith('/') ? '' : '/'}${formData.url}`} alt="Preview" style={{ height: 100, borderRadius: 4, objectFit: 'cover' }} />
+                                        )}
+                                    </div>
                                 )}
                             </div>
 
 
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, gridColumn: 'span 2' }}>
-                                <div className="form-group">
-                                    <label style={{ display: 'block', marginBottom: 5 }}>Title Color</label>
-                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                                        <input type="color" value={formData.titleColor} onChange={e => setFormData({ ...formData, titleColor: e.target.value })} style={{ height: 40, width: 60, padding: 0, border: 'none' }} />
-                                        <input type="text" className="form-control" value={formData.titleColor} onChange={e => setFormData({ ...formData, titleColor: e.target.value })} style={{ flex: 1, padding: 8 }} />
-                                    </div>
-                                </div>
-                                <div className="form-group">
-                                    <label style={{ display: 'block', marginBottom: 5 }}>Description Color</label>
-                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                                        <input type="color" value={formData.descriptionColor} onChange={e => setFormData({ ...formData, descriptionColor: e.target.value })} style={{ height: 40, width: 60, padding: 0, border: 'none' }} />
-                                        <input type="text" className="form-control" value={formData.descriptionColor} onChange={e => setFormData({ ...formData, descriptionColor: e.target.value })} style={{ flex: 1, padding: 8 }} />
-                                    </div>
-                                </div>
-                            </div>
+                           
 
                             {/* Language Switcher */}
                             <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
@@ -307,10 +326,7 @@ const AdminEventHeaders = () => {
                                         <label style={{ display: 'block', marginBottom: 5 }}>Subtitle (EN)</label>
                                         <input type="text" className="form-control" style={{ width: '100%', padding: 8 }} value={formData.subtitle} onChange={e => setFormData({ ...formData, subtitle: e.target.value })} />
                                     </div>
-                                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                        <label style={{ display: 'block', marginBottom: 5 }}>Description (EN)</label>
-                                        <textarea className="form-control" style={{ width: '100%', padding: 8 }} rows="2" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}></textarea>
-                                    </div>
+
                                     <div className="form-group">
                                         <label style={{ display: 'block', marginBottom: 5 }}>CTA Text (EN)</label>
                                         <input type="text" className="form-control" style={{ width: '100%', padding: 8 }} value={formData.ctaText} onChange={e => setFormData({ ...formData, ctaText: e.target.value })} />
@@ -326,10 +342,7 @@ const AdminEventHeaders = () => {
                                         <label style={{ display: 'block', marginBottom: 5 }}>Subtitle (HI)</label>
                                         <input type="text" className="form-control" style={{ width: '100%', padding: 8 }} value={formData.subtitle_hi} onChange={e => setFormData({ ...formData, subtitle_hi: e.target.value })} />
                                     </div>
-                                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                        <label style={{ display: 'block', marginBottom: 5 }}>Description (HI)</label>
-                                        <textarea className="form-control" style={{ width: '100%', padding: 8 }} rows="2" value={formData.description_hi} onChange={e => setFormData({ ...formData, description_hi: e.target.value })}></textarea>
-                                    </div>
+                                    
                                     <div className="form-group">
                                         <label style={{ display: 'block', marginBottom: 5 }}>CTA Text (HI)</label>
                                         <input type="text" className="form-control" style={{ width: '100%', padding: 8 }} value={formData.ctaText_hi} onChange={e => setFormData({ ...formData, ctaText_hi: e.target.value })} />
@@ -399,7 +412,13 @@ const AdminEventHeaders = () => {
                             <tr key={h._id} style={{ borderBottom: '1px solid #eee' }}>
                                 <td style={{ padding: 12 }}>{h.order}</td>
                                 <td style={{ padding: 12 }}>
-                                    {h.type === 'video' ? <Video size={24} /> : <img src={h.url.startsWith('http') ? h.url : `${API_BASE_URL}${h.url.startsWith('/') ? '' : '/'}${h.url}`} style={{ width: 50, height: 30, objectFit: 'cover', borderRadius: 4 }} alt="" />}
+                                    {getYouTubeVideoId(h.url) ? (
+                                        <img src={`https://img.youtube.com/vi/${getYouTubeVideoId(h.url)}/hqdefault.jpg`} style={{ width: 50, height: 30, objectFit: 'cover', borderRadius: 4 }} alt="YouTube" />
+                                    ) : h.type === 'video' ? (
+                                        <Video size={24} color="#00bfa5" />
+                                    ) : (
+                                        <img src={h.url.startsWith('http') ? h.url : `${API_BASE_URL}${h.url.startsWith('/') ? '' : '/'}${h.url}`} style={{ width: 50, height: 30, objectFit: 'cover', borderRadius: 4 }} alt="" />
+                                    )}
                                 </td>
                                 <td style={{ padding: 12 }}>
                                     <div>{h.title || 'No Title'}</div>

@@ -16,11 +16,21 @@ import { Ionicons } from '@expo/vector-icons';
 import YoutubeIframe from 'react-native-youtube-iframe';
 import api from '../../src/services/api';
 
+import { useTranslation } from '../../src/context/LanguageContext';
+
 const { width } = Dimensions.get('window');
+
+const getYouTubeVideoId = (url) => {
+  if (!url || typeof url !== 'string') return null;
+  const regExp = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(regExp);
+  return match ? match[1] : null;
+};
 
 const EventDetails = () => {
   const { slug } = useLocalSearchParams();
   const router = useRouter();
+  const { t, locale } = useTranslation();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,10 +52,13 @@ const EventDetails = () => {
   const renderDetailBlock = (block, index) => {
     switch (block.type) {
       case 'text':
+        const blockText = (locale === 'hi' && block.content?.htmlHi)
+          ? block.content.htmlHi
+          : (block.content?.html || block.content?.text || '');
         return (
           <View key={`detail-${index}`} style={styles.detailBlock}>
             <Text style={styles.detailText}>
-              {block.content?.text ? block.content.text.replace(/<[^>]*>?/gm, '') : ''}
+              {blockText.replace(/<[^>]*>?/gm, '')}
             </Text>
           </View>
         );
@@ -73,7 +86,7 @@ const EventDetails = () => {
 
         return (
           <View key={`detail-${index}`} style={styles.detailBlock}>
-            <Text style={styles.blockLabel}>Watch Highlight</Text>
+            <Text style={styles.blockLabel}>{locale === 'hi' ? 'मुख्य आकर्षण देखें' : 'Watch Highlight'}</Text>
             <View style={{ borderRadius: 12, overflow: 'hidden', marginTop: 10 }}>
               <YoutubeIframe
                 height={220}
@@ -89,9 +102,10 @@ const EventDetails = () => {
 
   const onShare = async () => {
     if (!event) return;
+    const title = (locale === 'hi' && event.title_hi) ? event.title_hi : event.title;
     try {
       await Share.share({
-        message: `Check out this event: ${event.title}\nhttps://thedharmarth.com/events/${event.slug}`,
+        message: `${locale === 'hi' ? 'इस कार्यक्रम को देखें' : 'Check out this event'}: ${title}\nhttps://thedharmarth.com/events/${event.slug}`,
       });
     } catch (error) {
       console.error('Error sharing event:', error);
@@ -110,20 +124,41 @@ const EventDetails = () => {
   if (!event) {
     return (
       <View style={styles.centered}>
-        <Stack.Screen options={{ title: 'Error' }} />
-        <Text style={styles.errorText}>Event not found</Text>
+        <Stack.Screen options={{ title: locale === 'hi' ? 'त्रुटि' : 'Error' }} />
+        <Text style={styles.errorText}>{locale === 'hi' ? 'कार्यक्रम नहीं मिला' : 'Event not found'}</Text>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backButtonText}>Go Back</Text>
+          <Text style={styles.backButtonText}>{locale === 'hi' ? 'वापस जाएं' : 'Go Back'}</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
+  const eventDate = new Date(event.date);
+  const now = new Date();
+  const eventStatus = event.status || (event.date && eventDate < now ? 'completed' : 'upcoming');
+  const statusLabel = eventStatus === 'upcoming'
+    ? (locale === 'hi' ? 'आगामी' : 'UPCOMING')
+    : eventStatus === 'ongoing'
+      ? (locale === 'hi' ? 'जारी है' : 'ONGOING')
+      : (locale === 'hi' ? 'पूर्ण' : 'COMPLETED');
+
+  const displayTitle = (locale === 'hi' && event.title_hi) ? event.title_hi : event.title;
+  const displayLocation = (locale === 'hi' && event.location_hi) ? event.location_hi : (event.location || (locale === 'hi' ? 'ऑनलाइन' : 'Online'));
+  const shortDesc = (locale === 'hi' && event.shortDescription_hi) ? event.shortDescription_hi : event.shortDescription;
+  
+  const blockTextContent = (locale === 'hi' && event.blocks?.find(b => b.type === 'text')?.content?.htmlHi)
+    ? event.blocks.find(b => b.type === 'text')?.content?.htmlHi
+    : event.blocks?.find(b => b.type === 'text')?.content?.html;
+
+  const fullDesc = (locale === 'hi' && event.description_hi)
+    ? event.description_hi
+    : (event.description || blockTextContent || '');
+
   return (
     <View style={styles.container}>
       <Stack.Screen 
         options={{
-          headerTitle: 'Event Details',
+          headerTitle: locale === 'hi' ? 'कार्यक्रम विवरण' : 'Event Details',
           headerStyle: { backgroundColor: 'white' },
           headerTintColor: '#00bfa5',
           headerRight: () => (
@@ -135,39 +170,47 @@ const EventDetails = () => {
       />
       
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Image source={{ uri: event.coverImage }} style={styles.coverImage} />
+        {(() => {
+          const youtubeCoverId = getYouTubeVideoId(event.coverImage);
+          if (youtubeCoverId) {
+            return (
+              <View style={{ width: '100%', height: 230, backgroundColor: '#000' }}>
+                <YoutubeIframe
+                  height={230}
+                  videoId={youtubeCoverId}
+                />
+              </View>
+            );
+          }
+          return event.coverImage ? (
+            <Image source={{ uri: event.coverImage }} style={styles.coverImage} />
+          ) : null;
+        })()}
         
         <View style={styles.contentContainer}>
           <View style={styles.badgesContainer}>
-            {(() => {
-              const eventDate = new Date(event.date);
-              const now = new Date();
-              const eventStatus = event.status || (event.date && eventDate < now ? 'completed' : 'upcoming');
-              return (
-                <Text style={[styles.statusBadge, styles[eventStatus]]}>
-                  {eventStatus.toUpperCase()}
-                </Text>
-              );
-            })()}
+            <Text style={[styles.statusBadge, styles[eventStatus]]}>
+              {statusLabel}
+            </Text>
             {event.category && (
               <Text style={styles.categoryBadge}>{event.category}</Text>
             )}
           </View>
 
-          <Text style={styles.title}>{event.title}</Text>
+          <Text style={styles.title}>{displayTitle}</Text>
           
           <View style={styles.metaContainer}>
             <View style={styles.metaItem}>
               <Ionicons name="calendar" size={20} color="#00bfa5" />
               <View style={styles.metaTextContainer}>
-                <Text style={styles.metaLabel}>Date</Text>
+                <Text style={styles.metaLabel}>{locale === 'hi' ? 'तारीख' : 'Date'}</Text>
                 <Text style={styles.metaValue}>
-                  {new Date(event.date).toLocaleDateString(undefined, {
+                  {event.date ? new Date(event.date).toLocaleDateString(locale === 'hi' ? 'hi-IN' : undefined, {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
-                  })}
+                  }) : 'TBA'}
                 </Text>
               </View>
             </View>
@@ -175,34 +218,45 @@ const EventDetails = () => {
             <View style={styles.metaItem}>
               <Ionicons name="time" size={20} color="#00bfa5" />
               <View style={styles.metaTextContainer}>
-                <Text style={styles.metaLabel}>Time</Text>
-                <Text style={styles.metaValue}>{event.time || 'TBA'}</Text>
+                <Text style={styles.metaLabel}>{locale === 'hi' ? 'समय' : 'Time'}</Text>
+                <Text style={styles.metaValue}>{event.time || (locale === 'hi' ? 'जल्द घोषित' : 'TBA')}</Text>
               </View>
             </View>
 
             <View style={styles.metaItem}>
               <Ionicons name="location" size={20} color="#00bfa5" />
               <View style={styles.metaTextContainer}>
-                <Text style={styles.metaLabel}>Location</Text>
-                <Text style={styles.metaValue}>{event.location || 'Online'}</Text>
+                <Text style={styles.metaLabel}>{locale === 'hi' ? 'स्थान' : 'Location'}</Text>
+                <Text style={styles.metaValue}>{displayLocation}</Text>
               </View>
             </View>
           </View>
 
           <View style={styles.descriptionContainer}>
-            <Text style={styles.sectionTitle}>About Event</Text>
-            {event.description ? (
-              <Text style={styles.description}>
-                {event.description.replace(/<[^>]*>?/gm, '')}
+            <Text style={styles.sectionTitle}>{locale === 'hi' ? 'कार्यक्रम के बारे में' : 'About Event'}</Text>
+            
+            {shortDesc ? (
+              <Text style={[styles.description, fullDesc && fullDesc !== shortDesc ? { fontWeight: '600', color: '#1e293b', marginBottom: 12 } : null]}>
+                {shortDesc.replace(/<[^>]*>?/gm, '')}
               </Text>
-            ) : (
-              <Text style={styles.description}>{event.shortDescription}</Text>
-            )}
+            ) : null}
+
+            {fullDesc && fullDesc !== shortDesc ? (
+              <Text style={styles.description}>
+                {fullDesc.replace(/<[^>]*>?/gm, '')}
+              </Text>
+            ) : null}
+
+            {!shortDesc && !fullDesc ? (
+              <Text style={styles.description}>
+                {locale === 'hi' ? 'कोई विवरण उपलब्ध नहीं है।' : 'No description available.'}
+              </Text>
+            ) : null}
           </View>
 
           {event.details && event.details.length > 0 && (
             <View style={styles.detailsContainer}>
-              <Text style={styles.sectionTitle}>Event Highlights</Text>
+              <Text style={styles.sectionTitle}>{locale === 'hi' ? 'कार्यक्रम की मुख्य बातें' : 'Event Highlights'}</Text>
               {event.details.map((block, index) => renderDetailBlock(block, index))}
             </View>
           )}
@@ -215,7 +269,7 @@ const EventDetails = () => {
           style={styles.actionButton}
           onPress={() => router.push('/donate')}
         >
-          <Text style={styles.actionButtonText}>Support the Foundation</Text>
+          <Text style={styles.actionButtonText}>{locale === 'hi' ? 'फाउंडेशन का समर्थन करें' : 'Support the Foundation'}</Text>
           <Ionicons name="heart" size={20} color="white" />
         </TouchableOpacity>
       </View>

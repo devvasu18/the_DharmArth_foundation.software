@@ -108,9 +108,19 @@ const ensureAvailabilityRecordsForDateRange = async (startDate, endDate, doctorI
                     let emergencyAvailable = false;
                     let notes = '';
 
+                    const targetMonth = targetDate.getUTCMonth() + 1;
+                    const targetYear = targetDate.getUTCFullYear();
+
                     if (hType === 'clinic') {
-                        // Clinic availability relies strictly on explicit date-specific overrides (1-31)
-                        const dateOverride = (doc.dateSpecificTimeSlots || []).find(slot => slot.dateNumber === dateNum);
+                        // Clinic availability relies strictly on explicit date-specific overrides (matching month/year if specified)
+                        const dateOverride = (doc.dateSpecificTimeSlots || []).find(slot => {
+                            if (slot.month) {
+                                return slot.month === targetMonth && 
+                                       (slot.year ? slot.year === targetYear : true) && 
+                                       slot.dateNumber === dateNum;
+                            }
+                            return slot.dateNumber === dateNum;
+                        });
                         if (dateOverride) {
                             const overriddenSlots = dateOverride.timeSlots.filter(s => s.hospitalType === hType);
                             finalSlots = overriddenSlots.map(s => ({
@@ -128,7 +138,14 @@ const ensureAvailabilityRecordsForDateRange = async (startDate, endDate, doctorI
                         }
                     } else {
                         // 1. Date-specific override
-                        const dateOverride = (doc.dateSpecificTimeSlots || []).find(slot => slot.dateNumber === dateNum);
+                        const dateOverride = (doc.dateSpecificTimeSlots || []).find(slot => {
+                            if (slot.month) {
+                                return slot.month === targetMonth && 
+                                       (slot.year ? slot.year === targetYear : true) && 
+                                       slot.dateNumber === dateNum;
+                            }
+                            return slot.dateNumber === dateNum;
+                        });
                         if (dateOverride) {
                             const overriddenSlots = dateOverride.timeSlots.filter(s => s.hospitalType === hType);
                             finalSlots = overriddenSlots.map(s => ({
@@ -601,10 +618,9 @@ exports.getAvailabilitySearch = async (req, res) => {
             const year = now.getFullYear();
             const month = now.getMonth();
             const startDate = new Date(Date.UTC(year, month, 1));
-            const endDate = new Date(Date.UTC(year, month + 1, 0)); // last day of the month
+            const endDate = new Date(Date.UTC(year, month + 2, 0)); // last day of next month
 
-            // Ensure availability records exist for all category doctors for this month
-            // Optimized: Pass doctors array directly
+            // Ensure availability records exist for all category doctors for current + next month
             await ensureAvailabilityRecordsForDateRange(startDate, endDate, doctors);
 
             // Query all availability records in the range
@@ -623,6 +639,9 @@ exports.getAvailabilitySearch = async (req, res) => {
                 a.timeSlots && a.timeSlots.some(s => s.status === 'Available')
             );
 
+            const monthNamesEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthNamesHi = ['जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
+
             // Group by doctor
             const doctorMap = {};
             for (const avail of activeAvailabilities) {
@@ -638,23 +657,52 @@ exports.getAvailabilitySearch = async (req, res) => {
                         _id: docId,
                         doctorId: avail.doctorId,
                         availableDates: [],
+                        monthlyAvailableDates: [],
                         hospitalType: 'clinic',
                         emergencyAvailable: avail.emergencyAvailable || avail.doctorId.isEmergencyAvailable || false,
                         timing: timing
                     };
                 }
-                const dayNum = avail.date.getUTCDate();
+
+                const d = new Date(avail.date);
+                const recYear = d.getUTCFullYear();
+                const recMonth = d.getUTCMonth(); // 0-11
+                const dayNum = d.getUTCDate();
+
                 if (!doctorMap[docId].availableDates.includes(dayNum)) {
                     doctorMap[docId].availableDates.push(dayNum);
+                }
+
+                let monthGroup = doctorMap[docId].monthlyAvailableDates.find(m => m.year === recYear && m.month === recMonth);
+                if (!monthGroup) {
+                    monthGroup = {
+                        year: recYear,
+                        month: recMonth,
+                        monthName: monthNamesEn[recMonth],
+                        monthNameHi: monthNamesHi[recMonth],
+                        dates: []
+                    };
+                    doctorMap[docId].monthlyAvailableDates.push(monthGroup);
+                }
+
+                if (!monthGroup.dates.includes(dayNum)) {
+                    monthGroup.dates.push(dayNum);
                 }
             }
 
             // Sort days ascending
             for (const docId in doctorMap) {
                 doctorMap[docId].availableDates.sort((a, b) => a - b);
+                doctorMap[docId].monthlyAvailableDates.sort((a, b) => {
+                    if (a.year !== b.year) return a.year - b.year;
+                    return a.month - b.month;
+                });
+                for (const m of doctorMap[docId].monthlyAvailableDates) {
+                    m.dates.sort((a, b) => a - b);
+                }
             }
 
-            const doctorsData = Object.values(doctorMap).filter(d => d.availableDates.length > 0);
+            const doctorsData = Object.values(doctorMap).filter(d => d.availableDates.length > 0 || (d.monthlyAvailableDates && d.monthlyAvailableDates.length > 0));
 
             return res.json({
                 available: doctorsData.length > 0,

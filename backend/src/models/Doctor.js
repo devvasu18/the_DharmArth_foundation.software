@@ -84,6 +84,8 @@ const doctorSchema = new mongoose.Schema({
     dateSpecificTimeSlots: {
         type: [{
             dateNumber: { type: Number, required: true, min: 1, max: 31 },
+            month: { type: Number, min: 1, max: 12 },
+            year: { type: Number },
             timeSlots: [{
                 period: { type: String, enum: ['Morning', 'Afternoon', 'Evening'], required: true },
                 startTime: { type: String, required: true },
@@ -102,6 +104,14 @@ const doctorSchema = new mongoose.Schema({
         default: ''
     },
     description_hi: {
+        type: String,
+        default: ''
+    },
+    notice: {
+        type: String,
+        default: ''
+    },
+    notice_hi: {
         type: String,
         default: ''
     },

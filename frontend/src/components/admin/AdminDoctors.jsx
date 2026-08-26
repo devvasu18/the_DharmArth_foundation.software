@@ -35,16 +35,63 @@ const AdminDoctors = () => {
 
     const [selectedClinicDates, setSelectedClinicDates] = useState([]);
     const [singleClinicSlot, setSingleClinicSlot] = useState({ period: 'Morning', startTime: '09:00', endTime: '12:00' });
+    const [activeClinicMonth, setActiveClinicMonth] = useState('current'); // 'current' | 'next'
 
-    const toggleClinicDate = (num) => {
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const today = new Date();
+    const currentMonth = today.getMonth(); // 0-11
+    const currentYear = today.getFullYear();
+    const nextMonth = (currentMonth + 1) % 12;
+    const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+
+    const getActiveMonthInfo = () => {
+        if (activeClinicMonth === 'next') {
+            return {
+                monthIndex: nextMonth,
+                monthNumber: nextMonth + 1, // 1-12
+                monthName: monthNames[nextMonth],
+                year: nextYear,
+                daysCount: new Date(nextYear, nextMonth + 1, 0).getDate()
+            };
+        }
+        return {
+            monthIndex: currentMonth,
+            monthNumber: currentMonth + 1, // 1-12
+            monthName: monthNames[currentMonth],
+            year: currentYear,
+            daysCount: new Date(currentYear, currentMonth + 1, 0).getDate()
+        };
+    };
+
+    const isClinicDateSelected = (year, monthNum, dateNum) => {
+        return selectedClinicDates.includes(`${year}-${monthNum}-${dateNum}`);
+    };
+
+    const toggleClinicDate = (year, monthNum, dateNum) => {
+        const key = `${year}-${monthNum}-${dateNum}`;
         setSelectedClinicDates(prev => {
-            if (prev.includes(num)) {
-                return prev.filter(d => d !== num);
+            if (prev.includes(key)) {
+                return prev.filter(d => d !== key);
             } else {
-                return [...prev, num].sort((a, b) => a - b);
+                return [...prev, key];
             }
         });
     };
+
+    const selectAllDatesForMonth = (year, monthNum, totalDays) => {
+        setSelectedClinicDates(prev => {
+            const currentOtherKeys = prev.filter(k => !k.startsWith(`${year}-${monthNum}-`));
+            const newKeysForMonth = Array.from({ length: totalDays }, (_, i) => `${year}-${monthNum}-${i + 1}`);
+            return [...currentOtherKeys, ...newKeysForMonth];
+        });
+    };
+
+    const clearAllDatesForMonth = (year, monthNum) => {
+        setSelectedClinicDates(prev => prev.filter(k => !k.startsWith(`${year}-${monthNum}-`)));
+    };
+
+    const currentMonthSelectedCount = selectedClinicDates.filter(k => k.startsWith(`${currentYear}-${currentMonth + 1}-`)).length;
+    const nextMonthSelectedCount = selectedClinicDates.filter(k => k.startsWith(`${nextYear}-${nextMonth + 1}-`)).length;
 
     // Doctor Categories States
     const [categories, setCategories] = useState([]);
@@ -75,6 +122,8 @@ const AdminDoctors = () => {
         categories: [],
         description: '',
         description_hi: '',
+        notice: '',
+        notice_hi: '',
         privateFee: 0
     });
 
@@ -119,6 +168,10 @@ const AdminDoctors = () => {
 
             // Map selectedClinicDates and singleClinicSlot into dateSpecificTimeSlots
             if (formData.type === 'clinic' || formData.type === 'both') {
+                const today = new Date();
+                const curYear = today.getFullYear();
+                const curMonth = today.getMonth() + 1;
+
                 const governmentOverrides = (formData.dateSpecificTimeSlots || [])
                     .map(override => ({
                         ...override,
@@ -126,35 +179,51 @@ const AdminDoctors = () => {
                     }))
                     .filter(override => override.timeSlots.length > 0);
 
-                const clinicOverrides = selectedClinicDates.map(dayNum => ({
-                    dateNumber: dayNum,
-                    timeSlots: [{
-                        period: singleClinicSlot.period,
-                        startTime: singleClinicSlot.startTime,
-                        endTime: singleClinicSlot.endTime,
-                        hospitalType: 'clinic'
-                    }]
-                }));
+                const clinicOverrides = selectedClinicDates.map(item => {
+                    if (typeof item === 'string' && item.includes('-')) {
+                        const [y, m, d] = item.split('-').map(Number);
+                        return {
+                            dateNumber: d,
+                            month: m,
+                            year: y,
+                            timeSlots: [{
+                                period: singleClinicSlot.period,
+                                startTime: singleClinicSlot.startTime,
+                                endTime: singleClinicSlot.endTime,
+                                hospitalType: 'clinic'
+                            }]
+                        };
+                    }
+                    return {
+                        dateNumber: Number(item),
+                        month: curMonth,
+                        year: curYear,
+                        timeSlots: [{
+                            period: singleClinicSlot.period,
+                            startTime: singleClinicSlot.startTime,
+                            endTime: singleClinicSlot.endTime,
+                            hospitalType: 'clinic'
+                        }]
+                    };
+                });
 
                 const mergedOverrides = [];
-                const allDays = Array.from(new Set([
-                    ...governmentOverrides.map(o => o.dateNumber),
-                    ...clinicOverrides.map(o => o.dateNumber)
-                ]));
-
-                for (const day of allDays) {
-                    const gov = governmentOverrides.find(o => o.dateNumber === day);
-                    const cl = clinicOverrides.find(o => o.dateNumber === day);
-
-                    const mergedSlots = [
-                        ...(gov ? gov.timeSlots : []),
-                        ...(cl ? cl.timeSlots : [])
-                    ];
-
+                for (const gov of governmentOverrides) {
                     mergedOverrides.push({
-                        dateNumber: day,
-                        timeSlots: mergedSlots
+                        dateNumber: gov.dateNumber,
+                        month: gov.month || curMonth,
+                        year: gov.year || curYear,
+                        timeSlots: [...gov.timeSlots]
                     });
+                }
+
+                for (const cl of clinicOverrides) {
+                    const existing = mergedOverrides.find(m => m.dateNumber === cl.dateNumber && m.month === cl.month && m.year === cl.year);
+                    if (existing) {
+                        existing.timeSlots = [...existing.timeSlots, ...cl.timeSlots];
+                    } else {
+                        mergedOverrides.push(cl);
+                    }
                 }
 
                 finalFormData.dateSpecificTimeSlots = mergedOverrides;
@@ -301,14 +370,25 @@ const AdminDoctors = () => {
                 categories: doctor.categories ? doctor.categories.map(c => typeof c === 'object' ? c._id : c) : [],
                 description: doctor.description || '',
                 description_hi: doctor.description_hi || '',
+                notice: doctor.notice || '',
+                notice_hi: doctor.notice_hi || '',
                 privateFee: doctor.privateFee || 0
             });
 
-            // Load clinic specific overrides
-            const clinicDates = (doctor.dateSpecificTimeSlots || [])
+            // Load clinic specific overrides (month-aware)
+            const today = new Date();
+            const curYear = today.getFullYear();
+            const curMonth = today.getMonth() + 1; // 1-12
+
+            const clinicDateKeys = (doctor.dateSpecificTimeSlots || [])
                 .filter(s => s.timeSlots && s.timeSlots.some(slot => slot.hospitalType === 'clinic'))
-                .map(s => s.dateNumber);
-            setSelectedClinicDates(clinicDates);
+                .map(s => {
+                    const y = s.year || curYear;
+                    const m = s.month || curMonth;
+                    return `${y}-${m}-${s.dateNumber}`;
+                });
+            setSelectedClinicDates(clinicDateKeys);
+            setActiveClinicMonth('current');
 
             let firstClinicSlot = null;
             for (const override of doctor.dateSpecificTimeSlots || []) {
@@ -360,9 +440,12 @@ const AdminDoctors = () => {
                 categories: [],
                 description: '',
                 description_hi: '',
+                notice: '',
+                notice_hi: '',
                 privateFee: 0
             });
             setSelectedClinicDates([]);
+            setActiveClinicMonth('current');
             setSingleClinicSlot({ period: 'Morning', startTime: '09:00', endTime: '12:00' });
         }
         setShowModal(true);
@@ -591,11 +674,12 @@ const AdminDoctors = () => {
                                 </p>
                             )}
 
-                            {(doctor.type === 'clinic' || doctor.type === 'both') && doctor.privateFee > 0 && (
-                                <div className="doctor-fee-preview" style={{ fontSize: '0.85rem', color: '#0f766e', fontWeight: '600', margin: '4px 0' }}>
-                                    💵 Fee: ₹{doctor.privateFee} (Clinic)
+                            {doctor.notice && (
+                                <div className="doctor-notice-preview" style={{ fontSize: '0.8rem', color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', padding: '4px 8px', margin: '6px 0', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    <span>📢</span> <span>{doctor.notice}</span>
                                 </div>
                             )}
+
 
                             {doctor.type === 'clinic' && doctor.priority > 0 && (
                                 <div className="priority-badge">⭐ Priority {doctor.priority}</div>
@@ -634,7 +718,7 @@ const AdminDoctors = () => {
                                     </button>
                                 )}
                                 {formData.type !== 'government' && (
-                                    <button type="button" className={`modal-tab-btn ${currentTab === 'date-slots' ? 'active' : ''}`} onClick={() => setActiveTab('date-slots')}>Date-Specific Slots (1-31)</button>
+                                    <button type="button" className={`modal-tab-btn ${currentTab === 'date-slots' ? 'active' : ''}`} onClick={() => setActiveTab('date-slots')}>Clinic Available Dates</button>
                                 )}
                             </div>
 
@@ -717,7 +801,7 @@ const AdminDoctors = () => {
                                                 value={formData.priority}
                                                 onChange={handleChange}
                                                 min="0"
-                                                max="10"
+                                                max="100"
                                             />
                                         </div>
                                     </div>
@@ -779,20 +863,17 @@ const AdminDoctors = () => {
                                         />
                                     </div>
 
-                                    {(formData.type === 'clinic' || formData.type === 'both') && (
-                                        <div className="form-group" style={{ marginBottom: '15px' }}>
-                                            <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '0.9rem', color: '#1e293b' }}>Private Clinic Fee (₹)</label>
-                                            <input
-                                                type="number"
-                                                name="privateFee"
-                                                value={formData.privateFee}
-                                                onChange={handleChange}
-                                                min="0"
-                                                placeholder="e.g. 200"
-                                                style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.9rem', outline: 'none' }}
-                                            />
-                                        </div>
-                                    )}
+                                    <div className="form-group" style={{ marginBottom: '15px' }}>
+                                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '0.9rem', color: '#1e293b' }}> Notice / Alert (English)</label>
+                                        <textarea
+                                            name="notice"
+                                            value={formData.notice || ''}
+                                            onChange={handleChange}
+                                            placeholder="e.g. Weekly availability / Special OPD timings: 10 AM - 2 PM..."
+                                            rows="2"
+                                            style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit' }}
+                                        />
+                                    </div>
 
                                     <div className="form-group" style={{ marginBottom: '15px' }}>
                                         <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.9rem', color: '#1e293b' }}>Doctor Categories</label>
@@ -900,6 +981,18 @@ const AdminDoctors = () => {
                                             style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit' }}
                                         />
                                     </div>
+
+                                    <div className="form-group" style={{ marginBottom: '15px' }}>
+                                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '0.9rem', color: '#1e293b' }}> Notice / Alert (Hindi)</label>
+                                        <textarea
+                                            name="notice_hi"
+                                            value={formData.notice_hi || ''}
+                                            onChange={handleChange}
+                                            placeholder="जैसे: साप्ताहिक उपलब्ध / विशेष ओपीडी समय: सुबह 10 से दोपहर 2 बजे तक..."
+                                            rows="2"
+                                            style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit' }}
+                                        />
+                                    </div>
                                 </>
                             )}
 
@@ -977,28 +1070,118 @@ const AdminDoctors = () => {
                                 </>
                             )}
 
-                            {currentTab === 'date-slots' && (
-                                <div className="date-specific-section">
-                                    <div className="date-grid-container">
-                                        <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '10px', textAlign: 'center' }}>
-                                            Select date numbers (1-31) to make the doctor available for the Private Clinic:
-                                        </p>
-                                        <div className="date-grid">
-                                            {Array.from({ length: 31 }, (_, i) => i + 1).map((num) => {
-                                                const isSelected = selectedClinicDates.includes(num);
-                                                return (
-                                                    <button
-                                                        key={num}
-                                                        type="button"
-                                                        className={`date-cell ${isSelected ? 'selected' : ''}`}
-                                                        onClick={() => toggleClinicDate(num)}
-                                                    >
-                                                        {num}
-                                                    </button>
-                                                );
-                                            })}
+                            {currentTab === 'date-slots' && (() => {
+                                const activeMonthInfo = getActiveMonthInfo();
+                                return (
+                                    <div className="date-specific-section">
+                                        {/* Month Selector Tabs */}
+                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setActiveClinicMonth('current')}
+                                                style={{
+                                                    padding: '10px 18px',
+                                                    borderRadius: '12px',
+                                                    border: activeClinicMonth === 'current' ? '2px solid #00bfa5' : '1px solid #cbd5e1',
+                                                    background: activeClinicMonth === 'current' ? '#f0fdfa' : '#ffffff',
+                                                    color: activeClinicMonth === 'current' ? '#0f766e' : '#64748b',
+                                                    fontWeight: '700',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    fontSize: '0.9rem',
+                                                    boxShadow: activeClinicMonth === 'current' ? '0 2px 8px rgba(0,191,165,0.15)' : 'none',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <span>📅</span>
+                                                <span>{monthNames[currentMonth]} {currentYear}</span>
+                                                <span style={{
+                                                    background: activeClinicMonth === 'current' ? '#00bfa5' : '#e2e8f0',
+                                                    color: activeClinicMonth === 'current' ? '#fff' : '#475569',
+                                                    fontSize: '0.75rem',
+                                                    padding: '2px 8px',
+                                                    borderRadius: '12px',
+                                                    fontWeight: '800'
+                                                }}>
+                                                    {currentMonthSelectedCount} dates
+                                                </span>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => setActiveClinicMonth('next')}
+                                                style={{
+                                                    padding: '10px 18px',
+                                                    borderRadius: '12px',
+                                                    border: activeClinicMonth === 'next' ? '2px solid #00bfa5' : '1px solid #cbd5e1',
+                                                    background: activeClinicMonth === 'next' ? '#f0fdfa' : '#ffffff',
+                                                    color: activeClinicMonth === 'next' ? '#0f766e' : '#64748b',
+                                                    fontWeight: '700',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    fontSize: '0.9rem',
+                                                    boxShadow: activeClinicMonth === 'next' ? '0 2px 8px rgba(0,191,165,0.15)' : 'none',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <span>📅</span>
+                                                <span>{monthNames[nextMonth]} {nextYear}</span>
+                                                <span style={{
+                                                    background: activeClinicMonth === 'next' ? '#00bfa5' : '#e2e8f0',
+                                                    color: activeClinicMonth === 'next' ? '#fff' : '#475569',
+                                                    fontSize: '0.75rem',
+                                                    padding: '2px 8px',
+                                                    borderRadius: '12px',
+                                                    fontWeight: '800'
+                                                }}>
+                                                    {nextMonthSelectedCount} dates
+                                                </span>
+                                            </button>
                                         </div>
-                                    </div>
+
+                                        <div className="date-grid-container" style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                                                <p style={{ fontSize: '0.9rem', color: '#1e293b', margin: 0, fontWeight: '700' }}>
+                                                    Select available dates for <strong>{activeMonthInfo.monthName} {activeMonthInfo.year}</strong>:
+                                                </p>
+                                                <div style={{ display: 'flex', gap: '6px' }}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => selectAllDatesForMonth(activeMonthInfo.year, activeMonthInfo.monthNumber, activeMonthInfo.daysCount)}
+                                                        style={{ background: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', borderRadius: '6px', padding: '4px 10px', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer' }}
+                                                    >
+                                                        Select All
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => clearAllDatesForMonth(activeMonthInfo.year, activeMonthInfo.monthNumber)}
+                                                        style={{ background: '#f1f5f9', color: '#64748b', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px 10px', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer' }}
+                                                    >
+                                                        Clear Month
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="date-grid">
+                                                {Array.from({ length: activeMonthInfo.daysCount }, (_, i) => i + 1).map((num) => {
+                                                    const isSelected = isClinicDateSelected(activeMonthInfo.year, activeMonthInfo.monthNumber, num);
+                                                    return (
+                                                        <button
+                                                            key={num}
+                                                            type="button"
+                                                            className={`date-cell ${isSelected ? 'selected' : ''}`}
+                                                            onClick={() => toggleClinicDate(activeMonthInfo.year, activeMonthInfo.monthNumber, num)}
+                                                        >
+                                                            {num}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
 
                                     <div className="date-override-panel" style={{ marginTop: '20px' }}>
                                         <div className="override-status-banner active-override">

@@ -394,6 +394,7 @@ export default function DoctorsScreen() {
           const doctorTitle = locale === 'hi' ? (avail.doctorId.title_hi || avail.doctorId.title) : avail.doctorId.title;
           const doctorExp = locale === 'hi' ? (avail.doctorId.experience_hi || avail.doctorId.experience) : avail.doctorId.experience;
           const doctorDesc = locale === 'hi' ? (avail.doctorId.description_hi || avail.doctorId.description) : avail.doctorId.description;
+          const doctorNotice = locale === 'hi' ? (avail.doctorId.notice_hi || avail.doctorId.notice) : (avail.doctorId.notice || avail.doctorId.notice_hi);
 
           return (
             <View key={avail._id} style={[styles.doctorCard, (selectedType !== 'clinic' && availabilityInfo?.isAvailableNow) ? styles.doctorCardAvailableNow : null]}>
@@ -408,16 +409,17 @@ export default function DoctorsScreen() {
                 <View style={styles.doctorInfo}>
                   <Text style={styles.doctorName}>Dr. {doctorName}</Text>
                   <Text style={styles.doctorMeta}>{doctorTitle} • {doctorExp}</Text>
-                  {selectedType === 'clinic' && avail.doctorId.privateFee > 0 && (
-                    <View style={styles.feeRow}>
-                      <Ionicons name="cash-outline" size={14} color="#16a34a" />
-                      <Text style={styles.feeText}>{t('doctors.fee')}: ₹{avail.doctorId.privateFee}</Text>
-                    </View>
-                  )}
                 </View>
               </View>
 
               {doctorDesc && <Text style={styles.doctorDesc}>{doctorDesc}</Text>}
+
+              {doctorNotice ? (
+                <View style={styles.noticeBox}>
+                  <Ionicons name="megaphone" size={15} color="#b45309" style={styles.noticeIcon} />
+                  <Text style={styles.noticeText}>{doctorNotice}</Text>
+                </View>
+              ) : null}
 
               {selectedType !== 'clinic' && !isUpcoming && availabilityInfo && (
                 <View style={[
@@ -443,22 +445,43 @@ export default function DoctorsScreen() {
                       <Text style={styles.timingText}>{t('doctors.timing')}{formatTime(avail.timing.startTime)} - {formatTime(avail.timing.endTime)}</Text>
                     </View>
                   )}
-                  <View style={styles.daysContainer}>
-                    <Text style={styles.daysHeader}>
-                      <Ionicons name="calendar" size={14} /> {t('doctors.availableDates')} ({locale === 'hi' ? monthNamesHi[new Date().getMonth()] : monthNamesEn[new Date().getMonth()]})
-                    </Text>
-                    <View style={styles.daysList}>
-                      {avail.availableDates && avail.availableDates.length > 0 ? (
-                        avail.availableDates.map(dayNum => (
-                          <View key={dayNum} style={styles.dayChip}>
-                            <Text style={styles.dayChipText}>{dayNum}</Text>
-                          </View>
-                        ))
-                      ) : (
-                        <Text style={styles.noDaysText}>{t('doctors.noAvailableDates')}</Text>
-                      )}
+                  {avail.monthlyAvailableDates && avail.monthlyAvailableDates.length > 0 ? (
+                    avail.monthlyAvailableDates.map((mGroup, mIdx) => (
+                      <View key={`${mGroup.year}-${mGroup.month}`} style={[styles.daysContainer, mIdx > 0 && { marginTop: 10 }]}>
+                        <Text style={styles.daysHeader}>
+                          <Ionicons name="calendar" size={14} color="#0f766e" /> {t('doctors.availableDates')} ({locale === 'hi' ? mGroup.monthNameHi : mGroup.monthName} {mGroup.year})
+                        </Text>
+                        <View style={styles.daysList}>
+                          {mGroup.dates && mGroup.dates.length > 0 ? (
+                            mGroup.dates.map(dayNum => (
+                              <View key={dayNum} style={styles.dayChip}>
+                                <Text style={styles.dayChipText}>{dayNum}</Text>
+                              </View>
+                            ))
+                          ) : (
+                            <Text style={styles.noDaysText}>{t('doctors.noAvailableDates')}</Text>
+                          )}
+                        </View>
+                      </View>
+                    ))
+                  ) : (
+                    <View style={styles.daysContainer}>
+                      <Text style={styles.daysHeader}>
+                        <Ionicons name="calendar" size={14} /> {t('doctors.availableDates')} ({locale === 'hi' ? monthNamesHi[new Date().getMonth()] : monthNamesEn[new Date().getMonth()]})
+                      </Text>
+                      <View style={styles.daysList}>
+                        {avail.availableDates && avail.availableDates.length > 0 ? (
+                          avail.availableDates.map(dayNum => (
+                            <View key={dayNum} style={styles.dayChip}>
+                              <Text style={styles.dayChipText}>{dayNum}</Text>
+                            </View>
+                          ))
+                        ) : (
+                          <Text style={styles.noDaysText}>{t('doctors.noAvailableDates')}</Text>
+                        )}
+                      </View>
                     </View>
-                  </View>
+                  )}
 
                   <TouchableOpacity
                     style={styles.bookButton}
@@ -673,7 +696,20 @@ const styles = StyleSheet.create({
   doctorMeta: { fontSize: 13, color: '#64748b', fontWeight: '600', marginBottom: 6 },
   feeRow: { flexDirection: 'row', alignItems: 'center' },
   feeText: { fontSize: 13, color: '#16a34a', fontWeight: '700', marginLeft: 4 },
-  doctorDesc: { fontSize: 14, color: '#475569', lineHeight: 20, marginBottom: 16, backgroundColor: '#f8fafc', padding: 12, borderRadius: 12 },
+  doctorDesc: { fontSize: 14, color: '#475569', lineHeight: 20, marginBottom: 14, backgroundColor: '#f8fafc', padding: 12, borderRadius: 12 },
+  noticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fffbeb',
+    borderColor: '#fde68a',
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginBottom: 14,
+  },
+  noticeIcon: { marginRight: 8 },
+  noticeText: { fontSize: 13, color: '#b45309', fontWeight: '700', flex: 1, lineHeight: 18 },
 
   statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 16 },
   statusBadgeText: { fontSize: 13, fontWeight: '800' },

@@ -8,6 +8,13 @@ import Footer from '../components/layout/Footer';
 import './Events.css';
 import SEO from '../components/common/SEO';
 
+const getYouTubeVideoId = (url) => {
+    if (!url || typeof url !== 'string') return null;
+    const regExp = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = url.match(regExp);
+    return match ? match[1] : null;
+};
+
 const Events = () => {
     const { t, i18n } = useTranslation();
     const [events, setEvents] = useState([]);
@@ -119,18 +126,44 @@ const Events = () => {
                     <div className="header-loader"><Loader2 className="animate-spin" /></div>
                 ) : headerSlides.length > 0 ? (
                     <div className="slider-container">
-                        {headerSlides.map((slide, index) => (
-                            <div
-                                key={slide._id}
-                                className={`slider-item ${index === currentSlide ? 'active' : ''} pos-${slide.textPosition || 'center'}`}
-                                style={{ backgroundImage: slide.type === 'image' ? `url(${slide.url.startsWith('http') ? slide.url : `${API_BASE_URL}${slide.url.startsWith('/') ? '' : '/'}${slide.url}`})` : 'none' }}
-                            >
-                                {slide.type === 'video' && (
-                                    <video className="slider-video-bg" autoPlay muted loop playsInline>
-                                        <source src={slide.url.startsWith('http') ? slide.url : `${API_BASE_URL}${slide.url.startsWith('/') ? '' : '/'}${slide.url}`} type="video/mp4" />
-                                    </video>
-                                )}
-                                <div className="slider-overlay"></div>
+                        {headerSlides.map((slide, index) => {
+                            const ytId = getYouTubeVideoId(slide.url);
+                            const bgUrl = ytId
+                                ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
+                                : (slide.type === 'image' ? (slide.url.startsWith('http') ? slide.url : `${API_BASE_URL}${slide.url.startsWith('/') ? '' : '/'}${slide.url}`) : 'none');
+
+                            return (
+                                <div
+                                    key={slide._id}
+                                    className={`slider-item ${index === currentSlide ? 'active' : ''} pos-${slide.textPosition || 'center'}`}
+                                    style={{ backgroundImage: bgUrl !== 'none' ? `url(${bgUrl})` : 'none' }}
+                                >
+                                    {ytId ? (
+                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden', zIndex: 0, pointerEvents: 'none' }}>
+                                            <iframe
+                                                src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&rel=0&modestbranding=1&enablejsapi=1&playsinline=1`}
+                                                title="YouTube Header Slide"
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: '50%',
+                                                    left: '50%',
+                                                    width: '100vw',
+                                                    height: '56.25vw',
+                                                    minHeight: '100%',
+                                                    minWidth: '177.77vh',
+                                                    transform: 'translate(-50%, -50%)',
+                                                    border: 'none',
+                                                    opacity: 0.95
+                                                }}
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            />
+                                        </div>
+                                    ) : slide.type === 'video' ? (
+                                        <video className="slider-video-bg" autoPlay muted loop playsInline>
+                                            <source src={slide.url.startsWith('http') ? slide.url : `${API_BASE_URL}${slide.url.startsWith('/') ? '' : '/'}${slide.url}`} type="video/mp4" />
+                                        </video>
+                                    ) : null}
+                                    <div className="slider-overlay"></div>
                                 <div className="slider-content">
                                     <h1 className="event-slide-up" style={{ color: slide.titleColor || '#ffffff' }}>
                                         {(i18n.language === 'hi' && slide.title_hi) ? slide.title_hi : (slide.title || 'Our Impact & Events')}

@@ -529,10 +529,10 @@ const DoctorAvailability = () => {
                                                                         </p>
                                                                     )}
 
-                                                                    {avail.hospitalType === 'clinic' && avail.doctorId.privateFee !== undefined && avail.doctorId.privateFee > 0 && (
-                                                                        <div className="doctor-fee-row">
-                                                                            <span>💵</span>
-                                                                            <span>{i18n.language === 'hi' ? 'फीस' : 'Fee'}: ₹{avail.doctorId.privateFee}</span>
+                                                                    {(i18n.language === 'hi' ? (avail.doctorId.notice_hi || avail.doctorId.notice) : (avail.doctorId.notice || avail.doctorId.notice_hi)) && (
+                                                                        <div className="doctor-notice-banner">
+                                                                            <span className="notice-icon">📢</span>
+                                                                            <span>{i18n.language === 'hi' ? (avail.doctorId.notice_hi || avail.doctorId.notice) : (avail.doctorId.notice || avail.doctorId.notice_hi)}</span>
                                                                         </div>
                                                                     )}
 
@@ -583,36 +583,69 @@ const DoctorAvailability = () => {
                                                                             </div>
                                                                         )}
                                                                         <div className="available-dates-container" style={{ marginTop: '15px', padding: '10px 20px 15px 20px', borderTop: '1px dashed #e2e8f0' }}>
-                                                                            <h4 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                                                <Calendar size={14} style={{ color: '#00bf9a' }} />
-                                                                                {i18n.language === 'hi'
-                                                                                    ? `उपलब्ध तिथियां (${new Date().toLocaleDateString('hi-IN', { month: 'long', year: 'numeric' })}):`
-                                                                                    : `Available Dates (${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}):`}
-                                                                            </h4>
-                                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                                                                {avail.availableDates && avail.availableDates.length > 0 ? (
-                                                                                    avail.availableDates.map(dayNum => (
-                                                                                        <span
-                                                                                            key={dayNum}
-                                                                                            style={{
-                                                                                                background: '#e6faf5',
-                                                                                                color: '#00bf9a',
-                                                                                                padding: '4px 10px',
-                                                                                                borderRadius: '20px',
-                                                                                                fontSize: '0.85rem',
-                                                                                                fontWeight: '600',
-                                                                                                border: '1px solid #c2f4e8'
-                                                                                            }}
-                                                                                        >
-                                                                                            {dayNum}
-                                                                                        </span>
-                                                                                    ))
-                                                                                ) : (
-                                                                                    <span style={{ color: '#94a3b8', fontSize: '0.8rem', fontStyle: 'italic' }}>
-                                                                                        {i18n.language === 'hi' ? 'कोई उपलब्ध तिथि नहीं' : 'No available dates'}
-                                                                                    </span>
-                                                                                )}
-                                                                            </div>
+                                                                            {avail.monthlyAvailableDates && avail.monthlyAvailableDates.length > 0 ? (
+                                                                                avail.monthlyAvailableDates.map((mGroup, mIdx) => (
+                                                                                    <div key={`${mGroup.year}-${mGroup.month}`} style={{ marginBottom: mIdx < avail.monthlyAvailableDates.length - 1 ? '12px' : '0' }}>
+                                                                                        <h4 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#334155', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                                            <Calendar size={14} style={{ color: '#00bf9a' }} />
+                                                                                            {i18n.language === 'hi'
+                                                                                                ? `उपलब्ध तिथियां (${mGroup.monthNameHi} ${mGroup.year}):`
+                                                                                                : `Available Dates (${mGroup.monthName} ${mGroup.year}):`}
+                                                                                        </h4>
+                                                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                                                                            {mGroup.dates.map(dayNum => (
+                                                                                                <span
+                                                                                                    key={dayNum}
+                                                                                                    style={{
+                                                                                                        background: '#e6faf5',
+                                                                                                        color: '#00bf9a',
+                                                                                                        padding: '4px 10px',
+                                                                                                        borderRadius: '20px',
+                                                                                                        fontSize: '0.85rem',
+                                                                                                        fontWeight: '600',
+                                                                                                        border: '1px solid #c2f4e8'
+                                                                                                    }}
+                                                                                                >
+                                                                                                    {dayNum}
+                                                                                                </span>
+                                                                                            ))}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                ))
+                                                                            ) : (
+                                                                                <div>
+                                                                                    <h4 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                                        <Calendar size={14} style={{ color: '#00bf9a' }} />
+                                                                                        {i18n.language === 'hi'
+                                                                                            ? `उपलब्ध तिथियां (${new Date().toLocaleDateString('hi-IN', { month: 'long', year: 'numeric' })}):`
+                                                                                            : `Available Dates (${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}):`}
+                                                                                    </h4>
+                                                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                                                                        {avail.availableDates && avail.availableDates.length > 0 ? (
+                                                                                            avail.availableDates.map(dayNum => (
+                                                                                                <span
+                                                                                                    key={dayNum}
+                                                                                                    style={{
+                                                                                                        background: '#e6faf5',
+                                                                                                        color: '#00bf9a',
+                                                                                                        padding: '4px 10px',
+                                                                                                        borderRadius: '20px',
+                                                                                                        fontSize: '0.85rem',
+                                                                                                        fontWeight: '600',
+                                                                                                        border: '1px solid #c2f4e8'
+                                                                                                    }}
+                                                                                                >
+                                                                                                    {dayNum}
+                                                                                                </span>
+                                                                                            ))
+                                                                                        ) : (
+                                                                                            <span style={{ color: '#94a3b8', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                                                                                                {i18n.language === 'hi' ? 'कोई उपलब्ध तिथि नहीं' : 'No available dates'}
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
                                                                         </div>
 
                                                                         <a
