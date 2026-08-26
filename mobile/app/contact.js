@@ -108,9 +108,7 @@ export default function ContactScreen() {
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
           {/* Top Banner Card */}
           <View style={styles.bannerCard}>
-            <View style={styles.bannerIconBox}>
-              <Ionicons name="heart" size={28} color="#00bfa5" />
-            </View>
+           
             <Text style={styles.bannerTitle}>
               {locale === 'hi' ? 'हम यहाँ सहायता के लिए हैं' : 'We are here to help'}
             </Text>
@@ -150,7 +148,7 @@ export default function ContactScreen() {
                 <Ionicons name="location" size={24} color="#64748b" />
               </View>
               <View style={styles.infoDetails}>
-                <Text style={styles.infoLabel}>{locale === 'hi' ? 'मुख्य कार्यालय' : 'Headquarters'}</Text>
+                <Text style={styles.infoLabel}>{locale === 'hi' ? 'मुख्यालय' : 'Headquarters'}</Text>
                 <Text style={styles.infoValue}>TDMF Online Ventures Pvt Ltd</Text>
                 <Text style={styles.infoSubtext}>
                   {locale === 'hi'

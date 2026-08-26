@@ -426,7 +426,7 @@ const translations = {
     },
     shareApp: {
       title: "Share App",
-      shareDharmarth: "Share DharmArth",
+      shareDharmarth: "Share App",
       subtitle: "Help us reach more people in need by sharing our app. 💚",
       forAndroid: "For Android Users",
       shareOnPlayStoreDesc: "Share our app on Google Play Store",
@@ -862,7 +862,7 @@ const translations = {
     },
     shareApp: {
       title: "ऐप शेयर करें",
-      shareDharmarth: "धर्मार्थ शेयर करें",
+      shareDharmarth: "ऐप शेयर करें",
       subtitle: "हमारे ऐप को शेयर करके अधिक जरूरतमंद लोगों तक पहुंचने में हमारी मदद करें। 💚",
       forAndroid: "एंड्रॉइड उपयोगकर्ताओं के लिए",
       shareOnPlayStoreDesc: "गूगल प्ले स्टोर पर हमारा ऐप शेयर करें",

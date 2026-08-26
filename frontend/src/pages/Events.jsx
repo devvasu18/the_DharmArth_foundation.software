@@ -15,6 +15,40 @@ const getYouTubeVideoId = (url) => {
     return match ? match[1] : null;
 };
 
+const getEventCoverUrl = (event) => {
+    if (!event) return null;
+    if (event.coverImage) {
+        const ytId = getYouTubeVideoId(event.coverImage);
+        if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+        return event.coverImage.startsWith('http')
+            ? event.coverImage
+            : `${API_BASE_URL}${event.coverImage.startsWith('/') ? '' : '/'}${event.coverImage}`;
+    }
+    if (event.heroImages && event.heroImages.length > 0) {
+        const firstHero = event.heroImages[0];
+        const ytId = getYouTubeVideoId(firstHero);
+        if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+        return firstHero.startsWith('http')
+            ? firstHero
+            : `${API_BASE_URL}${firstHero.startsWith('/') ? '' : '/'}${firstHero}`;
+    }
+    if (event.blocks && event.blocks.length > 0) {
+        for (const block of event.blocks) {
+            if (block.type === 'youtube' && block.content?.url) {
+                const ytId = getYouTubeVideoId(block.content.url);
+                if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+            }
+            if (block.type === 'image' && block.content?.url) {
+                const imgUrl = block.content.url;
+                return imgUrl.startsWith('http')
+                    ? imgUrl
+                    : `${API_BASE_URL}${imgUrl.startsWith('/') ? '' : '/'}${imgUrl}`;
+            }
+        }
+    }
+    return null;
+};
+
 const Events = () => {
     const { t, i18n } = useTranslation();
     const [events, setEvents] = useState([]);
@@ -164,28 +198,29 @@ const Events = () => {
                                         </video>
                                     ) : null}
                                     <div className="slider-overlay"></div>
-                                <div className="slider-content">
-                                    <h1 className="event-slide-up" style={{ color: slide.titleColor || '#ffffff' }}>
-                                        {(i18n.language === 'hi' && slide.title_hi) ? slide.title_hi : (slide.title || 'Our Impact & Events')}
-                                    </h1>
-                                    {((i18n.language === 'hi' && slide.subtitle_hi) || slide.subtitle) && (
-                                        <h3 className="event-slide-up delay-1">
-                                            {(i18n.language === 'hi' && slide.subtitle_hi) ? slide.subtitle_hi : slide.subtitle}
-                                        </h3>
-                                    )}
-                                    {((i18n.language === 'hi' && slide.description_hi) || slide.description) && (
-                                        <p className="event-slide-up delay-2" style={{ color: slide.descriptionColor || '#ffffff' }}>
-                                            {(i18n.language === 'hi' && slide.description_hi) ? slide.description_hi : slide.description}
-                                        </p>
-                                    )}
-                                    {slide.ctaLink && (
-                                        <Link to={slide.ctaLink} className="btn-primary event-slide-up delay-3">
-                                            {(i18n.language === 'hi' && slide.ctaText_hi) ? slide.ctaText_hi : (slide.ctaText || 'Learn More')}
-                                        </Link>
-                                    )}
+                                    <div className="slider-content">
+                                        <h1 className="event-slide-up" style={{ color: slide.titleColor || '#ffffff' }}>
+                                            {(i18n.language === 'hi' && slide.title_hi) ? slide.title_hi : (slide.title || '')}
+                                        </h1>
+                                        {((i18n.language === 'hi' && slide.subtitle_hi) || slide.subtitle) && (
+                                            <h3 className="event-slide-up delay-1">
+                                                {(i18n.language === 'hi' && slide.subtitle_hi) ? slide.subtitle_hi : slide.subtitle}
+                                            </h3>
+                                        )}
+                                        {((i18n.language === 'hi' && slide.description_hi) || slide.description) && (
+                                            <p className="event-slide-up delay-2" style={{ color: slide.descriptionColor || '#ffffff' }}>
+                                                {(i18n.language === 'hi' && slide.description_hi) ? slide.description_hi : slide.description}
+                                            </p>
+                                        )}
+                                        {slide.ctaLink && (
+                                            <Link to={slide.ctaLink} className="btn-primary event-slide-up delay-3">
+                                                {(i18n.language === 'hi' && slide.ctaText_hi) ? slide.ctaText_hi : (slide.ctaText || 'Learn More')}
+                                            </Link>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="static-header-fallback" style={{ background: 'linear-gradient(to right, #1a202c, #2d3748)', padding: '100px 0', color: 'white', textAlign: 'center' }}>
@@ -269,14 +304,17 @@ const Events = () => {
                         {filteredEvents.map(event => (
                             <div key={event._id} className="event-card">
                                 <Link to={`/events/${event.slug}`} className="event-card-image">
-                                    {event.coverImage ? (
-                                        <img src={event.coverImage.startsWith('http') ? event.coverImage : `${API_BASE_URL}${event.coverImage.startsWith('/') ? '' : '/'}${event.coverImage}`} alt={event.title} />
-                                    ) : (
-                                        <div className="placeholder-image">
-                                            <Calendar size={40} color="#ccc" />
-                                        </div>
-                                    )}
-                                    <div className="event-card-badges">
+                                    {(() => {
+                                        const coverUrl = getEventCoverUrl(event);
+                                        return coverUrl ? (
+                                            <img src={coverUrl} alt={event.title} />
+                                        ) : (
+                                            <div className="placeholder-image">
+                                                <Calendar size={40} color="#ccc" />
+                                            </div>
+                                        );
+                                    })()}
+                                                                                                                                                                                            <div className="event-card-badges">
                                         {(() => {
                                             const eventDate = new Date(event.date);
                                             const now = new Date();

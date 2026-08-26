@@ -16,6 +16,40 @@ const getYouTubeVideoId = (url) => {
     return match ? match[1] : null;
 };
 
+const getEventCoverUrl = (event) => {
+    if (!event) return null;
+    if (event.coverImage) {
+        const ytId = getYouTubeVideoId(event.coverImage);
+        if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+        return event.coverImage.startsWith('http')
+            ? event.coverImage
+            : `${API_BASE_URL}${event.coverImage.startsWith('/') ? '' : '/'}${event.coverImage}`;
+    }
+    if (event.heroImages && event.heroImages.length > 0) {
+        const firstHero = event.heroImages[0];
+        const ytId = getYouTubeVideoId(firstHero);
+        if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+        return firstHero.startsWith('http')
+            ? firstHero
+            : `${API_BASE_URL}${firstHero.startsWith('/') ? '' : '/'}${firstHero}`;
+    }
+    if (event.blocks && event.blocks.length > 0) {
+        for (const block of event.blocks) {
+            if (block.type === 'youtube' && block.content?.url) {
+                const ytId = getYouTubeVideoId(block.content.url);
+                if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+            }
+            if (block.type === 'image' && block.content?.url) {
+                const imgUrl = block.content.url;
+                return imgUrl.startsWith('http')
+                    ? imgUrl
+                    : `${API_BASE_URL}${imgUrl.startsWith('/') ? '' : '/'}${imgUrl}`;
+            }
+        }
+    }
+    return null;
+};
+
 const EventDetail = () => {
     const { slug } = useParams();
     const [event, setEvent] = useState(null);
@@ -330,7 +364,7 @@ const EventDetail = () => {
                                         {recentEvents.slice(0, 3).map(re => (
                                             <Link to={`/events/${re.slug}`} key={re._id} className="sidebar-event-item">
                                                 <div className="sidebar-event-thumb">
-                                                    <img src={re.coverImage && (re.coverImage.startsWith('http') ? re.coverImage : `${API_BASE_URL}${re.coverImage.startsWith('/') ? '' : '/'}${re.coverImage}`) || '/placeholder.jpg'} alt={re.title} />
+                                                    <img src={getEventCoverUrl(re) || '/placeholder.jpg'} alt={re.title} />
                                                 </div>
                                                 <div className="sidebar-event-info">
                                                     <h4>{re.title}</h4>
@@ -364,7 +398,7 @@ const EventDetail = () => {
                             {recentEvents.slice(3, 6).map(evt => (
                                 <Link to={`/events/${evt.slug}`} key={evt._id} className="related-card">
                                     <div className="related-thumb">
-                                        <img src={evt.coverImage && (evt.coverImage.startsWith('http') ? evt.coverImage : `${API_BASE_URL}${evt.coverImage.startsWith('/') ? '' : '/'}${evt.coverImage}`) || '/placeholder.jpg'} alt={evt.title} />
+                                        <img src={getEventCoverUrl(evt) || '/placeholder.jpg'} alt={evt.title} />
                                         <span className="related-tag">{evt.status}</span>
                                     </div>
                                     <div className="related-content">

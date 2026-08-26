@@ -5,6 +5,33 @@ import { Plus, Edit, Trash2, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './AdminEvents.css';
 
+const getYouTubeVideoId = (url) => {
+    if (!url || typeof url !== 'string') return null;
+    const regExp = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = url.match(regExp);
+    return match ? match[1] : null;
+};
+
+const getEventCoverUrl = (event) => {
+    if (!event) return null;
+    if (event.coverImage) {
+        const ytId = getYouTubeVideoId(event.coverImage);
+        if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+        return event.coverImage.startsWith('http')
+            ? event.coverImage
+            : `${API_BASE_URL}${event.coverImage.startsWith('/') ? '' : '/'}${event.coverImage}`;
+    }
+    if (event.heroImages && event.heroImages.length > 0) {
+        const firstHero = event.heroImages[0];
+        const ytId = getYouTubeVideoId(firstHero);
+        if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+        return firstHero.startsWith('http')
+            ? firstHero
+            : `${API_BASE_URL}${firstHero.startsWith('/') ? '' : '/'}${firstHero}`;
+    }
+    return null;
+};
+
 const AdminEvents = () => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -64,18 +91,20 @@ const AdminEvents = () => {
                             <tr>
                                 <td colSpan="4" style={{ textAlign: 'center', padding: '30px' }}>No events found. Create one!</td>
                             </tr>
-                        ) : events.map(event => (
-                            <tr key={event._id}>
-                                <td>
-                                    <div className="event-info-cell">
-                                        {event.coverImage ? (
-                                            <img src={event.coverImage.startsWith('http') ? event.coverImage : `${API_BASE_URL}${event.coverImage.startsWith('/') ? '' : '/'}${event.coverImage}`} alt="" className="event-thumb" />
-                                        ) : (
-                                            <div className="event-thumb" style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>N/A</div>
-                                        )}
-                                        <span>{event.title}</span>
-                                    </div>
-                                </td>
+                        ) : events.map(event => {
+                            const coverUrl = getEventCoverUrl(event);
+                            return (
+                                <tr key={event._id}>
+                                    <td>
+                                        <div className="event-info-cell">
+                                            {coverUrl ? (
+                                                <img src={coverUrl} alt="" className="event-thumb" />
+                                            ) : (
+                                                <div className="event-thumb" style={{ background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>N/A</div>
+                                            )}
+                                            <span>{event.title}</span>
+                                        </div>
+                                    </td>
                                 <td>
                                     {(() => {
                                         const eventDate = new Date(event.date);

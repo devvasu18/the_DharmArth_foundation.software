@@ -20,11 +20,33 @@ import { useTranslation } from '../../src/context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
+const API_BASE_URL = 'https://api.thedharmarth.com';
+
 const getYouTubeVideoId = (url) => {
   if (!url || typeof url !== 'string') return null;
   const regExp = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
   const match = url.match(regExp);
   return match ? match[1] : null;
+};
+
+const getEventCoverUrl = (event) => {
+  if (!event) return null;
+  if (event.coverImage) {
+    const ytId = getYouTubeVideoId(event.coverImage);
+    if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+    return event.coverImage.startsWith('http')
+      ? event.coverImage
+      : `${API_BASE_URL}${event.coverImage.startsWith('/') ? '' : '/'}${event.coverImage}`;
+  }
+  if (event.heroImages && event.heroImages.length > 0) {
+    const firstHero = event.heroImages[0];
+    const ytId = getYouTubeVideoId(firstHero);
+    if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+    return firstHero.startsWith('http')
+      ? firstHero
+      : `${API_BASE_URL}${firstHero.startsWith('/') ? '' : '/'}${firstHero}`;
+  }
+  return null;
 };
 
 const EventDetails = () => {
@@ -174,16 +196,18 @@ const EventDetails = () => {
           const youtubeCoverId = getYouTubeVideoId(event.coverImage);
           if (youtubeCoverId) {
             return (
-              <View style={{ width: '100%', height: 230, backgroundColor: '#000' }}>
+              <View style={{ width: '100%', height: 250, backgroundColor: '#000' }}>
                 <YoutubeIframe
-                  height={230}
+                  height={250}
                   videoId={youtubeCoverId}
+                  webViewStyle={{ opacity: 0.99 }}
                 />
               </View>
             );
           }
-          return event.coverImage ? (
-            <Image source={{ uri: event.coverImage }} style={styles.coverImage} />
+          const coverUrl = getEventCoverUrl(event);
+          return coverUrl ? (
+            <Image source={{ uri: coverUrl }} style={styles.coverImage} resizeMode="cover" />
           ) : null;
         })()}
         

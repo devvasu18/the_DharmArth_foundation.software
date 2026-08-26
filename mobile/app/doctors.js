@@ -407,8 +407,8 @@ export default function DoctorsScreen() {
                   )}
                 </View>
                 <View style={styles.doctorInfo}>
-                  <Text style={styles.doctorName}>Dr. {doctorName}</Text>
-                  <Text style={styles.doctorMeta}>{doctorTitle} • {doctorExp}</Text>
+                  <Text style={styles.doctorName}>{locale === 'hi' ? 'डॉ. ' : 'Dr. '}{doctorName}</Text>
+                  <Text style={styles.doctorMeta}>{doctorTitle}{doctorExp ? ' • ' : ''}<Text style={{ color: '#dc2626', fontWeight: '700' }}>{doctorExp}</Text></Text>
                 </View>
               </View>
 

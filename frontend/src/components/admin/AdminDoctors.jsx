@@ -1228,7 +1228,8 @@ const AdminDoctors = () => {
                                         </div>
                                     </div>
                                 </div>
-                            )}
+                            );
+                        })()}
 
                             <div className="form-actions">
                                 <button type="button" className="btn-cancel" onClick={closeModal}>

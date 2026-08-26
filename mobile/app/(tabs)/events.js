@@ -20,11 +20,47 @@ import { useTranslation } from '../../src/context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
+const API_BASE_URL = 'https://api.thedharmarth.com';
+
 const getYouTubeVideoId = (url) => {
   if (!url || typeof url !== 'string') return null;
   const regExp = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
   const match = url.match(regExp);
   return match ? match[1] : null;
+};
+
+const getEventCoverUrl = (event) => {
+  if (!event) return null;
+  if (event.coverImage) {
+    const ytId = getYouTubeVideoId(event.coverImage);
+    if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+    return event.coverImage.startsWith('http')
+      ? event.coverImage
+      : `${API_BASE_URL}${event.coverImage.startsWith('/') ? '' : '/'}${event.coverImage}`;
+  }
+  if (event.heroImages && event.heroImages.length > 0) {
+    const firstHero = event.heroImages[0];
+    const ytId = getYouTubeVideoId(firstHero);
+    if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+    return firstHero.startsWith('http')
+      ? firstHero
+      : `${API_BASE_URL}${firstHero.startsWith('/') ? '' : '/'}${firstHero}`;
+  }
+  if (event.blocks && event.blocks.length > 0) {
+    for (const block of event.blocks) {
+      if (block.type === 'youtube' && block.content?.url) {
+        const ytId = getYouTubeVideoId(block.content.url);
+        if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+      }
+      if (block.type === 'image' && block.content?.url) {
+        const imgUrl = block.content.url;
+        return imgUrl.startsWith('http')
+          ? imgUrl
+          : `${API_BASE_URL}${imgUrl.startsWith('/') ? '' : '/'}${imgUrl}`;
+      }
+    }
+  }
+  return null;
 };
 
 export default function EventsScreen() {
@@ -159,13 +195,15 @@ export default function EventsScreen() {
                 {headerSlides.map((slide, index) => {
                   const ytId = getYouTubeVideoId(slide.url);
                   return (
-                    <View key={`event-head-${slide._id || ''}-${index}`} style={{ width }}>
+                    <View key={`event-head-${slide._id || ''}-${index}`} style={{ width, height: 350 }}>
                       {ytId ? (
-                        <View style={{ width: '100%', height: 200, backgroundColor: '#000' }}>
+                        <View style={{ width: width, height: 350, backgroundColor: '#000', justifyContent: 'center' }}>
                           <YoutubeIframe
-                            height={200}
+                            width={width}
+                            height={350}
                             videoId={ytId}
                             play={currentSlide === index}
+                            webViewStyle={{ opacity: 0.99 }}
                           />
                         </View>
                       ) : (
@@ -272,7 +310,16 @@ export default function EventsScreen() {
                 style={styles.eventCard}
                 onPress={() => router.push(`/event/${event.slug}`)}
               >
-                <Image source={{ uri: event.coverImage }} style={styles.eventCardImage} />
+                {(() => {
+                  const coverUrl = getEventCoverUrl(event);
+                  return coverUrl ? (
+                    <Image source={{ uri: coverUrl }} style={styles.eventCardImage} resizeMode="cover" />
+                  ) : (
+                    <View style={[styles.eventCardImage, { backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }]}>
+                      <Ionicons name="calendar-outline" size={44} color="#cbd5e1" />
+                    </View>
+                  );
+                })()}
                 <View style={styles.cardBadges}>
                   {(() => {
                     const eventDate = new Date(event.date);
