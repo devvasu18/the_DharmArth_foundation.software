@@ -329,13 +329,7 @@ const AdminLayout = () => {
                                 >
                                     Events slider
                                 </NavLink>
-                                <NavLink
-                                    to="/admin/event-videos"
-                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
-                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
-                                >
-                                    YouTube Videos
-                                </NavLink>
+                               
                                 {/* <NavLink
                                     to="/admin/galleries"
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}

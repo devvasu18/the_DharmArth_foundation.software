@@ -11,9 +11,29 @@ import DOMPurify from 'dompurify';
 
 const getYouTubeVideoId = (url) => {
     if (!url || typeof url !== 'string') return null;
-    const regExp = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-    const match = url.match(regExp);
-    return match ? match[1] : null;
+    const trimmed = url.trim();
+    if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+    const regExp = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/|v\/|[^/\n\s]+\/\S+\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = trimmed.match(regExp);
+    if (match && match[1]) return match[1];
+    try {
+        const parsed = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
+        if (parsed.hostname.includes('youtube.com')) {
+            const v = parsed.searchParams.get('v');
+            if (v && v.length === 11) return v;
+            const pathParts = parsed.pathname.split('/').filter(Boolean);
+            for (const part of pathParts) {
+                if (part.length === 11 && /^[a-zA-Z0-9_-]{11}$/.test(part)) {
+                    return part;
+                }
+            }
+        }
+        if (parsed.hostname === 'youtu.be') {
+            const id = parsed.pathname.slice(1).split('/')[0].split('?')[0];
+            if (id && id.length === 11) return id;
+        }
+    } catch (e) {}
+    return null;
 };
 
 const getEventCoverUrl = (event) => {
@@ -26,19 +46,25 @@ const getEventCoverUrl = (event) => {
             : `${API_BASE_URL}${event.coverImage.startsWith('/') ? '' : '/'}${event.coverImage}`;
     }
     if (event.heroImages && event.heroImages.length > 0) {
+        for (const hero of event.heroImages) {
+            const ytId = getYouTubeVideoId(hero);
+            if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+        }
         const firstHero = event.heroImages[0];
-        const ytId = getYouTubeVideoId(firstHero);
-        if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
-        return firstHero.startsWith('http')
-            ? firstHero
-            : `${API_BASE_URL}${firstHero.startsWith('/') ? '' : '/'}${firstHero}`;
+        if (firstHero) {
+            return firstHero.startsWith('http')
+                ? firstHero
+                : `${API_BASE_URL}${firstHero.startsWith('/') ? '' : '/'}${firstHero}`;
+        }
     }
     if (event.blocks && event.blocks.length > 0) {
         for (const block of event.blocks) {
-            if (block.type === 'youtube' && block.content?.url) {
+            if ((block.type === 'youtube' || block.type === 'video') && block.content?.url) {
                 const ytId = getYouTubeVideoId(block.content.url);
                 if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
             }
+        }
+        for (const block of event.blocks) {
             if (block.type === 'image' && block.content?.url) {
                 const imgUrl = block.content.url;
                 return imgUrl.startsWith('http')
@@ -46,6 +72,14 @@ const getEventCoverUrl = (event) => {
                     : `${API_BASE_URL}${imgUrl.startsWith('/') ? '' : '/'}${imgUrl}`;
             }
         }
+    }
+    if (event.youtubeUrl) {
+        const ytId = getYouTubeVideoId(event.youtubeUrl);
+        if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+    }
+    if (event.videoUrl) {
+        const ytId = getYouTubeVideoId(event.videoUrl);
+        if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
     }
     return null;
 };
@@ -186,63 +220,6 @@ const EventDetail = () => {
                 return (
                     <div key={index} className="detail-block text-block animate-up">
                         <div style={{ whiteSpace: 'pre-line' }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(textContent) }} />
-                    </div>
-                );
-            case 'image':
-                return (
-                    <div key={index} className="detail-block image-block animate-up">
-                        <figure className="premium-figure">
-                            <img src={block.content.url.startsWith('http') ? block.content.url : `${API_BASE_URL}${block.content.url.startsWith('/') ? '' : '/'}${block.content.url}`} alt={block.content.title || ''} loading="lazy" />
-                            {block.content.title && <figcaption>{block.content.title}</figcaption>}
-                        </figure>
-                    </div>
-                );
-            case 'video':
-                return (
-                    <div key={index} className="detail-block video-block animate-up">
-                        <div className="block-label">Video Feature</div>
-                        <div className="video-card-premium">
-                            <video src={block.content.url.startsWith('http') ? block.content.url : `${API_BASE_URL}${block.content.url.startsWith('/') ? '' : '/'}${block.content.url}`} controls poster={block.content.thumbnail && (block.content.thumbnail.startsWith('http') ? block.content.thumbnail : `${API_BASE_URL}${block.content.thumbnail.startsWith('/') ? '' : '/'}${block.content.thumbnail}`)}></video>
-                        </div>
-                        {block.content.caption && <p className="media-caption">{block.content.caption}</p>}
-                    </div>
-                );
-            case 'youtube':
-                let videoId = '';
-                try {
-                    const url = block.content.url;
-                    if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
-                    else if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1];
-                    else if (url.includes('embed/')) videoId = url.split('embed/')[1];
-                } catch (e) { }
-
-                if (!videoId) return null;
-
-                return (
-                    <div key={index} className="detail-block youtube-block animate-up">
-                        <div className="block-label">Watch Highlight</div>
-                        <div className="youtube-card-premium">
-                            <iframe
-                                src={`https://www.youtube.com/embed/${videoId}`}
-                                title="YouTube video player"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                            ></iframe>
-                        </div>
-                    </div>
-                );
-            case 'instagram':
-                return (
-                    <div key={index} className="detail-block instagram-block animate-up">
-                        <div className="block-label instagram-label">Instagram Feature</div>
-                        <div className="instagram-card-premium">
-                            <blockquote
-                                className="instagram-media"
-                                data-instgrm-permalink={block.content.url}
-                                data-instgrm-version="14"
-                            ></blockquote>
-                        </div>
                     </div>
                 );
             default:

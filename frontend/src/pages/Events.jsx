@@ -10,9 +10,29 @@ import SEO from '../components/common/SEO';
 
 const getYouTubeVideoId = (url) => {
     if (!url || typeof url !== 'string') return null;
-    const regExp = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-    const match = url.match(regExp);
-    return match ? match[1] : null;
+    const trimmed = url.trim();
+    if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+    const regExp = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/|v\/|[^/\n\s]+\/\S+\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = trimmed.match(regExp);
+    if (match && match[1]) return match[1];
+    try {
+        const parsed = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
+        if (parsed.hostname.includes('youtube.com')) {
+            const v = parsed.searchParams.get('v');
+            if (v && v.length === 11) return v;
+            const pathParts = parsed.pathname.split('/').filter(Boolean);
+            for (const part of pathParts) {
+                if (part.length === 11 && /^[a-zA-Z0-9_-]{11}$/.test(part)) {
+                    return part;
+                }
+            }
+        }
+        if (parsed.hostname === 'youtu.be') {
+            const id = parsed.pathname.slice(1).split('/')[0].split('?')[0];
+            if (id && id.length === 11) return id;
+        }
+    } catch (e) {}
+    return null;
 };
 
 const getEventCoverUrl = (event) => {
@@ -25,19 +45,25 @@ const getEventCoverUrl = (event) => {
             : `${API_BASE_URL}${event.coverImage.startsWith('/') ? '' : '/'}${event.coverImage}`;
     }
     if (event.heroImages && event.heroImages.length > 0) {
+        for (const hero of event.heroImages) {
+            const ytId = getYouTubeVideoId(hero);
+            if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+        }
         const firstHero = event.heroImages[0];
-        const ytId = getYouTubeVideoId(firstHero);
-        if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
-        return firstHero.startsWith('http')
-            ? firstHero
-            : `${API_BASE_URL}${firstHero.startsWith('/') ? '' : '/'}${firstHero}`;
+        if (firstHero) {
+            return firstHero.startsWith('http')
+                ? firstHero
+                : `${API_BASE_URL}${firstHero.startsWith('/') ? '' : '/'}${firstHero}`;
+        }
     }
     if (event.blocks && event.blocks.length > 0) {
         for (const block of event.blocks) {
-            if (block.type === 'youtube' && block.content?.url) {
+            if ((block.type === 'youtube' || block.type === 'video') && block.content?.url) {
                 const ytId = getYouTubeVideoId(block.content.url);
                 if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
             }
+        }
+        for (const block of event.blocks) {
             if (block.type === 'image' && block.content?.url) {
                 const imgUrl = block.content.url;
                 return imgUrl.startsWith('http')
@@ -45,6 +71,14 @@ const getEventCoverUrl = (event) => {
                     : `${API_BASE_URL}${imgUrl.startsWith('/') ? '' : '/'}${imgUrl}`;
             }
         }
+    }
+    if (event.youtubeUrl) {
+        const ytId = getYouTubeVideoId(event.youtubeUrl);
+        if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+    }
+    if (event.videoUrl) {
+        const ytId = getYouTubeVideoId(event.videoUrl);
+        if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
     }
     return null;
 };
@@ -170,54 +204,66 @@ const Events = () => {
                                 <div
                                     key={slide._id}
                                     className={`slider-item ${index === currentSlide ? 'active' : ''} pos-${slide.textPosition || 'center'}`}
-                                    style={{ backgroundImage: bgUrl !== 'none' ? `url(${bgUrl})` : 'none' }}
                                 >
                                     {ytId ? (
-                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden', zIndex: 0, pointerEvents: 'none' }}>
-                                            <iframe
-                                                src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&rel=0&modestbranding=1&enablejsapi=1&playsinline=1`}
-                                                title="YouTube Header Slide"
-                                                style={{
-                                                    position: 'absolute',
-                                                    top: '50%',
-                                                    left: '50%',
-                                                    width: '100vw',
-                                                    height: '56.25vw',
-                                                    minHeight: '100%',
-                                                    minWidth: '177.77vh',
-                                                    transform: 'translate(-50%, -50%)',
-                                                    border: 'none',
-                                                    opacity: 0.95
-                                                }}
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        <div className="slider-media-wrapper">
+                                            <div
+                                                className="slider-blur-bg"
+                                                style={{ backgroundImage: `url(https://img.youtube.com/vi/${ytId}/hqdefault.jpg)` }}
                                             />
+                                            <div className="slider-video-frame">
+                                                <iframe
+                                                    src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&rel=0&modestbranding=1&enablejsapi=1&playsinline=1`}
+                                                    title="YouTube Header Slide"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                />
+                                            </div>
                                         </div>
                                     ) : slide.type === 'video' ? (
-                                        <video className="slider-video-bg" autoPlay muted loop playsInline>
-                                            <source src={slide.url.startsWith('http') ? slide.url : `${API_BASE_URL}${slide.url.startsWith('/') ? '' : '/'}${slide.url}`} type="video/mp4" />
-                                        </video>
+                                        <div className="slider-media-wrapper">
+                                            <video className="slider-blur-bg" autoPlay muted loop playsInline>
+                                                <source src={slide.url.startsWith('http') ? slide.url : `${API_BASE_URL}${slide.url.startsWith('/') ? '' : '/'}${slide.url}`} type="video/mp4" />
+                                            </video>
+                                            <div className="slider-video-frame">
+                                                <video className="slider-video-fg" autoPlay muted loop playsInline>
+                                                    <source src={slide.url.startsWith('http') ? slide.url : `${API_BASE_URL}${slide.url.startsWith('/') ? '' : '/'}${slide.url}`} type="video/mp4" />
+                                                </video>
+                                            </div>
+                                        </div>
+                                    ) : bgUrl !== 'none' ? (
+                                        <div className="slider-media-wrapper">
+                                            <div
+                                                className="slider-blur-bg"
+                                                style={{ backgroundImage: `url(${bgUrl})` }}
+                                            />
+                                            <img src={bgUrl} alt={slide.title || 'Header Banner'} className="slider-image-fg" />
+                                        </div>
                                     ) : null}
                                     <div className="slider-overlay"></div>
-                                    <div className="slider-content">
-                                        <h1 className="event-slide-up" style={{ color: slide.titleColor || '#ffffff' }}>
-                                            {(i18n.language === 'hi' && slide.title_hi) ? slide.title_hi : (slide.title || '')}
-                                        </h1>
-                                        {((i18n.language === 'hi' && slide.subtitle_hi) || slide.subtitle) && (
-                                            <h3 className="event-slide-up delay-1">
-                                                {(i18n.language === 'hi' && slide.subtitle_hi) ? slide.subtitle_hi : slide.subtitle}
-                                            </h3>
-                                        )}
-                                        {((i18n.language === 'hi' && slide.description_hi) || slide.description) && (
-                                            <p className="event-slide-up delay-2" style={{ color: slide.descriptionColor || '#ffffff' }}>
-                                                {(i18n.language === 'hi' && slide.description_hi) ? slide.description_hi : slide.description}
-                                            </p>
-                                        )}
-                                        {slide.ctaLink && (
-                                            <Link to={slide.ctaLink} className="btn-primary event-slide-up delay-3">
-                                                {(i18n.language === 'hi' && slide.ctaText_hi) ? slide.ctaText_hi : (slide.ctaText || 'Learn More')}
-                                            </Link>
-                                        )}
-                                    </div>
+                                    {(slide.title || slide.subtitle || slide.description || slide.ctaLink) && (
+                                        <div className="slider-content">
+                                            {((i18n.language === 'hi' && slide.title_hi) || slide.title) && (
+                                                <h1 className="event-slide-up" style={{ color: slide.titleColor || '#ffffff' }}>
+                                                    {(i18n.language === 'hi' && slide.title_hi) ? slide.title_hi : slide.title}
+                                                </h1>
+                                            )}
+                                            {((i18n.language === 'hi' && slide.subtitle_hi) || slide.subtitle) && (
+                                                <h3 className="event-slide-up delay-1">
+                                                    {(i18n.language === 'hi' && slide.subtitle_hi) ? slide.subtitle_hi : slide.subtitle}
+                                                </h3>
+                                            )}
+                                            {((i18n.language === 'hi' && slide.description_hi) || slide.description) && (
+                                                <p className="event-slide-up delay-2" style={{ color: slide.descriptionColor || '#ffffff' }}>
+                                                    {(i18n.language === 'hi' && slide.description_hi) ? slide.description_hi : slide.description}
+                                                </p>
+                                            )}
+                                            {slide.ctaLink && (
+                                                <Link to={slide.ctaLink} className="btn-primary event-slide-up delay-3">
+                                                    {(i18n.language === 'hi' && slide.ctaText_hi) ? slide.ctaText_hi : (slide.ctaText || 'Learn More')}
+                                                </Link>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
@@ -408,78 +454,11 @@ const Events = () => {
                     </div>
 
 
-                    <div className="newsletter-wrapper">
-                        <div className="newsletter-content">
-                            <div className="icon-box">
-                                <Smartphone size={24} />
-                            </div>
-                            <div className="text-box">
-                                <h3>{t('events.dontMissUpdate')}</h3>
-                                <p>{t('events.smsUpdates')}</p>
-                            </div>
-                        </div>
-                        <div className="newsletter-form">
-                            <input type="tel" placeholder={t('events.enterMobilePlaceholder')} />
-                            <button className="subscribe-btn">{t('events.subscribe')}</button>
-                        </div>
-                    </div>
+                   
                 </div>
             </section>
 
-            {/* Event Videos Section */}
-            <section className="events-video-section">
-                <div className="container">
-                    <div className="video-section-header">
-                        <h2 style={{ fontSize: 'var(--text-4xl)', marginBottom: 'var(--spacing-4)', color: 'var(--secondary)' }}>{t('events.ourImpactInMotion')}</h2>
-
-                        <a href="https://www.youtube.com/@TheDharmarthFoundation" target="_blank" rel="noreferrer" className="view-channel-link">
-                            {t('events.viewChannel')} <ArrowRight size={16} />
-                        </a>
-                    </div>
-
-                    <div className={`video-asymmetric-grid ${eventVideos.length === 1 ? 'single' : ''}`}>
-                        {/* Main Featured Video */}
-                        {activeVideo && (
-                            <div className="video-main-feature">
-                                <div className="video-wrapper">
-                                    <iframe
-                                        src={`https://www.youtube.com/embed/${activeVideo.videoId}`}
-                                        title={activeVideo.title}
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                    ></iframe>
-                                </div>
-                                <div className="video-main-content">
-                                    <h3>{activeVideo.title}</h3>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Side List */}
-                        <div className="video-side-list">
-                            {eventVideos.filter(v => v._id !== activeVideo?._id).slice(0, 3).map(video => (
-                                <div
-                                    key={video._id}
-                                    className="video-side-item"
-                                    onClick={() => setActiveVideo(video)}
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    <div className="side-video-thumb">
-                                        <img src={video.thumbnail.startsWith('http') ? video.thumbnail : `${API_BASE_URL}${video.thumbnail.startsWith('/') ? '' : '/'}${video.thumbnail}`} alt={video.title} />
-                                        <div className="play-overlay">
-                                            <PlayCircle size={32} />
-                                        </div>
-                                    </div>
-                                    <div className="side-video-info">
-                                        <h4>{video.title}</h4>
-                                        <span className="watch-now-txt">{t('events.watchNow')}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </section>
+         
 
             <Footer />
         </div>
