@@ -291,12 +291,14 @@ export default function DoctorsScreen() {
   };
 
   const getTranslatedStatus = (status) => {
+    if (!status) return '';
     if (locale !== 'hi') return status;
     if (status === 'Available Now') return 'अभी उपलब्ध';
     if (status === 'Not Available Today') return 'आज उपलब्ध नहीं';
     if (status === 'Shift Ended') return 'शिफ्ट समाप्त';
     if (status === 'Not Available') return 'उपलब्ध नहीं';
     if (status === 'Scheduled') return 'निर्धारित';
+    if (status === 'Absent') return 'अनुपस्थित';
     if (status.startsWith('Available in')) {
       return status.replace('Available in', '').replace('minutes', 'मिनट में उपलब्ध').replace('hours', 'घंटे में उपलब्ध').replace('hour', 'घंटे में उपलब्ध').trim();
     }
@@ -416,7 +418,7 @@ export default function DoctorsScreen() {
 
               {doctorNotice ? (
                 <View style={styles.noticeBox}>
-                  <Ionicons name="megaphone" size={15} color="#b45309" style={styles.noticeIcon} />
+                  <Text style={styles.noticeLabel}>{locale === 'hi' ? 'वार: ' : 'Days: '}</Text>
                   <Text style={styles.noticeText}>{doctorNotice}</Text>
                 </View>
               ) : null}
@@ -708,7 +710,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 14,
   },
-  noticeIcon: { marginRight: 8 },
+  noticeLabel: { fontSize: 13, color: '#b45309', fontWeight: '800' },
   noticeText: { fontSize: 13, color: '#b45309', fontWeight: '700', flex: 1, lineHeight: 18 },
 
   statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 16 },
