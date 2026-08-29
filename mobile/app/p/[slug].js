@@ -63,7 +63,7 @@ export default function DynamicCmsScreen() {
     const cleaned = text.replace(/<[^>]*>/g, '').trim().toLowerCase();
 
     if (cleaned.includes('become a mission partner')) return 'मिशन भागीदार बनें';
-    if (cleaned.includes('join the dharmarth Medical foundation as a motivator')) return 'एक प्रेरक के रूप में द धर्मार्थ फाउंडेशन से जुड़ें। जीवन बदलने वाले कारणों से दाताओं को जोड़ने में हमारी मदद करें और अपने प्रभाव के लिए पारदर्शी प्रोत्साहन अर्जित करें।';
+    if (cleaned.includes('join The dharmarth Medical foundation as a motivator')) return 'एक प्रेरक के रूप में द धर्मार्थ फाउंडेशन से जुड़ें। जीवन बदलने वाले कारणों से दाताओं को जोड़ने में हमारी मदद करें और अपने प्रभाव के लिए पारदर्शी प्रोत्साहन अर्जित करें।';
     if (cleaned.includes('how it works')) return 'यह कैसे काम करता है';
     if (cleaned.includes('a simple, transparent process')) return 'एक प्रेरक के रूप में अपनी यात्रा शुरू करने की एक सरल, पारदर्शी प्रक्रिया।';
     if (cleaned.includes('create account')) return 'खाता बनाएं';

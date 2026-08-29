@@ -1,5 +1,6 @@
 const DoctorCategory = require('../models/DoctorCategory');
 const Doctor = require('../models/Doctor');
+const { escapeRegex } = require('../utils/sanitizer');
 
 // Get all doctor categories
 exports.getAllCategories = async (req, res) => {
@@ -23,18 +24,20 @@ exports.createCategory = async (req, res) => {
     try {
         const { name, icon, isActive } = req.body;
 
-        if (!name) {
+        if (!name || !name.trim()) {
             return res.status(400).json({ message: 'Category name is required' });
         }
 
+        const trimmedName = name.trim();
+
         // Check if category already exists
-        const existing = await DoctorCategory.findOne({ name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
+        const existing = await DoctorCategory.findOne({ name: { $regex: new RegExp(`^${escapeRegex(trimmedName)}$`, 'i') } });
         if (existing) {
             return res.status(400).json({ message: 'Category already exists' });
         }
 
         const category = new DoctorCategory({
-            name: name.trim(),
+            name: trimmedName,
             icon: icon || '',
             isActive: isActive !== undefined ? isActive : true
         });
@@ -42,6 +45,9 @@ exports.createCategory = async (req, res) => {
         await category.save();
         res.status(201).json(category);
     } catch (error) {
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'Category already exists', error: error.message });
+        }
         res.status(400).json({ message: 'Error creating category', error: error.message });
     }
 };
@@ -56,14 +62,18 @@ exports.updateCategory = async (req, res) => {
             return res.status(404).json({ message: 'Category not found' });
         }
 
-        if (name && name.trim().toLowerCase() !== category.name.toLowerCase()) {
-            const existing = await DoctorCategory.findOne({ name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
-            if (existing) {
-                return res.status(400).json({ message: 'Category with this name already exists' });
+        if (name && name.trim()) {
+            const trimmedName = name.trim();
+            if (trimmedName.toLowerCase() !== category.name.toLowerCase()) {
+                const existing = await DoctorCategory.findOne({ 
+                    _id: { $ne: req.params.id },
+                    name: { $regex: new RegExp(`^${escapeRegex(trimmedName)}$`, 'i') } 
+                });
+                if (existing) {
+                    return res.status(400).json({ message: 'Category with this name already exists' });
+                }
             }
-            category.name = name.trim();
-        } else if (name) {
-            category.name = name.trim();
+            category.name = trimmedName;
         }
 
         if (icon !== undefined) category.icon = icon;
@@ -72,6 +82,9 @@ exports.updateCategory = async (req, res) => {
         await category.save();
         res.json(category);
     } catch (error) {
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'Category with this name already exists', error: error.message });
+        }
         res.status(400).json({ message: 'Error updating category', error: error.message });
     }
 };

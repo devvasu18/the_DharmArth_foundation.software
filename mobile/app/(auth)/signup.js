@@ -130,7 +130,7 @@ export default function Signup() {
             <Text style={styles.langText}>{locale === 'hi' ? 'English' : 'हिंदी'}</Text>
           </TouchableOpacity>
           <Text style={styles.title}>{locale === 'hi' ? 'खाता बनाएं' : 'Create Account'}</Text>
-          <Text style={styles.subtitle}>{locale === 'hi' ? 'द धर्मअर्थ मेडिकल फाउंडेशन से जुड़ें' : 'Join the Dharmarth Medical Foundation'}</Text>
+          <Text style={styles.subtitle}>{locale === 'hi' ? 'द धर्मअर्थ मेडिकल फाउंडेशन से जुड़ें' : 'Join The Dharmarth Medical Foundation'}</Text>
         </View>
 
         <View style={styles.card}>
