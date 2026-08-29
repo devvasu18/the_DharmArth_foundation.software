@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { API_BASE_URL } from '../../services/api';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Search, Tag } from 'lucide-react';
 import './AdminDoctors.css';
 
 const API_URL = `${API_BASE_URL}/api`;
@@ -98,6 +98,8 @@ const AdminDoctors = () => {
     const [showCategoryModal, setShowCategoryModal] = useState(false);
     const [categoryFormData, setCategoryFormData] = useState({ name: '', icon: '', isActive: true });
     const [editingCategory, setEditingCategory] = useState(null);
+    const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const [formData, setFormData] = useState({
         name: '',
@@ -610,6 +612,33 @@ const AdminDoctors = () => {
         currentTab = 'date-slots';
     }
 
+    const filteredDoctors = doctors.filter(doctor => {
+        // Category Filter
+        if (selectedCategoryFilter !== 'all') {
+            if (selectedCategoryFilter === 'uncategorized') {
+                if (doctor.categories && doctor.categories.length > 0) return false;
+            } else {
+                const hasCategory = (doctor.categories || []).some(cat => {
+                    const catId = typeof cat === 'object' ? cat._id : cat;
+                    return catId === selectedCategoryFilter;
+                });
+                if (!hasCategory) return false;
+            }
+        }
+
+        // Search Filter
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase().trim();
+            const nameMatch = (doctor.name || '').toLowerCase().includes(q);
+            const titleMatch = (doctor.title || '').toLowerCase().includes(q);
+            const expMatch = (doctor.experience || '').toLowerCase().includes(q);
+            const descMatch = (doctor.description || '').toLowerCase().includes(q);
+            if (!nameMatch && !titleMatch && !expMatch && !descMatch) return false;
+        }
+
+        return true;
+    });
+
     return (
         <div className="admin-doctors">
             <div className="admin-doctors-header">
@@ -648,59 +677,316 @@ const AdminDoctors = () => {
                 </div>
             </div>
 
-            <div className="doctors-grid">
-                {doctors.map(doctor => (
-                    <div key={doctor._id} className={`doctor-card ${doctor.type}`}>
-                        <div className="doctor-card-header">
-                            <div className="doctor-type-badge">
-                                {doctor.type === 'government' ? '🏥 Government' : doctor.type === 'clinic' ? '🏨 Clinic' : '🏥 Works in Both'}
-                            </div>
-                        </div>
+            {/* Category & Search Filter Bar */}
+            <div className="doctor-filter-bar" style={{
+                background: 'white',
+                padding: '16px 20px',
+                borderRadius: '12px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                marginBottom: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '14px',
+                border: '1px solid #e2e8f0'
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: '700', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Tag size={16} color="#4f46e5" /> Filter by Category:
+                        </span>
+                        <span style={{ fontSize: '0.85rem', color: '#64748b', background: '#f1f5f9', padding: '2px 10px', borderRadius: '12px', fontWeight: '600' }}>
+                            Showing {filteredDoctors.length} of {doctors.length}
+                        </span>
+                    </div>
 
-                        <div className="doctor-photo">
-                            {doctor.photo ? (
-                                <img src={doctor.photo.startsWith('http') ? doctor.photo : `${API_BASE_URL}${doctor.photo.startsWith('/') ? '' : '/'}${doctor.photo}`} alt={doctor.name} />
-                            ) : (
-                                <div className="photo-placeholder">👨‍⚕️</div>
+                    {/* Search Input and Reset */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1', maxWidth: '380px', minWidth: '220px' }}>
+                        <div style={{ position: 'relative', width: '100%' }}>
+                            <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                            <input
+                                type="text"
+                                placeholder="Search doctor by name or title..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '7px 10px 7px 32px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #cbd5e1',
+                                    fontSize: '0.85rem',
+                                    outline: 'none'
+                                }}
+                            />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchQuery('')}
+                                    style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '1rem', padding: 0 }}
+                                >
+                                    ×
+                                </button>
                             )}
                         </div>
 
-                        <div className="doctor-info">
-                            <h3>{doctor.name}</h3>
-                            <p className="doctor-title">{doctor.title}</p>
-                            <p className="doctor-experience"> {doctor.experience}</p>
-                            <div className="expertise-badge">{doctor.expertiseBadge}</div>
+                        {(selectedCategoryFilter !== 'all' || searchQuery) && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSelectedCategoryFilter('all');
+                                    setSearchQuery('');
+                                }}
+                                style={{
+                                    background: '#fee2e2',
+                                    border: '1px solid #fecaca',
+                                    borderRadius: '8px',
+                                    padding: '7px 12px',
+                                    fontSize: '0.8rem',
+                                    color: '#b91c1c',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                Reset
+                            </button>
+                        )}
+                    </div>
+                </div>
 
-                            {doctor.description && (
-                                <p className="doctor-description-preview" style={{ fontSize: '0.8rem', color: '#64748b', margin: '6px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontStyle: 'italic' }}>
-                                    {doctor.description}
-                                </p>
-                            )}
+                {/* Category Pills */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                    <button
+                        type="button"
+                        onClick={() => setSelectedCategoryFilter('all')}
+                        style={{
+                            padding: '6px 14px',
+                            borderRadius: '20px',
+                            fontSize: '0.85rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            border: selectedCategoryFilter === 'all' ? '2px solid #4f46e5' : '1px solid #e2e8f0',
+                            background: selectedCategoryFilter === 'all' ? '#eef2ff' : '#f8fafc',
+                            color: selectedCategoryFilter === 'all' ? '#4338ca' : '#475569',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'all 0.15s ease'
+                        }}
+                    >
+                        <span>👨‍⚕️ All Doctors</span>
+                        <span style={{
+                            background: selectedCategoryFilter === 'all' ? '#4f46e5' : '#e2e8f0',
+                            color: selectedCategoryFilter === 'all' ? '#ffffff' : '#64748b',
+                            padding: '1px 6px',
+                            borderRadius: '10px',
+                            fontSize: '0.75rem',
+                            fontWeight: '700'
+                        }}>
+                            {doctors.length}
+                        </span>
+                    </button>
 
-                            {doctor.notice && (
-                                <div className="doctor-notice-preview" style={{ fontSize: '0.8rem', color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', padding: '4px 8px', margin: '6px 0', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                    <span>📢</span> <span>{doctor.notice}</span>
-                                </div>
-                            )}
-
-
-                            {doctor.type === 'clinic' && doctor.priority > 0 && (
-                                <div className="priority-badge">⭐ Priority {doctor.priority}</div>
-                            )}
-
-                            <div className="doctor-status">
-                                <span className={`status-indicator ${doctor.isActive ? 'active' : 'inactive'}`}>
-                                    {doctor.isActive ? '✓ Active' : '✗ Inactive'}
+                    {categories.map(cat => {
+                        const count = doctors.filter(doc => (doc.categories || []).some(c => (typeof c === 'object' ? c._id : c) === cat._id)).length;
+                        const isSelected = selectedCategoryFilter === cat._id;
+                        return (
+                            <button
+                                key={cat._id}
+                                type="button"
+                                onClick={() => setSelectedCategoryFilter(isSelected ? 'all' : cat._id)}
+                                style={{
+                                    padding: '6px 14px',
+                                    borderRadius: '20px',
+                                    fontSize: '0.85rem',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    border: isSelected ? '2px solid #4f46e5' : '1px solid #e2e8f0',
+                                    background: isSelected ? '#eef2ff' : '#ffffff',
+                                    color: isSelected ? '#4338ca' : '#334155',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    transition: 'all 0.15s ease',
+                                    boxShadow: isSelected ? '0 2px 6px rgba(79, 70, 229, 0.15)' : 'none'
+                                }}
+                            >
+                                <span>{cat.icon || '🩺'}</span>
+                                <span>{cat.name}</span>
+                                <span style={{
+                                    background: isSelected ? '#4f46e5' : '#f1f5f9',
+                                    color: isSelected ? '#ffffff' : '#64748b',
+                                    padding: '1px 6px',
+                                    borderRadius: '10px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '700'
+                                }}>
+                                    {count}
                                 </span>
-                            </div>
-                        </div>
+                            </button>
+                        );
+                    })}
 
-                        <div className="doctor-card-actions">
-                            <button className="btn-edit" onClick={() => openModal(doctor)}>Edit</button>
-                            <button className="btn-delete" onClick={() => handleDelete(doctor._id)}>Delete</button>
+                    {doctors.some(doc => !doc.categories || doc.categories.length === 0) && (
+                        <button
+                            type="button"
+                            onClick={() => setSelectedCategoryFilter(selectedCategoryFilter === 'uncategorized' ? 'all' : 'uncategorized')}
+                            style={{
+                                padding: '6px 14px',
+                                borderRadius: '20px',
+                                fontSize: '0.85rem',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                border: selectedCategoryFilter === 'uncategorized' ? '2px solid #64748b' : '1px dashed #cbd5e1',
+                                background: selectedCategoryFilter === 'uncategorized' ? '#f1f5f9' : '#ffffff',
+                                color: selectedCategoryFilter === 'uncategorized' ? '#0f172a' : '#64748b',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                transition: 'all 0.15s ease'
+                            }}
+                        >
+                            <span>🏷️ Unassigned</span>
+                            <span style={{
+                                background: selectedCategoryFilter === 'uncategorized' ? '#64748b' : '#f1f5f9',
+                                color: selectedCategoryFilter === 'uncategorized' ? '#ffffff' : '#64748b',
+                                padding: '1px 6px',
+                                borderRadius: '10px',
+                                fontSize: '0.75rem',
+                                fontWeight: '700'
+                            }}>
+                                {doctors.filter(doc => !doc.categories || doc.categories.length === 0).length}
+                            </span>
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <div className="doctors-grid">
+                {filteredDoctors.length === 0 ? (
+                    <div style={{
+                        gridColumn: '1 / -1',
+                        textAlign: 'center',
+                        padding: '48px 20px',
+                        background: 'white',
+                        borderRadius: '12px',
+                        border: '1px dashed #cbd5e1'
+                    }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '12px' }}>👨‍⚕️</div>
+                        <h4 style={{ color: '#1e293b', margin: '0 0 6px 0', fontSize: '1.1rem', fontWeight: '700' }}>No doctors found</h4>
+                        <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0 0 16px 0' }}>
+                            {selectedCategoryFilter !== 'all' || searchQuery
+                                ? 'No doctors match your selected category or search filter.'
+                                : 'No doctors have been created yet.'}
+                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+                            {(selectedCategoryFilter !== 'all' || searchQuery) && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedCategoryFilter('all');
+                                        setSearchQuery('');
+                                    }}
+                                    style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', color: '#334155' }}
+                                >
+                                    Show All Doctors
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => openModal()}
+                                style={{ background: '#4f46e5', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', color: 'white' }}
+                            >
+                                + Add New Doctor
+                            </button>
                         </div>
                     </div>
-                ))}
+                ) : (
+                    filteredDoctors.map(doctor => (
+                        <div key={doctor._id} className={`doctor-card ${doctor.type}`}>
+                            <div className="doctor-card-header">
+                                <div className="doctor-type-badge">
+                                    {doctor.type === 'government' ? '🏥 Government' : doctor.type === 'clinic' ? '🏨 Clinic' : '🏥 Works in Both'}
+                                </div>
+                            </div>
+
+                            <div className="doctor-photo">
+                                {doctor.photo ? (
+                                    <img src={doctor.photo.startsWith('http') ? doctor.photo : `${API_BASE_URL}${doctor.photo.startsWith('/') ? '' : '/'}${doctor.photo}`} alt={doctor.name} />
+                                ) : (
+                                    <div className="photo-placeholder">👨‍⚕️</div>
+                                )}
+                            </div>
+
+                            <div className="doctor-info">
+                                <h3>{doctor.name}</h3>
+                                <p className="doctor-title">{doctor.title}</p>
+                                <p className="doctor-experience"> {doctor.experience}</p>
+                                <div className="expertise-badge">{doctor.expertiseBadge}</div>
+
+                                {/* Doctor Category Badges */}
+                                {doctor.categories && doctor.categories.length > 0 && (
+                                    <div className="doctor-categories-tags" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', margin: '8px 0' }}>
+                                        {doctor.categories.map(cat => {
+                                            const catObj = typeof cat === 'object' ? cat : categories.find(c => c._id === cat);
+                                            if (!catObj) return null;
+                                            return (
+                                                <span
+                                                    key={catObj._id || cat}
+                                                    onClick={() => setSelectedCategoryFilter(catObj._id)}
+                                                    style={{
+                                                        fontSize: '0.75rem',
+                                                        background: selectedCategoryFilter === catObj._id ? '#e0e7ff' : '#f1f5f9',
+                                                        color: selectedCategoryFilter === catObj._id ? '#3730a3' : '#475569',
+                                                        border: selectedCategoryFilter === catObj._id ? '1px solid #c7d2fe' : '1px solid #e2e8f0',
+                                                        padding: '3px 8px',
+                                                        borderRadius: '12px',
+                                                        fontWeight: '600',
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.15s ease'
+                                                    }}
+                                                    title={`Filter by ${catObj.name}`}
+                                                >
+                                                    <span>{catObj.icon || '🩺'}</span>
+                                                    <span>{catObj.name}</span>
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+
+                                {doctor.description && (
+                                    <p className="doctor-description-preview" style={{ fontSize: '0.8rem', color: '#64748b', margin: '6px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontStyle: 'italic' }}>
+                                        {doctor.description}
+                                    </p>
+                                )}
+
+                                {doctor.notice && (
+                                    <div className="doctor-notice-preview" style={{ fontSize: '0.8rem', color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', padding: '4px 8px', margin: '6px 0', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <span>📢</span> <span>{doctor.notice}</span>
+                                    </div>
+                                )}
+
+                                {doctor.type === 'clinic' && doctor.priority > 0 && (
+                                    <div className="priority-badge">⭐ Priority {doctor.priority}</div>
+                                )}
+
+                                <div className="doctor-status">
+                                    <span className={`status-indicator ${doctor.isActive ? 'active' : 'inactive'}`}>
+                                        {doctor.isActive ? '✓ Active' : '✗ Inactive'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="doctor-card-actions">
+                                <button className="btn-edit" onClick={() => openModal(doctor)}>Edit</button>
+                                <button className="btn-delete" onClick={() => handleDelete(doctor._id)}>Delete</button>
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
 
             {showModal && (
