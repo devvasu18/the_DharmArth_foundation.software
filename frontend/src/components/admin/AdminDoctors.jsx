@@ -303,10 +303,13 @@ const AdminDoctors = () => {
                 fetchCategories();
             } else {
                 const data = await response.json();
-                toast.error(data.message || 'Error saving category');
+                const errMsg = data.error ? `${data.message}: ${data.error}` : (data.message || 'Error saving category');
+                console.error('Failed to save category:', data);
+                toast.error(errMsg);
             }
         } catch (error) {
-            toast.error('Error saving category');
+            console.error('Network or client error saving category:', error);
+            toast.error(error.message || 'Error saving category');
         }
     };
 

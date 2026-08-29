@@ -45,6 +45,7 @@ exports.createCategory = async (req, res) => {
         await category.save();
         res.status(201).json(category);
     } catch (error) {
+        console.error('Error creating category:', error);
         if (error.code === 11000) {
             return res.status(400).json({ message: 'Category already exists', error: error.message });
         }
@@ -82,6 +83,7 @@ exports.updateCategory = async (req, res) => {
         await category.save();
         res.json(category);
     } catch (error) {
+        console.error('Error updating category:', error);
         if (error.code === 11000) {
             return res.status(400).json({ message: 'Category with this name already exists', error: error.message });
         }
@@ -106,6 +108,7 @@ exports.deleteCategory = async (req, res) => {
 
         res.json({ message: 'Category deleted successfully' });
     } catch (error) {
+        console.error('Error deleting category:', error);
         res.status(500).json({ message: 'Error deleting category', error: error.message });
     }
 };

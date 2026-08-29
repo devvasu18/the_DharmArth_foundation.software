@@ -14,21 +14,7 @@ const doctorCategorySchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
     }
-});
-
-// Update timestamp on save
-doctorCategorySchema.pre('save', function (next) {
-    this.updatedAt = Date.now();
-    next();
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('DoctorCategory', doctorCategorySchema);
