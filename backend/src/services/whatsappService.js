@@ -7,7 +7,7 @@ const NotificationQueue = require('../models/NotificationQueue');
  */
 class WhatsappService {
     constructor() {
-        this.baseUrl = (process.env.WHATSAPP_SERVICE_URL || 'http://44.203.78.96:10000')
+        this.baseUrl = (process.env.WHATSAPP_SERVICE_URL || 'http://98.82.26.22:10000')
             .replace('http://http://', 'http://')
             .replace('/:10000', ':10000');
         this.isProcessing = false;

@@ -88,6 +88,8 @@ export default function DonateScreen() {
   const mobileInputRef = useRef(null);
   const panInputRef = useRef(null);
   const aadhaarInputRef = useRef(null);
+  const isAmountManuallyEdited = useRef(false);
+  const hasLoadedSettings = useRef(false);
 
   // Validation Errors State
   const [errors, setErrors] = useState({
@@ -119,7 +121,10 @@ export default function DonateScreen() {
 
   useFocusEffect(
     React.useCallback(() => {
-      fetchSettings();
+      if (!hasLoadedSettings.current) {
+        hasLoadedSettings.current = true;
+        fetchSettings();
+      }
 
       const urlMotivator = routeParams?.motivator || routeParams?.ref;
       if (urlMotivator && !isMotivatorLocked) {
@@ -165,8 +170,11 @@ export default function DonateScreen() {
           ? JSON.parse(data.donation_config)
           : data.donation_config;
         setConfig(dConfig);
-        setAmount(dConfig.popularAmount || dConfig.plans[0]);
-        setCustomAmount((dConfig.popularAmount || dConfig.plans[0]).toString());
+        if (!isAmountManuallyEdited.current) {
+          const defaultAmt = dConfig.popularAmount || dConfig.plans?.[0] || 1000;
+          setAmount(defaultAmt);
+          setCustomAmount(defaultAmt.toString());
+        }
       }
       if (data.donation_label) setDonationLabel(data.donation_label);
       if (data.donation_label_hi) setDonationLabelHi(data.donation_label_hi);
@@ -420,7 +428,7 @@ export default function DonateScreen() {
         description: 'Monthly Donation',
         image: 'https://res.cloudinary.com/dbe1ykvg8/image/upload/v1783602963/the_dharmarth_foundation/logo.jpg',
         currency: data.currency || 'INR',
-        key: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_SvdzLNA9hdG9PL',
+        key: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_TlhzLU5ST8XRIt',
         name: 'The Dharmarth Medical Foundation',
         prefill: {
           contact: mobile,
@@ -694,6 +702,7 @@ export default function DonateScreen() {
               key={`amount-${p}-${index}`}
               style={[styles.amountBtn, amount === p && styles.amountBtnActive]}
               onPress={() => {
+                isAmountManuallyEdited.current = true;
                 setAmount(p);
                 setCustomAmount(p.toString());
                 if (errors.amount) setErrors(prev => ({ ...prev, amount: false }));
@@ -714,8 +723,15 @@ export default function DonateScreen() {
             keyboardType="number-pad"
             value={customAmount}
             onChangeText={(t) => {
-              setCustomAmount(t);
-              setAmount(0);
+              isAmountManuallyEdited.current = true;
+              const clean = t.replace(/[^0-9]/g, '');
+              setCustomAmount(clean);
+              const num = parseInt(clean, 10);
+              if (config.plans && config.plans.includes(num)) {
+                setAmount(num);
+              } else {
+                setAmount(0);
+              }
               if (errors.amount) setErrors(prev => ({ ...prev, amount: false }));
             }}
           />

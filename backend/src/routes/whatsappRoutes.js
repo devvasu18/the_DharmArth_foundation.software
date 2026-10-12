@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect, adminOnly } = require('../middlewares/authMiddleware');
 
-const WHATSAPP_SERVICE_URL = (process.env.WHATSAPP_SERVICE_URL || 'http://44.203.78.96:10000')
+const WHATSAPP_SERVICE_URL = (process.env.WHATSAPP_SERVICE_URL || 'http://98.82.26.22:10000')
     .replace('http://http://', 'http://')
     .replace('/:10000', ':10000');
 const WHATSAPP_SERVICE_API_KEY = process.env.WHATSAPP_SERVICE_API_KEY || 'df_ws_auth_6f8b9e2c4a1d3c5b7e9f0a2b4c6d8e0f';

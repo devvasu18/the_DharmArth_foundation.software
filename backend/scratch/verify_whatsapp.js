@@ -6,7 +6,7 @@ const whatsappService = require('../src/services/whatsappService');
 
 async function verify() {
     console.log("Checking WhatsApp Service Configuration...");
-    const url = process.env.WHATSAPP_SERVICE_URL || 'http://44.203.78.96:10000';
+    const url = process.env.WHATSAPP_SERVICE_URL || 'http://98.82.26.22:10000';
     console.log("URL:", url);
 
     if (!process.env.WHATSAPP_SERVICE_URL) {

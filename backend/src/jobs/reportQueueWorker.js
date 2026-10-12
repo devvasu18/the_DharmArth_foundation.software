@@ -39,7 +39,7 @@ const compileMessage = (report) => {
 
 // Send report message via WhatsApp service HTTP request directly to capture status codes
 const sendWhatsAppWithRateLimitCheck = async (number, message) => {
-    const baseUrl = (process.env.WHATSAPP_SERVICE_URL || 'http://44.203.78.96:10000')
+    const baseUrl = (process.env.WHATSAPP_SERVICE_URL || 'http://98.82.26.22:10000')
         .replace('http://http://', 'http://')
         .replace('/:10000', ':10000');
         
