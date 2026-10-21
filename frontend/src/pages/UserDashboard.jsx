@@ -559,9 +559,9 @@ const UserDashboard = () => {
 
                                 <p className="share-desc ">
                                     {isHindi ? (
-                                        <>इस लिंक को अपने व्हाट्सएप मित्रों के साथ शेयर करें। जब कोई आपके लिंक से दान करता है, तो आपको तुरंत अपने वॉलेट में दान का <strong>10% सेवा प्रोत्साहन राशि </strong> प्राप्त होता है!</>
+                                        <>इस लिंक को अपने व्हाट्सएप मित्रों के साथ शेयर करें। जब कोई आपके लिंक से दान करता है, तो आपको तुरंत अपने वॉलेट में दान का <strong>10% अंक </strong> अर्जित होंगे!</>
                                     ) : (
-                                        <>Share this link with your friends by WhatsApp. When someone donates using your link, you earn a <strong>10% Service Support Incentive </strong> instantly in your wallet!</>
+                                        <>Share this link with your friends by WhatsApp. When someone donates using your link, you earn a <strong>10% Score </strong> instantly in your wallet!</>
                                     )}
                                 </p>
 

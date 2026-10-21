@@ -114,7 +114,7 @@ const LandingScreen = () => {
 
   const handleJoin = () => {
     if (user) {
-      router.push('/dashboard');
+      router.push('/profile');
     } else {
       router.push('/signup');
     }
@@ -242,7 +242,7 @@ const LandingScreen = () => {
               style={[styles.quickLinkBtn, { backgroundColor: '#af8fbe' }]}
               onPress={() => router.push('/p/join-and-earn')}
             >
-              <Text style={styles.quickLinkText}>{locale === 'hi' ? 'जुड़ें और\nकमाएं' : 'Join &\nEarn'}</Text>
+              <Text style={styles.quickLinkText}>{locale === 'hi' ? 'अभी जुड़ें' : 'Join Now'}</Text>
               <Ionicons name="people" size={38} color="white" />
             </TouchableOpacity>
 
@@ -315,7 +315,7 @@ const LandingScreen = () => {
                   }
                 ]}
               >
-                {locale === 'hi' ? 'शेयर करें और कमाएं' : 'Share and Earn'}
+                {locale === 'hi' ? 'शेयर करें ' : 'Share '}
               </Text>
               <Ionicons name="share-social" size={30} color="white" />
             </TouchableOpacity>

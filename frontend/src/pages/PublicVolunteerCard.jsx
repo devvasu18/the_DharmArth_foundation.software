@@ -271,8 +271,8 @@ const PublicVolunteerCard = () => {
                                     <h4 className="how-title">{isHindi ? 'यह कैसे काम करता है?' : 'How it works?'}</h4>
                                     <p className="how-desc">
                                         {isHindi
-                                            ? 'जब कोई आपके लिंक पर क्लिक करता है और दान करता है, तो वे स्वचालित रूप से आपके नेटवर्क में जुड़ जाते हैं। आप अपने लिंक से किए गए प्रत्येक सफल दान पर सेवा प्रोत्साहन राशि कमाते हैं!'
-                                            : 'When someone clicks your link and makes a donation, they are automatically added to your network. You earn Service Support Incentive on every successful donation made through your link!'}
+                                            ? 'जब कोई आपके लिंक पर क्लिक करता है और दान करता है, तो वे स्वचालित रूप से आपके नेटवर्क में जुड़ जाते हैं। आप अपने लिंक से किए गए प्रत्येक सफल दान पर अंक अर्जित करते हैं!'
+                                            : 'When someone clicks your link and makes a donation, they are automatically added to your network. You earn Score on every successful donation made through your link!'}
                                     </p>
                                 </div>
                             </div>

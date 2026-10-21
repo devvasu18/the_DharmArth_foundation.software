@@ -92,7 +92,6 @@ export default function TabLayout() {
 
   const menuItems = [
     { label: t('navbar.leaderboard') || 'Leaderboard', icon: 'trophy-outline', route: '/leaderboard', public: true },
-    { label: t('navbar.myEarnings'), icon: 'wallet-outline', route: '/dashboard' },
     { label: t('navbar.myProfile'), icon: 'person-outline', route: '/profile' },
     { label: t('navbar.mySubscriptions'), icon: 'card-outline', route: '/my-subscriptions' },
     { label: t('navbar.myNetwork'), icon: 'git-network-outline', route: '/my-network' },
@@ -312,11 +311,16 @@ export default function TabLayout() {
         <Tabs.Screen
           name="dashboard"
           options={{
-            title: t('navbar.dashboard'),
+            title: t('navbar.profile'),
             tabBarLabel: t('navbar.profile'),
             tabBarIcon: ({ color }) => <Ionicons name="person" size={24} color={color} />,
           }}
-          listeners={{ tabPress: (e) => handleTabChange(e, '/dashboard') }}
+          listeners={{
+            tabPress: (e) => {
+              e.preventDefault();
+              navigateTo('/profile');
+            }
+          }}
         />
         <Tabs.Screen name="referrals" options={{ href: null }} />
         <Tabs.Screen name="profile" options={{ href: null }} />

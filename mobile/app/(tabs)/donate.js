@@ -543,7 +543,7 @@ export default function DonateScreen() {
 
       login(data);
       Alert.alert('Success', 'Account Created Successfully!');
-      router.replace('/dashboard');
+      router.replace('/profile');
     } catch (error) {
       console.error("Registration failed:", error);
       Alert.alert('Registration Failed', error.response?.data?.message || 'Something went wrong');
@@ -654,11 +654,11 @@ export default function DonateScreen() {
 
           <TouchableOpacity
             style={styles.goHomeBtn}
-            onPress={() => router.replace(isLoggedIn ? '/dashboard' : '/')}
+            onPress={() => router.replace(isLoggedIn ? '/profile' : '/')}
           >
             <Text style={styles.goHomeText}>
               {isLoggedIn
-                ? (locale === 'hi' ? 'डैशबोर्ड पर जाएं' : 'Go to Dashboard')
+                ? (locale === 'hi' ? 'प्रोफ़ाइल पर जाएं' : 'Go to Profile')
                 : (locale === 'hi' ? 'छोड़ें और होम पर जाएं' : 'Skip & Go Home')}
             </Text>
             <Ionicons name="arrow-forward" size={18} color="#00bfa5" />
