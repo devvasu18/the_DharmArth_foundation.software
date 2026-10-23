@@ -40,9 +40,36 @@ const orderSchema = new mongoose.Schema({
         platformFee: Number,
         deliveryCharge: Number
     },
+    recipientDetails: {
+        type: { type: String, enum: ['Self', 'Other'], default: 'Self' },
+        patientName: String,
+        patientPhone: String,
+        relation: String
+    },
+    courseDays: {
+        type: Number,
+        default: 15
+    },
+    advancePaymentDetails: {
+        isAdvanceOrder: { type: Boolean, default: false },
+        tokenPercentage: { type: Number, default: 50 },
+        advanceAmountPaid: { type: Number, default: 0 },
+        originalEstimatedTotal: Number,
+        revisedTotalOnArrival: Number,
+        balanceDue: { type: Number, default: 0 },
+        restockedAt: Date,
+        refundStatus: { type: String, enum: ['None', 'Eligible', 'Processed'], default: 'None' }
+    },
+    doctorConsultation: {
+        required: { type: Boolean, default: false },
+        doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        status: { type: String, enum: ['Not Required', 'Pending', 'Approved', 'Rejected'], default: 'Not Required' },
+        decisionNotes: String,
+        consultedAt: Date
+    },
     status: {
         type: String,
-        enum: ['Awaiting Approval', 'Payment Pending', 'Processing', 'Ready for Packing', 'Ready for Dispatch', 'Out for Delivery', 'Delivered', 'Cancelled'],
+        enum: ['Awaiting Approval', 'Payment Pending', 'Doctor Consultation Pending', 'Advance Paid', 'Processing', 'Ready for Packing', 'Ready for Dispatch', 'In Transit', 'Arrived at Partner Shop', 'Out for Delivery', 'Delivered', 'Cancelled'],
         default: 'Payment Pending'
     },
     shippingAddress: {
@@ -51,12 +78,23 @@ const orderSchema = new mongoose.Schema({
         state: String,
         zip: String,
         phone: String,
-        altPhone: String
+        altPhone: String,
+        villageName: String,
+        stoppageName: String
+    },
+    partnerShop: {
+        partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        shopName: String,
+        location: String,
+        receivedFromBusAt: Date,
+        pickupOtp: String,
+        codCollected: { type: Boolean, default: false },
+        codAmount: { type: Number, default: 0 }
     },
     paymentDetails: {
-        method: { type: String, enum: ['COD', 'Online', 'Wallet'], default: 'Online' },
+        method: { type: String, enum: ['COD', 'Online', 'Wallet', 'PARTNER_COD'], default: 'Online' },
         transactionId: String,
-        status: { type: String, enum: ['Pending', 'Completed', 'Failed'], default: 'Pending' }
+        status: { type: String, enum: ['Pending', 'Partially Paid', 'Completed', 'Failed', 'Refunded'], default: 'Pending' }
     },
     orderType: {
         type: String,
@@ -65,7 +103,7 @@ const orderSchema = new mongoose.Schema({
     },
     orderSource: {
         type: String,
-        enum: ['Website', 'Created by Medical/Admin'],
+        enum: ['Website', 'Created by Medical/Admin', 'Phone Call Intake'],
         default: 'Website'
     },
     statusHistory: [{

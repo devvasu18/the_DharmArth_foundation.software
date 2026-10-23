@@ -207,15 +207,26 @@ class NotificationService {
     /**
      * Specialized: Prescription Order Paid Alert for Admin
      */
-    async notifyOrderPaidAdmin(order, user, io) {
-        const msg = `💰 Order Paid: ₹${order.totalAmount} received from ${user?.name || 'Customer'} (${user?.mobile || 'N/A'}) for Order #${order._id}`;
+    /**
+     * Specialized: Order Arrived at Village Partner Shop Alert for User
+     */
+    async notifyOrderArrivedAtPartnerShop(order, user, partner, io) {
+        const trackerUrl = `${process.env.FRONTEND_URL || 'https://thedharmarth.com'}/track/${order._id}`;
+        const shopName = order.partnerShop?.shopName || partner?.name || 'गाँव की पार्टनर दुकान';
+        const otp = order.partnerShop?.pickupOtp ? `पिकअप OTP: ${order.partnerShop.pickupOtp}` : '';
+        const codMsg = order.paymentDetails?.method === 'PARTNER_COD' 
+            ? `नकद राशि देय: ₹${order.totalAmount}` 
+            : `भुगतान: पूर्ण`;
+        
+        const msg = `🏪 आपकी दवाई ${shopName} पर पहुँच चुकी है! ${otp}. ${codMsg}. कृपया दुकान से प्राप्त करें। लाइव स्टेटस: ${trackerUrl}`;
 
         return await this.notify({
-            userId: null, // For admins
-            type: 'ORDER_PAID',
+            userId: user?._id || null,
+            type: 'ORDER_ARRIVED_AT_PARTNER_SHOP',
             message: msg,
             referenceId: order._id,
             onModel: 'Order',
+            whatsapp: user?.mobile || order.shippingAddress?.phone,
             io
         });
     }

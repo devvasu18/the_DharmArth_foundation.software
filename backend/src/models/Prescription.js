@@ -14,12 +14,22 @@ const prescriptionSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Under Review', 'Verified', 'Rejected', 'Ordered'],
+        enum: ['Pending', 'Under Review', 'Doctor Approval Pending', 'Verified', 'Rejected', 'Ordered'],
         default: 'Pending'
+    },
+    recipientDetails: {
+        type: { type: String, enum: ['Self', 'Other'], default: 'Self' },
+        patientName: String,
+        patientPhone: String,
+        relation: String
+    },
+    courseDays: {
+        type: Number,
+        default: 15
     },
     orderSource: {
         type: String,
-        enum: ['Website', 'Created by Medical/Admin'],
+        enum: ['Website', 'Created by Medical/Admin', 'Phone Call Intake'],
         default: 'Website'
     },
     notes: String,
@@ -53,6 +63,13 @@ const prescriptionSchema = new mongoose.Schema({
     }],
     userApproved: { type: Boolean, default: false },
     approvalRequired: { type: Boolean, default: false },
+    doctorConsultation: {
+        required: { type: Boolean, default: false },
+        doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        status: { type: String, enum: ['Not Required', 'Pending', 'Approved', 'Rejected'], default: 'Not Required' },
+        notes: String,
+        decidedAt: Date
+    },
     rejectionReason: String,
     adminNote: String,
     verificationLog: [{

@@ -18,8 +18,13 @@ import './OrderMedicine.css'; // Reuse styles
 
 const getStatusIndex = (status) => {
     if (status === 'Awaiting Approval') return 0;
-    const order = ['Payment Pending', 'Processing', 'Ready for Packing', 'Ready for Dispatch', 'Out for Delivery', 'Delivered'];
-    return order.indexOf(status);
+    if (status === 'Payment Pending' || status === 'Doctor Consultation Pending') return 0;
+    if (status === 'Advance Paid' || status === 'Processing') return 1;
+    if (status === 'Ready for Packing') return 2;
+    if (status === 'Ready for Dispatch') return 3;
+    if (status === 'In Transit' || status === 'Arrived at Partner Shop' || status === 'Out for Delivery') return 4;
+    if (status === 'Delivered') return 5;
+    return 1;
 };
 
 const SharedTracker = () => {
@@ -112,21 +117,40 @@ const SharedTracker = () => {
                         })()}
                     </div>
 
-                    <div className="premium-grid" style={{
-                        display: 'grid',
-                        gridTemplateColumns: (order.status === 'Out for Delivery' || order.status === 'Delivered') ? '1.1fr 0.9fr' : '1fr',
-                        gap: '30px',
-                        maxWidth: (order.status === 'Out for Delivery' || order.status === 'Delivered') ? '100%' : '600px',
-                        margin: '0 auto'
-                    }}>
-                        {/* Box 1: Dispatch & Logistics (Conditionally Shown) */}
-                        {(order.status === 'Out for Delivery' || order.status === 'Delivered') && (
-                            <section className="customer-info-pane" style={{ display: 'flex', flexDirection: 'column', minHeight: '550px', background: 'white', borderRadius: '20px', border: '2px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' }}>
-                                <div className="pane-header" style={{ background: '#f8fafc', padding: '12px 20px', borderBottom: '2px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <div className="icon-circle" style={{ width: '32px', height: '32px', background: 'white', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }}><Truck size={18} /></div>
-                                    <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', margin: 0 }}>Dispatch & Logistics</h3>
-                                </div>
-                                <div className="pane-content" style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {(() => {
+                        const hasDispatchInfo = ['In Transit', 'Arrived at Partner Shop', 'Out for Delivery', 'Delivered', 'Ready for Dispatch'].includes(order.status) || !!order.dispatchDetails?.busNumber || !!order.partnerShop?.shopName;
+                        return (
+                            <div className="premium-grid" style={{
+                                display: 'grid',
+                                gridTemplateColumns: hasDispatchInfo ? '1.1fr 0.9fr' : '1fr',
+                                gap: '30px',
+                                maxWidth: hasDispatchInfo ? '100%' : '600px',
+                                margin: '0 auto'
+                            }}>
+                                {/* Box 1: Dispatch & Logistics */}
+                                {hasDispatchInfo && (
+                                    <section className="customer-info-pane" style={{ display: 'flex', flexDirection: 'column', minHeight: '550px', background: 'white', borderRadius: '20px', border: '2px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' }}>
+                                        <div className="pane-header" style={{ background: '#f8fafc', padding: '12px 20px', borderBottom: '2px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div className="icon-circle" style={{ width: '32px', height: '32px', background: 'white', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }}><Truck size={18} /></div>
+                                            <h3 style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', margin: 0 }}>Dispatch & Logistics</h3>
+                                        </div>
+                                        <div className="pane-content" style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                            {/* Partner Shop Status Alert */}
+                                            {order.status === 'Arrived at Partner Shop' && (
+                                                <div style={{ background: '#ecfdf5', border: '1px solid #10b981', borderRadius: '12px', padding: '14px' }}>
+                                                    <div style={{ fontWeight: '800', color: '#047857', fontSize: '13px' }}>
+                                                        🏪 पार्सल पार्टनर दुकान पर पहुँच चुका है!
+                                                    </div>
+                                                    <div style={{ fontSize: '13px', color: '#065f46', marginTop: '4px' }}>
+                                                        दुकान: <strong>{order.partnerShop?.shopName || 'गाँव पार्टनर शॉप'}</strong> {order.partnerShop?.location ? `(${order.partnerShop.location})` : ''}
+                                                    </div>
+                                                    {order.paymentDetails?.method === 'PARTNER_COD' && (
+                                                        <div style={{ marginTop: '6px', fontSize: '12px', fontWeight: '700', color: '#b45309' }}>
+                                                            नकद भुगतान (Partner COD): ₹{order.totalAmount} दुकान पर जमा करें
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                     <div className="pill-info" style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px' }}>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                                             <div className="data-row">
@@ -254,11 +278,33 @@ const SharedTracker = () => {
                                             <FileText size={16} />
                                             Download Digital Invoice
                                         </button>
+
+                                        {/* Post-Delivery Customer Feedback / Suggestion Box */}
+                                        {order.status === 'Delivered' && (
+                                            <div style={{ marginTop: '20px', padding: '16px', borderRadius: '12px', background: '#f0fdf4', border: '1px solid #bbf7d0', textAlign: 'center' }}>
+                                                <h4 style={{ margin: '0 0 6px 0', color: '#166534', fontSize: '14px' }}>Delivery Feedback & Review</h4>
+                                                <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#15803d' }}>How was your medicine delivery experience?</p>
+                                                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '10px' }}>
+                                                    {['⭐', '⭐⭐', '⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐⭐⭐'].map((star, idx) => (
+                                                        <button 
+                                                            key={idx}
+                                                            onClick={() => alert('Thank you for rating your delivery!')}
+                                                            style={{ border: '1px solid #86efac', background: '#fff', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', fontSize: '11px' }}
+                                                        >
+                                                            {idx + 1} ★
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <small style={{ color: '#15803d', fontSize: '11px' }}>Have a complaint or suggestion? Call helpline: 9:00 AM - 7:00 PM</small>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         </section>
-                    </div>
+                            </div>
+                        );
+                    })()}
                 </div>
 
                 <div className="modal-actions-premium" style={{ padding: '20px', background: '#f8fafc', textAlign: 'center', fontSize: '12px', color: '#94a3b8' }}>

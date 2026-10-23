@@ -1,0 +1,222 @@
+.restocked-orders-page {
+    padding: 24px;
+}
+
+.restocked-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.restocked-header h1 {
+    font-size: 1.4rem;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 4px 0;
+}
+
+.icon-sparkle {
+    color: #f59e0b;
+}
+
+.restocked-header p {
+    color: #64748b;
+    margin: 0;
+    font-size: 0.88rem;
+}
+
+.btn-refresh {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.restocked-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+}
+
+@media (max-width: 1024px) {
+    .restocked-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.orders-table-card,
+.revision-panel-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    border: 1px solid #e2e8f0;
+}
+
+.orders-table-card h2 {
+    font-size: 1.1rem;
+    color: #1e293b;
+    margin: 0 0 16px 0;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+th {
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.advance-tag {
+    background: #fef3c7;
+    color: #b45309;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+.selected-row {
+    background: #f0fdf4;
+}
+
+.btn-recalculate-view {
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.revision-panel-card h3 {
+    margin: 0 0 16px 0;
+    font-size: 1.1rem;
+    color: #0f172a;
+}
+
+.order-summary-box {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+}
+
+.order-summary-box p {
+    margin: 4px 0;
+}
+
+.math-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #cbd5e1;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 4px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.form-group small {
+    display: block;
+    color: #64748b;
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
+
+.balance-calc-preview {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 20px;
+}
+
+.calc-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #334155;
+    margin-bottom: 6px;
+}
+
+.calc-row.total {
+    border-top: 1px solid #86efac;
+    padding-top: 8px;
+    margin-top: 8px;
+    font-size: 0.95rem;
+    color: #14532d;
+}
+
+.btn-confirm-revision {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #16a34a;
+    color: #ffffff;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.empty-restock-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 48px 24px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.empty-restock-card h3 {
+    margin: 12px 0 6px 0;
+    color: #334155;
+}

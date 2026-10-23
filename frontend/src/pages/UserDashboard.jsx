@@ -554,7 +554,7 @@ const UserDashboard = () => {
 
                                 <div className="share-header">
                                     <Share2 size={24} color="#667eea" />
-                                    <h3 className="share-title">{isHindi ? 'शेयर करें और कमाएं' : 'Share & Earn'}</h3>
+                                    <h3 className="share-title">{isHindi ? 'शेयर करें ' : 'Share '}</h3>
                                 </div>
 
                                 <p className="share-desc ">

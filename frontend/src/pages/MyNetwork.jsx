@@ -121,8 +121,8 @@ const MyNetwork = () => {
                             </div>
                         ) : (
                             referralTree.level1Users.map(l1User => {
-                                const l2Group = referralTree.level2Data.find(g => g.level1User._id === l1User._id);
-                                const hasL2 = l2Group && l2Group.level2Users.length > 0;
+                                const l2Group = referralTree?.level2Data?.find(g => String(g?.level1User?._id) === String(l1User._id));
+                                const hasL2 = l2Group && l2Group.level2Users && l2Group.level2Users.length > 0;
 
                                 return (
                                     <div key={l1User._id} className="family-column">

@@ -163,7 +163,7 @@ export default function MyNetwork() {
             <NetworkNode 
               user={referralTree?.user} 
               level="you" 
-              title={t('myNetwork.youNode').replace('{name}', referralTree?.user?.name || '')}
+              title={(t('myNetwork.youNode') || 'You ({name})').replace('{name}', referralTree?.user?.name || '')}
             />
             {directCount > 0 && <View style={styles.connectorVertical} />}
           </View>
@@ -184,11 +184,11 @@ export default function MyNetwork() {
                 </View>
               ) : (
                 referralTree?.level1Users?.map(l1User => {
-                  const l2Group = referralTree?.level2Data?.find(g => g?.level1User?._id === l1User._id);
+                  const l2Group = referralTree?.level2Data?.find(g => String(g?.level1User?._id) === String(l1User._id));
                   const l2Users = l2Group ? l2Group.level2Users : [];
                   
                   return (
-                    <View key={l1User._id} style={styles.familyColumn}>
+                    <View key={l1User._id || l1User.mobile} style={styles.familyColumn}>
                       {/* L1 Node */}
                       <NetworkNode user={l1User} level="L1" />
                       
@@ -196,7 +196,7 @@ export default function MyNetwork() {
                       {l2Users.length > 0 && (
                         <View style={styles.level2Group}>
                           {l2Users.map(l2User => (
-                            <View key={l2User._id} style={styles.level2NodeWrapper}>
+                            <View key={l2User._id || l2User.mobile} style={styles.level2NodeWrapper}>
                               <View style={styles.connectorVerticalShort} />
                               <NetworkNode user={l2User} level="L2" />
                             </View>

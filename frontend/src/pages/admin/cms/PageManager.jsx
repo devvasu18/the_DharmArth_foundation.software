@@ -124,7 +124,7 @@ const AVAILABLE_COMPONENTS = [
             steps: [
                 { title: 'Register', description: 'Create your account in seconds.' },
                 { title: 'Verify', description: 'Complete your profile verification.' },
-                { title: 'Earn', description: 'Start your mission and earn rewards.' }
+                { title: 'Earn', description: 'Start your mission ' }
             ]
         }
     },
@@ -385,7 +385,7 @@ const PageManager = () => {
                             <div className="cms-form-grid">
                                 <div className="cms-form-group full-width">
                                     <label className="cms-label">Internal Page Title</label>
-                                    <input type="text" className="cms-input" placeholder="e.g. Join and Earn" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
+                                    <input type="text" className="cms-input" placeholder="e.g. Join now" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
                                 </div>
                                 <div className="cms-form-group">
                                     <label className="cms-label">URL Slug</label>

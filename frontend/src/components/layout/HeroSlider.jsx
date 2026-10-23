@@ -265,7 +265,7 @@ const HeroSlider = () => {
 
                     <Link to="/p/join-and-earn" className="mobile-card card-purple">
                         <div className="mobile-card-text">
-                            <span>{i18n.language === 'hi' ? 'जुड़ें और कमाएं' : 'Join & Earn'}</span>
+                            <span>{i18n.language === 'hi' ? 'अभी जुड़ें ' : 'Join Now'}</span>
                         </div>
                         <div className="mobile-card-icon">
                             <Users size={38} color="#ffffff" />
@@ -297,7 +297,7 @@ const HeroSlider = () => {
 
                     <Link to={user ? `/v/${user.referralCode || user.mobile}` : "/login"} className="mobile-card card-gold full-width">
                         <div className="mobile-card-text">
-                            <span>{i18n.language === 'hi' ? 'साझा करें और कमाएं' : 'Share and Earn'}</span>
+                            <span>{i18n.language === 'hi' ? 'साझा करें ' : 'Share'}</span>
                         </div>
                         <div className="mobile-card-icon">
                             <Share2 size={24} />

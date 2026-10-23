@@ -203,8 +203,30 @@ const SharedCheckout = () => {
         setCheckoutLoading(true);
 
         try {
-            // 1. Create Razorpay Order
             const total = calculateTotal();
+
+            // Handle Partner COD or Wallet directly without Razorpay
+            if (paymentMethod === 'PARTNER_COD' || paymentMethod === 'Wallet') {
+                const { data: newOrder } = await api.post(`/prescriptions/${id}/approve`, {
+                    shippingAddress: shippingDetails,
+                    paymentMethod
+                });
+
+                toast.success(paymentMethod === 'PARTNER_COD' 
+                    ? "Order placed with Village Partner COD!" 
+                    : "Payment processed from Dharmarth Wallet!");
+
+                setPrescription(prev => ({
+                    ...prev,
+                    status: 'Ordered',
+                    orderId: newOrder._id
+                }));
+                setSuccess(true);
+                setCheckoutLoading(false);
+                return;
+            }
+
+            // 1. Create Razorpay Order for Online Payment
             const { data: rzpOrder } = await api.post('/payment/create-order', {
                 amount: total,
                 prescriptionId: id,
@@ -587,17 +609,37 @@ const SharedCheckout = () => {
                                         </div>
                                     ) : (
                                         <>
-                                            <div className="payment-options-shared">
-                                                <div className={`pay-opt ${paymentMethod === 'Online' ? 'active' : ''}`} onClick={() => setPaymentMethod('Online')}>
-                                                    <div className="check-dot"></div>
-                                                    <span>Online (Cards/UPI)</span>
-                                                </div>
+                                            <div className="payment-options-shared" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                {pharmacyConfig?.allowOnlinePayment !== false && (
+                                                    <div className={`pay-opt ${paymentMethod === 'Online' ? 'active' : ''}`} onClick={() => setPaymentMethod('Online')}>
+                                                        <div className="check-dot"></div>
+                                                        <span>💳 Online Payment Gateway (UPI / Cards / Netbanking)</span>
+                                                    </div>
+                                                )}
+                                                {pharmacyConfig?.allowWalletPayment !== false && authUser && (
+                                                    <div className={`pay-opt ${paymentMethod === 'Wallet' ? 'active' : ''}`} onClick={() => setPaymentMethod('Wallet')}>
+                                                        <div className="check-dot"></div>
+                                                        <span>👛 Dharmarth Wallet (Balance: ₹{authUser.walletBalance || 0})</span>
+                                                    </div>
+                                                )}
+                                                {pharmacyConfig?.allowPartnerCod !== false && (
+                                                    <div className={`pay-opt ${paymentMethod === 'PARTNER_COD' ? 'active' : ''}`} onClick={() => setPaymentMethod('PARTNER_COD')}>
+                                                        <div className="check-dot"></div>
+                                                        <span>🏪 Village Partner COD (गाँव की दुकान पर नकद भुगतान)</span>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <button type="submit" className="btn-finalize-order" disabled={checkoutLoading}>
-                                                {checkoutLoading ? 'Processing...' : `Pay ₹${calculateTotal().toFixed(2)} &  Order`}
+                                                {checkoutLoading ? 'Processing...' : (
+                                                    paymentMethod === 'PARTNER_COD'
+                                                        ? `Confirm Order with Village Partner COD (₹${calculateTotal().toFixed(2)})`
+                                                        : paymentMethod === 'Wallet'
+                                                            ? `Pay ₹${calculateTotal().toFixed(2)} from Wallet`
+                                                            : `Pay ₹${calculateTotal().toFixed(2)} & Complete Order`
+                                                )}
                                             </button>
-                                            <p className="secure-p"><CheckCircle size={12} /> SSL Secure Transaction</p>
+                                            <p className="secure-p"><CheckCircle size={12} /> SSL Secure & Verified Health Logistics</p>
                                         </>
                                     )}
                                 </section>

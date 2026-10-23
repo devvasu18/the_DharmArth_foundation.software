@@ -6,12 +6,24 @@ const {
     getAllOrders, 
     updateOrderStatus,
     downloadInvoice,
-    getGuestOrders
+    getGuestOrders,
+    getAdvanceOrders,
+    getRestockedAdvanceOrders,
+    recalculateRestockedPrice,
+    getPackingQueue,
+    markOrderPacked,
+    refundAdvanceOrder
 } = require('../controllers/orderController');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 
 router.get('/my', protect, getMyOrders);
 router.get('/guest-history/:mobile', getGuestOrders);
+router.get('/advance-orders', protect, getAdvanceOrders);
+router.get('/advance-orders/restocked', protect, getRestockedAdvanceOrders);
+router.get('/packing-queue', protect, getPackingQueue);
+router.post('/:id/pack', protect, markOrderPacked);
+router.post('/:id/refund-advance', protect, refundAdvanceOrder);
+router.post('/:id/recalculate-price', protect, recalculateRestockedPrice);
 router.get('/public/:id/invoice', downloadInvoice); // Publicly accessible via tracking link
 router.get('/public/:id', getOrderById); // Added for shareable tracking links
 router.get('/:id/invoice', protect, downloadInvoice);
@@ -20,3 +32,4 @@ router.get('/', protect, checkPermission('Order Management', 'view'), getAllOrde
 router.patch('/:id/status', protect, checkPermission('Order Management', 'edit'), updateOrderStatus);
 
 module.exports = router;
+

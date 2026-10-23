@@ -114,6 +114,9 @@ const handleSubscriptionCharged = async (subscriptionId, paymentId, payload, io)
                 donorUser.city = subscription.city || donorUser.city;
                 donorUser.state = subscription.state || donorUser.state;
                 donorUser.lastMotivatorMobile = donorUser.lastMotivatorMobile || subscription.motivatorMobile;
+                if (!donorUser.referredBy && subscription.level1UserId) {
+                    donorUser.referredBy = subscription.level1UserId;
+                }
             } else {
                 donorUser = new User({
                     name: subscription.donorName,
@@ -122,7 +125,8 @@ const handleSubscriptionCharged = async (subscriptionId, paymentId, payload, io)
                     address: subscription.address,
                     city: subscription.city,
                     state: subscription.state,
-                    lastMotivatorMobile: subscription.motivatorMobile
+                    lastMotivatorMobile: subscription.motivatorMobile,
+                    referredBy: subscription.level1UserId || undefined
                 });
             }
             await donorUser.save();

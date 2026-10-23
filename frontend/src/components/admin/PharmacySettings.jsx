@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { toast } from 'react-hot-toast';
-import { Settings as SettingsIcon, Save, Info, Percent, Truck, HelpCircle, Trash2, Plus, MapPin } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Info, Percent, Truck, HelpCircle, Trash2, Plus, MapPin, RefreshCw, X, AlertTriangle } from 'lucide-react';
 import './PharmacySettings.css';
 
 const PharmacySettings = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [faqLang, setFaqLang] = useState('en');
+    const [newVillageInput, setNewVillageInput] = useState('');
+    const [newPincode, setNewPincode] = useState('');
+    const [newPinVillages, setNewPinVillages] = useState('');
     const [config, setConfig] = useState({
         platformFeePercent: 2,
         deliveryChargeType: 'flat',
@@ -16,8 +19,98 @@ const PharmacySettings = () => {
         percentDeliveryBelowThreshold: 10,
         percentDeliveryAboveThreshold: 5,
         gstPercent: 12,
+        serviceableVillages: 'छापर, सांडवा, बीदासर',
+        acceptedPincodes: '331502, 331517, 331501',
+        pincodeVillages: [
+            { pincode: '331502', villages: 'छापर' },
+            { pincode: '331517', villages: 'सांडवा' },
+            { pincode: '331501', villages: 'बीदासर' }
+        ],
+        unserviceableNotice: 'इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा छापर, सांडवा, बीदासर के लिए उपलब्ध है',
         faqs: []
     });
+
+    const getVillageList = () => {
+        if (!config.serviceableVillages) return ['छापर', 'सांडवा', 'बीदासर'];
+        return config.serviceableVillages.split(',').map(v => v.trim()).filter(Boolean);
+    };
+
+    const handleAddVillage = (villageName) => {
+        const trimmed = (villageName || newVillageInput).trim();
+        if (!trimmed) return;
+        const currentList = getVillageList();
+        if (!currentList.includes(trimmed)) {
+            const updatedList = [...currentList, trimmed];
+            const updatedStr = updatedList.join(', ');
+            setConfig(prev => ({
+                ...prev,
+                serviceableVillages: updatedStr,
+                unserviceableNotice: `इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा ${updatedStr} के लिए उपलब्ध है`
+            }));
+            setNewVillageInput('');
+            toast.success(`गाँव "${trimmed}" जोड़ा गया!`);
+        }
+    };
+
+    const handleRemoveVillage = (villageToRemove) => {
+        const currentList = getVillageList();
+        const updatedList = currentList.filter(v => v !== villageToRemove);
+        const updatedStr = updatedList.join(', ');
+        setConfig(prev => ({
+            ...prev,
+            serviceableVillages: updatedStr,
+            unserviceableNotice: `इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा ${updatedStr} के लिए उपलब्ध है`
+        }));
+        toast.success(`गाँव "${villageToRemove}" हटाया गया`);
+    };
+
+    const handleSyncNoticeWithVillages = () => {
+        const currentList = getVillageList();
+        const updatedStr = currentList.join(', ');
+        setConfig(prev => ({
+            ...prev,
+            unserviceableNotice: `इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा ${updatedStr} के लिए उपलब्ध है`
+        }));
+        toast.success("चेतावनी सूचना अपडेट हो गई!");
+    };
+
+    const handleUpdatePincode = (index, value) => {
+        const updated = [...(config.pincodeVillages || [])];
+        updated[index] = { ...updated[index], pincode: value.trim() };
+        setConfig(prev => ({ ...prev, pincodeVillages: updated }));
+    };
+
+    const handleUpdateVillagesForPin = (index, value) => {
+        const updated = [...(config.pincodeVillages || [])];
+        updated[index] = { ...updated[index], villages: value };
+        setConfig(prev => ({ ...prev, pincodeVillages: updated }));
+    };
+
+    const handleRemovePincodeMapping = (index) => {
+        const updated = (config.pincodeVillages || []).filter((_, i) => i !== index);
+        setConfig(prev => ({ ...prev, pincodeVillages: updated }));
+        toast.success("Mapping removed");
+    };
+
+    const handleAddPincodeMapping = () => {
+        if (!newPincode.trim() || !newPinVillages.trim()) {
+            toast.error("Please enter both PIN Code and Village names");
+            return;
+        }
+        const updated = [...(config.pincodeVillages || []), { pincode: newPincode.trim(), villages: newPinVillages.trim() }];
+        const currentPins = (config.acceptedPincodes || '').split(',').map(p => p.trim()).filter(Boolean);
+        if (!currentPins.includes(newPincode.trim())) {
+            currentPins.push(newPincode.trim());
+        }
+        setConfig(prev => ({
+            ...prev,
+            pincodeVillages: updated,
+            acceptedPincodes: currentPins.join(', ')
+        }));
+        setNewPincode('');
+        setNewPinVillages('');
+        toast.success(`PIN ${newPincode} mapped to ${newPinVillages}`);
+    };
 
     useEffect(() => {
         fetchSettings();
@@ -27,7 +120,14 @@ const PharmacySettings = () => {
         try {
             const res = await api.get('/settings');
             if (res.data.pharmacy_config) {
-                setConfig(res.data.pharmacy_config);
+                setConfig({
+                    pincodeVillages: [
+                        { pincode: '331502', villages: 'छापर' },
+                        { pincode: '331517', villages: 'सांडवा' },
+                        { pincode: '331501', villages: 'बीदासर' }
+                    ],
+                    ...res.data.pharmacy_config
+                });
             }
         } catch (error) {
             toast.error("Failed to load settings");
@@ -325,6 +425,290 @@ const PharmacySettings = () => {
                         >
                             <Plus size={18} /> Add New Question
                         </button>
+                    </div>
+                </div>
+
+                {/* Service Area, Villages & Unserviceable Notice (Admin Configurable) */}
+                <div className="settings-card glass-card full-width" style={{ marginTop: '20px' }}>
+                    <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <MapPin size={20} color="#3182ce" />
+                            <div>
+                                <h3 style={{ margin: 0 }}>Service Area & Village Customization (सेवा क्षेत्र व गाँव प्रबंधन)</h3>
+                                <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#64748b' }}>
+                                    Manage delivery villages (छापर, सांडवा, बीदासर), accepted PIN codes, and automatic fallback warning notices.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="card-body">
+                        {/* 1. Serviceable Villages Tag Manager */}
+                        <div style={{ marginBottom: '20px', padding: '16px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <label style={{ fontWeight: '700', fontSize: '13px', color: '#1e293b' }}>
+                                    Active Serviceable Villages (सक्रिय सेवा योग्य गाँव / कस्बे)
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={handleSyncNoticeWithVillages}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '5px 10px',
+                                        background: '#ecfdf5',
+                                        color: '#059669',
+                                        border: '1px solid #a7f3d0',
+                                        borderRadius: '6px',
+                                        fontSize: '11px',
+                                        fontWeight: '600',
+                                        cursor: 'pointer'
+                                    }}
+                                    title="Click to automatically update the warning notice with current villages"
+                                >
+                                    <RefreshCw size={12} /> Sync with Warning Notice
+                                </button>
+                            </div>
+
+                            {/* Active Village Badges */}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                                {getVillageList().map((village, idx) => (
+                                    <span 
+                                        key={idx}
+                                        style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            padding: '6px 12px',
+                                            background: '#3b82f6',
+                                            color: '#ffffff',
+                                            borderRadius: '20px',
+                                            fontSize: '12px',
+                                            fontWeight: '600',
+                                            boxShadow: '0 1px 3px rgba(59, 130, 246, 0.3)'
+                                        }}
+                                    >
+                                        <MapPin size={12} /> {village}
+                                        <X 
+                                            size={14} 
+                                            style={{ cursor: 'pointer', opacity: 0.8 }} 
+                                            onClick={() => handleRemoveVillage(village)}
+                                            title={`Remove ${village}`}
+                                        />
+                                    </span>
+                                ))}
+                            </div>
+
+                            {/* Add New Village Inline Form */}
+                            <div style={{ display: 'flex', gap: '8px', maxWidth: '400px' }}>
+                                <input 
+                                    type="text" 
+                                    value={newVillageInput} 
+                                    onChange={(e) => setNewVillageInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleAddVillage();
+                                        }
+                                    }}
+                                    placeholder="गाँव का नाम लिखें (e.g. सुजानगढ़, छापर)..."
+                                    style={{ flex: 1, padding: '8px 12px', fontSize: '13px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => handleAddVillage()}
+                                    style={{
+                                        padding: '8px 14px',
+                                        background: '#2563eb',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        fontSize: '12px',
+                                        fontWeight: '600',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px'
+                                    }}
+                                >
+                                    <Plus size={14} /> जोड़ें (Add)
+                                </button>
+                            </div>
+                            <small style={{ color: '#64748b', fontSize: '11px', marginTop: '6px', display: 'block' }}>
+                                You can also edit the raw comma-separated list below.
+                            </small>
+                        </div>
+
+                        {/* Raw Comma Separated Villages */}
+                        <div className="input-group" style={{ marginBottom: '16px' }}>
+                            <label>Serviceable Villages (Comma Separated)</label>
+                            <input 
+                                type="text" 
+                                value={config.serviceableVillages || ''} 
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setConfig({
+                                        ...config, 
+                                        serviceableVillages: val,
+                                        unserviceableNotice: `इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा ${val} के लिए उपलब्ध है`
+                                    });
+                                }}
+                                placeholder="छापर, सांडवा, बीदासर"
+                            />
+                            <small>Enter all active villages/cities separated by commas.</small>
+                        </div>
+
+                        {/* Accepted PIN Codes */}
+                        <div className="input-group" style={{ marginBottom: '16px' }}>
+                            <label>Accepted Pin Codes (स्वीकृत पिन कोड - Comma Separated)</label>
+                            <input 
+                                type="text" 
+                                value={config.acceptedPincodes || ''} 
+                                onChange={(e) => setConfig({...config, acceptedPincodes: e.target.value})}
+                                placeholder="e.g. 331502, 331517, 331501"
+                            />
+                            <small>Leave empty to allow all locations, or restrict to active delivery zones (e.g. 331502 for Chhapar, 331517 for Sandwa, 331501 for Bidasar).</small>
+                        </div>
+
+                        {/* Dynamic Warning Notice */}
+                        <div className="input-group" style={{ marginBottom: '16px' }}>
+                            <label>Dynamic Unserviceable Warning Notice (Hindi / Local Text)</label>
+                            <textarea 
+                                rows={2}
+                                value={config.unserviceableNotice || ''} 
+                                onChange={(e) => setConfig({...config, unserviceableNotice: e.target.value})}
+                                placeholder="इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा छापर, सांडवा, बीदासर के लिए उपलब्ध है"
+                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', resize: 'vertical' }}
+                            />
+                            <small>This exact warning text is rendered in real time if the customer's delivery area is outside coverage.</small>
+                        </div>
+
+                        {/* 2-LEVEL CHECK: Dynamic PIN Code -> Villages Dropdown Mapping */}
+                        <div style={{ marginTop: '20px', marginBottom: '20px', padding: '16px', background: '#f0fdf4', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
+                            <div style={{ marginBottom: '12px' }}>
+                                <label style={{ fontWeight: '700', fontSize: '13px', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <MapPin size={16} color="#15803d" />
+                                    2-Level Check: PIN Code ➔ Village/City Dropdown Mappings (पिन कोड अनुसार गाँव/शहर ड्रॉपडाउन)
+                                </label>
+                                <p style={{ margin: '3px 0 0 0', fontSize: '12px', color: '#15803d' }}>
+                                    When patient enters a serviceable PIN code, the system will dynamically show a dropdown containing these specific villages/cities for that PIN.
+                                </p>
+                            </div>
+
+                            {/* Table of PIN to Village Mappings */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
+                                {(config.pincodeVillages || []).map((mapping, idx) => (
+                                    <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#ffffff', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                                        <div style={{ width: '130px' }}>
+                                            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700', display: 'block', marginBottom: '2px' }}>PIN Code</span>
+                                            <input 
+                                                type="text" 
+                                                value={mapping.pincode} 
+                                                onChange={(e) => handleUpdatePincode(idx, e.target.value)}
+                                                placeholder="331502"
+                                                style={{ width: '100%', padding: '6px 8px', fontSize: '13px', fontWeight: '700', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                                            />
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '700', display: 'block', marginBottom: '2px' }}>Villages / Cities in this PIN (Dropdown options - Comma Separated)</span>
+                                            <input 
+                                                type="text" 
+                                                value={mapping.villages} 
+                                                onChange={(e) => handleUpdateVillagesForPin(idx, e.target.value)}
+                                                placeholder="e.g. छापर, रामपुरा"
+                                                style={{ width: '100%', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemovePincodeMapping(idx)}
+                                            style={{ background: '#fee2e2', border: 'none', color: '#dc2626', padding: '8px', borderRadius: '6px', cursor: 'pointer', marginTop: '16px' }}
+                                            title="Delete this PIN mapping"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Add New PIN -> Villages Mapping Row */}
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', background: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px dashed #86efac' }}>
+                                <div style={{ width: '130px' }}>
+                                    <label style={{ fontSize: '11px', fontWeight: '700', color: '#166534', display: 'block', marginBottom: '4px' }}>New PIN Code</label>
+                                    <input 
+                                        type="text" 
+                                        value={newPincode} 
+                                        onChange={(e) => setNewPincode(e.target.value)}
+                                        placeholder="e.g. 331502"
+                                        style={{ width: '100%', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                                    />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ fontSize: '11px', fontWeight: '700', color: '#166534', display: 'block', marginBottom: '4px' }}>Villages (Comma Separated)</label>
+                                    <input 
+                                        type="text" 
+                                        value={newPinVillages} 
+                                        onChange={(e) => setNewPinVillages(e.target.value)}
+                                        placeholder="e.g. छापर, रामपुर"
+                                        style={{ width: '100%', padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleAddPincodeMapping}
+                                    style={{ padding: '8px 14px', background: '#16a34a', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', height: '34px' }}
+                                >
+                                    <Plus size={14} /> Add PIN Mapping
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Live Warning Preview for Admin */}
+                        <div style={{ padding: '12px 16px', background: '#fffbeb', borderRadius: '8px', border: '1px solid #fef3c7', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                            <AlertTriangle size={18} color="#d97706" style={{ marginTop: '2px', flexShrink: 0 }} />
+                            <div>
+                                <strong style={{ fontSize: '12px', color: '#92400e', display: 'block' }}>Customer Screen Live Preview (ग्राहक को दिखने वाली चेतावनी):</strong>
+                                <span style={{ fontSize: '12px', color: '#b45309' }}>
+                                    {config.unserviceableNotice || `इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा ${config.serviceableVillages || 'छापर, सांडवा, बीदासर'} के लिए उपलब्ध है`}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Admin Configurable Payment Methods */}
+                <div className="settings-card glass-card full-width" style={{ marginTop: '20px' }}>
+                    <div className="card-header">
+                        <Percent size={20} color="#16a34a" />
+                        <h3>Payment Methods Availability</h3>
+                    </div>
+                    <div className="card-body">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                <input 
+                                    type="checkbox" 
+                                    checked={config.allowOnlinePayment !== false} 
+                                    onChange={(e) => setConfig({...config, allowOnlinePayment: e.target.checked})}
+                                />
+                                Allow Online Payment (UPI / Cards)
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                <input 
+                                    type="checkbox" 
+                                    checked={config.allowWalletPayment !== false} 
+                                    onChange={(e) => setConfig({...config, allowWalletPayment: e.target.checked})}
+                                />
+                                Allow Dharmarth Wallet
+                            </label>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                <input 
+                                    type="checkbox" 
+                                    checked={config.allowPartnerCod !== false} 
+                                    onChange={(e) => setConfig({...config, allowPartnerCod: e.target.checked})}
+                                />
+                                Allow Partner Cash-on-Delivery (COD)
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>

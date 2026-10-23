@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Donation = require('../models/Donation');
 const Transaction = require('../models/Transaction');
 const Wallet = require('../models/Wallet');
+const Subscription = require('../models/Subscription');
 
 const { sanitizeString, escapeRegex } = require('../utils/sanitizer');
 const { protect, adminOnly } = require('../middlewares/authMiddleware');
@@ -277,6 +278,77 @@ router.get('/users/paginated', async (req, res) => {
     }
 });
 
+/**
+ * Helper to get direct referrals for a user across all referral channels:
+ * 1. Direct User.referredBy
+ * 2. User.lastMotivatorMobile (matching mobile, 10-digit clean mobile, or referralCode)
+ * 3. Donors from successful Donations/Subscriptions where level1UserId is targetUser._id
+ */
+const getDirectReferrals = async (targetUser, excludeUserIds = []) => {
+    if (!targetUser || !targetUser._id) return [];
+
+    const targetUserId = targetUser._id;
+    const cleanMobile = (targetUser.mobile || '').replace(/\D/g, '').slice(-10);
+    const refCode = targetUser.referralCode ? targetUser.referralCode.trim() : null;
+
+    // Build identifier conditions for motivator match
+    const motivatorConditions = [];
+    if (targetUser.mobile) {
+        motivatorConditions.push({ lastMotivatorMobile: targetUser.mobile });
+    }
+    if (cleanMobile && cleanMobile.length === 10) {
+        motivatorConditions.push({ lastMotivatorMobile: cleanMobile });
+    }
+    if (refCode) {
+        motivatorConditions.push({
+            lastMotivatorMobile: { $regex: new RegExp(`^${escapeRegex(refCode)}$`, 'i') }
+        });
+    }
+
+    // Also get donor mobiles from Donation & Subscription where level1UserId is targetUserId
+    const [l1Donations, l1Subscriptions] = await Promise.all([
+        Donation.find({ level1UserId: targetUserId }).select('donorMobile'),
+        Subscription.find({ level1UserId: targetUserId }).select('donorMobile')
+    ]);
+
+    const donorMobiles = new Set();
+    l1Donations.forEach(d => { if (d.donorMobile) donorMobiles.add(d.donorMobile); });
+    l1Subscriptions.forEach(s => { if (s.donorMobile) donorMobiles.add(s.donorMobile); });
+
+    const orConditions = [
+        { referredBy: targetUserId }
+    ];
+    if (motivatorConditions.length > 0) {
+        orConditions.push(...motivatorConditions);
+    }
+    if (donorMobiles.size > 0) {
+        orConditions.push({ mobile: { $in: Array.from(donorMobiles) } });
+    }
+
+    const allExcluded = [targetUserId.toString(), ...excludeUserIds.map(id => id.toString())];
+
+    const users = await User.find({
+        isDeleted: { $ne: true },
+        isSuperAdmin: { $ne: true },
+        $or: orConditions
+    })
+    .select('name mobile email createdAt referredBy lastMotivatorMobile referralCode')
+    .sort({ createdAt: -1 });
+
+    const uniqueUsers = [];
+    const seenIds = new Set(allExcluded);
+
+    for (const u of users) {
+        const uId = u._id.toString();
+        if (!seenIds.has(uId)) {
+            seenIds.add(uId);
+            uniqueUsers.push(u);
+        }
+    }
+
+    return uniqueUsers;
+};
+
 // @desc    Get current user's referral tree
 // @route   GET /api/transactions/my-referral-tree
 // @access  Private
@@ -286,7 +358,7 @@ router.get('/my-referral-tree', protect, async (req, res) => {
 
         // Get the current user
         const user = await User.findById(userId)
-            .select('name mobile email referredBy createdAt')
+            .select('name mobile email referralCode referredBy createdAt')
             .populate('referredBy', 'name mobile');
 
         if (!user) {
@@ -294,40 +366,18 @@ router.get('/my-referral-tree', protect, async (req, res) => {
         }
 
         // Get direct referrals (Level 1)
-        const level1ByReferral = await User.find({ referredBy: userId })
-            .select('name mobile email createdAt referredBy lastMotivatorMobile')
-            .sort({ createdAt: -1 });
+        const level1Users = await getDirectReferrals(user);
 
-        const level1ByMotivator = await User.find({
-            referredBy: null,
-            lastMotivatorMobile: user.mobile,
-            _id: { $nin: level1ByReferral.map(u => u._id) }
-        })
-            .select('name mobile email createdAt referredBy lastMotivatorMobile')
-            .sort({ createdAt: -1 });
-
-        const level1Users = [...level1ByReferral, ...level1ByMotivator];
-
-        // Get Level 2 referrals
-        const level2Data = [];
-        for (const l1User of level1Users) {
-            const l2ByReferral = await User.find({ referredBy: l1User._id })
-                .select('name mobile email createdAt')
-                .sort({ createdAt: -1 });
-
-            const l2ByMotivator = await User.find({
-                referredBy: null,
-                lastMotivatorMobile: l1User.mobile,
-                _id: { $nin: l2ByReferral.map(u => u._id) }
+        // Get Level 2 referrals (people referred by Level 1 users)
+        const level2Data = await Promise.all(
+            level1Users.map(async (l1User) => {
+                const l2Users = await getDirectReferrals(l1User, [user._id, ...level1Users.map(x => x._id)]);
+                return {
+                    level1User: l1User,
+                    level2Users: l2Users
+                };
             })
-                .select('name mobile email createdAt')
-                .sort({ createdAt: -1 });
-
-            level2Data.push({
-                level1User: l1User,
-                level2Users: [...l2ByReferral, ...l2ByMotivator]
-            });
-        }
+        );
 
         res.json({
             user,
@@ -335,7 +385,7 @@ router.get('/my-referral-tree', protect, async (req, res) => {
             level2Data
         });
     } catch (error) {
-        console.error(error);
+        console.error('Error fetching referral tree:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -374,49 +424,26 @@ router.get('/users/:userId/referral-tree', async (req, res) => {
 
         // Get the selected user
         const user = await User.findById(userId)
-            .select('name mobile email referredBy createdAt')
+            .select('name mobile email referralCode referredBy createdAt')
             .populate('referredBy', 'name mobile');
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Get direct referrals (Level 1) - via referredBy OR lastMotivatorMobile
-        const level1ByReferral = await User.find({ referredBy: userId })
-            .select('name mobile email createdAt referredBy lastMotivatorMobile')
-            .sort({ createdAt: -1 });
-
-        // Also find users who donated using this user's mobile as motivator (but no formal referral link)
-        const level1ByMotivator = await User.find({
-            referredBy: null,
-            lastMotivatorMobile: user.mobile,
-            _id: { $nin: level1ByReferral.map(u => u._id) } // avoid duplicates
-        })
-            .select('name mobile email createdAt referredBy lastMotivatorMobile')
-            .sort({ createdAt: -1 });
-
-        const level1Users = [...level1ByReferral, ...level1ByMotivator];
+        // Get direct referrals (Level 1)
+        const level1Users = await getDirectReferrals(user);
 
         // Get Level 2 referrals (people referred by Level 1 users)
-        const level2Data = [];
-        for (const l1User of level1Users) {
-            const l2ByReferral = await User.find({ referredBy: l1User._id })
-                .select('name mobile email createdAt')
-                .sort({ createdAt: -1 });
-
-            const l2ByMotivator = await User.find({
-                referredBy: null,
-                lastMotivatorMobile: l1User.mobile,
-                _id: { $nin: l2ByReferral.map(u => u._id) }
+        const level2Data = await Promise.all(
+            level1Users.map(async (l1User) => {
+                const l2Users = await getDirectReferrals(l1User, [user._id, ...level1Users.map(x => x._id)]);
+                return {
+                    level1User: l1User,
+                    level2Users: l2Users
+                };
             })
-                .select('name mobile email createdAt')
-                .sort({ createdAt: -1 });
-
-            level2Data.push({
-                level1User: l1User,
-                level2Users: [...l2ByReferral, ...l2ByMotivator]
-            });
-        }
+        );
 
         res.json({
             user,
@@ -424,7 +451,7 @@ router.get('/users/:userId/referral-tree', async (req, res) => {
             level2Data
         });
     } catch (error) {
-        console.error(error);
+        console.error('Error fetching user referral tree:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -679,13 +706,13 @@ router.get('/users/:userId/network-stats', async (req, res) => {
         const networkList = [];
 
         // 1. Get Direct Referrals (Level 1)
-        const level1Users = await User.find({ referredBy: userId });
+        const level1Users = await getDirectReferrals(user);
         for (const l1User of level1Users) {
             const stats = await getReferralStats(l1User, 'Level 1');
             networkList.push(stats);
 
             // 2. Get Indirect Referrals (Level 2) - Users referred by this l1User
-            const level2Users = await User.find({ referredBy: l1User._id });
+            const level2Users = await getDirectReferrals(l1User, [user._id, ...level1Users.map(x => x._id)]);
             for (const l2User of level2Users) {
                 const l2Stats = await getReferralStats(l2User, 'Level 2');
                 networkList.push(l2Stats);

@@ -143,6 +143,8 @@ app.use('/api/marg', margRoutes);
 app.use('/api/body-tests', require('./routes/bodyTestRoutes'));
 app.use('/api/doctor-faqs', require('./routes/doctorFaqRoutes'));
 app.use('/api/reports', require('./routes/doctorReportRoutes'));
+app.use('/api/doctor', require('./routes/doctorConsultationRoutes'));
+app.use('/api/partner-shop', require('./routes/partnerShopRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

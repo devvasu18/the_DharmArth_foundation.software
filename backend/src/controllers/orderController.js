@@ -238,11 +238,163 @@ const getGuestOrders = async (req, res) => {
     }
 };
 
+// @desc    Get all advance orders (pending shortage or restocked)
+// @route   GET /api/orders/advance-orders
+// @access  Private (Admin / Pharmacist)
+const getAdvanceOrders = async (req, res) => {
+    try {
+        const orders = await Order.find({ 'advancePaymentDetails.isAdvanceOrder': true })
+            .populate('user', 'name mobile')
+            .populate('prescription', 'image')
+            .sort({ createdAt: -1 });
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get restocked advance orders queue
+// @route   GET /api/orders/advance-orders/restocked
+// @access  Private (Admin / Pharmacist / Packer)
+const getRestockedAdvanceOrders = async (req, res) => {
+    try {
+        const orders = await Order.find({ 
+            'advancePaymentDetails.isAdvanceOrder': true,
+            status: { $in: ['Ready for Packing', 'Advance Paid', 'Processing'] }
+        })
+            .populate('user', 'name mobile')
+            .populate('prescription', 'image')
+            .sort({ updatedAt: -1 });
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Recalculate price on restock (New MRP - Advance Paid = Balance Due)
+// @route   POST /api/orders/:id/recalculate-price
+// @access  Private (Admin / Pharmacist)
+const recalculateRestockedPrice = async (req, res) => {
+    try {
+        const { revisedTotal, items } = req.body;
+        const order = await Order.findById(req.params.id);
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+
+        const advancePaid = order.advancePaymentDetails?.advanceAmountPaid || 0;
+        const newTotal = Number(revisedTotal) || order.totalAmount;
+        const balanceDue = Math.max(0, newTotal - advancePaid);
+
+        order.totalAmount = newTotal;
+        if (order.financials) {
+            order.financials.subtotal = newTotal;
+        }
+        order.advancePaymentDetails.revisedTotalOnArrival = newTotal;
+        order.advancePaymentDetails.balanceDue = balanceDue;
+        order.advancePaymentDetails.restockedAt = new Date();
+        order.status = 'Ready for Packing';
+
+        if (items && Array.isArray(items)) {
+            order.items = items;
+        }
+
+        order.statusHistory.push({
+            status: 'Ready for Packing',
+            note: `Stock arrived. Price revised to ₹${newTotal}. Advance paid ₹${advancePaid}. Balance due ₹${balanceDue}.`
+        });
+
+        await order.save();
+        res.json({ message: 'Price recalculated and moved to Ready for Packing', order });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get orders ready for medicine packing
+// @route   GET /api/orders/packing-queue
+// @access  Private (Packer / Pharmacist / Admin)
+const getPackingQueue = async (req, res) => {
+    try {
+        const orders = await Order.find({ 
+            status: { $in: ['Ready for Packing', 'Advance Paid', 'Processing'] }
+        })
+            .populate('user', 'name mobile')
+            .populate('prescription', 'image')
+            .sort({ createdAt: 1 });
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Mark order as packed with verification details
+// @route   POST /api/orders/:id/pack
+// @access  Private (Packer / Pharmacist / Admin)
+const markOrderPacked = async (req, res) => {
+    try {
+        const { tamperSealVerified, packerNotes } = req.body;
+        const order = await Order.findById(req.params.id);
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+
+        order.status = 'Ready for Dispatch';
+        order.statusHistory.push({
+            status: 'Ready for Dispatch',
+            note: `Packed and sealed securely by ${req.user?.name || 'Packer'}. Seal Verified: ${tamperSealVerified ? 'Yes' : 'No'}. ${packerNotes || ''}`,
+            updatedAt: new Date()
+        });
+
+        await order.save();
+        res.json({ message: 'Order successfully verified, packed, and queued for dispatch', order });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    1-Click Advance Order Refund (SLA Exceeded)
+// @route   POST /api/orders/:id/refund-advance
+// @access  Private (Admin / Pharmacist)
+const refundAdvanceOrder = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id).populate('user');
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+
+        const advanceAmount = order.advancePaymentDetails?.advanceAmountPaid || 0;
+        if (advanceAmount > 0 && order.user) {
+            order.user.walletBalance = (order.user.walletBalance || 0) + advanceAmount;
+            await order.user.save();
+        }
+
+        order.status = 'Cancelled';
+        if (order.advancePaymentDetails) {
+            order.advancePaymentDetails.refundStatus = 'Processed';
+        }
+        if (order.paymentDetails) {
+            order.paymentDetails.status = 'Refunded';
+        }
+
+        order.statusHistory.push({
+            status: 'Cancelled',
+            note: `Advance token ₹${advanceAmount} refunded to user wallet due to procurement SLA timeframe limit.`,
+            updatedAt: new Date()
+        });
+
+        await order.save();
+        res.json({ message: `Advance amount ₹${advanceAmount} refunded to patient wallet successfully`, order });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getMyOrders,
     getOrderById,
     getAllOrders,
     updateOrderStatus,
     downloadInvoice,
-    getGuestOrders
+    getGuestOrders,
+    getAdvanceOrders,
+    getRestockedAdvanceOrders,
+    recalculateRestockedPrice,
+    getPackingQueue,
+    markOrderPacked,
+    refundAdvanceOrder
 };

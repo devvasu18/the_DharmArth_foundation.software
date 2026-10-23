@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Search, ChevronDown, Menu, X, Heart, Calendar, Stethoscope, User as UserIcon, Home, Languages, Globe, Trophy, Wallet, CreditCard, Network, Users, Share2, Info, Mail, LogOut, ChevronRight, LogIn } from 'lucide-react';
+import { Bell, Search, ChevronDown, Menu, X, Heart, Calendar, Stethoscope, User as UserIcon, Home, Languages, Globe, Trophy, Wallet, CreditCard, Network, Users, Share2, Info, Mail, LogOut, ChevronRight, LogIn, Truck, Package } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -452,7 +452,7 @@ const Navbar = () => {
                             </>
                         )}
 
-                        {/* Admin Panel Link */}
+                        {/* Admin & Specialized Portals */}
                         {user && user.isSuperAdmin && (
                             <NavLink
                                 to="/admin"
@@ -465,6 +465,44 @@ const Navbar = () => {
                                 </div>
                                 <ChevronRight size={18} className="menu-arrow" />
                             </NavLink>
+                        )}
+
+                        {user && (
+                            <>
+                                <NavLink
+                                    to="/doctor/consultations"
+                                    className={({ isActive }) => `mobile-menu-item ${isActive ? 'active' : ''}`}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <div className="menu-item-left">
+                                        <Heart size={20} className="menu-icon" />
+                                        <span>Doctor Consultation Portal</span>
+                                    </div>
+                                    <ChevronRight size={18} className="menu-arrow" />
+                                </NavLink>
+                                <NavLink
+                                    to="/partner-shop/orders"
+                                    className={({ isActive }) => `mobile-menu-item ${isActive ? 'active' : ''}`}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <div className="menu-item-left">
+                                        <Truck size={20} className="menu-icon" />
+                                        <span>Village Partner Shop Portal</span>
+                                    </div>
+                                    <ChevronRight size={18} className="menu-arrow" />
+                                </NavLink>
+                                <NavLink
+                                    to="/packer/dashboard"
+                                    className={({ isActive }) => `mobile-menu-item ${isActive ? 'active' : ''}`}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <div className="menu-item-left">
+                                        <Package size={20} className="menu-icon" />
+                                        <span>Medicine Packing Station</span>
+                                    </div>
+                                    <ChevronRight size={18} className="menu-arrow" />
+                                </NavLink>
+                            </>
                         )}
 
                         {/* 9. About Us */}

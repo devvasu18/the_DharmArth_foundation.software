@@ -81,6 +81,10 @@ const AdminCreateDeliveryBoy = lazy(() => import('./components/admin/AdminCreate
 
 const OrderHistory = lazy(() => import('./pages/OrderHistory'));
 const AdminOrderMedicine = lazy(() => import('./components/admin/AdminOrderMedicine'));
+const DoctorDashboard = lazy(() => import('./pages/DoctorDashboard'));
+const PartnerShopDashboard = lazy(() => import('./pages/PartnerShopDashboard'));
+const AdminRestockedOrders = lazy(() => import('./components/admin/AdminRestockedOrders'));
+const PackerDashboard = lazy(() => import('./pages/PackerDashboard'));
 
 import { AuthProvider } from './context/AuthContext';
 import AdminRoute from './components/auth/AdminRoute';
@@ -126,8 +130,11 @@ const router = createBrowserRouter(
       <Route path="/body-tests" element={<BodyTests />} />
       <Route path="/order-history" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
       
-      {/* Protected Rider Route */}
+      {/* Protected Rider & Role Dashboards */}
       <Route path="/delivery-boy" element={<ProtectedRoute><DeliveryBoyDashboard /></ProtectedRoute>} />
+      <Route path="/doctor/consultations" element={<ProtectedRoute><DoctorDashboard /></ProtectedRoute>} />
+      <Route path="/partner-shop/orders" element={<ProtectedRoute><PartnerShopDashboard /></ProtectedRoute>} />
+      <Route path="/packer/dashboard" element={<ProtectedRoute><PackerDashboard /></ProtectedRoute>} />
       
       <Route path="/checkout/:id" element={<SharedCheckout />} />
       <Route path="/track/:orderId" element={<SharedTracker />} />
@@ -160,6 +167,7 @@ const router = createBrowserRouter(
         <Route path="prescriptions" element={<AdminPrescriptions />} />
         <Route path="order-medicine" element={<AdminOrderMedicine />} />
         <Route path="pharmacy-orders" element={<AdminPharmacyOrders />} />
+        <Route path="advance-orders/restocked" element={<AdminRestockedOrders />} />
         <Route path="delivery" element={<AdminDelivery />} />
         <Route path="dispatch" element={<AdminDispatch />} />
         <Route path="whatsapp" element={<AdminWhatsApp />} />

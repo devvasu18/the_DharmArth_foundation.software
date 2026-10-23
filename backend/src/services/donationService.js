@@ -94,6 +94,9 @@ exports.completeDonation = async (orderId, paymentId, io) => {
                 donorUser.city = city || donorUser.city;
                 donorUser.state = state || donorUser.state;
                 donorUser.lastMotivatorMobile = donorUser.lastMotivatorMobile || motivatorMobile;
+                if (!donorUser.referredBy && level1UserId) {
+                    donorUser.referredBy = level1UserId;
+                }
             } else {
                 donorUser = new User({
                     name: donorName,
@@ -102,7 +105,8 @@ exports.completeDonation = async (orderId, paymentId, io) => {
                     address,
                     city,
                     state,
-                    lastMotivatorMobile: motivatorMobile
+                    lastMotivatorMobile: motivatorMobile,
+                    referredBy: level1UserId || undefined
                 });
             }
             await donorUser.save();

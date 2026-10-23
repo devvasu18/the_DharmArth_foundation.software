@@ -62,6 +62,26 @@ const AdminPrescriptions = () => {
             const allPrescriptions = res.data.prescriptions || res.data;
             // Filter out 'Ordered' as they have moved to the Order Management system
             const activeQueue = allPrescriptions.filter(p => p.status !== 'Ordered');
+            
+            // Check if new pending prescriptions arrived to trigger audible screen alarm
+            if (activeQueue.length > prescriptions.length && statusFilter === 'Pending') {
+                try {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // High A pitch
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.8);
+                } catch (e) {
+                    console.log('Audio alert blocked by browser policy until user interacts');
+                }
+            }
+
             setPrescriptions(activeQueue);
             setLoading(false);
         } catch (err) {

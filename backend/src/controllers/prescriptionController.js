@@ -281,8 +281,28 @@ exports.approveAndCreateOrder = async (req, res) => {
 
         const totalAmount = subtotal + gst + platformFee + deliveryCharge;
 
-        // The order should always be associated with the prescription owner, 
-        // even if someone else pays for it.
+        const hasShortlistedItems = orderItems.some(i => i.fulfillmentStatus === 'Shortlisted');
+        const isPartnerCod = paymentMethod === 'PARTNER_COD';
+        const isWallet = paymentMethod === 'Wallet';
+
+        let initialOrderStatus = 'Payment Pending';
+        let initialPaymentStatus = 'Pending';
+
+        if (isPartnerCod) {
+            initialOrderStatus = 'Ready for Packing';
+            initialPaymentStatus = 'Pending';
+        } else if (isWallet) {
+            if (req.user && req.user.walletBalance >= totalAmount) {
+                req.user.walletBalance -= totalAmount;
+                await req.user.save();
+                initialOrderStatus = 'Ready for Packing';
+                initialPaymentStatus = 'Completed';
+            } else {
+                return res.status(400).json({ message: 'Insufficient wallet balance' });
+            }
+        }
+
+        // The order should always be associated with the prescription owner
         const order = await Order.create({
             user: prescription.user, 
             prescription: prescription._id,
@@ -294,12 +314,25 @@ exports.approveAndCreateOrder = async (req, res) => {
                 platformFee,
                 deliveryCharge
             },
+            recipientDetails: prescription.recipientDetails || { type: 'Self' },
+            courseDays: prescription.courseDays || 15,
+            advancePaymentDetails: {
+                isAdvanceOrder: hasShortlistedItems,
+                tokenPercentage: 50,
+                advanceAmountPaid: isPartnerCod ? 0 : totalAmount,
+                originalEstimatedTotal: totalAmount,
+                balanceDue: 0
+            },
             shippingAddress,
+            partnerShop: {
+                shopName: shippingAddress?.villageName || '',
+                location: shippingAddress?.stoppageName || shippingAddress?.city || ''
+            },
             paymentDetails: {
                 method: paymentMethod || 'Online',
-                status: 'Pending'
+                status: initialPaymentStatus
             },
-            status: 'Payment Pending'
+            status: initialOrderStatus
         });
 
         // Mutate prescription state to prevent overlapping checkout duplication
@@ -464,7 +497,7 @@ exports.getGuestHistory = async (req, res) => {
 // @access  Private/Admin
 exports.createAdminOrder = async (req, res) => {
     try {
-        const { userMobile, userName, shippingAddress, verifiedItems, adminNote } = req.body;
+        const { userMobile, userName, shippingAddress, verifiedItems, adminNote, requiresDoctorConsultation, recipientDetails, courseDays } = req.body;
 
         if (!userMobile) {
             return res.status(400).json({ message: 'User mobile number is required' });
@@ -486,8 +519,10 @@ exports.createAdminOrder = async (req, res) => {
                 const allowedPincodes = config.acceptedPincodes.split(',').map(pin => pin.trim());
                 const userPincode = shippingAddress.zip.trim();
                 if (!allowedPincodes.includes(userPincode)) {
+                    const villages = config.serviceableVillages || "छापर, सांडवा, बीदासर";
+                    const defaultNotice = `इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा ${villages} के लिए उपलब्ध है`;
                     return res.status(400).json({ 
-                        message: `Sorry, we do not deliver to this pin code. Serviceable pin codes are: ${allowedPincodes.join(', ')}` 
+                        message: config.unserviceableNotice || defaultNotice 
                     });
                 }
             }
@@ -503,14 +538,21 @@ exports.createAdminOrder = async (req, res) => {
             });
         }
 
+        const isDocReq = Boolean(requiresDoctorConsultation);
         const prescription = await Prescription.create({
             user: user._id,
             guestName: userName || user.name,
             guestMobile: userMobile,
-            status: 'Verified',
+            status: isDocReq ? 'Doctor Approval Pending' : 'Verified',
             userApproved: true,
             approvalRequired: false,
-            orderSource: 'Created by Medical/Admin',
+            recipientDetails: recipientDetails || { type: 'Self' },
+            courseDays: Number(courseDays) || 15,
+            orderSource: 'Phone Call Intake',
+            doctorConsultation: {
+                required: isDocReq,
+                status: isDocReq ? 'Pending' : 'Not Required'
+            },
             verifiedItems: verifiedItems.map(item => ({
                 ...item,
                 isAvailable: true,
@@ -520,7 +562,7 @@ exports.createAdminOrder = async (req, res) => {
                 ...shippingAddress,
                 phone: shippingAddress.phone || userMobile
             },
-            adminNote: adminNote || 'Order manually created by Medical/Admin'
+            adminNote: adminNote || (isDocReq ? 'Doctor permission requested by Pharmacist' : 'Order manually created by Medical/Admin')
         });
 
         // Add verification log

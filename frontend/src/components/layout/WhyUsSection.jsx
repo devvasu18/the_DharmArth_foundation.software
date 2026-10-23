@@ -52,7 +52,7 @@ const WhyUsSection = () => {
         }
     ];
 
-    return (
+   {/*} return (
         <section className="why-us-section">
             <div className="container">
                 <h2 className="why-us-title">{t('whyUs.title')}</h2>
@@ -71,8 +71,8 @@ const WhyUsSection = () => {
                     ))}
                 </div>
             </div>
-        </section>
-    );
+        </section> 
+    );*/}
 };
 
 export default WhyUsSection;

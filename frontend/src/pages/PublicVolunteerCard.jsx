@@ -107,7 +107,7 @@ const PublicVolunteerCard = () => {
                     </button>
                     <h2 className="header-title-text">
                         {isOwner
-                            ? (isHindi ? 'साझा करें और कमाएं' : 'Share & Earn')
+                            ? (isHindi ? 'साझा करें ' : 'Share ')
                             : (isHindi ? 'स्वयंसेवक प्रोफ़ाइल' : 'Volunteer Profile')}
                     </h2>
                     <div style={{ width: 40 }} />
@@ -125,7 +125,7 @@ const PublicVolunteerCard = () => {
                             {isOwner
                                 ? (isHindi
                                     ? 'अपने नेटवर्क को बढ़ाने और प्रोत्साहन कमाने के लिए अपनी सत्यापित स्वयंसेवक प्रोफ़ाइल साझा करें।'
-                                    : 'Share your verified volunteer profile to grow your network and earn commissions.')
+                                    : 'Share your verified volunteer profile to grow your network ')
                                 : (isHindi
                                     ? `${volunteer.name} द धर्मार्थ मेडिकल फाउंडेशन के साथ सत्यापित मिशन पार्टनर हैं।`
                                     : `${volunteer.name} is a verified Mission Partner with The Dharmarth Medical Foundation.`)}
@@ -245,7 +245,7 @@ const PublicVolunteerCard = () => {
                             </div>
 
                             {/* Section 3: Your Impact */}
-                            <div className="share-section-box">
+                          {/*  <div className="share-section-box">
                                 <span className="section-label-small">
                                     {isHindi ? 'आपका प्रभाव' : 'YOUR IMPACT'}
                                 </span>
@@ -260,7 +260,7 @@ const PublicVolunteerCard = () => {
                                         <span className="impact-label">{isHindi ? 'कमाए' : 'Earned'}</span>
                                     </div>
                                 </div>
-                            </div>
+                            </div> */}
 
                             {/* Section 4: How it works? */}
                             <div className="how-it-works-box">

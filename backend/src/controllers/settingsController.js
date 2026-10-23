@@ -53,7 +53,14 @@ const getPharmacyConfig = async () => {
             dayTimeContactText: "Pharmacist will contact you in 10-20 minutes",
             nightTimeContactText: "Foundation will contact you at 8:30 AM",
             faqs: [],
-            acceptedPincodes: ''
+            acceptedPincodes: '331502, 331517, 331501',
+            serviceableVillages: 'छापर, सांडवा, बीदासर',
+            pincodeVillages: [
+                { pincode: '331502', villages: 'छापर' },
+                { pincode: '331517', villages: 'सांडवा' },
+                { pincode: '331501', villages: 'बीदासर' }
+            ],
+            unserviceableNotice: 'इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा छापर, सांडवा, बीदासर के लिए उपलब्ध है'
         };
     }
     // Ensure new fields have defaults if they don't exist in saved config
@@ -61,7 +68,14 @@ const getPharmacyConfig = async () => {
         dayTimeContactText: "Pharmacist will contact you in 10-20 minutes",
         nightTimeContactText: "Foundation will contact you at 8:30 AM",
         faqs: [],
-        acceptedPincodes: '',
+        acceptedPincodes: '331502, 331517, 331501',
+        serviceableVillages: 'छापर, सांडवा, बीदासर',
+        pincodeVillages: [
+            { pincode: '331502', villages: 'छापर' },
+            { pincode: '331517', villages: 'सांडवा' },
+            { pincode: '331501', villages: 'बीदासर' }
+        ],
+        unserviceableNotice: 'इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा छापर, सांडवा, बीदासर के लिए उपलब्ध है',
         ...config.value
     };
     return mergedConfig;

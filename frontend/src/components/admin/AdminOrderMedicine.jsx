@@ -56,6 +56,12 @@ const AdminOrderMedicine = () => {
     const [submitting, setSubmitting] = useState(false);
     const [createdPrescription, setCreatedPrescription] = useState(null);
 
+    // Recipient & Duration States
+    const [recipientType, setRecipientType] = useState('Self'); // 'Self' | 'Other'
+    const [patientName, setPatientName] = useState('');
+    const [patientPhone, setPatientPhone] = useState('');
+    const [courseDays, setCourseDays] = useState(15);
+
     useEffect(() => {
         fetchPharmacyConfig();
     }, []);
@@ -68,6 +74,45 @@ const AdminOrderMedicine = () => {
             console.error("Failed to fetch pharmacy config", err);
         }
     };
+
+    const getVillagesForPincode = (pincodeValue) => {
+        const pin = (pincodeValue || '').trim();
+        if (!pin) return [];
+        const match = (pharmacyConfig?.pincodeVillages || []).find(pv => (pv.pincode || '').trim() === pin);
+        if (match && match.villages) {
+            return match.villages.split(',').map(v => v.trim()).filter(Boolean);
+        }
+        if (pharmacyConfig?.serviceableVillages) {
+            return pharmacyConfig.serviceableVillages.split(',').map(v => v.trim()).filter(Boolean);
+        }
+        return ['छापर', 'सांडवा', 'बीदासर'];
+    };
+
+    const [pincodeError, setPincodeError] = useState('');
+
+    const validateAdminZip = (pin) => {
+        if (!pin) {
+            setPincodeError('');
+            return true;
+        }
+        if (pharmacyConfig?.acceptedPincodes && pharmacyConfig.acceptedPincodes.trim() !== '') {
+            const allowed = pharmacyConfig.acceptedPincodes.split(',').map(p => p.trim());
+            if (!allowed.includes(pin.trim())) {
+                const villages = pharmacyConfig?.serviceableVillages || "छापर, सांडवा, बीदासर";
+                const defaultNotice = `इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा ${villages} के लिए उपलब्ध है`;
+                const msg = pharmacyConfig?.unserviceableNotice || defaultNotice;
+                setPincodeError(msg);
+                return false;
+            }
+        }
+        setPincodeError('');
+        const villages = getVillagesForPincode(pin);
+        if (villages.length > 0 && !shippingAddress.city) {
+            setShippingAddress(prev => ({ ...prev, city: villages[0], villageName: villages[0] }));
+        }
+        return true;
+    };
+
 
     // Auto lookup user by mobile (exactly when 10 digits are filled)
     useEffect(() => {
@@ -259,9 +304,7 @@ const AdminOrderMedicine = () => {
     };
 
     // Manual creation submit handler
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
+    const handleFormSubmit = async (isDoctorRequest = false) => {
         // 1. Mobile verification
         const cleanMobile = userMobile.replace(/\D/g, '');
         if (cleanMobile.length !== 10) {
@@ -280,7 +323,9 @@ const AdminOrderMedicine = () => {
         if (pharmacyConfig?.acceptedPincodes && pharmacyConfig.acceptedPincodes.trim() !== '') {
             const allowedPincodes = pharmacyConfig.acceptedPincodes.split(',').map(pin => pin.trim());
             if (!allowedPincodes.includes(userPincode)) {
-                toast.error(`Sorry, we do not deliver to this pin code. Serviceable pin codes are: ${allowedPincodes.join(', ')}`);
+                const villages = pharmacyConfig?.serviceableVillages || "छापर, सांडवा, बीदासर";
+                const defaultNotice = `इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा ${villages} के लिए उपलब्ध है`;
+                toast.error(pharmacyConfig?.unserviceableNotice || defaultNotice);
                 return;
             }
         }
@@ -305,10 +350,21 @@ const AdminOrderMedicine = () => {
                 userName: userName || 'Guest User',
                 shippingAddress,
                 verifiedItems,
-                adminNote
+                adminNote,
+                requiresDoctorConsultation: Boolean(isDoctorRequest),
+                courseDays: Number(courseDays) || 15,
+                recipientDetails: {
+                    type: recipientType,
+                    patientName: recipientType === 'Other' ? patientName : (userName || 'Patient'),
+                    patientPhone: recipientType === 'Other' ? patientPhone : cleanMobile
+                }
             });
             setCreatedPrescription(res.data);
-            toast.success("Manual Medicine Order created successfully!");
+            if (isDoctorRequest) {
+                toast.success("Consultation ticket sent to Doctor Dashboard!");
+            } else {
+                toast.success("Direct Sale Order created successfully!");
+            }
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to generate admin order');
         } finally {
@@ -389,7 +445,7 @@ const AdminOrderMedicine = () => {
                 </div>
             </header>
 
-            <form onSubmit={handleSubmit} className="glass-card-admin">
+            <form onSubmit={(e) => { e.preventDefault(); handleFormSubmit(false); }} className="glass-card-admin">
                 
                 {/* Section 1: Customer Profile */}
                 <section>
@@ -421,9 +477,97 @@ const AdminOrderMedicine = () => {
                             />
                         </div>
                     </div>
+
+                    {/* Recipient Details & Course Days Row */}
+                    <div className="grid-2-col" style={{ marginTop: '16px', background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                        <div>
+                            <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#334155', display: 'block', marginBottom: '8px' }}>Ordering For:</label>
+                            <div style={{ display: 'flex', gap: '16px' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', cursor: 'pointer' }}>
+                                    <input 
+                                        type="radio" 
+                                        name="recipientType" 
+                                        value="Self" 
+                                        checked={recipientType === 'Self'}
+                                        onChange={() => setRecipientType('Self')}
+                                    />
+                                    Self (Caller)
+                                </label>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', cursor: 'pointer' }}>
+                                    <input 
+                                        type="radio" 
+                                        name="recipientType" 
+                                        value="Other" 
+                                        checked={recipientType === 'Other'}
+                                        onChange={() => setRecipientType('Other')}
+                                    />
+                                    Someone Else
+                                </label>
+                            </div>
+                            {recipientType === 'Other' && (
+                                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Patient Name" 
+                                        value={patientName} 
+                                        onChange={(e) => setPatientName(e.target.value)}
+                                        style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                                    />
+                                    <input 
+                                        type="text" 
+                                        placeholder="Patient Phone" 
+                                        value={patientPhone} 
+                                        onChange={(e) => setPatientPhone(e.target.value)}
+                                        style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <div>
+                            <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#334155', display: 'block', marginBottom: '8px' }}>
+                                दवाई कितने दिन की चाहिए (Course Duration):
+                            </label>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <div style={{ position: 'relative', width: '130px' }}>
+                                    <input 
+                                        type="number" 
+                                        min="1" 
+                                        max="365"
+                                        value={courseDays} 
+                                        onChange={(e) => setCourseDays(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value) || 1))}
+                                        placeholder="15"
+                                        style={{ width: '100%', padding: '10px 35px 10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', fontWeight: '700' }}
+                                    />
+                                    <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '11px', color: '#64748b', fontWeight: '600', pointerEvents: 'none' }}>दिन</span>
+                                </div>
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                    {[7, 15, 30, 60].map(days => (
+                                        <button
+                                            key={days}
+                                            type="button"
+                                            onClick={() => setCourseDays(days)}
+                                            style={{
+                                                padding: '8px 12px',
+                                                borderRadius: '8px',
+                                                border: `1px solid ${Number(courseDays) === days ? '#10b981' : '#cbd5e1'}`,
+                                                background: Number(courseDays) === days ? '#ecfdf5' : '#f8fafc',
+                                                color: Number(courseDays) === days ? '#065f46' : '#475569',
+                                                fontSize: '12px',
+                                                fontWeight: '700',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            {days} दिन
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
-                {/* Section 2: Delivery Address details */}
+                {/* Section 2: Delivery Address details (2-Level Serviceability Check) */}
                 <section>
                     <div className="form-section-header" style={{ justifyContent: 'space-between', display: 'flex' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -451,17 +595,25 @@ const AdminOrderMedicine = () => {
                     </div>
                     <div className="grid-2-col">
                         <div className="input-group-premium">
-                            <label>City</label>
+                            <label>Pin Code <span style={{ fontSize: '11px', color: '#64748b' }}>(Level 1 Check)</span> <span style={{ color: '#ef4444' }}>*</span></label>
                             <input 
                                 type="text" 
-                                value={shippingAddress.city}
-                                onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                                placeholder="Enter City..."
+                                value={shippingAddress.zip}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/\D/g, '').substring(0, 6);
+                                    setShippingAddress(prev => ({ ...prev, zip: val }));
+                                    if (val.length === 6) {
+                                        validateAdminZip(val);
+                                    } else {
+                                        setPincodeError('');
+                                    }
+                                }}
+                                placeholder="Enter 6-digit Pincode (e.g. 331502)"
                                 required
                             />
                         </div>
                         <div className="input-group-premium">
-                            <label>State</label>
+                            <label>State <span style={{ color: '#ef4444' }}>*</span></label>
                             <input 
                                 type="text" 
                                 value={shippingAddress.state}
@@ -470,25 +622,56 @@ const AdminOrderMedicine = () => {
                                 required
                             />
                         </div>
-                        <div className="input-group-premium">
-                            <label>Pin Code (Serviceability Whitelist Checked)</label>
-                            <input 
-                                type="text" 
-                                value={shippingAddress.zip}
-                                onChange={(e) => setShippingAddress({ ...shippingAddress, zip: e.target.value.replace(/\D/g, '').substring(0, 6) })}
-                                placeholder="Enter 6-digit Pincode..."
+                    </div>
+
+                    {pincodeError && (
+                        <div style={{ color: '#e53e3e', fontSize: '12px', marginTop: '10px', marginBottom: '15px', fontWeight: '600', background: '#fff5f5', padding: '10px 14px', borderRadius: '8px', border: '1px solid #fed7d7' }}>
+                            {pincodeError}
+                        </div>
+                    )}
+
+                    {/* Level 2: Dynamic Village/City Dropdown for this PIN Code */}
+                    {shippingAddress.zip && !pincodeError && (
+                        <div style={{ marginTop: '15px', marginBottom: '15px', background: '#f0fdf4', padding: '14px', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
+                            <label style={{ fontSize: '13px', fontWeight: '700', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                                <Check size={16} color="#16a34a" />
+                                गाँव / कस्बा चुनें (Level 2: Select Village/City for PIN {shippingAddress.zip}) <span style={{ color: '#ef4444' }}>*</span>
+                            </label>
+                            <select
+                                value={shippingAddress.city || ''}
+                                onChange={(e) => setShippingAddress(prev => ({ ...prev, city: e.target.value, villageName: e.target.value }))}
                                 required
-                            />
+                                style={{
+                                    width: '100%',
+                                    padding: '10px 12px',
+                                    borderRadius: '8px',
+                                    border: '2px solid #16a34a',
+                                    background: '#ffffff',
+                                    fontWeight: '700',
+                                    color: '#0f172a',
+                                    fontSize: '13px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value="">-- इस पिन कोड के तहत गाँव / कस्बा चुनें --</option>
+                                {getVillagesForPincode(shippingAddress.zip).map((village, idx) => (
+                                    <option key={idx} value={village}>{village}</option>
+                                ))}
+                            </select>
+                            <small style={{ color: '#15803d', fontSize: '11px', marginTop: '4px', display: 'block', fontWeight: '500' }}>
+                                ✓ पिन कोड स्वीकृत! कृपया डिलीवरी के लिए उपरोक्त सूची में से गाँव/शहर चुनें।
+                            </small>
                         </div>
-                        <div className="input-group-premium">
-                            <label>Alternate Mobile Number (Optional)</label>
-                            <input 
-                                type="text" 
-                                value={shippingAddress.altPhone}
-                                onChange={(e) => setShippingAddress({ ...shippingAddress, altPhone: e.target.value.replace(/\D/g, '').substring(0, 10) })}
-                                placeholder="Enter alternative contact..."
-                            />
-                        </div>
+                    )}
+
+                    <div className="input-group-premium" style={{ marginTop: '15px' }}>
+                        <label>Alternate Mobile Number (Optional)</label>
+                        <input 
+                            type="text" 
+                            value={shippingAddress.altPhone}
+                            onChange={(e) => setShippingAddress({ ...shippingAddress, altPhone: e.target.value.replace(/\D/g, '').substring(0, 10) })}
+                            placeholder="Enter alternative contact..."
+                        />
                     </div>
                 </section>
 
@@ -785,14 +968,24 @@ const AdminOrderMedicine = () => {
                     </div>
                 </section>
 
-                <div className="action-footer" style={{ border: 'none', margin: '20px 0 0 0', padding: 0, position: 'static' }}>
+                <div className="action-footer" style={{ border: 'none', margin: '20px 0 0 0', padding: 0, position: 'static', display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
                     <button 
-                        type="submit" 
+                        type="button" 
                         className="btn-approve-p" 
                         disabled={submitting}
-                        style={{ width: '100%', height: '55px', fontSize: '1.05rem' }}
+                        onClick={() => handleFormSubmit(false)}
+                        style={{ flex: 1, minWidth: '220px', height: '52px', fontSize: '1rem', backgroundColor: '#0284c7' }}
                     >
-                        <Check size={20} /> {submitting ? "Generating Order..." : "Create manual checkout order"}
+                        <Check size={18} /> {submitting ? "Processing..." : "Create Direct Sale Order"}
+                    </button>
+                    <button 
+                        type="button" 
+                        className="btn-approve-p" 
+                        disabled={submitting}
+                        onClick={() => handleFormSubmit(true)}
+                        style={{ flex: 1, minWidth: '220px', height: '52px', fontSize: '1rem', backgroundColor: '#7c3aed' }}
+                    >
+                        <AlertCircle size={18} /> {submitting ? "Sending..." : "Request Doctor Permission"}
                     </button>
                 </div>
             </form>

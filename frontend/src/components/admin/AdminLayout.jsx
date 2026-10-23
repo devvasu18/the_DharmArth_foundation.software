@@ -459,6 +459,13 @@ const AdminLayout = () => {
                                     Order Management
                                 </NavLink>
                                 <NavLink
+                                    to="/admin/advance-orders/restocked"
+                                    className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
+                                    onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}
+                                >
+                                    Restocked Advance Orders
+                                </NavLink>
+                                <NavLink
                                     to="/admin/dispatch"
                                     className={({ isActive }) => `admin-sublink ${isActive ? 'active-sub' : ''}`}
                                     onClick={() => window.innerWidth < 992 && setIsSidebarCollapsed(false)}

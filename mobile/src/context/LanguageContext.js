@@ -306,7 +306,7 @@ const translations = {
     shareEarn: {
       title: "Share & Earn",
       digitalIdentity: "Your Digital Identity",
-      digitalIdentityDesc: "Share your verified volunteer profile to grow your network and earn commissions.",
+      digitalIdentityDesc: "Share your verified volunteer profile to grow your network and get scores",
       volunteerId: "VOLUNTEER ID",
       contact: "Contact",
       location: "Location",
@@ -443,6 +443,18 @@ const translations = {
       shareOnAppStore: "Share on App Store",
       googlePlayStore: "Google Play Store",
       appStore: "App Store"
+    },
+    myNetwork: {
+      title: "My Network",
+      buildingMap: "Building your network map...",
+      loadFailed: "Failed to load network",
+      directL1: "Direct (L1)",
+      indirectL2: "Indirect (L2)",
+      myMotivator: "MY MOTIVATOR",
+      youNode: "You ({name})",
+      emptyDesc: "No direct referrals yet. Start sharing your link to build your network!",
+      memberSince: "Member since ",
+      na: "N/A"
     }
   },
   hi: {
@@ -544,7 +556,7 @@ const translations = {
       savedText: "जीवन बचाए गए हैं मासिक योगदान के द्वारा",
       contributorsLower: "योगदानकर्ता",
       saveCountless: "मासिक योगदान देकर अनगिनत जिंदगियां बचाएं।",
-      joinEarnMonthly: "जुड़ें और मासिक कमाएं",
+      joinEarnMonthly: "जुड़ें ",
       faqTitle: "अक्सर पूछे जाने वाले प्रश्न",
       feedChild: "एक बच्चे को खिलाएं, एक मरीज को ठीक करें, एक जीवन बचाएं।"
     },
@@ -886,6 +898,18 @@ const translations = {
       shareOnAppStore: "ऐप स्टोर पर शेयर करें",
       googlePlayStore: "गूगल प्ले स्टोर",
       appStore: "ऐप स्टोर"
+    },
+    myNetwork: {
+      title: "मेरा नेटवर्क",
+      buildingMap: "नेटवर्क मैप तैयार हो रहा है...",
+      loadFailed: "नेटवर्क लोड करने में विफल",
+      directL1: "डायरेक्ट (L1)",
+      indirectL2: "इनडायरेक्ट (L2)",
+      myMotivator: "मेरे प्रेरक",
+      youNode: "आप ({name})",
+      emptyDesc: "अभी कोई डायरेक्ट रेफरल नहीं है। अपना नेटवर्क बनाने के लिए अपना लिंक शेयर करना शुरू करें!",
+      memberSince: "सदस्यता तिथि: ",
+      na: "उपलब्ध नहीं"
     }
   }
 };

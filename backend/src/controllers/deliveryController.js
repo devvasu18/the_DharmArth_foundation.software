@@ -327,9 +327,15 @@ exports.bulkUpdateAssignmentStatus = async (req, res) => {
                     assignment.driverNumber = driverNumber;
                     assignment.actualDepartureTime = actualDepartureTime || Date.now();
 
+                    const isBusHandover = Boolean(assignment.busId);
+                    const nextOrderStatus = isBusHandover ? 'In Transit' : 'Delivered';
+                    const statusNote = isBusHandover 
+                        ? `Handed over to Bus Conductor (${assignment.driverNumber || 'Driver'}) by runner ${req.user.name}`
+                        : `Delivered by: ${req.user.name}`;
+
                     await Order.findByIdAndUpdate(assignment.orderId, { 
-                        status: 'Delivered',
-                        $push: { statusHistory: { status: 'Delivered', note: 'Bulk Delivered by: ' + req.user.name } },
+                        status: nextOrderStatus,
+                        $push: { statusHistory: { status: nextOrderStatus, note: statusNote } },
                         $set: {
                             'dispatchDetails.actualDepartureTime': assignment.actualDepartureTime,
                             'dispatchDetails.conductorNumber': assignment.driverNumber || undefined,
@@ -399,9 +405,15 @@ exports.updateAssignmentStatus = async (req, res) => {
             assignment.driverNumber = req.body.driverNumber;
             assignment.actualDepartureTime = req.body.actualDepartureTime || Date.now();
 
+            const isBusHandover = Boolean(assignment.busId);
+            const nextOrderStatus = isBusHandover ? 'In Transit' : 'Delivered';
+            const statusNote = isBusHandover 
+                ? `Handed over to Bus Conductor (${assignment.driverNumber || 'Driver'}) by runner ${req.user.name}`
+                : `Delivered by: ${req.user.name}`;
+
             await Order.findByIdAndUpdate(assignment.orderId, { 
-                status: 'Delivered',
-                $push: { statusHistory: { status: 'Delivered', note: 'Delivered by: ' + req.user.name } },
+                status: nextOrderStatus,
+                $push: { statusHistory: { status: nextOrderStatus, note: statusNote } },
                 $set: {
                     'dispatchDetails.actualDepartureTime': assignment.actualDepartureTime,
                     'dispatchDetails.conductorNumber': assignment.driverNumber || undefined,

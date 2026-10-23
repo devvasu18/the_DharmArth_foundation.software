@@ -123,6 +123,12 @@ const OrderMedicine = () => {
     const [pincodeError, setPincodeError] = useState('');
     const zipTimeoutRef = useRef(null);
 
+    // Client Flowchart Page 1 Requirements
+    const [courseDays, setCourseDays] = useState(15);
+    const [needAllMedicines, setNeedAllMedicines] = useState(true); // true: 'पर्ची की सभी दवाई चाहिए', false: 'पर्ची की कुछ दवाई चाहिए'
+    const [showPastRxModal, setShowPastRxModal] = useState(false);
+    const [selectedPastRx, setSelectedPastRx] = useState(null);
+
     const validatePincode = (pincodeValue) => {
         const pin = (pincodeValue || '').trim();
         if (!pin) {
@@ -132,13 +138,28 @@ const OrderMedicine = () => {
         if (pharmacyConfig?.acceptedPincodes && pharmacyConfig.acceptedPincodes.trim() !== '') {
             const allowedPincodes = pharmacyConfig.acceptedPincodes.split(',').map(p => p.trim());
             if (!allowedPincodes.includes(pin)) {
-                const errMsg = `${t('pharmacy.unserviceablePin') || "Sorry, we do not deliver to this pin code. Serviceable pin codes are"}: ${allowedPincodes.join(', ')}`;
+                const villages = pharmacyConfig?.serviceableVillages || "छापर, सांडवा, बीदासर";
+                const defaultNotice = `इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा ${villages} के लिए उपलब्ध है`;
+                const errMsg = pharmacyConfig?.unserviceableNotice || defaultNotice;
                 setPincodeError(errMsg);
                 return false;
             }
         }
         setPincodeError('');
         return true;
+    };
+
+    const getVillagesForPincode = (pincodeValue) => {
+        const pin = (pincodeValue || '').trim();
+        if (!pin) return [];
+        const match = (pharmacyConfig?.pincodeVillages || []).find(pv => (pv.pincode || '').trim() === pin);
+        if (match && match.villages) {
+            return match.villages.split(',').map(v => v.trim()).filter(Boolean);
+        }
+        if (pharmacyConfig?.serviceableVillages) {
+            return pharmacyConfig.serviceableVillages.split(',').map(v => v.trim()).filter(Boolean);
+        }
+        return ['छापर', 'सांडवा', 'बीदासर'];
     };
 
     const handleManualZipChange = (newZip) => {
@@ -151,8 +172,18 @@ const OrderMedicine = () => {
             return;
         }
         zipTimeoutRef.current = setTimeout(() => {
-            validatePincode(newZip);
-        }, 2000);
+            const isValid = validatePincode(newZip);
+            if (isValid) {
+                const villages = getVillagesForPincode(newZip);
+                if (villages.length > 0 && !shippingDetails.villageName) {
+                    setShippingDetails(prev => ({ 
+                        ...prev, 
+                        city: prev.city || villages[0], 
+                        villageName: prev.villageName || villages[0] 
+                    }));
+                }
+            }
+        }, 400);
     };
 
     const [suggestions, setSuggestions] = useState([]);
@@ -546,6 +577,11 @@ const OrderMedicine = () => {
         const formData = new FormData();
         formData.append('prescription', file);
         if (notes) formData.append('notes', notes);
+        formData.append('courseDays', courseDays);
+        formData.append('needAllMedicines', needAllMedicines ? 'ALL' : 'PARTIAL');
+        if (selectedPastRx) {
+            formData.append('reusedPrescriptionId', selectedPastRx._id);
+        }
 
         const answerArray = (pharmacyConfig?.faqs || [])
             .filter(faq => faqAnswers[faq.id])
@@ -989,20 +1025,22 @@ const OrderMedicine = () => {
                                                         </button>
                                                     </div>
 
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                                                         <div>
-                                                            <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.city') || "City"}</label>
+                                                            <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px' }}>
+                                                                {t('pharmacy.pinCode') || "Pin Code"} <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 'normal' }}>(Level 1 Check)</span> <span style={{ color: '#ef4444' }}>*</span>
+                                                            </label>
                                                             <input
                                                                 type="text"
-                                                                value={shippingDetails.city}
-                                                                onChange={(e) => setShippingDetails(prev => ({ ...prev, city: e.target.value }))}
-                                                                placeholder="e.g. Nagaur"
+                                                                value={shippingDetails.zip}
+                                                                onChange={(e) => handleManualZipChange(e.target.value)}
+                                                                placeholder="उदा. 331502"
                                                                 required
-                                                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                                                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', fontWeight: '600' }}
                                                             />
                                                         </div>
                                                         <div>
-                                                            <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.state') || "State"}</label>
+                                                            <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.state') || "State"} <span style={{ color: '#ef4444' }}>*</span></label>
                                                             <input
                                                                 type="text"
                                                                 value={shippingDetails.state}
@@ -1012,23 +1050,50 @@ const OrderMedicine = () => {
                                                                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                                                             />
                                                         </div>
-                                                        <div>
-                                                            <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.pinCode') || "Pin Code"}</label>
-                                                            <input
-                                                                type="text"
-                                                                value={shippingDetails.zip}
-                                                                onChange={(e) => handleManualZipChange(e.target.value)}
-                                                                placeholder="341001"
-                                                                required
-                                                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
-                                                            />
-                                                        </div>
-                                                        {pincodeError && (
-                                                            <div style={{ color: '#e53e3e', fontSize: '12px', marginTop: '6px', fontWeight: '600', width: '100%', textAlign: 'left', gridColumn: 'span 3' }}>
-                                                                {pincodeError}
-                                                            </div>
-                                                        )}
                                                     </div>
+
+                                                    {pincodeError && (
+                                                        <div style={{ color: '#e53e3e', fontSize: '12px', marginBottom: '12px', fontWeight: '600', width: '100%', textAlign: 'left', background: '#fff5f5', padding: '10px 12px', borderRadius: '8px', border: '1px solid #fed7d7' }}>
+                                                            {pincodeError}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Level 2: Dynamic Village/City Dropdown for this PIN Code */}
+                                                    {shippingDetails.zip && !pincodeError && (
+                                                        <div style={{ marginBottom: '12px', background: '#f0fdf4', padding: '12px', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
+                                                            <label style={{ fontSize: '12px', fontWeight: '700', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                                                                <CheckCircle size={15} color="#16a34a" />
+                                                                गाँव / कस्बा चुनें (Level 2: Select Village/City for PIN {shippingDetails.zip}) <span style={{ color: '#ef4444' }}>*</span>
+                                                            </label>
+                                                            <select
+                                                                value={shippingDetails.villageName || shippingDetails.city || ''}
+                                                                onChange={(e) => {
+                                                                    const selectedVal = e.target.value;
+                                                                    setShippingDetails(prev => ({ ...prev, city: selectedVal, villageName: selectedVal }));
+                                                                }}
+                                                                required
+                                                                style={{
+                                                                    width: '100%',
+                                                                    padding: '10px 12px',
+                                                                    borderRadius: '8px',
+                                                                    border: '2px solid #16a34a',
+                                                                    background: '#ffffff',
+                                                                    fontWeight: '700',
+                                                                    color: '#0f172a',
+                                                                    fontSize: '13px',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                            >
+                                                                <option value="">-- इस पिन कोड के तहत अपना गाँव / कस्बा चुनें --</option>
+                                                                {getVillagesForPincode(shippingDetails.zip).map((village, idx) => (
+                                                                    <option key={idx} value={village}>{village}</option>
+                                                                ))}
+                                                            </select>
+                                                            <small style={{ color: '#15803d', fontSize: '11px', marginTop: '4px', display: 'block', fontWeight: '500' }}>
+                                                                ✓ पिन कोड स्वीकृत! कृपया डिलीवरी के लिए उपरोक्त सूची में से अपना गाँव/शहर चुनें।
+                                                            </small>
+                                                        </div>
+                                                    )}
 
                                                     {user && (
                                                         <div style={{ marginTop: '5px' }}>
@@ -1077,6 +1142,99 @@ const OrderMedicine = () => {
                                             )}
                                         </div>
 
+                                        {/* Phone Call Order & Timings Guardrail (9:00 AM - 7:00 PM) */}
+                                        <div style={{
+                                            marginBottom: '22px',
+                                            padding: '16px 20px',
+                                            borderRadius: '14px',
+                                            background: (() => {
+                                                const h = new Date().getHours();
+                                                return (h >= 9 && h < 19) ? 'linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%)' : '#fffbeb';
+                                            })(),
+                                            border: `1px solid ${(() => {
+                                                const h = new Date().getHours();
+                                                return (h >= 9 && h < 19) ? '#86efac' : '#fde68a';
+                                            })()}`,
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            flexWrap: 'wrap',
+                                            gap: '12px'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div style={{
+                                                    width: '42px',
+                                                    height: '42px',
+                                                    borderRadius: '12px',
+                                                    background: 'white',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: '#0284c7',
+                                                    boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
+                                                }}>
+                                                    <Phone size={20} />
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontWeight: '800', fontSize: '14px', color: '#0f172a' }}>
+                                                        फोन से आर्डर करें (Phone Order Intake)
+                                                    </div>
+                                                    <div style={{ fontSize: '12px', color: '#475569', marginTop: '2px' }}>
+                                                        {(() => {
+                                                            const h = new Date().getHours();
+                                                            return (h >= 9 && h < 19) 
+                                                                ? `फार्मासिस्ट अभी कॉल पर उपलब्ध हैं • सुबह 9:00 AM से शाम 7:00 PM`
+                                                                : `यह सेवा सुबह 9 से रात 7 बजे तक उपलब्ध है • अभी पर्ची अपलोड करें या 9 AM पर कॉल करें`;
+                                                        })()}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                {(() => {
+                                                    const h = new Date().getHours();
+                                                    if (h >= 9 && h < 19) {
+                                                        return (
+                                                            <a
+                                                                href={`tel:${(contactPhone || '8306305569').replace(/\s+/g, '')}`}
+                                                                style={{
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '6px',
+                                                                    background: '#16a34a',
+                                                                    color: 'white',
+                                                                    padding: '8px 18px',
+                                                                    borderRadius: '10px',
+                                                                    fontWeight: '700',
+                                                                    fontSize: '13px',
+                                                                    textDecoration: 'none',
+                                                                    boxShadow: '0 4px 10px rgba(22, 163, 74, 0.25)'
+                                                                }}
+                                                            >
+                                                                <Phone size={14} /> कॉल करें: {contactPhone || '8306305569'}
+                                                            </a>
+                                                        );
+                                                    } else {
+                                                        return (
+                                                            <div style={{
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                gap: '6px',
+                                                                background: '#fef3c7',
+                                                                color: '#92400e',
+                                                                border: '1px solid #fde68a',
+                                                                padding: '6px 14px',
+                                                                borderRadius: '10px',
+                                                                fontWeight: '700',
+                                                                fontSize: '12px'
+                                                            }}>
+                                                                <Clock size={14} /> समय: 9 AM - 7 PM
+                                                            </div>
+                                                        );
+                                                    }
+                                                })()}
+                                            </div>
+                                        </div>
+
                                         {/* Step 2: Upload Prescription */}
                                         <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '700', color: '#1e293b', marginBottom: '15px' }}>
                                             <FileText size={18} color="#3b82f6" />
@@ -1109,6 +1267,145 @@ const OrderMedicine = () => {
                                                 onChange={handleFileChange}
                                                 accept="image/*"
                                             />
+                                        </div>
+
+                                        {/* Client Flowchart Requirements: Past Rx & Days Options */}
+                                        <div style={{ marginTop: '16px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPastRxModal(true)}
+                                                style={{
+                                                    flex: 1,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '8px',
+                                                    padding: '10px 14px',
+                                                    background: selectedPastRx ? '#ecfdf5' : '#f8fafc',
+                                                    border: `1px solid ${selectedPastRx ? '#10b981' : '#cbd5e1'}`,
+                                                    borderRadius: '10px',
+                                                    color: selectedPastRx ? '#047857' : '#334155',
+                                                    fontWeight: '600',
+                                                    fontSize: '12px',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <FileText size={16} color={selectedPastRx ? '#10b981' : '#3b82f6'} />
+                                                {selectedPastRx ? `पर्ची चुनी गई (#${selectedPastRx._id.slice(-4)})` : 'पहले की पर्ची चुनें (Archive)'}
+                                            </button>
+                                        </div>
+
+                                        {/* Medicine Scope & Duration Selector */}
+                                        <div style={{ marginTop: '16px', padding: '14px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                            <div style={{ marginBottom: '12px' }}>
+                                                <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155', display: 'block', marginBottom: '8px' }}>
+                                                    पर्ची की दवाई का चयन:
+                                                </label>
+                                                <div style={{ display: 'flex', gap: '10px' }}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setNeedAllMedicines(true)}
+                                                        style={{
+                                                            flex: 1,
+                                                            padding: '8px 12px',
+                                                            borderRadius: '8px',
+                                                            border: `1px solid ${needAllMedicines ? '#2563eb' : '#cbd5e1'}`,
+                                                            background: needAllMedicines ? '#eff6ff' : '#fff',
+                                                            color: needAllMedicines ? '#1d4ed8' : '#64748b',
+                                                            fontSize: '12px',
+                                                            fontWeight: '600',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        पर्ची की सभी दवाई चाहिए
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setNeedAllMedicines(false)}
+                                                        style={{
+                                                            flex: 1,
+                                                            padding: '8px 12px',
+                                                            borderRadius: '8px',
+                                                            border: `1px solid ${!needAllMedicines ? '#2563eb' : '#cbd5e1'}`,
+                                                            background: !needAllMedicines ? '#eff6ff' : '#fff',
+                                                            color: !needAllMedicines ? '#1d4ed8' : '#64748b',
+                                                            fontSize: '12px',
+                                                            fontWeight: '600',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        कुछ दवाई चाहिए (Notes में लिखें)
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                    <span>दवाई कितने दिन की चाहिए (Course Duration):</span>
+                                                    {courseDays && (
+                                                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#059669', background: '#ecfdf5', padding: '2px 8px', borderRadius: '6px' }}>
+                                                            {courseDays} दिन का कोर्स
+                                                        </span>
+                                                    )}
+                                                </label>
+                                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                    <div style={{ position: 'relative', flex: '1 1 180px' }}>
+                                                        <input 
+                                                            type="number" 
+                                                            min="1" 
+                                                            max="365"
+                                                            value={courseDays} 
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                setCourseDays(val === '' ? '' : Math.max(1, parseInt(val) || 1));
+                                                            }}
+                                                            placeholder="दिन संख्या लिखें (उदा. 15)"
+                                                            required
+                                                            style={{
+                                                                width: '100%',
+                                                                padding: '10px 48px 10px 14px',
+                                                                borderRadius: '10px',
+                                                                border: '2px solid #cbd5e1',
+                                                                fontSize: '14px',
+                                                                fontWeight: '700',
+                                                                color: '#0f172a',
+                                                                background: '#ffffff',
+                                                                outline: 'none',
+                                                                boxSizing: 'border-box'
+                                                            }}
+                                                            onFocus={(e) => e.target.style.borderColor = '#10b981'}
+                                                            onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
+                                                        />
+                                                        <span style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', fontWeight: '700', color: '#64748b', pointerEvents: 'none' }}>
+                                                            दिन
+                                                        </span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                                        {[7, 15, 30, 60].map((days) => (
+                                                            <button
+                                                                key={days}
+                                                                type="button"
+                                                                onClick={() => setCourseDays(days)}
+                                                                style={{
+                                                                    padding: '8px 12px',
+                                                                    borderRadius: '8px',
+                                                                    border: `1px solid ${Number(courseDays) === days ? '#10b981' : '#cbd5e1'}`,
+                                                                    background: Number(courseDays) === days ? '#ecfdf5' : '#f8fafc',
+                                                                    color: Number(courseDays) === days ? '#065f46' : '#475569',
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '700',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                            >
+                                                                {days} दिन
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <small style={{ color: '#64748b', fontSize: '11px', marginTop: '6px', display: 'block' }}>
+                                                    मरीज अपनी आवश्यकता अनुसार जितने दिन की दवाई चाहिए यहाँ संख्या (दिन) भर सकते हैं।
+                                                </small>
+                                            </div>
                                         </div>
 
                                         {pharmacyConfig?.faqs?.length > 0 && (
@@ -1528,28 +1825,57 @@ const OrderMedicine = () => {
                                             </div>
                                             <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
                                                 <div className="form-group" style={{ flex: 1 }}>
-                                                    <label>{t('pharmacy.city')}</label>
-                                                    <input type="text" required value={shippingDetails.city} onChange={e => setShippingDetails({ ...shippingDetails, city: e.target.value })} placeholder={t('pharmacy.city')} />
+                                                    <label>{t('pharmacy.pinCode')} <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'normal' }}>(पहला चरण / Step 1)</span></label>
+                                                    <input type="text" required value={shippingDetails.zip} onChange={e => handleManualZipChange(e.target.value)} placeholder={t('pharmacy.placeholderPin')} />
                                                 </div>
                                                 <div className="form-group" style={{ flex: 1 }}>
-                                                    <label>{t('pharmacy.pinCode')}</label>
-                                                    <input type="text" required value={shippingDetails.zip} onChange={e => handleManualZipChange(e.target.value)} placeholder={t('pharmacy.placeholderPin')} />
-                                                    {false && (
-                                                        <div style={{ color: '#e53e3e', fontSize: '12px', marginTop: '4px', fontWeight: '600' }}>
-                                                            {pincodeError}
-                                                        </div>
-                                                    )}
+                                                    <label>{t('pharmacy.state')}</label>
+                                                    <input type="text" required value={shippingDetails.state} onChange={e => setShippingDetails({ ...shippingDetails, state: e.target.value })} placeholder={t('pharmacy.state')} />
                                                 </div>
                                             </div>
+
                                             {pincodeError && (
-                                                <div style={{ color: '#e53e3e', fontSize: '12px', marginTop: '-10px', marginBottom: '15px', fontWeight: '600', width: '100%', textAlign: 'left' }}>
+                                                <div style={{ color: '#e53e3e', fontSize: '12px', marginTop: '-5px', marginBottom: '15px', fontWeight: '600', width: '100%', textAlign: 'left', background: '#fff5f5', padding: '10px 12px', borderRadius: '8px', border: '1px solid #fed7d7' }}>
                                                     {pincodeError}
                                                 </div>
                                             )}
-                                            <div className="form-group" style={{ marginBottom: '15px' }}>
-                                                <label>{t('pharmacy.state')}</label>
-                                                <input type="text" required value={shippingDetails.state} onChange={e => setShippingDetails({ ...shippingDetails, state: e.target.value })} placeholder={t('pharmacy.state')} />
-                                            </div>
+
+                                            {/* Level 2: Dynamic Village/City Dropdown for this PIN Code */}
+                                            {shippingDetails.zip && !pincodeError && (
+                                                <div className="form-group" style={{ marginBottom: '15px', background: '#f0fdf4', padding: '12px', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
+                                                    <label style={{ fontSize: '13px', fontWeight: '700', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                                                        <CheckCircle size={16} color="#16a34a" />
+                                                        गाँव / कस्बा चुनें (Step 2: Select Village/City for PIN {shippingDetails.zip}) <span style={{ color: '#ef4444' }}>*</span>
+                                                    </label>
+                                                    <select
+                                                        value={shippingDetails.villageName || shippingDetails.city || ''}
+                                                        onChange={(e) => {
+                                                            const selectedVal = e.target.value;
+                                                            setShippingDetails(prev => ({ ...prev, city: selectedVal, villageName: selectedVal }));
+                                                        }}
+                                                        required
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '10px 12px',
+                                                            borderRadius: '8px',
+                                                            border: '2px solid #16a34a',
+                                                            background: '#ffffff',
+                                                            fontWeight: '700',
+                                                            color: '#0f172a',
+                                                            fontSize: '13px',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        <option value="">-- इस पिन कोड के तहत अपना गाँव / कस्बा चुनें --</option>
+                                                        {getVillagesForPincode(shippingDetails.zip).map((village, idx) => (
+                                                            <option key={idx} value={village}>{village}</option>
+                                                        ))}
+                                                    </select>
+                                                    <small style={{ color: '#15803d', fontSize: '11px', marginTop: '5px', display: 'block', fontWeight: '500' }}>
+                                                        ✓ पिन कोड स्वीकृत! कृपया डिलीवरी के लिए उपरोक्त सूची में से अपना गाँव/शहर चुनें।
+                                                    </small>
+                                                </div>
+                                            )}
                                             <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', justifyContent: 'flex-start' }} onClick={() => setIsOrderingForSomeoneElse(!isOrderingForSomeoneElse)}>
                                                 <input
                                                     type="checkbox"
@@ -2002,6 +2328,68 @@ const OrderMedicine = () => {
                                 {loading ? <div className="loader"></div> : t('pharmacy.confirmSubmit')}
                             </button>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Past Prescription Archive Selector Modal ("पहले की पर्ची चुनें") */}
+            {showPastRxModal && (
+                <div className="modal-overlay" onClick={() => setShowPastRxModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px', maxHeight: '80vh', overflowY: 'auto' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>पहले की पर्ची चुनें (Past Prescriptions)</h3>
+                            <button onClick={() => setShowPastRxModal(false)} style={{ border: 'none', background: 'transparent', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+                        </div>
+
+                        {history.length === 0 ? (
+                            <div style={{ padding: '30px 20px', textAlign: 'center', color: '#64748b' }}>
+                                <FileText size={40} color="#cbd5e1" style={{ marginBottom: '10px' }} />
+                                <p style={{ margin: 0 }}>No past uploaded prescriptions found in your account.</p>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {history.map((rx) => (
+                                    <div
+                                        key={rx._id}
+                                        onClick={() => {
+                                            setSelectedPastRx(rx);
+                                            setPreview(rx.image);
+                                            setShowPastRxModal(false);
+                                            toast.success(`Selected past prescription #${rx._id.slice(-4)}`);
+                                        }}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '12px',
+                                            borderRadius: '10px',
+                                            border: '1px solid #e2e8f0',
+                                            cursor: 'pointer',
+                                            background: '#f8fafc'
+                                        }}
+                                    >
+                                        {rx.image && (
+                                            <img
+                                                src={rx.image}
+                                                alt="Rx thumbnail"
+                                                style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px' }}
+                                            />
+                                        )}
+                                        <div style={{ flex: 1 }}>
+                                            <strong style={{ fontSize: '13px', color: '#1e293b', display: 'block' }}>Ref: #{rx._id.slice(-6).toUpperCase()}</strong>
+                                            <span style={{ fontSize: '11px', color: '#64748b' }}>Uploaded: {new Date(rx.createdAt).toLocaleDateString()}</span>
+                                            <div style={{ fontSize: '11px', color: '#10b981', fontWeight: '600' }}>Status: {rx.status}</div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            style={{ padding: '6px 12px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}
+                                        >
+                                            Choose
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

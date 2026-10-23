@@ -75,7 +75,7 @@ const Home = () => {
             <section className="home-welcome" style={{ background: 'white', borderBottom: '1px solid #f1f5f9' }}>
                 <div className="container">
                     <div style={{ textAlign: 'center', }}>
-                        <h2 style={{
+                        {/* <h2 style={{
                             display: 'block',
                             fontSize: 'clamp(2.25rem, 6vw, 3.5rem)',
                             fontWeight: 500,
@@ -88,7 +88,7 @@ const Home = () => {
                             letterSpacing: '-0.03em'
                         }}>
                             {t('home.welcomeTitle')}
-                        </h2>
+                        </h2> */}
                         <div style={{
                             width: '80px',
                             height: '5px',
@@ -97,7 +97,7 @@ const Home = () => {
                             borderRadius: 'var(--radius-full)',
                             opacity: 0.3
                         }}></div>
-                        <p style={{
+                       {/* <p style={{
                             color: 'var(--text-muted)',
                             fontSize: 'clamp(1.1rem, 2.5vw, 1.4rem)',
                             maxWidth: '800px',
@@ -106,7 +106,7 @@ const Home = () => {
                             lineHeight: 1.6
                         }}>
                             {t('home.welcomeSubtitle')}
-                        </p>
+                        </p>*/}
                     </div>
                 </div>
             </section>
