@@ -32,9 +32,10 @@ const Leaderboard = () => {
     };
 
     const getInitials = (name) => {
-        return name
-            ? name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
-            : '??';
+        if (!name || !name.trim()) return '??';
+        const parts = name.trim().split(/\s+/);
+        const initials = parts.map(n => n[0]).join('').toUpperCase();
+        return initials.substring(0, 2) || '??';
     };
 
     // Separate top 3
@@ -101,11 +102,19 @@ const Leaderboard = () => {
                                                 />
                                             )}
                                             <div className="avatar-circle">
-                                                {getInitials(donor.name)}
+                                                {donor.profileImage ? (
+                                                    <img
+                                                        src={donor.profileImage}
+                                                        alt={donor.name || 'Donor'}
+                                                        className="avatar-img"
+                                                    />
+                                                ) : (
+                                                    getInitials(donor.name)
+                                                )}
                                             </div>
                                             <div className="rank-badge">{donor.rank}</div>
                                         </div>
-                                        <div className="player-name">{donor.name}</div>
+                                        <div className="player-name">{donor.name || 'Donor'}</div>
                                         <div className="player-score">₹{donor.totalAmount.toLocaleString()}</div>
                                     </motion.div>
                                 ))}
@@ -126,9 +135,17 @@ const Leaderboard = () => {
                                             <Minus size={12} className="rank-arrow" />
                                         </div>
                                         <div className="item-avatar">
-                                            {getInitials(donor.name)}
+                                            {donor.profileImage ? (
+                                                <img
+                                                    src={donor.profileImage}
+                                                    alt={donor.name || 'Donor'}
+                                                    className="avatar-img"
+                                                />
+                                            ) : (
+                                                getInitials(donor.name)
+                                            )}
                                         </div>
-                                        <div className="item-name">{donor.name}</div>
+                                        <div className="item-name">{donor.name || 'Donor'}</div>
                                         <div className="item-score">₹{donor.totalAmount.toLocaleString()}</div>
                                     </motion.div>
                                 ))}

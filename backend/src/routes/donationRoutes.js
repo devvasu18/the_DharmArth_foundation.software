@@ -681,7 +681,7 @@ router.get('/leaderboard', async (req, res) => {
             {
                 $group: {
                     _id: "$donorMobile",
-                    name: { $last: "$donorName" }, // Use the latest name provided by this mobile
+                    donorName: { $last: "$donorName" }, // Use the latest name provided by this mobile
                     totalAmount: { $sum: "$amount" }
                 }
             },
@@ -695,7 +695,33 @@ router.get('/leaderboard', async (req, res) => {
             },
             {
                 $addFields: {
-                    profileImage: { $arrayElemAt: ["$userDetails.profileImage", 0] }
+                    userDoc: { $arrayElemAt: ["$userDetails", 0] }
+                }
+            },
+            {
+                $addFields: {
+                    profileImage: "$userDoc.profileImage",
+                    name: {
+                        $let: {
+                            vars: {
+                                trimmedDonorName: { $trim: { input: { $ifNull: ["$donorName", ""] } } },
+                                trimmedUserName: { $trim: { input: { $ifNull: ["$userDoc.name", ""] } } }
+                            },
+                            in: {
+                                $cond: {
+                                    if: { $gt: [{ $strLenCP: "$$trimmedDonorName" }, 0] },
+                                    then: "$$trimmedDonorName",
+                                    else: {
+                                        $cond: {
+                                            if: { $gt: [{ $strLenCP: "$$trimmedUserName" }, 0] },
+                                            then: "$$trimmedUserName",
+                                            else: "Anonymous"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             },
             { $sort: { totalAmount: -1 } },
