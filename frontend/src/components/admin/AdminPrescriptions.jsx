@@ -191,7 +191,7 @@ const AdminPrescriptions = () => {
         if (status === 'Verified') {
             const newErrors = [];
             verifiedItems.forEach((item, index) => {
-                if (!item.frequency || !item.time || !item.foodRelation || !item.intakeMethod || !item.medicineName || !item.quantity || item.price === '' || item.price === null || item.price === undefined) {
+                if (!item.medicineName || !item.quantity || item.price === '' || item.price === null || item.price === undefined) {
                     newErrors.push(index);
                 }
             });
@@ -372,11 +372,31 @@ const AdminPrescriptions = () => {
                                         </div>
                                     )}
 
-                                    {(selected.notes || (selected.faqAnswers && selected.faqAnswers.length > 0)) && (
+                                    {(selected.notes || (selected.faqAnswers && selected.faqAnswers.length > 0) || selected.needAllMedicines || selected.courseDays) && (
                                         <section className="form-section" style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
                                             <div className="sec-title" style={{ marginBottom: '10px' }}>
                                                 <AlertCircle size={18} color="#3b82f6" />
-                                                <h4 style={{ color: '#1e293b', margin: 0 }}>Patient Information & Notes</h4>
+                                                <h4 style={{ color: '#1e293b', margin: 0 }}>Patient Information & Order Preferences</h4>
+                                            </div>
+
+                                            {/* Order Preferences (दवाई चयन & कोर्स अवधि) */}
+                                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                                                <div style={{ background: '#fff', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', flex: 1, minWidth: '220px' }}>
+                                                    <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>पर्ची की दवाई का चयन (Preference):</div>
+                                                    <div style={{ fontSize: '14px', fontWeight: '700', marginTop: '4px', color: selected.needAllMedicines === 'PARTIAL' ? '#d97706' : '#2563eb' }}>
+                                                        {selected.needAllMedicines === 'PARTIAL'
+                                                            ? '⚠️ कुछ दवाई चाहिए (Notes में लिखे अनुसार)'
+                                                            : '✓ पर्ची की सभी दवाई चाहिए (All Medicines)'}
+                                                    </div>
+                                                </div>
+                                                {selected.courseDays && (
+                                                    <div style={{ background: '#fff', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', flex: 1, minWidth: '160px' }}>
+                                                        <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>कोर्स की अवधि (Course Duration):</div>
+                                                        <div style={{ fontSize: '14px', fontWeight: '700', marginTop: '4px', color: '#059669' }}>
+                                                            {selected.courseDays} दिन का कोर्स
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                             {selected.faqAnswers && selected.faqAnswers.length > 0 && (
                                                 <div style={{ marginBottom: selected.notes ? '15px' : '0' }}>
@@ -536,6 +556,7 @@ const AdminPrescriptions = () => {
                                                         )}
                                                     </div>
                                                     <div style={{display: 'flex', gap: '8px', width: '100%', flexWrap: 'wrap', backgroundColor: '#f8fafc', padding: '10px', borderRadius: '8px', border: errors.includes(index) ? '1px solid #ef4444' : 'none'}}>
+                                                        {/*
                                                         <div className="input-group-p" style={{flex: 1, minWidth: '120px'}}>
                                                             <label style={{fontSize: '0.75rem'}}>Frequency</label>
                                                             <select value={item.frequency || ''} onChange={(e) => handleItemChange(index, 'frequency', e.target.value)} disabled={isReadOnly} style={{padding: '8px', borderRadius: '6px', border: errors.includes(index) && !item.frequency ? '1px solid #ef4444' : '1px solid #cbd5e0', width: '100%'}}>
@@ -619,6 +640,7 @@ const AdminPrescriptions = () => {
                                                                 <option value="dissolved in water">Dissolve in water</option>
                                                             </select>
                                                         </div>
+                                                        */}
                                                         <div className="input-group-p" style={{flex: 1, minWidth: '120px'}}>
                                                             <label style={{fontSize: '0.75rem'}}>Batch</label>
                                                             {item.batches && item.batches.length > 0 ? (

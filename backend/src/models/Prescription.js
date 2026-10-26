@@ -27,6 +27,11 @@ const prescriptionSchema = new mongoose.Schema({
         type: Number,
         default: 15
     },
+    needAllMedicines: {
+        type: String,
+        enum: ['ALL', 'PARTIAL'],
+        default: 'ALL'
+    },
     orderSource: {
         type: String,
         enum: ['Website', 'Created by Medical/Admin', 'Phone Call Intake'],

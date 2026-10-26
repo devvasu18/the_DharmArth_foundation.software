@@ -76,6 +76,8 @@ exports.uploadPrescription = async (req, res) => {
             image: req.file.path, // Cloudinary URL
             status: 'Pending',
             notes: req.body.notes,
+            courseDays: req.body.courseDays ? Number(req.body.courseDays) : 15,
+            needAllMedicines: req.body.needAllMedicines || 'ALL',
             faqAnswers: parsedFaqAnswers,
             guestName: guestInfo.name,
             guestMobile: guestInfo.mobile,

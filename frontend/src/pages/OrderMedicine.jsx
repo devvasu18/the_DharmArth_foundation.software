@@ -1904,7 +1904,6 @@ const OrderMedicine = () => {
                                     <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
                                         <option value="Online">{t('pharmacy.onlinePayment')}</option>
                                         <option value="COD">{t('pharmacy.codPayment')}</option>
-                                        <option value="Wallet">{t('pharmacy.walletPayment')}</option>
                                     </select>
                                 </div>
 
