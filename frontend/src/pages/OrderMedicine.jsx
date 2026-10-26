@@ -840,22 +840,11 @@ const OrderMedicine = () => {
             <main className="order-medicine-main">
                 {/* Hero Header */}
                 <div className="hero-head">
-                    <div className="badge-pill">{t('pharmacy.premiumService')}</div>
-                    <h1>{t('pharmacy.orderMedicine')} & Free Medicine Service</h1>
-                    <p>{t('pharmacy.heroSubtitle')}</p>
-                    <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'center', gap: '15px' }}>
-                        <button
-                            className="refresh-btn"
-                            onClick={() => navigate('/order-history')}
-                            style={{ background: '#3182ce', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '15px' }}
-                        >
-                            <Clock size={18} /> {t('pharmacy.viewHistory')}
-                        </button>
-                    </div>
+                    <h1>{t('pharmacy.orderMedicine')}</h1>
                 </div>
 
                 {/* Info Steps */}
-                <section className="steps-sec">
+                {/* <section className="steps-sec">
                     <div className="container">
                         <div className="steps-grid">
                             <div className="step-card">
@@ -877,7 +866,7 @@ const OrderMedicine = () => {
                             </div>
                         </div>
                     </div>
-                </section>
+                </section> */}
 
                 <section className="main-features container">
                     <div className="grid-layout">
@@ -1348,8 +1337,8 @@ const OrderMedicine = () => {
                                                         </span>
                                                     )}
                                                 </label>
-                                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                                    <div style={{ position: 'relative', flex: '1 1 180px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                    <div style={{ position: 'relative', width: '100%', maxWidth: '280px' }}>
                                                         <input 
                                                             type="number" 
                                                             min="1" 
@@ -1379,27 +1368,6 @@ const OrderMedicine = () => {
                                                         <span style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', fontWeight: '700', color: '#64748b', pointerEvents: 'none' }}>
                                                             दिन
                                                         </span>
-                                                    </div>
-                                                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                                        {[7, 15, 30, 60].map((days) => (
-                                                            <button
-                                                                key={days}
-                                                                type="button"
-                                                                onClick={() => setCourseDays(days)}
-                                                                style={{
-                                                                    padding: '8px 12px',
-                                                                    borderRadius: '8px',
-                                                                    border: `1px solid ${Number(courseDays) === days ? '#10b981' : '#cbd5e1'}`,
-                                                                    background: Number(courseDays) === days ? '#ecfdf5' : '#f8fafc',
-                                                                    color: Number(courseDays) === days ? '#065f46' : '#475569',
-                                                                    fontSize: '12px',
-                                                                    fontWeight: '700',
-                                                                    cursor: 'pointer'
-                                                                }}
-                                                            >
-                                                                {days} दिन
-                                                            </button>
-                                                        ))}
                                                     </div>
                                                 </div>
                                                 <small style={{ color: '#64748b', fontSize: '11px', marginTop: '6px', display: 'block' }}>
@@ -1669,6 +1637,16 @@ const OrderMedicine = () => {
                         </div>
                     </div>
                 </section>
+
+                {/* <div style={{ margin: '40px 0 20px', display: 'flex', justifyContent: 'center' }}>
+                    <button
+                        className="refresh-btn"
+                        onClick={() => navigate('/order-history')}
+                        style={{ background: '#3182ce', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '600' }}
+                    >
+                        <Clock size={18} /> {t('pharmacy.viewHistory')}
+                    </button>
+                </div> */} 
             </main>
 
             <Footer />
