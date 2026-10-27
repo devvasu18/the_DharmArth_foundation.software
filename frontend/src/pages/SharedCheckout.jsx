@@ -528,7 +528,7 @@ const SharedCheckout = () => {
                                                     <span className="med-price">₹{item.price?.toFixed(2)}</span>
                                                 </div>
                                                 <div className="med-details-shared">
-                                                    <button
+                                                    {/* <button
                                                         type="button"
                                                         className="btn-link-dosage"
                                                         onClick={() => {
@@ -538,7 +538,7 @@ const SharedCheckout = () => {
                                                         }}
                                                     >
                                                         {showDosageMap[index] ? 'Hide Timing' : 'View Timing'}
-                                                    </button>
+                                                    </button> */}
 
                                                     {showDosageMap[index] && (
                                                         <div className="dosage-popover-shared">

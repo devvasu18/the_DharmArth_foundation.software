@@ -109,6 +109,7 @@ const OrderMedicine = () => {
         _id: null,
         street: '',
         city: '',
+        villageName: '',
         state: '',
         zip: '',
         phone: '',
@@ -117,6 +118,7 @@ const OrderMedicine = () => {
     const [savedAddresses, setSavedAddresses] = useState([]);
     const [isAddingNewAddress, setIsAddingNewAddress] = useState(false);
     const [isOrderingForSomeoneElse, setIsOrderingForSomeoneElse] = useState(false);
+    const [activeStep, setActiveStep] = useState(1);
 
     const [notes, setNotes] = useState('');
     const [faqAnswers, setFaqAnswers] = useState({});
@@ -477,6 +479,28 @@ const OrderMedicine = () => {
         fetchPharmacyConfig();
         if (localStorage.getItem('user')) {
             fetchSavedAddresses();
+        } else {
+            try {
+                const localSaved = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+                if (localSaved && localSaved.length > 0) {
+                    setSavedAddresses(localSaved);
+                    setShippingDetails(localSaved[0]);
+                    setIsAddingNewAddress(false);
+                    validatePincode(localSaved[0].zip);
+                } else {
+                    const singleLocal = JSON.parse(localStorage.getItem('savedShippingDetails') || 'null');
+                    if (singleLocal && singleLocal.street) {
+                        setSavedAddresses([singleLocal]);
+                        setShippingDetails(singleLocal);
+                        setIsAddingNewAddress(false);
+                        validatePincode(singleLocal.zip);
+                    } else {
+                        setIsAddingNewAddress(true);
+                    }
+                }
+            } catch (e) {
+                setIsAddingNewAddress(true);
+            }
         }
 
         const fetchSettings = async () => {
@@ -610,6 +634,28 @@ const OrderMedicine = () => {
             setShowGuestModal(false);
             setFile(null);
             setPreview(null);
+            // Persist the confirmed address to localStorage for future orders
+            try {
+                const currentShipping = {
+                    ...shippingDetails,
+                    phone: deliveryPhone,
+                    _id: shippingDetails._id || `addr_${Date.now()}`,
+                    updatedAt: new Date().toISOString()
+                };
+                localStorage.setItem('savedShippingDetails', JSON.stringify(currentShipping));
+                const existingSaved = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+                const foundIdx = existingSaved.findIndex(a => 
+                    (a._id && a._id === currentShipping._id) || 
+                    (a.street === currentShipping.street && a.zip === currentShipping.zip)
+                );
+                if (foundIdx >= 0) {
+                    existingSaved[foundIdx] = currentShipping;
+                } else {
+                    existingSaved.unshift(currentShipping);
+                }
+                localStorage.setItem('savedAddresses', JSON.stringify(existingSaved));
+            } catch (e) {}
+
             if (isUserLoggedIn) {
                 fetchHistory();
                 fetchOrders();
@@ -670,26 +716,135 @@ const OrderMedicine = () => {
         }
     };
 
+    const handleProceedToStep2 = () => {
+        // If user is choosing from saved addresses and not adding new:
+        if (!isAddingNewAddress && savedAddresses.length > 0) {
+            const selected = shippingDetails.street ? shippingDetails : savedAddresses[0];
+            if (!selected || !selected.street) {
+                toast.error(t('pharmacy.fillAddress') || "कृपया डिलीवरी का पता चुनें (Please select a delivery address)");
+                return;
+            }
+            if (selected.zip && !validatePincode(selected.zip)) {
+                toast.error(pincodeError || "पिन कोड सेवा क्षेत्र में नहीं है (Pincode is not serviceable)");
+                return;
+            }
+            const phoneToUse = selected.phone || guestMobile || (user ? user.mobile : '');
+            if (!phoneToUse || phoneToUse.trim().length < 10) {
+                toast.error(t('pharmacy.phoneRequired') || "कृपया वैध 10-अंकों का मोबाइल नंबर भरें (Valid 10-digit phone number required)");
+                return;
+            }
+            setShippingDetails(prev => ({ ...prev, ...selected, phone: phoneToUse }));
+            setActiveStep(2);
+            window.scrollTo({ top: 150, behavior: 'smooth' });
+            return;
+        }
+
+        // Validate newly entered address:
+        if (!shippingDetails.street || !shippingDetails.street.trim()) {
+            toast.error(t('pharmacy.fillStreet') || "कृपया मकान/सड़क का पता भरें (Please enter street address)");
+            return;
+        }
+        if (!shippingDetails.zip || !shippingDetails.zip.trim()) {
+            toast.error(t('pharmacy.fillZip') || "कृपया पिन कोड भरें (Please enter PIN code)");
+            return;
+        }
+        if (!validatePincode(shippingDetails.zip)) {
+            toast.error(pincodeError || "पिन कोड सेवा क्षेत्र में नहीं है (Pincode is not serviceable)");
+            return;
+        }
+        const currentVillage = shippingDetails.villageName || shippingDetails.city;
+        if (!currentVillage || !currentVillage.trim()) {
+            toast.error("कृपया गाँव / कस्बा चुनें (Please select village/city)");
+            return;
+        }
+        if (!shippingDetails.state || !shippingDetails.state.trim()) {
+            toast.error(t('pharmacy.fillState') || "कृपया राज्य भरें (Please enter state)");
+            return;
+        }
+
+        const phoneToUse = shippingDetails.phone || guestMobile || (user ? user.mobile : '');
+        if (!phoneToUse || phoneToUse.trim().length < 10) {
+            toast.error(t('pharmacy.phoneRequired') || "कृपया वैध 10-अंकों का मोबाइल नंबर भरें (Valid 10-digit phone number required)");
+            return;
+        }
+
+        const updatedShipping = {
+            ...shippingDetails,
+            city: currentVillage,
+            villageName: currentVillage,
+            phone: phoneToUse,
+            _id: shippingDetails._id || `addr_${Date.now()}`,
+            updatedAt: new Date().toISOString()
+        };
+        setShippingDetails(updatedShipping);
+
+        // Update savedAddresses list
+        const updatedSaved = [...savedAddresses];
+        const matchIdx = updatedSaved.findIndex(a => 
+            (a._id && updatedShipping._id && a._id === updatedShipping._id) || 
+            (a.street === updatedShipping.street && a.zip === updatedShipping.zip)
+        );
+
+        if (matchIdx >= 0) {
+            updatedSaved[matchIdx] = updatedShipping;
+        } else {
+            updatedSaved.unshift(updatedShipping);
+        }
+
+        setSavedAddresses(updatedSaved);
+        try {
+            localStorage.setItem('savedAddresses', JSON.stringify(updatedSaved));
+            localStorage.setItem('savedShippingDetails', JSON.stringify(updatedShipping));
+        } catch (e) {
+            console.error("Local storage address save error:", e);
+        }
+
+        if (localStorage.getItem('user')) {
+            api.post('/users/profile/addresses', updatedShipping).catch(() => {});
+        }
+
+        setIsAddingNewAddress(false);
+        setActiveStep(2);
+        window.scrollTo({ top: 150, behavior: 'smooth' });
+    };
+
     const fetchSavedAddresses = async () => {
         try {
             const res = await api.get('/users/profile');
-            if (res.data.savedAddresses) {
+            if (res.data.savedAddresses && res.data.savedAddresses.length > 0) {
                 const sorted = [...res.data.savedAddresses].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
                 setSavedAddresses(sorted);
+                localStorage.setItem('savedAddresses', JSON.stringify(sorted));
                 // Auto-select latest if not currently editing
-                if (sorted.length > 0) {
-                    setShippingDetails(sorted[0]);
+                setShippingDetails(sorted[0]);
+                setIsAddingNewAddress(false);
+                validatePincode(sorted[0].zip);
+            } else {
+                const localSaved = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+                if (localSaved && localSaved.length > 0) {
+                    setSavedAddresses(localSaved);
+                    setShippingDetails(localSaved[0]);
                     setIsAddingNewAddress(false);
-                    validatePincode(sorted[0].zip);
+                    validatePincode(localSaved[0].zip);
                 } else {
                     setIsAddingNewAddress(true);
                 }
-            } else {
-                setIsAddingNewAddress(true);
             }
         } catch (err) {
             console.error('Failed to fetch addresses', err);
-            setIsAddingNewAddress(true);
+            try {
+                const localSaved = JSON.parse(localStorage.getItem('savedAddresses') || '[]');
+                if (localSaved && localSaved.length > 0) {
+                    setSavedAddresses(localSaved);
+                    setShippingDetails(localSaved[0]);
+                    setIsAddingNewAddress(false);
+                    validatePincode(localSaved[0].zip);
+                } else {
+                    setIsAddingNewAddress(true);
+                }
+            } catch (e) {
+                setIsAddingNewAddress(true);
+            }
         }
     };
 
@@ -838,10 +993,10 @@ const OrderMedicine = () => {
             <Navbar />
 
             <main className="order-medicine-main">
-                {/* Hero Header */}
+                {/* Hero Header 
                 <div className="hero-head">
                     <h1>{t('pharmacy.orderMedicine')}</h1>
-                </div>
+                </div>*/}
 
                 {/* Info Steps */}
                 {/* <section className="steps-sec">
@@ -868,361 +1023,671 @@ const OrderMedicine = () => {
                     </div>
                 </section> */}
 
-                <section className="main-features container">
-                    <div className="grid-layout">
-                        {/* LEFT: Upload Form */}
-                        <div className="form-column">
+                <section className="main-features container" style={{ padding: 0 }}>
+                    <div className="grid-layout single-column" style={{ display: 'flex', justifyContent: 'center' }}>
+                        {/* Upload Form */}
+                        <div className="form-column" style={{ width: '100%', maxWidth: '720px' }}>
                             <div className="upload-box glass-card">
                                 <div className="card-header">
                                     <h3>{t('pharmacy.sendPrescription')}</h3>
                                     <Zap size={20} color="#f6ad55" />
                                 </div>
-                                <form onSubmit={handleSubmit}>
-                                    <div className="form-scroll-fields">
-                                        {/* Step 1: Delivery Address */}
-                                        <div className="address-section-premium" style={{ marginBottom: '25px', paddingBottom: '20px', borderBottom: '1px solid #cbd5e1' }}>
-                                            <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '700', color: '#1e293b', marginBottom: '15px' }}>
-                                                <MapPin size={18} color="#e53e3e" />
-                                                1. {t('pharmacy.deliveryAddress') || "Delivery Address"}
-                                            </h4>
 
-                                            {savedAddresses.length > 0 && (
-                                                <div className="saved-addresses-selector-shared" style={{ marginBottom: '15px' }}>
-                                                    <div className="address-pills-row-shared" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
-                                                        {savedAddresses.map((addr, idx) => (
-                                                            <button
-                                                                key={idx}
-                                                                className={`addr-pill-shared ${shippingDetails.street === addr.street ? 'active' : ''}`}
-                                                                onClick={() => {
-                                                                    setShippingDetails(addr);
-                                                                    setIsAddingNewAddress(false);
-                                                                    validatePincode(addr.zip);
-                                                                }}
-                                                                type="button"
-                                                                style={{
-                                                                    padding: '8px 12px',
-                                                                    borderRadius: '8px',
-                                                                    border: shippingDetails.street === addr.street ? '2px solid #3b82f6' : '1px solid #cbd5e1',
-                                                                    background: shippingDetails.street === addr.street ? '#eff6ff' : '#f8fafc',
-                                                                    cursor: 'pointer',
-                                                                    whiteSpace: 'nowrap',
-                                                                    fontSize: '12px'
-                                                                }}
-                                                            >
-                                                                <strong>{addr.city}</strong>: <span style={{ fontSize: '11px', color: '#64748b' }}>{addr.street.substring(0, 20)}...</span>
-                                                            </button>
-                                                        ))}
+                                {/* Stepper Navigation Header Matching Design */}
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '2px 4px 10px',
+                                    marginBottom: '10px',
+                                    gap: '12px',
+                                    userSelect: 'none'
+                                }}>
+                                    {/* Step 1 */}
+                                    <div 
+                                        onClick={() => setActiveStep(1)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '10px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <div style={{
+                                            width: '28px',
+                                            height: '28px',
+                                            borderRadius: '50%',
+                                            background: activeStep === 1 ? '#1d68ff' : '#16a34a',
+                                            color: '#ffffff',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '13px',
+                                            fontWeight: '800',
+                                            boxShadow: activeStep === 1 
+                                                ? '0 0 0 4px #dbeafe' 
+                                                : '0 0 0 4px #dcfce7',
+                                            transition: 'all 0.25s ease'
+                                        }}>
+                                            {activeStep > 1 ? <CheckCircle size={15} color="#fff" /> : '1'}
+                                        </div>
+                                        <span style={{
+                                            fontSize: '14px',
+                                            fontWeight: '700',
+                                            color: activeStep === 1 ? '#1d68ff' : '#334155',
+                                            whiteSpace: 'nowrap',
+                                            letterSpacing: '-0.2px'
+                                        }}>
+                                            Delivery Address
+                                        </span>
+                                    </div>
+
+                                    {/* Connecting Line */}
+                                    <div style={{
+                                        width: '48px',
+                                        height: '2px',
+                                        background: activeStep === 2 ? '#93c5fd' : '#cbd5e1',
+                                        borderRadius: '2px',
+                                        transition: 'background 0.3s ease'
+                                    }} />
+
+                                    {/* Step 2 */}
+                                    <div 
+                                        onClick={() => {
+                                            if (activeStep === 1) handleProceedToStep2();
+                                        }}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '10px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <div style={{
+                                            width: '28px',
+                                            height: '28px',
+                                            borderRadius: '50%',
+                                            background: activeStep === 2 ? '#1d68ff' : '#b0c4de',
+                                            color: '#ffffff',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '13px',
+                                            fontWeight: '800',
+                                            boxShadow: activeStep === 2 
+                                                ? '0 0 0 4px #dbeafe' 
+                                                : '0 0 0 4px #f1f5f9',
+                                            transition: 'all 0.25s ease'
+                                        }}>
+                                            2
+                                        </div>
+                                        <div style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            lineHeight: '1.15',
+                                            textAlign: 'left'
+                                        }}>
+                                            <span style={{
+                                                fontSize: '13px',
+                                                fontWeight: activeStep === 2 ? '700' : '600',
+                                                color: activeStep === 2 ? '#1d68ff' : '#475569',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                Upload
+                                            </span>
+                                            <span style={{
+                                                fontSize: '13px',
+                                                fontWeight: activeStep === 2 ? '700' : '600',
+                                                color: activeStep === 2 ? '#1d68ff' : '#475569',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                Prescription
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <form id="medicine-order-form" onSubmit={(e) => {
+                                    e.preventDefault();
+                                    if (activeStep === 1) {
+                                        handleProceedToStep2();
+                                    } else {
+                                        handleSubmit(e);
+                                    }
+                                }}>
+                                    <div className="form-scroll-fields" style={{ paddingBottom: activeStep === 2 ? '75px' : '0' }}>
+                                        {/* ================= STEP 1: DELIVERY ADDRESS ================= */}
+                                        {activeStep === 1 && (
+                                            <div className="address-section-premium" style={{ marginBottom: '15px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+                                                    <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
+                                                        <MapPin size={18} color="#e53e3e" />
+                                                        1. {t('pharmacy.deliveryAddress') || "Delivery Address"}
+                                                    </h4>
+                                                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#2563eb', background: '#eff6ff', padding: '3px 8px', borderRadius: '10px' }}>
+                                                        Step 1 of 2
+                                                    </span>
+                                                </div>
+
+                                                {/* CASE A: User has saved addresses and is NOT adding a new one */}
+                                                {!isAddingNewAddress && savedAddresses.length > 0 ? (
+                                                    <div className="saved-address-container">
+                                                        <div style={{ fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <span>सहेजा गया डिलीवरी पता (Saved Address):</span>
+                                                            {savedAddresses.length > 1 && (
+                                                                <span style={{ fontSize: '11px', color: '#64748b' }}>({savedAddresses.length} पते सहेजे हुए)</span>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Multiple address pills switcher if > 1 */}
+                                                        {savedAddresses.length > 1 && (
+                                                            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', marginBottom: '12px' }}>
+                                                                {savedAddresses.map((addr, idx) => {
+                                                                    const isSelected = (shippingDetails.street === addr.street && shippingDetails.zip === addr.zip);
+                                                                    return (
+                                                                        <button
+                                                                            key={idx}
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                setShippingDetails(addr);
+                                                                                validatePincode(addr.zip);
+                                                                            }}
+                                                                            style={{
+                                                                                padding: '6px 12px',
+                                                                                borderRadius: '8px',
+                                                                                border: isSelected ? '2px solid #2563eb' : '1px solid #cbd5e1',
+                                                                                background: isSelected ? '#eff6ff' : '#f8fafc',
+                                                                                color: isSelected ? '#1d4ed8' : '#475569',
+                                                                                fontWeight: '600',
+                                                                                fontSize: '12px',
+                                                                                cursor: 'pointer',
+                                                                                whiteSpace: 'nowrap'
+                                                                            }}
+                                                                        >
+                                                                            📍 {addr.villageName || addr.city || 'Address'} {idx === 0 ? '(Recent)' : ''}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Selected Address Display Card */}
+                                                        <div style={{
+                                                            padding: '12px 14px',
+                                                            borderRadius: '12px',
+                                                            border: '2px solid #3b82f6',
+                                                            background: 'linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%)',
+                                                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.08)',
+                                                            marginBottom: '10px'
+                                                        }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                    <span style={{ background: '#16a34a', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                                        <CheckCircle size={12} color="#fff" /> चुना गया पता
+                                                                    </span>
+                                                                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+                                                                        {shippingDetails.villageName || shippingDetails.city || 'डिलीवरी पता'}
+                                                                    </span>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setIsAddingNewAddress(true);
+                                                                    }}
+                                                                    style={{
+                                                                        background: '#fff',
+                                                                        border: '1px solid #cbd5e1',
+                                                                        padding: '4px 10px',
+                                                                        borderRadius: '6px',
+                                                                        fontSize: '11px',
+                                                                        fontWeight: '600',
+                                                                        color: '#334155',
+                                                                        cursor: 'pointer',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '4px'
+                                                                    }}
+                                                                >
+                                                                    <Edit2 size={12} /> {t('pharmacy.edit') || "बदलें / Edit"}
+                                                                </button>
+                                                            </div>
+
+                                                            <div style={{ fontSize: '13px', color: '#334155', lineHeight: '1.6', marginBottom: '8px' }}>
+                                                                <div style={{ fontWeight: '600' }}>{shippingDetails.street}</div>
+                                                                <div>{shippingDetails.villageName || shippingDetails.city}, {shippingDetails.state} - <strong>{shippingDetails.zip}</strong></div>
+                                                            </div>
+
+                                                            <div style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid #e2e8f0', paddingTop: '8px' }}>
+                                                                <Phone size={13} color="#2563eb" />
+                                                                <span>मोबाइल: <strong>{shippingDetails.phone || user?.mobile || guestMobile || 'Not provided'}</strong></span>
+                                                                {shippingDetails.altPhone && <span>| अन्य: {shippingDetails.altPhone}</span>}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Add New Address Button */}
                                                         <button
-                                                            className={`addr-pill-shared ${isAddingNewAddress ? 'active' : ''}`}
+                                                            type="button"
                                                             onClick={() => {
-                                                                setShippingDetails({ _id: null, street: '', city: '', state: '', zip: '', phone: user?.mobile || '', altPhone: '' });
+                                                                setShippingDetails({
+                                                                    _id: null,
+                                                                    street: '',
+                                                                    city: '',
+                                                                    villageName: '',
+                                                                    state: '',
+                                                                    zip: '',
+                                                                    phone: user?.mobile || guestMobile || '',
+                                                                    altPhone: ''
+                                                                });
                                                                 setIsAddingNewAddress(true);
                                                                 setPincodeError('');
                                                             }}
-                                                            type="button"
                                                             style={{
-                                                                padding: '8px 12px',
-                                                                borderRadius: '8px',
-                                                                border: isAddingNewAddress ? '2px solid #3b82f6' : '1px solid #cbd5e1',
-                                                                background: isAddingNewAddress ? '#eff6ff' : '#f8fafc',
-                                                                cursor: 'pointer',
-                                                                whiteSpace: 'nowrap',
+                                                                width: '100%',
+                                                                padding: '9px 14px',
+                                                                borderRadius: '10px',
+                                                                border: '2px dashed #94a3b8',
+                                                                background: '#f8fafc',
+                                                                color: '#2563eb',
+                                                                fontWeight: '700',
                                                                 fontSize: '12px',
-                                                                fontWeight: '600'
-                                                            }}
-                                                        >
-                                                            + {t('pharmacy.addNewAddress') || "New Address"}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {(isAddingNewAddress || savedAddresses.length === 0) && (
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
-                                                    <div style={{ position: 'relative' }}>
-                                                        <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.streetAddress') || "Street Address"}</label>
-                                                        <input
-                                                            type="text"
-                                                            value={shippingDetails.street}
-                                                            onChange={(e) => handleStreetChange(e.target.value, 'main')}
-                                                            placeholder={isDetecting ? "Detecting location..." : "House/Plot No, Apartment, Street"}
-                                                            required
-                                                            style={{ width: '100%', padding: '10px 90px 10px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
-                                                        />
-                                                        {activeInputContext === 'main' && suggestions.length > 0 && (
-                                                            <ul style={{
-                                                                position: 'absolute',
-                                                                top: '100%',
-                                                                left: 0,
-                                                                right: 0,
-                                                                zIndex: 99,
-                                                                background: '#ffffff',
-                                                                border: '1px solid #cbd5e1',
-                                                                borderRadius: '8px',
-                                                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                                                                marginTop: '4px',
-                                                                listStyle: 'none',
-                                                                padding: '4px 0',
-                                                                maxHeight: '200px',
-                                                                overflowY: 'auto',
-                                                                textAlign: 'left'
-                                                            }}>
-                                                                {suggestions.map((sug) => (
-                                                                    <li
-                                                                        key={sug.place_id}
-                                                                        onClick={() => handleSelectSuggestion(sug.place_id)}
-                                                                        style={{
-                                                                            padding: '10px 12px',
-                                                                            fontSize: '13px',
-                                                                            color: '#334155',
-                                                                            cursor: 'pointer',
-                                                                            transition: 'background-color 0.2s',
-                                                                            borderBottom: '1px solid #f1f5f9'
-                                                                        }}
-                                                                        onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                                                                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                                                                    >
-                                                                        <div style={{ fontWeight: '600', color: '#1e293b' }}>{sug.structured_formatting?.main_text || sug.description}</div>
-                                                                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{sug.structured_formatting?.secondary_text}</div>
-                                                                    </li>
-                                                                ))}
-                                                            </ul>
-                                                        )}
-                                                        <button
-                                                            type="button"
-                                                            onClick={handleDetectLocation}
-                                                            disabled={isDetecting}
-                                                            style={{
-                                                                position: 'absolute',
-                                                                right: '6px',
-                                                                bottom: '6px',
-                                                                padding: '5px 10px',
-                                                                borderRadius: '6px',
-                                                                background: '#3b82f6',
-                                                                color: '#fff',
-                                                                border: 'none',
-                                                                fontSize: '11px',
-                                                                fontWeight: '600',
                                                                 cursor: 'pointer',
                                                                 display: 'flex',
                                                                 alignItems: 'center',
-                                                                gap: '4px'
+                                                                justifyContent: 'center',
+                                                                gap: '6px',
+                                                                marginBottom: '10px',
+                                                                transition: 'all 0.2s'
                                                             }}
                                                         >
-                                                            <MapPin size={11} />
-                                                            {isDetecting ? '...' : t('pharmacy.detect') || 'Detect'}
+                                                            <Plus size={16} /> + {t('pharmacy.addNewAddress') || "नया पता जोड़ें (Add New Address)"}
                                                         </button>
                                                     </div>
-
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-                                                        <div>
-                                                            <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px' }}>
-                                                                {t('pharmacy.pinCode') || "Pin Code"} <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 'normal' }}>(Level 1 Check)</span> <span style={{ color: '#ef4444' }}>*</span>
-                                                            </label>
-                                                            <input
-                                                                type="text"
-                                                                value={shippingDetails.zip}
-                                                                onChange={(e) => handleManualZipChange(e.target.value)}
-                                                                placeholder="उदा. 331502"
-                                                                required
-                                                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', fontWeight: '600' }}
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.state') || "State"} <span style={{ color: '#ef4444' }}>*</span></label>
-                                                            <input
-                                                                type="text"
-                                                                value={shippingDetails.state}
-                                                                onChange={(e) => setShippingDetails(prev => ({ ...prev, state: e.target.value }))}
-                                                                placeholder="e.g. Rajasthan"
-                                                                required
-                                                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
-                                                            />
-                                                        </div>
-                                                    </div>
-
-                                                    {pincodeError && (
-                                                        <div style={{ color: '#e53e3e', fontSize: '12px', marginBottom: '12px', fontWeight: '600', width: '100%', textAlign: 'left', background: '#fff5f5', padding: '10px 12px', borderRadius: '8px', border: '1px solid #fed7d7' }}>
-                                                            {pincodeError}
-                                                        </div>
-                                                    )}
-
-                                                    {/* Level 2: Dynamic Village/City Dropdown for this PIN Code */}
-                                                    {shippingDetails.zip && !pincodeError && (
-                                                        <div style={{ marginBottom: '12px', background: '#f0fdf4', padding: '12px', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
-                                                            <label style={{ fontSize: '12px', fontWeight: '700', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                                                                <CheckCircle size={15} color="#16a34a" />
-                                                                गाँव / कस्बा चुनें (Level 2: Select Village/City for PIN {shippingDetails.zip}) <span style={{ color: '#ef4444' }}>*</span>
-                                                            </label>
-                                                            <select
-                                                                value={shippingDetails.villageName || shippingDetails.city || ''}
-                                                                onChange={(e) => {
-                                                                    const selectedVal = e.target.value;
-                                                                    setShippingDetails(prev => ({ ...prev, city: selectedVal, villageName: selectedVal }));
-                                                                }}
-                                                                required
-                                                                style={{
-                                                                    width: '100%',
-                                                                    padding: '10px 12px',
-                                                                    borderRadius: '8px',
-                                                                    border: '2px solid #16a34a',
-                                                                    background: '#ffffff',
-                                                                    fontWeight: '700',
-                                                                    color: '#0f172a',
-                                                                    fontSize: '13px',
-                                                                    cursor: 'pointer'
-                                                                }}
-                                                            >
-                                                                <option value="">-- इस पिन कोड के तहत अपना गाँव / कस्बा चुनें --</option>
-                                                                {getVillagesForPincode(shippingDetails.zip).map((village, idx) => (
-                                                                    <option key={idx} value={village}>{village}</option>
-                                                                ))}
-                                                            </select>
-                                                            <small style={{ color: '#15803d', fontSize: '11px', marginTop: '4px', display: 'block', fontWeight: '500' }}>
-                                                                ✓ पिन कोड स्वीकृत! कृपया डिलीवरी के लिए उपरोक्त सूची में से अपना गाँव/शहर चुनें।
-                                                            </small>
-                                                        </div>
-                                                    )}
-
-                                                    {user && (
-                                                        <div style={{ marginTop: '5px' }}>
-                                                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#475569', cursor: 'pointer' }}>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={isOrderingForSomeoneElse}
-                                                                    onChange={(e) => {
-                                                                        setIsOrderingForSomeoneElse(e.target.checked);
-                                                                        if (!e.target.checked) {
-                                                                            setShippingDetails(prev => ({ ...prev, phone: user.mobile }));
+                                                ) : (
+                                                    /* CASE B: User is entering or editing a new address */
+                                                    <div className="new-address-form">
+                                                        {savedAddresses.length > 0 && (
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                                                <span style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>
+                                                                    नया डिलीवरी पता भरें:
+                                                                </span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setIsAddingNewAddress(false);
+                                                                        if (savedAddresses.length > 0) {
+                                                                            setShippingDetails(savedAddresses[0]);
+                                                                            validatePincode(savedAddresses[0].zip);
                                                                         }
                                                                     }}
-                                                                />
-                                                                {t('pharmacy.someoneElse') || "Ordering for someone else?"}
-                                                            </label>
-                                                        </div>
-                                                    )}
+                                                                    style={{
+                                                                        background: 'transparent',
+                                                                        border: 'none',
+                                                                        color: '#2563eb',
+                                                                        fontSize: '12px',
+                                                                        fontWeight: '600',
+                                                                        cursor: 'pointer',
+                                                                        textDecoration: 'underline'
+                                                                    }}
+                                                                >
+                                                                    ← सहेजा गया पता चुनें (Use Saved Address)
+                                                                </button>
+                                                            </div>
+                                                        )}
 
-                                                    {(isOrderingForSomeoneElse || !user) && (
-                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '5px' }}>
-                                                            <div>
-                                                                <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.receiverPhone') || "Receiver's Phone Number"}</label>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                                                            <div style={{ position: 'relative' }}>
+                                                                <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.streetAddress') || "Street Address"} <span style={{ color: '#ef4444' }}>*</span></label>
                                                                 <input
-                                                                    type="tel"
-                                                                    value={shippingDetails.phone}
-                                                                    onChange={(e) => setShippingDetails(prev => ({ ...prev, phone: e.target.value }))}
-                                                                    placeholder="10-digit number"
+                                                                    type="text"
+                                                                    value={shippingDetails.street}
+                                                                    onChange={(e) => handleStreetChange(e.target.value, 'main')}
+                                                                    placeholder={isDetecting ? "Detecting location..." : "House/Plot No, Apartment, Street"}
                                                                     required
-                                                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                                                                    style={{ width: '100%', padding: '10px 90px 10px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                                                                 />
+                                                                {activeInputContext === 'main' && suggestions.length > 0 && (
+                                                                    <ul style={{
+                                                                        position: 'absolute',
+                                                                        top: '100%',
+                                                                        left: 0,
+                                                                        right: 0,
+                                                                        zIndex: 99,
+                                                                        background: '#ffffff',
+                                                                        border: '1px solid #cbd5e1',
+                                                                        borderRadius: '8px',
+                                                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                                                                        marginTop: '4px',
+                                                                        listStyle: 'none',
+                                                                        padding: '4px 0',
+                                                                        maxHeight: '200px',
+                                                                        overflowY: 'auto',
+                                                                        textAlign: 'left'
+                                                                    }}>
+                                                                        {suggestions.map((sug) => (
+                                                                            <li
+                                                                                key={sug.place_id}
+                                                                                onClick={() => handleSelectSuggestion(sug.place_id)}
+                                                                                style={{
+                                                                                    padding: '10px 12px',
+                                                                                    fontSize: '13px',
+                                                                                    color: '#334155',
+                                                                                    cursor: 'pointer',
+                                                                                    transition: 'background-color 0.2s',
+                                                                                    borderBottom: '1px solid #f1f5f9'
+                                                                                }}
+                                                                                onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                                                                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                                                            >
+                                                                                <div style={{ fontWeight: '600', color: '#1e293b' }}>{sug.structured_formatting?.main_text || sug.description}</div>
+                                                                                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{sug.structured_formatting?.secondary_text}</div>
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                )}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={handleDetectLocation}
+                                                                    disabled={isDetecting}
+                                                                    style={{
+                                                                        position: 'absolute',
+                                                                        right: '6px',
+                                                                        bottom: '6px',
+                                                                        padding: '5px 10px',
+                                                                        borderRadius: '6px',
+                                                                        background: '#3b82f6',
+                                                                        color: '#fff',
+                                                                        border: 'none',
+                                                                        fontSize: '11px',
+                                                                        fontWeight: '600',
+                                                                        cursor: 'pointer',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '4px'
+                                                                    }}
+                                                                >
+                                                                    <MapPin size={11} />
+                                                                    {isDetecting ? '...' : t('pharmacy.detect') || 'Detect'}
+                                                                </button>
                                                             </div>
-                                                            <div>
-                                                                <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.altPhone') || "Alternate Phone"}</label>
-                                                                <input
-                                                                    type="tel"
-                                                                    value={shippingDetails.altPhone}
-                                                                    onChange={(e) => setShippingDetails(prev => ({ ...prev, altPhone: e.target.value }))}
-                                                                    placeholder="Optional"
-                                                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
 
-                                        {/* Phone Call Order & Timings Guardrail (9:00 AM - 7:00 PM) */}
-                                        <div style={{
-                                            marginBottom: '22px',
-                                            padding: '16px 20px',
-                                            borderRadius: '14px',
-                                            background: (() => {
-                                                const h = new Date().getHours();
-                                                return (h >= 9 && h < 19) ? 'linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%)' : '#fffbeb';
-                                            })(),
-                                            border: `1px solid ${(() => {
-                                                const h = new Date().getHours();
-                                                return (h >= 9 && h < 19) ? '#86efac' : '#fde68a';
-                                            })()}`,
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                            flexWrap: 'wrap',
-                                            gap: '12px'
-                                        }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                                                                <div>
+                                                                    <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px' }}>
+                                                                        {t('pharmacy.pinCode') || "Pin Code"} <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 'normal' }}>(Level 1 Check)</span> <span style={{ color: '#ef4444' }}>*</span>
+                                                                    </label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={shippingDetails.zip}
+                                                                        onChange={(e) => handleManualZipChange(e.target.value)}
+                                                                        placeholder="उदा. 331502"
+                                                                        required
+                                                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', fontWeight: '600' }}
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.state') || "State"} <span style={{ color: '#ef4444' }}>*</span></label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={shippingDetails.state}
+                                                                        onChange={(e) => setShippingDetails(prev => ({ ...prev, state: e.target.value }))}
+                                                                        placeholder="e.g. Rajasthan"
+                                                                        required
+                                                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                                                                    />
+                                                                </div>
+                                                            </div>
+
+                                                            {pincodeError && (
+                                                                <div style={{ color: '#e53e3e', fontSize: '12px', marginBottom: '12px', fontWeight: '600', width: '100%', textAlign: 'left', background: '#fff5f5', padding: '10px 12px', borderRadius: '8px', border: '1px solid #fed7d7' }}>
+                                                                    {pincodeError}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Level 2: Dynamic Village/City Dropdown for this PIN Code */}
+                                                            {shippingDetails.zip && !pincodeError && (
+                                                                <div style={{ marginBottom: '12px', background: '#f0fdf4', padding: '12px', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
+                                                                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                                                                        <CheckCircle size={15} color="#16a34a" />
+                                                                        गाँव / कस्बा चुनें (Level 2: Select Village/City for PIN {shippingDetails.zip}) <span style={{ color: '#ef4444' }}>*</span>
+                                                                    </label>
+                                                                    <select
+                                                                        value={shippingDetails.villageName || shippingDetails.city || ''}
+                                                                        onChange={(e) => {
+                                                                            const selectedVal = e.target.value;
+                                                                            setShippingDetails(prev => ({ ...prev, city: selectedVal, villageName: selectedVal }));
+                                                                        }}
+                                                                        required
+                                                                        style={{
+                                                                            width: '100%',
+                                                                            padding: '10px 12px',
+                                                                            borderRadius: '8px',
+                                                                            border: '2px solid #16a34a',
+                                                                            background: '#ffffff',
+                                                                            fontWeight: '700',
+                                                                            color: '#0f172a',
+                                                                            fontSize: '13px',
+                                                                            cursor: 'pointer'
+                                                                        }}
+                                                                    >
+                                                                        <option value="">-- इस पिन कोड के तहत अपना गाँव / कस्बा चुनें --</option>
+                                                                        {getVillagesForPincode(shippingDetails.zip).map((village, idx) => (
+                                                                            <option key={idx} value={village}>{village}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                    <small style={{ color: '#15803d', fontSize: '11px', marginTop: '4px', display: 'block', fontWeight: '500' }}>
+                                                                        ✓ पिन कोड स्वीकृत! कृपया डिलीवरी के लिए उपरोक्त सूची में से अपना गाँव/शहर चुनें।
+                                                                    </small>
+                                                                </div>
+                                                            )}
+
+                                                            {user && (
+                                                                <div style={{ marginTop: '5px' }}>
+                                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#475569', cursor: 'pointer' }}>
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={isOrderingForSomeoneElse}
+                                                                            onChange={(e) => {
+                                                                                setIsOrderingForSomeoneElse(e.target.checked);
+                                                                                if (!e.target.checked) {
+                                                                                    setShippingDetails(prev => ({ ...prev, phone: user.mobile }));
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                        {t('pharmacy.someoneElse') || "Ordering for someone else?"}
+                                                                    </label>
+                                                                </div>
+                                                            )}
+
+                                                            {(isOrderingForSomeoneElse || !user) && (
+                                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '5px' }}>
+                                                                    <div>
+                                                                        <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.receiverPhone') || "Receiver's Phone Number"} <span style={{ color: '#ef4444' }}>*</span></label>
+                                                                        <input
+                                                                            type="tel"
+                                                                            value={shippingDetails.phone}
+                                                                            onChange={(e) => setShippingDetails(prev => ({ ...prev, phone: e.target.value }))}
+                                                                            placeholder="10-digit number"
+                                                                            required
+                                                                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                                                                        />
+                                                                    </div>
+                                                                    <div>
+                                                                        <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.altPhone') || "Alternate Phone"}</label>
+                                                                        <input
+                                                                            type="tel"
+                                                                            value={shippingDetails.altPhone}
+                                                                            onChange={(e) => setShippingDetails(prev => ({ ...prev, altPhone: e.target.value }))}
+                                                                            placeholder="Optional"
+                                                                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Proceed to Step 2 Button */}
+                                                <button
+                                                    type="button"
+                                                    onClick={handleProceedToStep2}
+                                                    className="btn-submit-premium"
+                                                    style={{
+                                                        width: '100%',
+                                                        padding: '12px 16px',
+                                                        borderRadius: '10px',
+                                                        fontSize: '14px',
+                                                        fontWeight: '700',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '8px',
+                                                        marginTop: '12px',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <span>Proceed to Step 2</span>
+                                                    <ArrowRight size={18} />
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* ================= STEP 2: UPLOAD PRESCRIPTION & DETAILS ================= */}
+                                        {activeStep === 2 && (
+                                            <div className="prescription-step-content">
+                                                {/* Compact Address Summary bar */}
                                                 <div style={{
-                                                    width: '42px',
-                                                    height: '42px',
-                                                    borderRadius: '12px',
-                                                    background: 'white',
+                                                    marginBottom: '10px',
+                                                    padding: '9px 12px',
+                                                    borderRadius: '10px',
+                                                    background: '#f0fdf4',
+                                                    border: '1px solid #bbf7d0',
                                                     display: 'flex',
                                                     alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    color: '#0284c7',
-                                                    boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
+                                                    justifyContent: 'space-between',
+                                                    gap: '10px'
                                                 }}>
-                                                    <Phone size={20} />
-                                                </div>
-                                                <div>
-                                                    <div style={{ fontWeight: '800', fontSize: '14px', color: '#0f172a' }}>
-                                                        फोन से आर्डर करें (Phone Order Intake)
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#166534', minWidth: 0 }}>
+                                                        <MapPin size={18} color="#16a34a" style={{ flexShrink: 0 }} />
+                                                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            <strong style={{ color: '#15803d' }}>डिलीवरी पता: </strong>
+                                                            <span>{shippingDetails.villageName || shippingDetails.city || 'पता'}, {shippingDetails.zip}</span>
+                                                            <span style={{ color: '#475569', fontSize: '11px', marginLeft: '6px' }}>({shippingDetails.phone})</span>
+                                                        </div>
                                                     </div>
-                                                    <div style={{ fontSize: '12px', color: '#475569', marginTop: '2px' }}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setActiveStep(1)}
+                                                        style={{
+                                                            background: '#ffffff',
+                                                            border: '1px solid #86efac',
+                                                            padding: '4px 10px',
+                                                            borderRadius: '6px',
+                                                            fontSize: '11px',
+                                                            fontWeight: '700',
+                                                            color: '#15803d',
+                                                            cursor: 'pointer',
+                                                            flexShrink: 0
+                                                        }}
+                                                    >
+                                                        {t('pharmacy.change') || "बदलें (Change)"}
+                                                    </button>
+                                                </div>
+
+                                                {/* Phone Call Order & Timings Guardrail (9:00 AM - 7:00 PM) */}
+                                                <div style={{
+                                                    marginBottom: '12px',
+                                                    padding: '10px 14px',
+                                                    borderRadius: '10px',
+                                                    background: (() => {
+                                                        const h = new Date().getHours();
+                                                        return (h >= 9 && h < 19) ? 'linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%)' : '#fffbeb';
+                                                    })(),
+                                                    border: `1px solid ${(() => {
+                                                        const h = new Date().getHours();
+                                                        return (h >= 9 && h < 19) ? '#86efac' : '#fde68a';
+                                                    })()}`,
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    flexWrap: 'wrap',
+                                                    gap: '10px'
+                                                }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                        <div style={{
+                                                            width: '32px',
+                                                            height: '32px',
+                                                            borderRadius: '8px',
+                                                            background: 'white',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            color: '#0284c7',
+                                                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                                                            flexShrink: 0
+                                                        }}>
+                                                            <Phone size={16} />
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontWeight: '700', fontSize: '13px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                <span>फोन पर दवाई ऑर्डर करें</span>
+                                                                <span style={{ fontSize: '10px', color: '#059669', background: '#dcfce7', padding: '1px 6px', borderRadius: '4px', fontWeight: '600' }}>Call to Order</span>
+                                                            </div>
+                                                            <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px' }}>
+                                                                {(() => {
+                                                                    const h = new Date().getHours();
+                                                                    return (h >= 9 && h < 19) 
+                                                                        ? `फार्मासिस्ट उपलब्ध हैं (सुबह 9 AM - शाम 7 PM)`
+                                                                        : `उपलब्ध समय: सुबह 9 AM - शाम 7 PM`;
+                                                                })()}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div>
                                                         {(() => {
                                                             const h = new Date().getHours();
-                                                            return (h >= 9 && h < 19) 
-                                                                ? `फार्मासिस्ट अभी कॉल पर उपलब्ध हैं • सुबह 9:00 AM से शाम 7:00 PM`
-                                                                : `यह सेवा सुबह 9 से रात 7 बजे तक उपलब्ध है • अभी पर्ची अपलोड करें या 9 AM पर कॉल करें`;
+                                                            if (h >= 9 && h < 19) {
+                                                                return (
+                                                                    <a
+                                                                        href={`tel:${(contactPhone || '8306305569').replace(/\s+/g, '')}`}
+                                                                        style={{
+                                                                            display: 'inline-flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '6px',
+                                                                            background: '#16a34a',
+                                                                            color: 'white',
+                                                                            padding: '6px 12px',
+                                                                            borderRadius: '8px',
+                                                                            fontWeight: '700',
+                                                                            fontSize: '12px',
+                                                                            textDecoration: 'none',
+                                                                            boxShadow: '0 2px 6px rgba(22, 163, 74, 0.25)'
+                                                                        }}
+                                                                    >
+                                                                        <Phone size={13} /> कॉल करें: {contactPhone || '8306305569'}
+                                                                    </a>
+                                                                );
+                                                            } else {
+                                                                return (
+                                                                    <div style={{
+                                                                        display: 'inline-flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '5px',
+                                                                        background: '#fef3c7',
+                                                                        color: '#92400e',
+                                                                        border: '1px solid #fde68a',
+                                                                        padding: '4px 10px',
+                                                                        borderRadius: '8px',
+                                                                        fontWeight: '700',
+                                                                        fontSize: '11px'
+                                                                    }}>
+                                                                        <Clock size={13} /> समय: 9 AM - 7 PM
+                                                                    </div>
+                                                                );
+                                                            }
                                                         })()}
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div>
-                                                {(() => {
-                                                    const h = new Date().getHours();
-                                                    if (h >= 9 && h < 19) {
-                                                        return (
-                                                            <a
-                                                                href={`tel:${(contactPhone || '8306305569').replace(/\s+/g, '')}`}
-                                                                style={{
-                                                                    display: 'inline-flex',
-                                                                    alignItems: 'center',
-                                                                    gap: '6px',
-                                                                    background: '#16a34a',
-                                                                    color: 'white',
-                                                                    padding: '8px 18px',
-                                                                    borderRadius: '10px',
-                                                                    fontWeight: '700',
-                                                                    fontSize: '13px',
-                                                                    textDecoration: 'none',
-                                                                    boxShadow: '0 4px 10px rgba(22, 163, 74, 0.25)'
-                                                                }}
-                                                            >
-                                                                <Phone size={14} /> कॉल करें: {contactPhone || '8306305569'}
-                                                            </a>
-                                                        );
-                                                    } else {
-                                                        return (
-                                                            <div style={{
-                                                                display: 'inline-flex',
-                                                                alignItems: 'center',
-                                                                gap: '6px',
-                                                                background: '#fef3c7',
-                                                                color: '#92400e',
-                                                                border: '1px solid #fde68a',
-                                                                padding: '6px 14px',
-                                                                borderRadius: '10px',
-                                                                fontWeight: '700',
-                                                                fontSize: '12px'
-                                                            }}>
-                                                                <Clock size={14} /> समय: 9 AM - 7 PM
-                                                            </div>
-                                                        );
-                                                    }
-                                                })()}
-                                            </div>
-                                        </div>
 
                                         {/* Step 2: Upload Prescription */}
                                         <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '700', color: '#1e293b', marginBottom: '15px' }}>
@@ -1242,11 +1707,11 @@ const OrderMedicine = () => {
                                             ) : (
                                                 <div className="placeholder">
                                                     <div className="icon-circle">
-                                                        <Upload size={32} />
+                                                        <Upload size={24} />
                                                     </div>
                                                     <p>{t('pharmacy.dropPrescription')}</p>
                                                     <span>{t('pharmacy.supports')}</span>
-                                                    <small className="text-gray-500 mt-2 block">{t('pharmacy.maxSize')}</small>
+                                                    <small className="text-gray-500 mt-1 block">{t('pharmacy.maxSize')}</small>
                                                 </div>
                                             )}
                                             <input
@@ -1330,7 +1795,7 @@ const OrderMedicine = () => {
 
                                             <div>
                                                 <label style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                                    <span>दवाई कितने दिन की चाहिए (Course Duration):</span>
+                                                    <span>Course Duration:</span>
                                                     {courseDays && (
                                                         <span style={{ fontSize: '12px', fontWeight: '700', color: '#059669', background: '#ecfdf5', padding: '2px 8px', borderRadius: '6px' }}>
                                                             {courseDays} दिन का कोर्स
@@ -1416,223 +1881,71 @@ const OrderMedicine = () => {
                                             </span>
                                         </div>
 
-                                        {error && <div className="alert alert-error">{error}</div>}
-                                        {success && <div className="alert alert-success">Successfully uploaded! Review in progress.</div>}
-                                    </div>
+                                                {error && <div className="alert alert-error">{error}</div>}
+                                                {success && <div className="alert alert-success">Successfully uploaded! Review in progress.</div>}
 
-                                    <button className="btn-submit-premium" disabled={loading} style={{ marginTop: '20px' }}>
-                                        {loading ? (
-                                            <div className="loader"></div>
-                                        ) : (
-                                            <>
-                                                <Zap size={18} fill="currentColor" />
-                                                {t('pharmacy.submitNow')}
-                                            </>
+                                                {/* Fixed/Sticky Bottom Actions for Step 2 */}
+                                                <div className="fixed-bottom-actions">
+                                                    <div className="fixed-bottom-actions-inner">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setActiveStep(1)}
+                                                            style={{
+                                                                minHeight: '48px',
+                                                                padding: '0 20px',
+                                                                borderRadius: '12px',
+                                                                border: '1.5px solid #cbd5e1',
+                                                                background: '#f8fafc',
+                                                                color: '#334155',
+                                                                fontWeight: '700',
+                                                                fontSize: '13px',
+                                                                cursor: 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                gap: '6px',
+                                                                whiteSpace: 'nowrap',
+                                                                flexShrink: 0,
+                                                                boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                                                                transition: 'all 0.2s'
+                                                            }}
+                                                        >
+                                                            ← {t('pharmacy.back') || "पता बदलें (Back)"}
+                                                        </button>
+
+                                                        <button 
+                                                            type="submit" 
+                                                            className="btn-submit-premium" 
+                                                            disabled={loading} 
+                                                            style={{ 
+                                                                flex: 1, 
+                                                                margin: 0,
+                                                                minHeight: '48px',
+                                                                padding: '0 24px',
+                                                                fontSize: '15px'
+                                                            }}
+                                                        >
+                                                            {loading ? (
+                                                                <div className="loader"></div>
+                                                            ) : (
+                                                                <>
+                                                                    <Zap size={18} fill="currentColor" />
+                                                                    {t('pharmacy.submitNow')}
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         )}
-                                    </button>
+                                    </div>
                                 </form>
 
-                                <div className="or-divider" style={{ margin: '20px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
-                                    <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '700' }}>OR</span>
-                                    <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
-                                </div>
-
-                                <button
-                                    className="btn-action-secondary"
-                                    style={{ width: '100%', padding: '15px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#f8fafc', border: '2px dashed #cbd5e1', color: '#475569', fontWeight: '700' }}
-                                    onClick={() => {
-                                        if (!user) {
-                                            navigate('/login');
-                                        } else {
-                                            setShowRecentModal(true);
-                                        }
-                                    }}
-                                >
-                                    <Clock size={18} />
-                                    {t('pharmacy.selectPrevious')}
-                                </button>
 
                                 <div className="security-tag">
                                     <ShieldCheck size={14} />
                                     <span>{t('pharmacy.encryptedPrivate')}</span>
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* RIGHT: History */}
-                        <div className="history-column">
-                            <div className="history-box glass-card">
-                                <div className="card-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '15px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            <h3 style={{ margin: 0 }}>{t('pharmacy.historyRecent')}</h3>
-                                            {!localStorage.getItem('user') && localStorage.getItem('guestMobile') && (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#64748b', fontWeight: '600', background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px' }}>
-                                                    <User size={10} /> {t('pharmacy.viewingAsGuest', { mobile: localStorage.getItem('guestMobile') })}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <button
-                                            className={`refresh-btn ${isSyncing ? 'syncing' : ''}`}
-                                            onClick={handleSync}
-                                            disabled={isSyncing}
-                                        >
-                                            <Clock size={16} style={{ transform: isSyncing ? 'rotate(360deg)' : 'none', transition: 'transform 0.8s ease' }} />
-                                            {isSyncing ? t('pharmacy.syncing') : t('pharmacy.refresh')}
-                                        </button>
-                                    </div>
-                                    <div className="tab-switcher" style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '8px', width: '100%' }}>
-                                        <button
-                                            className={`tab-btn ${historyTab === 'prescriptions' ? 'active' : ''}`}
-                                            onClick={() => setHistoryTab('prescriptions')}
-                                            style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: historyTab === 'prescriptions' ? '#fff' : 'transparent', fontWeight: historyTab === 'prescriptions' ? '600' : '400', boxShadow: historyTab === 'prescriptions' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s', outline: 'none' }}
-                                        >
-                                            {t('pharmacy.prescriptionsTab', { count: filteredPrescriptions.length })}
-                                        </button>
-                                        <button
-                                            className={`tab-btn ${historyTab === 'orders' ? 'active' : ''}`}
-                                            onClick={() => setHistoryTab('orders')}
-                                            style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: historyTab === 'orders' ? '#fff' : 'transparent', fontWeight: historyTab === 'orders' ? '600' : '400', boxShadow: historyTab === 'orders' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s', outline: 'none' }}
-                                        >
-                                            {t('pharmacy.trackOrdersTab', { count: myOrders.length })}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="order-list-premium">
-                                    {guestHistoryError ? (
-                                        <div className="empty-state-cool" style={{ padding: '30px 20px', textAlign: 'center' }}>
-                                            <AlertCircle size={48} color="#e53e3e" strokeWidth={1.5} style={{ margin: '0 auto 15px' }} />
-                                            <h4 style={{ margin: '0 0 8px 0', color: '#e53e3e', fontWeight: '700', fontSize: '15px' }}>{t('pharmacy.loginRequired') || 'Login Required'}</h4>
-                                            <p style={{ fontSize: '13px', color: '#4a5568', maxWidth: '280px', margin: '0 auto 15px auto', lineHeight: '1.5' }}>{guestHistoryError}</p>
-                                            <button
-                                                type="button"
-                                                onClick={() => navigate('/login')}
-                                                style={{ width: '100%', maxWidth: '200px', padding: '10px', background: '#3182ce', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'background 0.2s' }}
-                                            >
-                                                {t('pharmacy.loginNow') || 'Login Now'}
-                                            </button>
-                                        </div>
-                                    ) : historyTab === 'prescriptions' ? (
-                                        filteredPrescriptions.length === 0 ? (
-                                            <div className="empty-state-cool">
-                                                <FileText size={48} strokeWidth={1} />
-                                                <p>{t('pharmacy.noPrescriptions')}</p>
-                                                {!localStorage.getItem('user') && !localStorage.getItem('guestMobile') && (
-                                                    <button
-                                                        onClick={() => navigate('/login')}
-                                                        style={{ marginTop: '10px', fontSize: '12px', color: '#3182ce', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600', textDecoration: 'underline' }}
-                                                    >
-                                                        {t('pharmacy.loginToSeeHistory')}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            filteredPrescriptions.map(p => (
-                                                <div key={p._id} className="order-card-premium">
-                                                    <div className="presc-thumb" onClick={() => setImageModalSrc(p.image)} style={{ cursor: 'pointer' }}>
-                                                        <img src={p.image.startsWith('http') ? p.image : `${API_BASE_URL}${p.image.startsWith('/') ? '' : '/'}${p.image}`} alt="Uploaded Prescription Receipt - The Dharmarth Medical Foundation" />
-                                                    </div>
-                                                    <div className="order-meta">
-                                                        <div className="meta-row">
-                                                            <span className="order-date">{new Date(p.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                                                            {getStatusBadge(p.status)}
-                                                        </div>
-                                                        <div className="meta-footer">
-                                                            {p.status === 'Verified' ? (
-                                                                <div style={{ display: 'flex', gap: '8px' }}>
-                                                                    <button
-                                                                        className="btn-action-primary"
-                                                                        onClick={() => navigate(`/checkout/${p._id}`)}
-                                                                        style={{ flex: 1 }}
-                                                                    >
-                                                                        {t('pharmacy.reviewCheckout')}
-                                                                    </button>
-                                                                    <button
-                                                                        className="btn-action-secondary"
-                                                                        onClick={() => handleCopyLink(p._id)}
-                                                                        title={t('pharmacy.sharePaymentLink')}
-                                                                        style={{ width: '40px', padding: '0', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                                                                    >
-                                                                        <Share2 size={16} />
-                                                                    </button>
-                                                                </div>
-                                                            ) : p.status === 'Ordered' ? (
-                                                                <button
-                                                                    className="btn-action-secondary"
-                                                                    style={{ background: '#ebf8ff', color: '#2b6cb0', padding: '6px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '5px', border: '1px solid #90cdf4', cursor: 'pointer', outline: 'none' }}
-                                                                    onClick={() => {
-                                                                        setSelectedPrescription(p);
-                                                                        setIsReorderFlow(false);
-                                                                        setCheckoutModalOpen(true);
-                                                                    }}
-                                                                >
-                                                                    <FileText size={16} /> {t('pharmacy.viewDosageInst')}
-                                                                </button>
-                                                            ) : (
-                                                                <div className="status-msg">
-                                                                    {p.status === 'Pending' ? t('pharmacy.statusPending') : p.status === 'Rejected' ? t('pharmacy.statusRejected') : t('pharmacy.statusReviewing')}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        )
-                                    ) : (
-                                        myOrders.length === 0 ? (
-                                            <div className="empty-state-cool">
-                                                <Truck size={48} strokeWidth={1} />
-                                                <p>{t('pharmacy.noActiveOrders')}</p>
-                                            </div>
-                                        ) : (
-                                            myOrders.map(order => (
-                                                <div
-                                                    key={order._id}
-                                                    className="order-card-premium"
-                                                    style={{ padding: '15px', cursor: 'pointer' }}
-                                                    onClick={() => {
-                                                        setSelectedTrackOrder(order);
-                                                        setTrackModalOpen(true);
-                                                    }}
-                                                >
-                                                    <div style={{ width: '100%' }}>
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                                            <span style={{ fontWeight: '700', color: '#1a202c' }}>{t('pharmacy.orderNum', { id: order._id.substring(order._id.length - 6).toUpperCase() })}</span>
-                                                            {getOrderBadge(order.status)}
-                                                        </div>
-                                                        <div style={{ fontSize: '13px', color: '#4a5568', marginBottom: '10px' }}>
-                                                            {t('pharmacy.medicinesCount', { count: order.items.length, price: order.totalAmount.toFixed(2) })}
-                                                        </div>
-                                                        <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px', fontSize: '12px', color: '#718096', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                            <div>
-                                                                <MapPin size={12} style={{ display: 'inline', marginRight: '4px' }} />
-                                                                {order.shippingAddress?.city}
-                                                            </div>
-                                                            <span style={{ color: '#3182ce', fontWeight: 'bold' }}>{t('pharmacy.viewDetails')}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        )
-                                    )}
-                                </div>
-                                {!localStorage.getItem('user') && localStorage.getItem('guestMobile') && !guestHistoryError && (
-                                    <div style={{ marginTop: '15px', padding: '12px', background: '#eff6ff', borderRadius: '10px', border: '1px solid #bfdbfe', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <div style={{ fontSize: '12px', color: '#1e40af', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <Info size={14} /> {t('pharmacy.syncedViaGuest')}
-                                        </div>
-                                        <p style={{ fontSize: '11px', color: '#3b82f6', margin: 0 }}>{t('pharmacy.syncMsg')}</p>
-                                        <button
-                                            type="button"
-                                            onClick={() => navigate('/login')}
-                                            style={{ width: '100%', padding: '8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', transition: 'background 0.2s' }}
-                                        >
-                                            {t('pharmacy.loginRegisterNow')}
-                                        </button>
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </div>

@@ -695,14 +695,6 @@ const PharmacySettings = () => {
                             <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                                 <input 
                                     type="checkbox" 
-                                    checked={config.allowWalletPayment !== false} 
-                                    onChange={(e) => setConfig({...config, allowWalletPayment: e.target.checked})}
-                                />
-                                Allow Dharmarth Wallet
-                            </label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', padding: '12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                                <input 
-                                    type="checkbox" 
                                     checked={config.allowPartnerCod !== false} 
                                     onChange={(e) => setConfig({...config, allowPartnerCod: e.target.checked})}
                                 />

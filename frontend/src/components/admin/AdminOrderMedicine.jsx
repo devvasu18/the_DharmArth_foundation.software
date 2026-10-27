@@ -333,13 +333,13 @@ const AdminOrderMedicine = () => {
         // 4. Validate medicine items list
         const newErrors = [];
         verifiedItems.forEach((item, index) => {
-            if (!item.frequency || !item.time || !item.foodRelation || !item.intakeMethod || !item.medicineName || !item.quantity || item.price === '' || item.price === null || item.price === undefined) {
+            if (!item.medicineName || !item.quantity || item.price === '' || item.price === null || item.price === undefined) {
                 newErrors.push(index);
             }
         });
         if (newErrors.length > 0) {
             setErrors(newErrors);
-            toast.error("Please fill all details and dosage instructions for all medicines.");
+            toast.error("Please fill all details for all medicines.");
             return;
         }
 
@@ -804,6 +804,7 @@ const AdminOrderMedicine = () => {
                                         )}
                                     </div>
                                     <div style={{ display: 'flex', gap: '8px', width: '100%', flexWrap: 'wrap', backgroundColor: '#ffffff', padding: '12px', borderRadius: '8px', border: errors.includes(index) ? '1px solid #ef4444' : 'none' }}>
+                                        {/*
                                         <div className="input-group-p" style={{ flex: 1, minWidth: '120px' }}>
                                             <label style={{ fontSize: '0.75rem' }}>Frequency</label>
                                             <select value={item.frequency || ''} onChange={(e) => handleItemChange(index, 'frequency', e.target.value)} style={{ padding: '8px', borderRadius: '6px', border: errors.includes(index) && !item.frequency ? '1px solid #ef4444' : '1px solid #cbd5e0', width: '100%', fontSize: '0.85rem' }}>
@@ -886,6 +887,7 @@ const AdminOrderMedicine = () => {
                                                 <option value="dissolved in water">Dissolve in water</option>
                                             </select>
                                         </div>
+                                        */}
                                         <div className="input-group-p" style={{ flex: 1, minWidth: '120px' }}>
                                             <label style={{ fontSize: '0.75rem' }}>Batch</label>
                                             {item.batches && item.batches.length > 0 ? (
@@ -936,11 +938,6 @@ const AdminOrderMedicine = () => {
                                                 placeholder={(!item.isManualAllowed && !item.margPID) ? "Search MARG first..." : "Auto/Man"}
                                             />
                                         </div>
-                                        {errors.includes(index) && (
-                                            <div style={{ width: '100%', color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', fontWeight: '500' }}>
-                                                * Please complete all medicine details and dosage instructions.
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             ))}

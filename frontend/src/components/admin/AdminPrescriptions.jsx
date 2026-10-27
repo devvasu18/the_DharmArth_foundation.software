@@ -692,11 +692,6 @@ const AdminPrescriptions = () => {
                                                                 placeholder={(!item.isManualAllowed && !item.margPID) ? "Search MARG first..." : "Auto/Man"}
                                                             />
                                                         </div>
-                                                        {errors.includes(index) && (
-                                                            <div style={{width: '100%', color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', fontWeight: '500'}}>
-                                                                * Please complete all medicine details and dosage instructions.
-                                                            </div>
-                                                        )}
                                                     </div>
                                                 </div>
 
