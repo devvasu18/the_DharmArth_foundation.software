@@ -133,10 +133,15 @@
 .glass-card {
     background: #ffffff;
     border: 2px solid #e2e8f0;
-    border-radius: 20px;
+    border-radius: 0;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
     padding: 24px 28px;
     height: auto;
+}
+
+.upload-box.glass-card,
+.upload-box {
+    border-radius: 0 !important;
 }
 
 .card-header {
@@ -534,7 +539,7 @@
     }
     .glass-card {
         padding: 20px;
-        border-radius: 20px;
+        border-radius: 0;
     }
     .card-header h3 {
         font-size: 1.2rem;

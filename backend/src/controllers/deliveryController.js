@@ -16,12 +16,12 @@ exports.createRoute = async (req, res) => {
 
 exports.getRoutes = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.max(1, parseInt(req.query.limit) || 100);
         const skip = (page - 1) * limit;
 
         const total = await BusRoute.countDocuments();
-        const routes = await BusRoute.find().skip(skip).limit(limit);
+        const routes = await BusRoute.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
 
         res.json({
             routes,

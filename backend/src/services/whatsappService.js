@@ -341,6 +341,26 @@ class WhatsappService {
     }
 
     /**
+     * Specialized: Send Subscription Stopped Notification to Motivator via WhatsApp
+     */
+    async sendSubscriptionStoppedMotivatorNotification(motivatorMobile, data) {
+        const lang = await this._getRecipientLanguage(motivatorMobile);
+        const template = await this._getTemplate('whatsapp_subscription_stopped_motivator_template', lang)
+            || (lang === 'hi'
+                ? "नमस्ते {motivator_name}, महत्वपूर्ण सूचना: {donor_name} ({donor_mobile}) ने ₹{amount}/माह का अपना मासिक दान रद्द कर दिया है। आपको अब इस दाता से मासिक कमीशन प्राप्त नहीं होगा।"
+                : "Hello {motivator_name}, Important Notice: {donor_name} ({donor_mobile}) has stopped their monthly recurring donation of ₹{amount}/month. You will no longer receive recurring commission from this donor.");
+
+        const message = this._replacePlaceholders(template, {
+            motivator_name: data.motivatorName || 'Motivator',
+            donor_name: data.donorName,
+            donor_mobile: data.donorMobile,
+            amount: data.amount
+        });
+
+        return this.sendMessage(motivatorMobile, message, { type: 'subscription_stopped', donorMobile: data.donorMobile });
+    }
+
+    /**
      * Specialized: Send 80G Certificate Ready Notification
      */
     async send80GCertificateNotification(mobile, name, certificateUrl) {

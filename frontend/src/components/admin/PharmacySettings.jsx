@@ -75,9 +75,23 @@ const PharmacySettings = () => {
     };
 
     const handleUpdatePincode = (index, value) => {
+        const oldPin = (config.pincodeVillages || [])[index]?.pincode;
+        const newPin = value.trim();
         const updated = [...(config.pincodeVillages || [])];
-        updated[index] = { ...updated[index], pincode: value.trim() };
-        setConfig(prev => ({ ...prev, pincodeVillages: updated }));
+        updated[index] = { ...updated[index], pincode: newPin };
+
+        let updatedAccepted = (config.acceptedPincodes || '').split(',').map(p => p.trim()).filter(Boolean);
+        if (oldPin && updatedAccepted.includes(oldPin)) {
+            updatedAccepted = updatedAccepted.map(p => p === oldPin ? newPin : p);
+        } else if (newPin && !updatedAccepted.includes(newPin)) {
+            updatedAccepted.push(newPin);
+        }
+
+        setConfig(prev => ({
+            ...prev,
+            pincodeVillages: updated,
+            acceptedPincodes: updatedAccepted.join(', ')
+        }));
     };
 
     const handleUpdateVillagesForPin = (index, value) => {
@@ -87,8 +101,20 @@ const PharmacySettings = () => {
     };
 
     const handleRemovePincodeMapping = (index) => {
+        const removedPin = (config.pincodeVillages || [])[index]?.pincode;
         const updated = (config.pincodeVillages || []).filter((_, i) => i !== index);
-        setConfig(prev => ({ ...prev, pincodeVillages: updated }));
+        
+        let updatedAccepted = (config.acceptedPincodes || '').split(',').map(p => p.trim()).filter(Boolean);
+        const remainingPins = updated.map(item => (item.pincode || '').trim()).filter(Boolean);
+        if (removedPin && !remainingPins.includes(removedPin.trim())) {
+            updatedAccepted = updatedAccepted.filter(p => p !== removedPin.trim());
+        }
+
+        setConfig(prev => ({
+            ...prev,
+            pincodeVillages: updated,
+            acceptedPincodes: updatedAccepted.join(', ')
+        }));
         toast.success("Mapping removed");
     };
 

@@ -12,7 +12,8 @@ const {
     recalculateRestockedPrice,
     getPackingQueue,
     markOrderPacked,
-    refundAdvanceOrder
+    refundAdvanceOrder,
+    pushOrderToMarg
 } = require('../controllers/orderController');
 const { protect, checkPermission } = require('../middlewares/authMiddleware');
 
@@ -24,6 +25,7 @@ router.get('/packing-queue', protect, getPackingQueue);
 router.post('/:id/pack', protect, markOrderPacked);
 router.post('/:id/refund-advance', protect, refundAdvanceOrder);
 router.post('/:id/recalculate-price', protect, recalculateRestockedPrice);
+router.post('/:id/push-marg', protect, checkPermission('Order Management', 'edit'), pushOrderToMarg);
 router.get('/public/:id/invoice', downloadInvoice); // Publicly accessible via tracking link
 router.get('/public/:id', getOrderById); // Added for shareable tracking links
 router.get('/:id/invoice', protect, downloadInvoice);

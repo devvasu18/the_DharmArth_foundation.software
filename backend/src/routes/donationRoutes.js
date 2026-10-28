@@ -124,8 +124,8 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
 
         let finalMotivatorMobile = motivatorMobile;
 
-        // Backend Protection: If user is logged in, prioritize their existing motivator
-        if (req.user) {
+        // Backend Protection: If no explicit motivator provided and user is logged in, use their existing motivator
+        if (!finalMotivatorMobile && req.user) {
             const user = await User.findById(req.user._id).populate('referredBy');
             if (user && user.referredBy) {
                 finalMotivatorMobile = user.referredBy.mobile || user.referredBy.referralCode;
@@ -146,6 +146,18 @@ router.post('/', donationLimiter, optionalProtect, async (req, res) => {
                 level1UserId = motivator._id;
                 if (motivator.referredBy) {
                     level2UserId = motivator.referredBy._id;
+                } else if (motivator.lastMotivatorMobile) {
+                    const grand = await User.findOne({
+                        $or: [
+                            { mobile: motivator.lastMotivatorMobile },
+                            { referralCode: String(motivator.lastMotivatorMobile).toUpperCase() }
+                        ]
+                    });
+                    if (grand) {
+                        level2UserId = grand._id;
+                        // Auto-heal missing referredBy on motivator
+                        await User.updateOne({ _id: motivator._id }, { $set: { referredBy: grand._id } });
+                    }
                 }
             }
         }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import { Check, X, Eye, Package, Truck, Search, User, Phone, Calendar, AlertCircle, Trash2, Plus, Edit2, Lock, Share2 } from 'lucide-react';
 import { useConfirm } from '../../context/ConfirmContext';
@@ -20,6 +20,8 @@ const AdminPrescriptions = () => {
     const [suggestions, setSuggestions] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [statusFilter, setStatusFilter] = useState('Pending'); // 'Pending', 'Verified', 'All'
+    const [customerSearch, setCustomerSearch] = useState('');
+    const searchTimeoutRef = useRef(null);
 
     const handleCopyLink = (prescriptionId) => {
         const url = `${window.location.origin}/checkout/${prescriptionId}`;
@@ -125,13 +127,12 @@ const AdminPrescriptions = () => {
         }
     };
 
-    let searchTimeout;
     const searchMargProducts = (index, query) => {
         setSearchingIndex(index);
         setIsSearching(true);
-        if (searchTimeout) clearTimeout(searchTimeout);
+        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
         
-        searchTimeout = setTimeout(async () => {
+        searchTimeoutRef.current = setTimeout(async () => {
             try {
                 const res = await api.get(`/marg/search-products?search=${query}`);
                 const products = res.data.products || [];
@@ -197,6 +198,7 @@ const AdminPrescriptions = () => {
             });
             if (newErrors.length > 0) {
                 setErrors(newErrors);
+                toast.error("Please fill medicine name, quantity, and price for all items.");
                 return;
             }
         }
@@ -236,7 +238,12 @@ const AdminPrescriptions = () => {
                 <aside className="queue-sidebar">
                     <div className="sidebar-header">
                         <Search size={16} />
-                        <input type="text" placeholder="Search customer..." />
+                        <input
+                            type="text"
+                            placeholder="Search customer..."
+                            value={customerSearch}
+                            onChange={(e) => setCustomerSearch(e.target.value)}
+                        />
                     </div>
 
                     {/* Status Tabs */}
@@ -262,8 +269,26 @@ const AdminPrescriptions = () => {
                                 <Check size={40} color="#cbd5e0" />
                                 <p>All caught up!</p>
                             </div>
-                        ) : (
-                            prescriptions.map(p => (
+                        ) : (() => {
+                            const filteredPrescriptions = prescriptions.filter(p => {
+                                if (!customerSearch.trim()) return true;
+                                const q = customerSearch.toLowerCase().trim();
+                                const customerName = (p.user?.name || p.guestName || '').toLowerCase();
+                                const customerMobile = (p.user?.mobile || p.guestMobile || '').toLowerCase();
+                                const id = (p._id || '').toLowerCase();
+                                return customerName.includes(q) || customerMobile.includes(q) || id.includes(q);
+                            });
+
+                            if (filteredPrescriptions.length === 0) {
+                                return (
+                                    <div className="empty-sidebar">
+                                        <AlertCircle size={32} color="#94a3b8" />
+                                        <p style={{ marginTop: '8px' }}>No matches found</p>
+                                    </div>
+                                );
+                            }
+
+                            return filteredPrescriptions.map(p => (
                                 <div key={p._id} className={`queue-card ${selected?._id === p._id ? 'active' : ''}`} onClick={() => setSelected(p)}>
                                     <div className="thumb">
                                         {p.image ? (
@@ -309,8 +334,8 @@ const AdminPrescriptions = () => {
                                         )}
                                     </div>
                                 </div>
-                            ))
-                        )}
+                            ));
+                        })()}
                     </div>
                 </aside>
                 <div className="admin-v-divider"></div>

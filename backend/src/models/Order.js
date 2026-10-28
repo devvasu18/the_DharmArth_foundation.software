@@ -122,6 +122,17 @@ const orderSchema = new mongoose.Schema({
         pickupStoppage: String,
         estimatedArrivalTime: String,
         dispatchedAt: Date
+    },
+    margOrderDetails: {
+        margOrderNo: String,
+        margCustomerId: String,
+        margStatus: String,
+        billNo: String,
+        billDate: Date,
+        billAmount: Number,
+        pushedAt: Date,
+        lastSyncedAt: Date,
+        error: String
     }
 }, {
     timestamps: true
@@ -131,6 +142,7 @@ const orderSchema = new mongoose.Schema({
 orderSchema.index({ user: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ prescription: 1 });
+orderSchema.index({ 'margOrderDetails.margOrderNo': 1 });
 orderSchema.index({ createdAt: -1 });
 
 const Order = mongoose.model('Order', orderSchema);

@@ -58,34 +58,45 @@ const processDonationCommission = async (donationAmount, motivatorIdentifier, do
         // --- LEVEL 2 COMMISSION ---
         // "This commission will be given to the motivator of the Level 1 motivator"
         // Check who referred the Level 1 motivator
+        let grandMotivator = null;
         if (motivator.referredBy) {
-            const grandMotivator = await User.findById(motivator.referredBy);
-
+            grandMotivator = await User.findById(motivator.referredBy);
+        } else if (motivator.lastMotivatorMobile) {
+            grandMotivator = await User.findOne({
+                $or: [
+                    { mobile: motivator.lastMotivatorMobile },
+                    { referralCode: String(motivator.lastMotivatorMobile).toUpperCase() }
+                ]
+            });
+            // Auto-heal missing referredBy on motivator
             if (grandMotivator) {
-                const comm2 = Math.round((donationAmount * rate2)) / 100; // Round to 2 decimals
-
-                let wallet2 = await Wallet.findOneAndUpdate(
-                    { user: grandMotivator._id },
-                    { $inc: { balance: comm2, totalEarned: comm2 } },
-                    { new: true, upsert: true }
-                );
-
-                await Transaction.create({
-                    wallet: wallet2._id,
-                    amount: comm2,
-                    type: 'credit',
-                    reason: 'referral_commission_l2',
-                    referenceId: donationId,
-                    description: ` L2 Commission via ${motivator.name} for donation from ${donorName} (${donorMobile})`
-                });
-
-                console.log(`L2 Commission: ${comm2} credited to ${grandMotivator.name}`);
-
-                // Notify Grand Motivator
-                await notificationService.notifyMotivatorDonation(grandMotivator, donationAmount, donorName, donorMobile, 2, motivator);
+                await User.updateOne({ _id: motivator._id }, { $set: { referredBy: grandMotivator._id } });
             }
         }
 
+        if (grandMotivator) {
+            const comm2 = Math.round((donationAmount * rate2)) / 100; // Round to 2 decimals
+
+            let wallet2 = await Wallet.findOneAndUpdate(
+                { user: grandMotivator._id },
+                { $inc: { balance: comm2, totalEarned: comm2 } },
+                { new: true, upsert: true }
+            );
+
+            await Transaction.create({
+                wallet: wallet2._id,
+                amount: comm2,
+                type: 'credit',
+                reason: 'referral_commission_l2',
+                referenceId: donationId,
+                description: ` L2 Commission via ${motivator.name} for donation from ${donorName} (${donorMobile})`
+            });
+
+            console.log(`L2 Commission: ${comm2} credited to ${grandMotivator.name}`);
+
+            // Notify Grand Motivator
+            await notificationService.notifyMotivatorDonation(grandMotivator, donationAmount, donorName, donorMobile, 2, motivator);
+        }
     } catch (error) {
         console.error("Error processing commission:", error);
     }

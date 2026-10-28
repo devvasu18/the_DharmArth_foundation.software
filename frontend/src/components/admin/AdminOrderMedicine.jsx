@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import { 
     Check, X, Eye, Package, Truck, Search, User, Phone, Calendar, 
@@ -11,6 +11,7 @@ import '../admin/AdminPrescriptions.css'; // Leverage existing premium styles fo
 
 const AdminOrderMedicine = () => {
     const { showAlert } = useConfirm();
+    const searchTimeoutRef = useRef(null);
     
     // User info state
     const [userMobile, setUserMobile] = useState('');
@@ -161,23 +162,38 @@ const AdminOrderMedicine = () => {
                     if (data.status === 'OK' && data.results[0]) {
                         const components = data.results[0].address_components;
                         let street = data.results[0].formatted_address;
-                        let city = '';
+                        let locality = '';
+                        let sublocality = '';
+                        let district = '';
                         let state = '';
                         let zip = '';
 
                         components.forEach(c => {
-                            if (c.types.includes('locality')) city = c.long_name;
+                            if (c.types.includes('locality')) locality = c.long_name;
+                            if (c.types.includes('sublocality_level_1') || c.types.includes('sublocality')) sublocality = c.long_name;
+                            if (c.types.includes('administrative_area_level_2')) district = c.long_name;
+                            if (c.types.includes('postal_town')) locality = locality || c.long_name;
                             if (c.types.includes('administrative_area_level_1')) state = c.long_name;
                             if (c.types.includes('postal_code')) zip = c.long_name;
                         });
 
-                        setShippingAddress(prev => ({
-                            ...prev,
-                            street,
-                            city: city || prev.city,
-                            state: state || prev.state,
-                            zip: zip || prev.zip
-                        }));
+                        const detectedCity = locality || sublocality || district || '';
+
+                        setShippingAddress(prev => {
+                            const newZip = zip || prev.zip;
+                            let cityToUse = detectedCity || prev.city;
+                            if (!cityToUse && newZip) {
+                                const villages = getVillagesForPincode(newZip);
+                                if (villages.length > 0) cityToUse = villages[0];
+                            }
+                            return {
+                                ...prev,
+                                street,
+                                city: cityToUse,
+                                state: state || prev.state,
+                                zip: newZip
+                            };
+                        });
                         toast.success("Location auto-detected successfully!", { id: 'detect-location' });
                     } else {
                         toast.error("Failed to parse address. Enter manually.", { id: 'detect-location' });
@@ -233,13 +249,12 @@ const AdminOrderMedicine = () => {
         }
     };
 
-    let searchTimeout;
     const searchMargProducts = (index, query) => {
         setSearchingIndex(index);
         setIsSearching(true);
-        if (searchTimeout) clearTimeout(searchTimeout);
+        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
         
-        searchTimeout = setTimeout(async () => {
+        searchTimeoutRef.current = setTimeout(async () => {
             try {
                 const res = await api.get(`/marg/search-products?search=${query}`);
                 const products = res.data.products || [];

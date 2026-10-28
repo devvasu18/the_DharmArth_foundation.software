@@ -66,7 +66,9 @@ const getOrderById = async (req, res) => {
 const getAllOrders = async (req, res) => {
     try {
         const { page = 1, limit = 20, status, search } = req.query;
-        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const currentPage = Math.max(1, parseInt(page) || 1);
+        const currentLimit = Math.max(1, parseInt(limit) || 20);
+        const skip = (currentPage - 1) * currentLimit;
 
         const query = {};
         if (status) {
@@ -88,13 +90,21 @@ const getAllOrders = async (req, res) => {
                 { user: { $in: userIds } }
             ];
 
-            // Add ID search if it looks like a hex string
+            // Add ID search if it looks like a hex string (full or partial 4-24 chars)
             if (/^[0-9a-fA-F]{4,24}$/.test(search)) {
-                // If it's a full 24-char ID, use exact match
                 if (search.length === 24) {
                     query.$or.push({ _id: search });
+                } else {
+                    query.$or.push({
+                        $expr: {
+                            $regexMatch: {
+                                input: { $toString: '$_id' },
+                                regex: search,
+                                options: 'i'
+                            }
+                        }
+                    });
                 }
-                // Partial ID search is not natively supported on ObjectId in Mongoose without aggregation
             }
         }
 
@@ -105,7 +115,7 @@ const getAllOrders = async (req, res) => {
             .populate('dispatchDetails.busId')
             .sort({ createdAt: -1 })
             .skip(skip)
-            .limit(parseInt(limit));
+            .limit(currentLimit);
 
         // Logic to backfill image and FETCH DELIVERY BOY info
         const Bus = require('../models/Bus');
@@ -384,6 +394,33 @@ const refundAdvanceOrder = async (req, res) => {
     }
 };
 
+// @desc    Manually push order to MARG ERP
+// @route   POST /api/orders/:id/push-marg
+// @access  Private/Admin
+const pushOrderToMarg = async (req, res) => {
+    try {
+        const MargErpService = require('../services/margErpService');
+        const order = await Order.findById(req.params.id)
+            .populate('user', 'name mobile margCustomerId')
+            .populate('prescription', 'doctorName');
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        const result = await MargErpService.pushOrderToMarg(order);
+        const refreshedOrder = await Order.findById(req.params.id);
+
+        res.json({
+            success: Boolean(result),
+            result,
+            order: refreshedOrder
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getMyOrders,
     getOrderById,
@@ -396,5 +433,6 @@ module.exports = {
     recalculateRestockedPrice,
     getPackingQueue,
     markOrderPacked,
-    refundAdvanceOrder
+    refundAdvanceOrder,
+    pushOrderToMarg
 };

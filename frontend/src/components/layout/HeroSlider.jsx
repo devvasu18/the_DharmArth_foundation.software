@@ -236,15 +236,22 @@ const HeroSlider = () => {
                                         : (activeTextSlide.subtitle || t('hero.defaultSubtitle'))}
                                 </p>
 
-                                <Link to={activeTextSlide.ctaLink || "/events"} className="hero-cta-btn">
-                                    {i18n.language === 'hi'
-                                        ? (activeTextSlide.ctaText_hi || getTranslatedText(activeTextSlide.ctaText))
-                                        : (activeTextSlide.ctaText || 'Donate')}
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M5 12h14"></path>
-                                        <path d="M12 5l7 7-7 7"></path>
-                                    </svg>
-                                </Link>
+                                <div className="hero-btn-group">
+                                    <Link to={activeTextSlide.ctaLink || "/events"} className="hero-cta-btn">
+                                        {i18n.language === 'hi'
+                                            ? (activeTextSlide.ctaText_hi || getTranslatedText(activeTextSlide.ctaText))
+                                            : (activeTextSlide.ctaText || 'Donate')}
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M5 12h14"></path>
+                                            <path d="M12 5l7 7-7 7"></path>
+                                        </svg>
+                                    </Link>
+
+                                    <Link to="/order-medicine" className="hero-cta-btn hero-cta-btn-medicine">
+                                        {i18n.language === 'hi' ? 'दवा ऑर्डर करें' : 'Order Medicine'}
+                                        <CapsuleSvg size={42} />
+                                    </Link>
+                                </div>
                             </motion.div>
                         )}
                     </div>
@@ -286,7 +293,7 @@ const HeroSlider = () => {
                     </div>
 
                     <Link to="/order-medicine" className="mobile-card card-cyan">
-                        <span className="card-badge">{i18n.language === 'hi' ? 'जल्द आ रहा है' : 'Coming Soon'}</span>
+                       
                         <div className="mobile-card-text">
                             <span>{i18n.language === 'hi' ? 'ऑनलाइन दवा ऑर्डर करें' : 'Order Online Medicine'}</span>
                         </div>

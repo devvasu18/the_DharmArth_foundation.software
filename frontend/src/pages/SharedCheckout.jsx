@@ -60,20 +60,27 @@ const SharedCheckout = () => {
                     if (data.status === 'OK' && data.results[0]) {
                         const components = data.results[0].address_components;
                         let street = data.results[0].formatted_address;
-                        let city = '';
+                        let locality = '';
+                        let sublocality = '';
+                        let district = '';
                         let state = '';
                         let zip = '';
 
                         components.forEach(c => {
-                            if (c.types.includes('locality')) city = c.long_name;
+                            if (c.types.includes('locality')) locality = c.long_name;
+                            if (c.types.includes('sublocality_level_1') || c.types.includes('sublocality')) sublocality = c.long_name;
+                            if (c.types.includes('administrative_area_level_2')) district = c.long_name;
+                            if (c.types.includes('postal_town')) locality = locality || c.long_name;
                             if (c.types.includes('administrative_area_level_1')) state = c.long_name;
                             if (c.types.includes('postal_code')) zip = c.long_name;
                         });
 
+                        const detectedCity = locality || sublocality || district || '';
+
                         setShippingDetails(prev => ({
                             ...prev,
                             street,
-                            city: city || prev.city,
+                            city: detectedCity || prev.city,
                             state: state || prev.state,
                             zip: zip || prev.zip
                         }));

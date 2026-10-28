@@ -433,6 +433,11 @@ i18n
                         "mobileNumber": "Mobile Number",
                         "mobilePlaceholder": "Enter 10-digit mobile number",
                         "confirmSubmit": "Confirm and Submit",
+                        "change": "Change",
+                        "back": "Change Address",
+                        "edit": "Edit",
+                        "changePhoto": "Change Photo",
+                        "addNewAddress": "Add New Address",
                         "badges": {
                             "pendingPayment": "Pending Payment",
                             "processing": "Processing",
@@ -857,6 +862,11 @@ i18n
                         "mobileNumber": "मोबाइल नंबर",
                         "mobilePlaceholder": "10 अंकों का मोबाइल नंबर दर्ज करें",
                         "confirmSubmit": "पुष्टि करें और सबमिट करें",
+                        "change": "बदलें",
+                        "back": "पता बदलें",
+                        "edit": "बदलें",
+                        "changePhoto": "फोटो बदलें",
+                        "addNewAddress": "नया पता जोड़ें",
                         "badges": {
                             "pendingPayment": "भुगतान लंबित",
                             "processing": "प्रसंस्करण",

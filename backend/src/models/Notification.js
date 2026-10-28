@@ -4,7 +4,20 @@ const notificationSchema = new mongoose.Schema({
     type: {
         type: String,
         required: true,
-        enum: ['DONATION', 'SYSTEM', 'USER', 'COMMISSION_EARNED', 'SUBSCRIPTION_STOPPED', 'PAYOUT', 'EVENT', 'PRESCRIPTION_UPLOADED', 'PRESCRIPTION_VERIFIED', 'ORDER_PAID']
+        enum: [
+            'DONATION', 
+            'SYSTEM', 
+            'USER', 
+            'COMMISSION_EARNED', 
+            'SUBSCRIPTION_STOPPED', 
+            'SUBSCRIPTION_CANCELLED',
+            'PAYOUT', 
+            'EVENT', 
+            'PRESCRIPTION_UPLOADED', 
+            'PRESCRIPTION_VERIFIED', 
+            'ORDER_PAID',
+            'ORDER_ARRIVED_AT_PARTNER_SHOP'
+        ]
     },
     user: {
         type: mongoose.Schema.Types.ObjectId,

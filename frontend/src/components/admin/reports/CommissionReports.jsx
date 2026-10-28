@@ -169,7 +169,15 @@ const CommissionReports = () => {
         doc.save("Commission_Report.pdf");
     };
 
-    const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0);
+    const formatCurrency = (val) => {
+        const num = Number(val) || 0;
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: num % 1 === 0 ? 0 : 2,
+            maximumFractionDigits: 2
+        }).format(num);
+    };
 
     if (!data && loading) return <div className="p-8">Loading Report Data...</div>;
     if (!data) return <div className="p-8">No data available</div>;

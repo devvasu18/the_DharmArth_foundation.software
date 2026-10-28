@@ -117,6 +117,24 @@ const AdminLayout = () => {
             setUnreadCount(prev => prev + 1);
         });
 
+        socketRef.current.on('subscription_cancelled', (newNotification) => {
+            playAlert();
+            toast.error(
+                <div onClick={() => {
+                    setIsNotificationsOpen(true);
+                    stopRingtone();
+                    navigate('/admin/subscriptions');
+                }} style={{ cursor: 'pointer' }}>
+                    <b>🛑 Subscription Cancelled!</b>
+                    <p style={{ margin: 0, fontSize: '0.9rem' }}>{newNotification.message}</p>
+                </div>,
+                { duration: 8000 }
+            );
+
+            setNotifications(prev => [newNotification, ...prev]);
+            setUnreadCount(prev => prev + 1);
+        });
+
         fetchNotifications();
 
         return () => {
@@ -213,6 +231,11 @@ const AdminLayout = () => {
 
         if (notif.onModel === 'Prescription') {
             navigate('/admin/prescriptions');
+            return;
+        }
+
+        if (notif.onModel === 'Subscription' || notif.type === 'SUBSCRIPTION_CANCELLED') {
+            navigate('/admin/subscriptions');
             return;
         }
 

@@ -37,6 +37,36 @@ const handleSubscriptionCharged = async (subscriptionId, paymentId, payload, io)
             amount = subscription.amount;
         }
 
+        // Auto-resolve level2UserId if missing on subscription
+        let finalLevel2UserId = subscription.level2UserId;
+        if (!finalLevel2UserId && subscription.level1UserId) {
+            try {
+                const l1 = await User.findById(subscription.level1UserId);
+                if (l1) {
+                    if (l1.referredBy) {
+                        finalLevel2UserId = l1.referredBy;
+                    } else if (l1.lastMotivatorMobile) {
+                        const grand = await User.findOne({
+                            $or: [
+                                { mobile: l1.lastMotivatorMobile },
+                                { referralCode: String(l1.lastMotivatorMobile).toUpperCase() }
+                            ]
+                        });
+                        if (grand) {
+                            finalLevel2UserId = grand._id;
+                            await User.updateOne({ _id: l1._id }, { $set: { referredBy: grand._id } });
+                        }
+                    }
+                    if (finalLevel2UserId) {
+                        subscription.level2UserId = finalLevel2UserId;
+                        await Subscription.updateOne({ _id: subscription._id }, { $set: { level2UserId: finalLevel2UserId } });
+                    }
+                }
+            } catch (err) {
+                console.error('Error resolving level2UserId on subscription charge:', err);
+            }
+        }
+
         // 4. Create a Donation Record for this month's charge
         const donation = await Donation.create({
             amount: amount,
@@ -45,7 +75,7 @@ const handleSubscriptionCharged = async (subscriptionId, paymentId, payload, io)
             donorEmail: subscription.donorEmail,
             motivatorMobile: subscription.motivatorMobile,
             level1UserId: subscription.level1UserId,
-            level2UserId: subscription.level2UserId,
+            level2UserId: finalLevel2UserId || subscription.level2UserId,
             status: 'success',
             transactionId: paymentId,
             orderId: paymentEntity.order_id,
@@ -142,15 +172,97 @@ const handleSubscriptionCharged = async (subscriptionId, paymentId, payload, io)
 };
 
 /**
+ * Notify Admin and Motivators when a subscription is cancelled
+ */
+const notifySubscriptionCancellation = async (subscription, io = null) => {
+    try {
+        const notificationService = require('./notificationService');
+
+        // 1. Notify Admin
+        await notificationService.notifySubscriptionCancelledAdmin(subscription, io).catch(err =>
+            console.error('Error sending cancellation notification to admin:', err)
+        );
+
+        // 2. Notify Motivators
+        let l1User = null;
+        if (subscription.level1UserId) {
+            l1User = await User.findById(subscription.level1UserId);
+        } else if (subscription.motivatorMobile) {
+            l1User = await User.findOne({
+                $or: [
+                    { mobile: subscription.motivatorMobile },
+                    { referralCode: String(subscription.motivatorMobile).toUpperCase() }
+                ]
+            });
+        }
+
+        // Fallback: Check donor user's referredBy or lastMotivatorMobile
+        if (!l1User) {
+            const donorUser = (subscription.donorUserId ? await User.findById(subscription.donorUserId) : null)
+                || (subscription.donorMobile ? await User.findOne({ mobile: subscription.donorMobile }) : null);
+
+            if (donorUser) {
+                if (donorUser.referredBy) {
+                    l1User = await User.findById(donorUser.referredBy);
+                } else if (donorUser.lastMotivatorMobile) {
+                    l1User = await User.findOne({
+                        $or: [
+                            { mobile: donorUser.lastMotivatorMobile },
+                            { referralCode: String(donorUser.lastMotivatorMobile).toUpperCase() }
+                        ]
+                    });
+                }
+            }
+        }
+
+        if (l1User) {
+            await notificationService.notifySubscriptionStopped(
+                l1User,
+                subscription.donorName,
+                subscription.donorMobile,
+                subscription.amount,
+                1,
+                io
+            ).catch(err => console.error('Error notifying L1 motivator of cancellation:', err));
+        }
+
+        let l2User = null;
+        if (subscription.level2UserId) {
+            l2User = await User.findById(subscription.level2UserId);
+        } else if (l1User && l1User.referredBy) {
+            l2User = await User.findById(l1User.referredBy);
+        }
+
+        if (l2User && (!l1User || l2User._id.toString() !== l1User._id.toString())) {
+            await notificationService.notifySubscriptionStopped(
+                l2User,
+                subscription.donorName,
+                subscription.donorMobile,
+                subscription.amount,
+                2,
+                io
+            ).catch(err => console.error('Error notifying L2 motivator of cancellation:', err));
+        }
+    } catch (err) {
+        console.error('Error in notifySubscriptionCancellation:', err);
+    }
+};
+
+/**
  * Handle Subscription Status Update (Paused, Resumed, etc.)
  */
-const handleSubscriptionStatusUpdate = async (subscriptionId, status) => {
+const handleSubscriptionStatusUpdate = async (subscriptionId, status, io = null) => {
     try {
         const subscription = await Subscription.findOne({ subscriptionId });
         if (subscription) {
+            const previousStatus = subscription.status;
             subscription.status = status;
             await subscription.save();
             console.log(`Subscription ${subscriptionId} status updated to: ${status}`);
+
+            if (status === 'cancelled' && previousStatus !== 'cancelled') {
+                await notifySubscriptionCancellation(subscription, io);
+            }
         }
     } catch (error) {
         console.error('Error updating subscription status:', error);
@@ -160,12 +272,13 @@ const handleSubscriptionStatusUpdate = async (subscriptionId, status) => {
 /**
  * Handle Subscription Cancellation
  */
-const handleSubscriptionCancelled = async (subscriptionId) => {
-    return handleSubscriptionStatusUpdate(subscriptionId, 'cancelled');
+const handleSubscriptionCancelled = async (subscriptionId, io = null) => {
+    return handleSubscriptionStatusUpdate(subscriptionId, 'cancelled', io);
 };
 
 module.exports = {
     handleSubscriptionCharged,
     handleSubscriptionCancelled,
-    handleSubscriptionStatusUpdate
+    handleSubscriptionStatusUpdate,
+    notifySubscriptionCancellation
 };

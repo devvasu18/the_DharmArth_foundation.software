@@ -39,7 +39,7 @@ const AdminDelivery = () => {
 
     const fetchRoutes = async () => {
         try {
-            const res = await api.get('/delivery/routes');
+            const res = await api.get('/delivery/routes?limit=100');
             setRoutes(res.data.routes || res.data);
             setLoading(false);
         } catch (err) {

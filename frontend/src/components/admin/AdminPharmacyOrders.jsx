@@ -59,7 +59,7 @@ const AdminPharmacyOrders = () => {
         fetchOrders(1, true);
     }, [statusFilter, debouncedSearchTerm]);
 
-    const fetchOrders = async (pageNum, isInitial = false) => {
+    const fetchOrders = async (pageNum = 1, isInitial = false) => {
         if (isInitial) setLoading(true);
         else setIsFetchingMore(true);
 
@@ -101,7 +101,8 @@ const AdminPharmacyOrders = () => {
         try {
             await api.patch(`/orders/${orderId}/status`, { status: newStatus, note });
             toast.success(`Order status changed to ${newStatus}`);
-            fetchOrders();
+            setPage(1);
+            fetchOrders(1, true);
         } catch (error) {
             toast.error('Could not update order status');
         }

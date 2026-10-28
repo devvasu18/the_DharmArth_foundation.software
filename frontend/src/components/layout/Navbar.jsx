@@ -55,7 +55,8 @@ const Navbar = () => {
                                     <div className="notif-icon">
                                         {notif.type === 'PRESCRIPTION_VERIFIED' ? '✅' :
                                             notif.onModel === 'PayoutRequest' ? '💸' :
-                                                notif.type === 'COMMISSION_EARNED' ? '💰' : '📢'}
+                                                notif.type === 'COMMISSION_EARNED' ? '💰' :
+                                                    notif.type === 'SUBSCRIPTION_STOPPED' ? '⚠️' : '📢'}
                                     </div>
                                     <div className="notif-body">
                                         <p>{notif.message}</p>

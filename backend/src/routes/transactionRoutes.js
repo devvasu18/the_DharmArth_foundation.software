@@ -305,10 +305,13 @@ const getDirectReferrals = async (targetUser, excludeUserIds = []) => {
         });
     }
 
-    // Also get donor mobiles from Donation & Subscription where level1UserId is targetUserId
+    // Also get donor mobiles from Donation & Subscription where level1UserId is targetUserId (only successful/active)
     const [l1Donations, l1Subscriptions] = await Promise.all([
-        Donation.find({ level1UserId: targetUserId }).select('donorMobile'),
-        Subscription.find({ level1UserId: targetUserId }).select('donorMobile')
+        Donation.find({ level1UserId: targetUserId, status: 'success' }).select('donorMobile'),
+        Subscription.find({ 
+            level1UserId: targetUserId, 
+            status: { $in: ['active', 'completed'] } 
+        }).select('donorMobile')
     ]);
 
     const donorMobiles = new Set();

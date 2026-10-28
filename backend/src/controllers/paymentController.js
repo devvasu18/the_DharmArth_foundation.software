@@ -317,7 +317,8 @@ exports.handleWebhook = async (req, res) => {
             const subscription_id = payload.subscription.entity.id;
             const status = payload.subscription.entity.status;
             const subscriptionService = require('../services/subscriptionService');
-            await subscriptionService.handleSubscriptionStatusUpdate(subscription_id, status);
+            const io = req.app.get('io');
+            await subscriptionService.handleSubscriptionStatusUpdate(subscription_id, status, io);
         } else if (event === 'payment.failed') {
              const paymentDetails = payload.payment.entity;
              const order_id = paymentDetails.order_id;

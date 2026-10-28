@@ -112,16 +112,28 @@ class NotificationService {
     /**
      * Specialized: Subscription Stopped Alert for Motivator
      */
-    async notifySubscriptionStopped(motivator, donorName, donorMobile) {
-        const msg = `⚠️ Important: ${donorName} (${donorMobile}) has stopped their monthly donation. You will no longer receive commission from this donor.`;
+    async notifySubscriptionStopped(motivator, donorName, donorMobile, amount = 0, level = 1, io = null) {
+        const msg = level === 1
+            ? `⚠️ Important: ${donorName} (${donorMobile}) has stopped their monthly donation of ₹${amount}. You will no longer receive recurring commission from this donor.`
+            : `⚠️ Network Update: ${donorName} (${donorMobile}, in your partner network) has stopped their monthly donation of ₹${amount}.`;
 
         await this.notify({
             userId: motivator._id,
             type: 'SUBSCRIPTION_STOPPED',
             message: msg,
             email: motivator.email,
-            sms: motivator.mobile
+            sms: motivator.mobile,
+            io
         });
+
+        if (motivator.mobile) {
+            await whatsappService.sendSubscriptionStoppedMotivatorNotification(motivator.mobile, {
+                motivatorName: motivator.name,
+                donorName,
+                donorMobile,
+                amount
+            }).catch(e => console.error("WhatsApp error in notifySubscriptionStopped:", e));
+        }
     }
 
     /**
@@ -159,16 +171,23 @@ class NotificationService {
     /**
      * Specialized: Subscription Cancelled Alert for Admin
      */
-    async notifySubscriptionCancelledAdmin(subscription) {
+    async notifySubscriptionCancelledAdmin(subscription, io = null) {
         const msg = `🛑 Subscription Cancelled: ${subscription.donorName} (${subscription.donorMobile}) has cancelled their monthly donation of ₹${subscription.amount}.`;
 
-        return await this.notify({
+        const notification = await this.notify({
             userId: null, // For admins
             type: 'SUBSCRIPTION_CANCELLED',
             message: msg,
             referenceId: subscription._id,
             onModel: 'Subscription',
         });
+
+        if (io) {
+            console.log(`[SOCKET] Emitting subscription_cancelled to admin_notifications`);
+            io.to('admin_notifications').emit('subscription_cancelled', notification);
+        }
+
+        return notification;
     }
 
     /**

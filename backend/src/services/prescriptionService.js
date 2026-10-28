@@ -102,6 +102,12 @@ exports.completeOrder = async (orderId, paymentId, io) => {
             await NotificationService.notifyOrderPaidAdmin(newOrder, prescription.user, io);
         }
 
+        // Asynchronously push order to MARG ERP
+        const MargErpService = require('./margErpService');
+        MargErpService.pushOrderToMarg(newOrder).catch(err => {
+            console.error(`[MARG ERP] Auto-push failed for paid order #${newOrder._id}:`, err?.message || err);
+        });
+
         console.log(`Prescription Order completed. Formal Order ID: ${newOrder._id}`);
         return newOrder;
     } catch (error) {

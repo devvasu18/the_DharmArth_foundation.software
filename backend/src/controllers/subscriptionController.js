@@ -230,9 +230,11 @@ exports.cancelSubscription = async (req, res) => {
         subscription.status = 'cancelled';
         await subscription.save();
 
-        // 3. Notify Admin
-        notificationService.notifySubscriptionCancelledAdmin(subscription).catch(err => 
-            console.error('Error sending cancellation notification to admin:', err)
+        // 3. Notify Admin & Motivators
+        const io = req.app.get('io');
+        const subscriptionService = require('../services/subscriptionService');
+        subscriptionService.notifySubscriptionCancellation(subscription, io).catch(err => 
+            console.error('Error sending cancellation notifications:', err)
         );
 
         res.json({ message: 'Subscription cancelled successfully', subscription });

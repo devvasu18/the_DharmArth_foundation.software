@@ -97,53 +97,54 @@ exports.getInvoices = async (req, res) => {
 exports.searchProductsWithStock = async (req, res) => {
     try {
         const { search = '' } = req.query;
-        if (!search || search.length < 2) {
+        if (!search || search.trim().length < 2) {
             return res.json({ products: [] });
         }
 
-        const products = await MargProduct.aggregate([
-            {
-                $match: {
-                    Name: new RegExp(search, 'i')
-                }
-            },
-            {
-                $lookup: {
-                    from: 'margstocks', // collection name for MargStock
-                    let: { pid: '$PID', cid: '$CompanyID' },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $and: [
-                                        { $eq: ['$PID', '$$pid'] },
-                                        { $eq: ['$CompanyID', '$$cid'] }
-                                    ]
-                                }
-                            }
-                        }
-                    ],
-                    as: 'stocks'
-                }
-            },
-            {
-                $project: {
-                    Name: 1,
-                    PID: 1,
-                    Code: 1,
-                    Unit: 1,
-                    Pack: 1,
-                    totalStock: { $sum: '$stocks.Stock' },
-                    mrp: { $max: '$stocks.MRP' },
-                    rateA: { $max: '$stocks.RateA' },
-                    stocks: 1
-                }
-            },
-            { $limit: 10 },
-            { $sort: { Name: 1 } }
-        ]);
+        const queryStr = search.trim();
+        const regex = new RegExp(queryStr, 'i');
 
-        res.json({ products });
+        const products = await MargProduct.find({
+            $and: [
+                { Is_Deleted: { $ne: true } },
+                {
+                    $or: [
+                        { Name: regex },
+                        { Code: regex },
+                        { Salt: regex },
+                        { Company: regex }
+                    ]
+                }
+            ]
+        })
+        .limit(25)
+        .sort({ Name: 1 })
+        .lean();
+
+        const formatted = products.map(p => ({
+            _id: p._id,
+            PID: p.Code || String(p.PID || ''),
+            Code: p.Code,
+            Name: p.Name,
+            Company: p.Company || '',
+            Salt: p.Salt || '',
+            Unit: p.Unit || 'PCS',
+            Pack: p.Pack || 1,
+            totalStock: p.Stock || 0,
+            mrp: p.MRP || 0,
+            rateA: p.Rate || 0,
+            stocks: [
+                {
+                    Batch: p.Batch || 'MAIN',
+                    Expiry: p.Expiry || '',
+                    MRP: p.MRP || 0,
+                    RateA: p.Rate || 0,
+                    Stock: p.Stock || 0
+                }
+            ]
+        }));
+
+        res.json({ products: formatted });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -152,25 +153,22 @@ exports.searchProductsWithStock = async (req, res) => {
 exports.checkStockBulk = async (req, res) => {
     try {
         const { pids = [] } = req.body;
-        if (!pids.length) return res.json({ available: {} });
+        if (!pids.length) return res.json({ availability: {} });
 
-        const stocks = await MargStock.aggregate([
-            {
-                $match: {
-                    PID: { $in: pids.map(Number) }
-                }
-            },
-            {
-                $group: {
-                    _id: '$PID',
-                    totalStock: { $sum: '$Stock' }
-                }
-            }
-        ]);
+        const stringPids = pids.map(String);
+        const numberPids = pids.map(Number).filter(n => !isNaN(n));
+
+        const products = await MargProduct.find({
+            $or: [
+                { Code: { $in: stringPids } },
+                { PID: { $in: numberPids } }
+            ]
+        }).lean();
 
         const availabilityMap = {};
-        stocks.forEach(s => {
-            availabilityMap[s._id] = s.totalStock > 0;
+        pids.forEach(p => {
+            const found = products.find(prod => prod.Code === String(p) || prod.PID === Number(p));
+            availabilityMap[p] = found ? (found.Stock > 0) : false;
         });
 
         res.json({ availability: availabilityMap });
@@ -184,6 +182,15 @@ exports.triggerSync = async (req, res) => {
         // Run sync in background
         margService.sync().catch(err => console.error('Manual Sync Failed:', err));
         res.json({ message: 'Sync process started in background.' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.syncDispatch = async (req, res) => {
+    try {
+        const result = await margService.syncDispatchStatus();
+        res.json({ message: 'Dispatch status sync completed.', data: result });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

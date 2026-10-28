@@ -160,11 +160,13 @@ const AdminTransactions = ({ initialUser, isModal, onClose }) => {
 
     const formatCurrency = (amount) => {
         if (amount === undefined || amount === null || isNaN(amount)) return '₹0';
+        const val = Number(amount);
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR',
-            maximumFractionDigits: 0
-        }).format(amount);
+            minimumFractionDigits: val % 1 === 0 ? 0 : 2,
+            maximumFractionDigits: 2
+        }).format(val);
     };
 
     const formatDate = (date) => {

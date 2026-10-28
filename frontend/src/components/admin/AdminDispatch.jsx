@@ -32,7 +32,7 @@ const AdminDispatch = () => {
 
     const fetchAllRoutes = async () => {
         try {
-            const res = await api.get('/delivery/routes');
+            const res = await api.get('/delivery/routes?limit=100');
             // Check if it's paginated response or direct array
             setAllRoutes(res.data.routes || res.data);
         } catch (err) {

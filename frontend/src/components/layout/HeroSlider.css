@@ -118,6 +118,13 @@
     line-height: 1.6;
 }
 
+.hero-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+}
+
 .hero-cta-btn {
     background-color: #ff0707;
     /* Teal */
@@ -128,7 +135,7 @@
     border-radius: 6px;
     border: none;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -138,6 +145,21 @@
 .hero-cta-btn:hover {
     background-color: #009999;
     transform: translateY(-2px);
+}
+
+.hero-cta-btn-medicine {
+    background-color: #00a887;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(0, 168, 135, 0.25);
+    padding: 0.55rem 1.75rem;
+    gap: 0.6rem;
+}
+
+.hero-cta-btn-medicine:hover {
+    background-color: #008f73;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 168, 135, 0.35);
 }
 
 .hero-link-arrow {
@@ -201,6 +223,10 @@
 
     .hero-description {
         margin-bottom: 1.25rem;
+    }
+
+    .hero-btn-group {
+        justify-content: center;
     }
 }
 

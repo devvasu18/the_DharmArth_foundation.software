@@ -66,6 +66,7 @@ const VerifiedItemRow = ({ item }) => {
 
 const OrderMedicine = () => {
     const { t, i18n } = useTranslation();
+    const isHindi = i18n.language === 'hi' || i18n.language?.startsWith('hi');
     const navigate = useNavigate();
     const { user } = useAuth();
     const { showAlert } = useConfirm();
@@ -130,6 +131,25 @@ const OrderMedicine = () => {
     const [needAllMedicines, setNeedAllMedicines] = useState(true); // true: 'पर्ची की सभी दवाई चाहिए', false: 'पर्ची की कुछ दवाई चाहिए'
     const [showPastRxModal, setShowPastRxModal] = useState(false);
     const [selectedPastRx, setSelectedPastRx] = useState(null);
+    const [showUploadPickerModal, setShowUploadPickerModal] = useState(false);
+
+    const openCameraPicker = () => {
+        setShowUploadPickerModal(false);
+        const camInput = document.getElementById('presc-upload-camera');
+        if (camInput) {
+            camInput.value = '';
+            camInput.click();
+        }
+    };
+
+    const openGalleryPicker = () => {
+        setShowUploadPickerModal(false);
+        const galInput = document.getElementById('presc-upload-gallery');
+        if (galInput) {
+            galInput.value = '';
+            galInput.click();
+        }
+    };
 
     const validatePincode = (pincodeValue) => {
         const pin = (pincodeValue || '').trim();
@@ -140,9 +160,11 @@ const OrderMedicine = () => {
         if (pharmacyConfig?.acceptedPincodes && pharmacyConfig.acceptedPincodes.trim() !== '') {
             const allowedPincodes = pharmacyConfig.acceptedPincodes.split(',').map(p => p.trim());
             if (!allowedPincodes.includes(pin)) {
-                const villages = pharmacyConfig?.serviceableVillages || "छापर, सांडवा, बीदासर";
-                const defaultNotice = `इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा ${villages} के लिए उपलब्ध है`;
-                const errMsg = pharmacyConfig?.unserviceableNotice || defaultNotice;
+                const villages = pharmacyConfig?.serviceableVillages || (isHindi ? "छापर, सांडवा, बीदासर" : "Chhapar, Sandwa, Bidasar");
+                const defaultNotice = isHindi 
+                    ? `इस शहर/गाँव में अभी सेवा उपलब्ध नहीं है, शीघ्र ही सेवा शुरू होगी, अभी यह सेवा ${villages} के लिए उपलब्ध है`
+                    : `Service is not yet available in this town/village. It will start soon. Currently, this service is available for ${villages}`;
+                const errMsg = (isHindi ? pharmacyConfig?.unserviceableNoticeHi : pharmacyConfig?.unserviceableNotice) || pharmacyConfig?.unserviceableNotice || defaultNotice;
                 setPincodeError(errMsg);
                 return false;
             }
@@ -435,20 +457,34 @@ const OrderMedicine = () => {
 
                         components.forEach(c => {
                             if (c.types.includes('locality')) city = c.long_name;
+                            else if (c.types.includes('sublocality_level_1') && !city) city = c.long_name;
+                            else if (c.types.includes('postal_town') && !city) city = c.long_name;
+                            else if (c.types.includes('administrative_area_level_2') && !city) city = c.long_name;
+
                             if (c.types.includes('administrative_area_level_1')) state = c.long_name;
                             if (c.types.includes('postal_code')) zip = c.long_name;
                         });
 
+                        let matchedVillage = city;
+                        if (zip) {
+                            const isPinValid = validatePincode(zip);
+                            if (isPinValid) {
+                                const pinVillages = getVillagesForPincode(zip);
+                                if (pinVillages.length > 0) {
+                                    const found = pinVillages.find(v => (city || '').toLowerCase().includes(v.toLowerCase()) || v.toLowerCase().includes((city || '').toLowerCase()));
+                                    matchedVillage = found || pinVillages[0];
+                                }
+                            }
+                        }
+
                         setShippingDetails(prev => ({
                             ...prev,
                             street,
-                            city: city || prev.city,
-                            state: state || prev.state,
+                            city: matchedVillage || city || prev.city,
+                            villageName: matchedVillage || prev.villageName,
+                            state: state || prev.state || 'Rajasthan',
                             zip: zip || prev.zip
                         }));
-                        if (zip) {
-                            validatePincode(zip);
-                        }
                         toast.success(t('pharmacy.locationDetected') || "Location detected!", { id: 'detect-location' });
                     } else {
                         toast.error("Failed to fetch address. Please enter manually.", { id: 'detect-location' });
@@ -531,17 +567,49 @@ const OrderMedicine = () => {
         lookupGuestName();
     }, [guestMobile]);
 
+    const [isDragOver, setIsDragOver] = useState(false);
+
+    const processFile = (selectedFile) => {
+        if (!selectedFile) return;
+        if (!selectedFile.type.startsWith('image/')) {
+            toast.error(isHindi ? "केवल छवि फ़ाइलें (JPG, PNG) स्वीकार्य हैं" : "Only image files (JPG, PNG) are accepted");
+            return;
+        }
+        if (selectedFile.size > 4 * 1024 * 1024) {
+            toast.error(t('pharmacy.maxSizeError'));
+            return;
+        }
+        setFile(selectedFile);
+        setSelectedPastRx(null);
+        setPreview(URL.createObjectURL(selectedFile));
+        setError(null);
+    };
+
     const handleFileChange = (e) => {
-        const selectedFile = e.target.files[0];
+        const selectedFile = e.target.files && e.target.files[0];
         if (selectedFile) {
-            if (selectedFile.size > 4 * 1024 * 1024) {
-                toast.error(t('pharmacy.maxSizeError'));
-                e.target.value = null;
-                return;
-            }
-            setFile(selectedFile);
-            setPreview(URL.createObjectURL(selectedFile));
-            setError(null);
+            processFile(selectedFile);
+        }
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            processFile(e.dataTransfer.files[0]);
         }
     };
 
@@ -560,16 +628,18 @@ const OrderMedicine = () => {
 
         // Validate Address details first
         if (!shippingDetails.street || !shippingDetails.city || !shippingDetails.state || !shippingDetails.zip) {
-            toast.error(t('pharmacy.fillAddress') || "Please fill in all delivery address fields.");
-            setError(t('pharmacy.fillAddress') || "Please fill in all delivery address fields.");
+            const errStr = isHindi ? "कृपया डिलीवरी का पूरा पता भरें" : "Please fill in all delivery address fields.";
+            toast.error(errStr);
+            setError(errStr);
             return;
         }
 
         // Phone is required for delivery
         const deliveryPhone = shippingDetails.phone || guestMobile || (user ? user.mobile : '');
         if (!deliveryPhone) {
-            toast.error(t('pharmacy.phoneRequired') || "A contact number is required for delivery.");
-            setError(t('pharmacy.phoneRequired') || "A contact number is required for delivery.");
+            const errStr = isHindi ? "डिलीवरी के लिए मोबाइल नंबर आवश्यक है" : "A contact number is required for delivery.";
+            toast.error(errStr);
+            setError(errStr);
             return;
         }
 
@@ -578,13 +648,13 @@ const OrderMedicine = () => {
         if (pharmacyConfig?.acceptedPincodes && pharmacyConfig.acceptedPincodes.trim() !== '') {
             const allowedPincodes = pharmacyConfig.acceptedPincodes.split(',').map(pin => pin.trim());
             if (!allowedPincodes.includes(userPincode)) {
-                const errMsg = `${t('pharmacy.unserviceablePin') || "Sorry, we do not deliver to this pin code. Serviceable pin codes are"}: ${allowedPincodes.join(', ')}`;
+                const errMsg = `${isHindi ? "क्षमा करें, हम इस पिन कोड पर डिलीवरी नहीं करते हैं। सेवा योग्य पिन कोड हैं" : "Sorry, we do not deliver to this pin code. Serviceable pin codes are"}: ${allowedPincodes.join(', ')}`;
                 setPincodeError(errMsg);
                 return;
             }
         }
 
-        if (!file) {
+        if (!file && !selectedPastRx) {
             setError(t('pharmacy.selectFile'));
             return;
         }
@@ -599,9 +669,11 @@ const OrderMedicine = () => {
         }
 
         const formData = new FormData();
-        formData.append('prescription', file);
+        if (file) {
+            formData.append('prescription', file);
+        }
         if (notes) formData.append('notes', notes);
-        formData.append('courseDays', courseDays);
+        formData.append('courseDays', (courseDays && Number(courseDays) > 0) ? Number(courseDays) : 15);
         formData.append('needAllMedicines', needAllMedicines ? 'ALL' : 'PARTIAL');
         if (selectedPastRx) {
             formData.append('reusedPrescriptionId', selectedPastRx._id);
@@ -634,6 +706,9 @@ const OrderMedicine = () => {
             setShowGuestModal(false);
             setFile(null);
             setPreview(null);
+            setSelectedPastRx(null);
+            const fileInput = document.getElementById('presc-upload');
+            if (fileInput) fileInput.value = '';
             // Persist the confirmed address to localStorage for future orders
             try {
                 const currentShipping = {
@@ -720,17 +795,22 @@ const OrderMedicine = () => {
         // If user is choosing from saved addresses and not adding new:
         if (!isAddingNewAddress && savedAddresses.length > 0) {
             const selected = shippingDetails.street ? shippingDetails : savedAddresses[0];
-            if (!selected || !selected.street) {
-                toast.error(t('pharmacy.fillAddress') || "कृपया डिलीवरी का पता चुनें (Please select a delivery address)");
+            if (!selected || !selected.street || !selected.street.trim()) {
+                toast.error(isHindi ? "कृपया डिलीवरी का पता चुनें" : "Please select a delivery address");
                 return;
             }
-            if (selected.zip && !validatePincode(selected.zip)) {
-                toast.error(pincodeError || "पिन कोड सेवा क्षेत्र में नहीं है (Pincode is not serviceable)");
+            if (!selected.zip || !validatePincode(selected.zip)) {
+                toast.error(pincodeError || (isHindi ? "पिन कोड सेवा क्षेत्र में नहीं है" : "Pincode is not serviceable"));
+                return;
+            }
+            const selectedVillage = selected.villageName || selected.city;
+            if (!selectedVillage || !selectedVillage.trim()) {
+                toast.error(isHindi ? "कृपया गाँव / कस्बा चुनें" : "Please select village/city");
                 return;
             }
             const phoneToUse = selected.phone || guestMobile || (user ? user.mobile : '');
             if (!phoneToUse || phoneToUse.trim().length < 10) {
-                toast.error(t('pharmacy.phoneRequired') || "कृपया वैध 10-अंकों का मोबाइल नंबर भरें (Valid 10-digit phone number required)");
+                toast.error(isHindi ? "कृपया वैध 10-अंकों का मोबाइल नंबर भरें" : "Please enter a valid 10-digit phone number");
                 return;
             }
             setShippingDetails(prev => ({ ...prev, ...selected, phone: phoneToUse }));
@@ -741,30 +821,30 @@ const OrderMedicine = () => {
 
         // Validate newly entered address:
         if (!shippingDetails.street || !shippingDetails.street.trim()) {
-            toast.error(t('pharmacy.fillStreet') || "कृपया मकान/सड़क का पता भरें (Please enter street address)");
+            toast.error(isHindi ? "कृपया मकान/सड़क का पता भरें" : "Please enter street address");
             return;
         }
         if (!shippingDetails.zip || !shippingDetails.zip.trim()) {
-            toast.error(t('pharmacy.fillZip') || "कृपया पिन कोड भरें (Please enter PIN code)");
+            toast.error(isHindi ? "कृपया पिन कोड भरें" : "Please enter PIN code");
             return;
         }
         if (!validatePincode(shippingDetails.zip)) {
-            toast.error(pincodeError || "पिन कोड सेवा क्षेत्र में नहीं है (Pincode is not serviceable)");
+            toast.error(pincodeError || (isHindi ? "पिन कोड सेवा क्षेत्र में नहीं है" : "Pincode is not serviceable"));
             return;
         }
         const currentVillage = shippingDetails.villageName || shippingDetails.city;
         if (!currentVillage || !currentVillage.trim()) {
-            toast.error("कृपया गाँव / कस्बा चुनें (Please select village/city)");
+            toast.error(isHindi ? "कृपया गाँव / कस्बा चुनें" : "Please select village/city");
             return;
         }
         if (!shippingDetails.state || !shippingDetails.state.trim()) {
-            toast.error(t('pharmacy.fillState') || "कृपया राज्य भरें (Please enter state)");
+            toast.error(isHindi ? "कृपया राज्य भरें" : "Please enter state");
             return;
         }
 
         const phoneToUse = shippingDetails.phone || guestMobile || (user ? user.mobile : '');
         if (!phoneToUse || phoneToUse.trim().length < 10) {
-            toast.error(t('pharmacy.phoneRequired') || "कृपया वैध 10-अंकों का मोबाइल नंबर भरें (Valid 10-digit phone number required)");
+            toast.error(isHindi ? "कृपया वैध 10-अंकों का मोबाइल नंबर भरें" : "Please enter a valid 10-digit phone number");
             return;
         }
 
@@ -805,6 +885,26 @@ const OrderMedicine = () => {
 
         setIsAddingNewAddress(false);
         setActiveStep(2);
+        window.scrollTo({ top: 150, behavior: 'smooth' });
+    };
+
+    const handleProceedToStep3 = () => {
+        if (!file && !selectedPastRx) {
+            const msg = isHindi 
+                ? "कृपया पर्चे की फोटो अपलोड करें या पुरानी पर्ची चुनें" 
+                : (t('pharmacy.selectFile') || "Please upload a prescription image or select a past prescription");
+            toast.error(msg);
+            setError(msg);
+            return;
+        }
+        setError(null);
+        setActiveStep(3);
+        window.scrollTo({ top: 150, behavior: 'smooth' });
+    };
+
+    const handleProceedToStep4 = () => {
+        setError(null);
+        setActiveStep(4);
         window.scrollTo({ top: 150, behavior: 'smooth' });
     };
 
@@ -924,7 +1024,7 @@ const OrderMedicine = () => {
     };
 
     const calculateTotal = (items) => {
-        return items.filter(i => i.isAvailable).reduce((acc, item) => acc + (item.price || 0), 0);
+        return (items || []).filter(i => i.isAvailable).reduce((acc, item) => acc + (Number(item.price) || 0), 0);
     };
 
     const handleCheckoutSubmit = async (e) => {
@@ -1027,145 +1127,33 @@ const OrderMedicine = () => {
                     <div className="grid-layout single-column" style={{ display: 'flex', justifyContent: 'center' }}>
                         {/* Upload Form */}
                         <div className="form-column" style={{ width: '100%', maxWidth: '720px' }}>
-                            <div className="upload-box glass-card">
-                                <div className="card-header">
-                                    <h3>{t('pharmacy.sendPrescription')}</h3>
-                                    <Zap size={20} color="#f6ad55" />
-                                </div>
+                            <div className="upload-box glass-card" style={{ borderRadius: 0 }}>
+                               
 
-                                {/* Stepper Navigation Header Matching Design */}
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    padding: '2px 4px 10px',
-                                    marginBottom: '10px',
-                                    gap: '12px',
-                                    userSelect: 'none'
-                                }}>
-                                    {/* Step 1 */}
-                                    <div 
-                                        onClick={() => setActiveStep(1)}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '10px',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        <div style={{
-                                            width: '28px',
-                                            height: '28px',
-                                            borderRadius: '50%',
-                                            background: activeStep === 1 ? '#1d68ff' : '#16a34a',
-                                            color: '#ffffff',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            fontSize: '13px',
-                                            fontWeight: '800',
-                                            boxShadow: activeStep === 1 
-                                                ? '0 0 0 4px #dbeafe' 
-                                                : '0 0 0 4px #dcfce7',
-                                            transition: 'all 0.25s ease'
-                                        }}>
-                                            {activeStep > 1 ? <CheckCircle size={15} color="#fff" /> : '1'}
-                                        </div>
-                                        <span style={{
-                                            fontSize: '14px',
-                                            fontWeight: '700',
-                                            color: activeStep === 1 ? '#1d68ff' : '#334155',
-                                            whiteSpace: 'nowrap',
-                                            letterSpacing: '-0.2px'
-                                        }}>
-                                            Delivery Address
-                                        </span>
-                                    </div>
-
-                                    {/* Connecting Line */}
-                                    <div style={{
-                                        width: '48px',
-                                        height: '2px',
-                                        background: activeStep === 2 ? '#93c5fd' : '#cbd5e1',
-                                        borderRadius: '2px',
-                                        transition: 'background 0.3s ease'
-                                    }} />
-
-                                    {/* Step 2 */}
-                                    <div 
-                                        onClick={() => {
-                                            if (activeStep === 1) handleProceedToStep2();
-                                        }}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '10px',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        <div style={{
-                                            width: '28px',
-                                            height: '28px',
-                                            borderRadius: '50%',
-                                            background: activeStep === 2 ? '#1d68ff' : '#b0c4de',
-                                            color: '#ffffff',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            fontSize: '13px',
-                                            fontWeight: '800',
-                                            boxShadow: activeStep === 2 
-                                                ? '0 0 0 4px #dbeafe' 
-                                                : '0 0 0 4px #f1f5f9',
-                                            transition: 'all 0.25s ease'
-                                        }}>
-                                            2
-                                        </div>
-                                        <div style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            lineHeight: '1.15',
-                                            textAlign: 'left'
-                                        }}>
-                                            <span style={{
-                                                fontSize: '13px',
-                                                fontWeight: activeStep === 2 ? '700' : '600',
-                                                color: activeStep === 2 ? '#1d68ff' : '#475569',
-                                                whiteSpace: 'nowrap'
-                                            }}>
-                                                Upload
-                                            </span>
-                                            <span style={{
-                                                fontSize: '13px',
-                                                fontWeight: activeStep === 2 ? '700' : '600',
-                                                color: activeStep === 2 ? '#1d68ff' : '#475569',
-                                                whiteSpace: 'nowrap'
-                                            }}>
-                                                Prescription
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
 
                                 <form id="medicine-order-form" onSubmit={(e) => {
                                     e.preventDefault();
                                     if (activeStep === 1) {
                                         handleProceedToStep2();
+                                    } else if (activeStep === 2) {
+                                        handleProceedToStep3();
+                                    } else if (activeStep === 3) {
+                                        handleProceedToStep4();
                                     } else {
                                         handleSubmit(e);
                                     }
                                 }}>
-                                    <div className="form-scroll-fields" style={{ paddingBottom: activeStep === 2 ? '75px' : '0' }}>
+                                    <div className="form-scroll-fields" style={{ paddingBottom: activeStep >= 2 ? '75px' : '0' }}>
                                         {/* ================= STEP 1: DELIVERY ADDRESS ================= */}
                                         {activeStep === 1 && (
                                             <div className="address-section-premium" style={{ marginBottom: '15px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
                                                     <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
                                                         <MapPin size={18} color="#e53e3e" />
-                                                        1. {t('pharmacy.deliveryAddress') || "Delivery Address"}
+                                                        1. {isHindi ? 'डिलीवरी का पता' : (t('pharmacy.deliveryAddress') || 'Delivery Address')}
                                                     </h4>
                                                     <span style={{ fontSize: '11px', fontWeight: '700', color: '#2563eb', background: '#eff6ff', padding: '3px 8px', borderRadius: '10px' }}>
-                                                        Step 1 of 2
+                                                        {isHindi ? 'चरण 1 का 4' : 'Step 1 of 4'}
                                                     </span>
                                                 </div>
 
@@ -1173,9 +1161,11 @@ const OrderMedicine = () => {
                                                 {!isAddingNewAddress && savedAddresses.length > 0 ? (
                                                     <div className="saved-address-container">
                                                         <div style={{ fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                            <span>सहेजा गया डिलीवरी पता (Saved Address):</span>
+                                                            <span>{isHindi ? 'सहेजा गया डिलीवरी पता:' : 'Saved Delivery Address:'}</span>
                                                             {savedAddresses.length > 1 && (
-                                                                <span style={{ fontSize: '11px', color: '#64748b' }}>({savedAddresses.length} पते सहेजे हुए)</span>
+                                                                <span style={{ fontSize: '11px', color: '#64748b' }}>
+                                                                    {isHindi ? `(${savedAddresses.length} पते सहेजे हुए)` : `(${savedAddresses.length} addresses saved)`}
+                                                                </span>
                                                             )}
                                                         </div>
 
@@ -1204,7 +1194,7 @@ const OrderMedicine = () => {
                                                                                 whiteSpace: 'nowrap'
                                                                             }}
                                                                         >
-                                                                            📍 {addr.villageName || addr.city || 'Address'} {idx === 0 ? '(Recent)' : ''}
+                                                                            📍 {addr.villageName || addr.city || (isHindi ? 'पता' : 'Address')} {idx === 0 ? (isHindi ? '(हालिया)' : '(Recent)') : ''}
                                                                         </button>
                                                                     );
                                                                 })}
@@ -1223,10 +1213,10 @@ const OrderMedicine = () => {
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                     <span style={{ background: '#16a34a', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                                                        <CheckCircle size={12} color="#fff" /> चुना गया पता
+                                                                        <CheckCircle size={12} color="#fff" /> {isHindi ? 'चुना गया पता' : 'Selected Address'}
                                                                     </span>
                                                                     <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
-                                                                        {shippingDetails.villageName || shippingDetails.city || 'डिलीवरी पता'}
+                                                                        {shippingDetails.villageName || shippingDetails.city || (isHindi ? 'डिलीवरी पता' : 'Delivery Address')}
                                                                     </span>
                                                                 </div>
                                                                 <button
@@ -1248,7 +1238,7 @@ const OrderMedicine = () => {
                                                                         gap: '4px'
                                                                     }}
                                                                 >
-                                                                    <Edit2 size={12} /> {t('pharmacy.edit') || "बदलें / Edit"}
+                                                                    <Edit2 size={12} /> {t('pharmacy.edit', { defaultValue: isHindi ? 'बदलें' : 'Edit' })}
                                                                 </button>
                                                             </div>
 
@@ -1259,8 +1249,8 @@ const OrderMedicine = () => {
 
                                                             <div style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid #e2e8f0', paddingTop: '8px' }}>
                                                                 <Phone size={13} color="#2563eb" />
-                                                                <span>मोबाइल: <strong>{shippingDetails.phone || user?.mobile || guestMobile || 'Not provided'}</strong></span>
-                                                                {shippingDetails.altPhone && <span>| अन्य: {shippingDetails.altPhone}</span>}
+                                                                <span>{isHindi ? 'मोबाइल:' : 'Mobile:'} <strong>{shippingDetails.phone || user?.mobile || guestMobile || (isHindi ? 'उपलब्ध नहीं' : 'Not provided')}</strong></span>
+                                                                {shippingDetails.altPhone && <span>{isHindi ? '| अन्य: ' : '| Alt: '}{shippingDetails.altPhone}</span>}
                                                             </div>
                                                         </div>
 
@@ -1299,7 +1289,7 @@ const OrderMedicine = () => {
                                                                 transition: 'all 0.2s'
                                                             }}
                                                         >
-                                                            <Plus size={16} /> + {t('pharmacy.addNewAddress') || "नया पता जोड़ें (Add New Address)"}
+                                                            <Plus size={16} /> + {t('pharmacy.addNewAddress', { defaultValue: isHindi ? 'नया पता जोड़ें' : 'Add New Address' })}
                                                         </button>
                                                     </div>
                                                 ) : (
@@ -1308,7 +1298,7 @@ const OrderMedicine = () => {
                                                         {savedAddresses.length > 0 && (
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                                                                 <span style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b' }}>
-                                                                    नया डिलीवरी पता भरें:
+                                                                    {isHindi ? 'नया डिलीवरी पता भरें:' : 'Enter New Delivery Address:'}
                                                                 </span>
                                                                 <button
                                                                     type="button"
@@ -1329,19 +1319,21 @@ const OrderMedicine = () => {
                                                                         textDecoration: 'underline'
                                                                     }}
                                                                 >
-                                                                    ← सहेजा गया पता चुनें (Use Saved Address)
+                                                                    {isHindi ? '← सहेजा गया पता चुनें' : '← Use Saved Address'}
                                                                 </button>
                                                             </div>
                                                         )}
 
                                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
                                                             <div style={{ position: 'relative' }}>
-                                                                <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.streetAddress') || "Street Address"} <span style={{ color: '#ef4444' }}>*</span></label>
+                                                                <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>
+                                                                    {isHindi ? 'सड़क का पता' : (t('pharmacy.streetAddress') || 'Street Address')} <span style={{ color: '#ef4444' }}>*</span>
+                                                                </label>
                                                                 <input
                                                                     type="text"
                                                                     value={shippingDetails.street}
                                                                     onChange={(e) => handleStreetChange(e.target.value, 'main')}
-                                                                    placeholder={isDetecting ? "Detecting location..." : "House/Plot No, Apartment, Street"}
+                                                                    placeholder={isDetecting ? (isHindi ? "स्थान का पता लगाया जा रहा है..." : "Detecting location...") : (isHindi ? "मकान/प्लॉट नं., अपार्टमेंट, सड़क का नाम" : "House/Plot No, Apartment, Street")}
                                                                     required
                                                                     style={{ width: '100%', padding: '10px 90px 10px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                                                                 />
@@ -1406,31 +1398,33 @@ const OrderMedicine = () => {
                                                                     }}
                                                                 >
                                                                     <MapPin size={11} />
-                                                                    {isDetecting ? '...' : t('pharmacy.detect') || 'Detect'}
+                                                                    {isDetecting ? '...' : (isHindi ? 'पता लगाएं' : (t('pharmacy.detect') || 'Detect'))}
                                                                 </button>
                                                             </div>
 
                                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                                                                 <div>
                                                                     <label style={{ fontSize: '11px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '4px' }}>
-                                                                        {t('pharmacy.pinCode') || "Pin Code"} <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 'normal' }}>(Level 1 Check)</span> <span style={{ color: '#ef4444' }}>*</span>
+                                                                        {isHindi ? 'पिन कोड' : (t('pharmacy.pinCode') || 'PIN Code')} <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 'normal' }}>{isHindi ? '(स्तर 1 जाँच)' : '(Level 1 Check)'}</span> <span style={{ color: '#ef4444' }}>*</span>
                                                                     </label>
                                                                     <input
                                                                         type="text"
                                                                         value={shippingDetails.zip}
                                                                         onChange={(e) => handleManualZipChange(e.target.value)}
-                                                                        placeholder="उदा. 331502"
+                                                                        placeholder={isHindi ? "उदा. 331502" : "e.g. 331502"}
                                                                         required
                                                                         style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', fontWeight: '600' }}
                                                                     />
                                                                 </div>
                                                                 <div>
-                                                                    <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.state') || "State"} <span style={{ color: '#ef4444' }}>*</span></label>
+                                                                    <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>
+                                                                        {isHindi ? 'राज्य' : (t('pharmacy.state') || 'State')} <span style={{ color: '#ef4444' }}>*</span>
+                                                                    </label>
                                                                     <input
                                                                         type="text"
                                                                         value={shippingDetails.state}
                                                                         onChange={(e) => setShippingDetails(prev => ({ ...prev, state: e.target.value }))}
-                                                                        placeholder="e.g. Rajasthan"
+                                                                        placeholder={isHindi ? "उदा. राजस्थान" : "e.g. Rajasthan"}
                                                                         required
                                                                         style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                                                                     />
@@ -1448,7 +1442,7 @@ const OrderMedicine = () => {
                                                                 <div style={{ marginBottom: '12px', background: '#f0fdf4', padding: '12px', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
                                                                     <label style={{ fontSize: '12px', fontWeight: '700', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                                                                         <CheckCircle size={15} color="#16a34a" />
-                                                                        गाँव / कस्बा चुनें (Level 2: Select Village/City for PIN {shippingDetails.zip}) <span style={{ color: '#ef4444' }}>*</span>
+                                                                        {isHindi ? `गाँव / कस्बा चुनें (स्तर 2: पिन ${shippingDetails.zip} के लिए)` : `Select Village / Town (Level 2: For PIN ${shippingDetails.zip})`} <span style={{ color: '#ef4444' }}>*</span>
                                                                     </label>
                                                                     <select
                                                                         value={shippingDetails.villageName || shippingDetails.city || ''}
@@ -1469,18 +1463,18 @@ const OrderMedicine = () => {
                                                                             cursor: 'pointer'
                                                                         }}
                                                                     >
-                                                                        <option value="">-- इस पिन कोड के तहत अपना गाँव / कस्बा चुनें --</option>
+                                                                        <option value="">{isHindi ? '-- इस पिन कोड के तहत अपना गाँव / कस्बा चुनें --' : '-- Select your Village / Town for this PIN --'}</option>
                                                                         {getVillagesForPincode(shippingDetails.zip).map((village, idx) => (
                                                                             <option key={idx} value={village}>{village}</option>
                                                                         ))}
                                                                     </select>
                                                                     <small style={{ color: '#15803d', fontSize: '11px', marginTop: '4px', display: 'block', fontWeight: '500' }}>
-                                                                        ✓ पिन कोड स्वीकृत! कृपया डिलीवरी के लिए उपरोक्त सूची में से अपना गाँव/शहर चुनें।
+                                                                        {isHindi ? '✓ पिन कोड स्वीकृत! कृपया डिलीवरी के लिए उपरोक्त सूची में से अपना गाँव/शहर चुनें।' : '✓ PIN code accepted! Please select your village/city from above list for delivery.'}
                                                                     </small>
                                                                 </div>
                                                             )}
 
-                                                            {user && (
+                                                            {user && user.mobile && (
                                                                 <div style={{ marginTop: '5px' }}>
                                                                     <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#475569', cursor: 'pointer' }}>
                                                                         <input
@@ -1493,31 +1487,37 @@ const OrderMedicine = () => {
                                                                                 }
                                                                             }}
                                                                         />
-                                                                        {t('pharmacy.someoneElse') || "Ordering for someone else?"}
+                                                                        {isHindi ? 'किसी और के लिए ऑर्डर कर रहे हैं?' : (t('pharmacy.someoneElse') || 'Ordering for someone else?')}
                                                                     </label>
                                                                 </div>
                                                             )}
 
-                                                            {(isOrderingForSomeoneElse || !user) && (
+                                                            {(isOrderingForSomeoneElse || !user || !user?.mobile) && (
                                                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '5px' }}>
                                                                     <div>
-                                                                        <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.receiverPhone') || "Receiver's Phone Number"} <span style={{ color: '#ef4444' }}>*</span></label>
+                                                                        <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>
+                                                                            {isHindi ? 'प्राप्तकर्ता का फ़ोन नंबर' : (t('pharmacy.receiverPhone') || "Receiver's Phone Number")} <span style={{ color: '#ef4444' }}>*</span>
+                                                                        </label>
                                                                         <input
                                                                             type="tel"
+                                                                            maxLength={10}
                                                                             value={shippingDetails.phone}
-                                                                            onChange={(e) => setShippingDetails(prev => ({ ...prev, phone: e.target.value }))}
-                                                                            placeholder="10-digit number"
+                                                                            onChange={(e) => setShippingDetails(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+                                                                            placeholder={isHindi ? "10 अंकों का मोबाइल नंबर" : "10-digit number"}
                                                                             required
                                                                             style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                                                                         />
                                                                     </div>
                                                                     <div>
-                                                                        <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>{t('pharmacy.altPhone') || "Alternate Phone"}</label>
+                                                                        <label style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '4px' }}>
+                                                                            {isHindi ? 'वैकल्पिक मोबाइल नंबर' : (t('pharmacy.altPhone') || 'Alternate Phone')}
+                                                                        </label>
                                                                         <input
                                                                             type="tel"
+                                                                            maxLength={10}
                                                                             value={shippingDetails.altPhone}
-                                                                            onChange={(e) => setShippingDetails(prev => ({ ...prev, altPhone: e.target.value }))}
-                                                                            placeholder="Optional"
+                                                                            onChange={(e) => setShippingDetails(prev => ({ ...prev, altPhone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+                                                                            placeholder={isHindi ? "वैकल्पिक" : "Optional"}
                                                                             style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }}
                                                                         />
                                                                     </div>
@@ -1546,7 +1546,7 @@ const OrderMedicine = () => {
                                                         cursor: 'pointer'
                                                     }}
                                                 >
-                                                    <span>Proceed to Step 2</span>
+                                                    <span>{isHindi ? 'आगे बढ़ें (पर्ची अपलोड करें)' : 'Proceed to Step 2'}</span>
                                                     <ArrowRight size={18} />
                                                 </button>
                                             </div>
@@ -1570,8 +1570,8 @@ const OrderMedicine = () => {
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#166534', minWidth: 0 }}>
                                                         <MapPin size={18} color="#16a34a" style={{ flexShrink: 0 }} />
                                                         <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                            <strong style={{ color: '#15803d' }}>डिलीवरी पता: </strong>
-                                                            <span>{shippingDetails.villageName || shippingDetails.city || 'पता'}, {shippingDetails.zip}</span>
+                                                            <strong style={{ color: '#15803d' }}>{isHindi ? 'डिलीवरी पता: ' : 'Delivery Address: '}</strong>
+                                                            <span>{shippingDetails.villageName || shippingDetails.city || (isHindi ? 'पता' : 'Address')}, {shippingDetails.zip}</span>
                                                             <span style={{ color: '#475569', fontSize: '11px', marginLeft: '6px' }}>({shippingDetails.phone})</span>
                                                         </div>
                                                     </div>
@@ -1590,264 +1590,770 @@ const OrderMedicine = () => {
                                                             flexShrink: 0
                                                         }}
                                                     >
-                                                        {t('pharmacy.change') || "बदलें (Change)"}
+                                                        {t('pharmacy.change', { defaultValue: isHindi ? 'बदलें' : 'Change' })}
                                                     </button>
                                                 </div>
 
-                                                {/* Phone Call Order & Timings Guardrail (9:00 AM - 7:00 PM) */}
-                                                <div style={{
-                                                    marginBottom: '12px',
-                                                    padding: '10px 14px',
-                                                    borderRadius: '10px',
-                                                    background: (() => {
-                                                        const h = new Date().getHours();
-                                                        return (h >= 9 && h < 19) ? 'linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%)' : '#fffbeb';
-                                                    })(),
-                                                    border: `1px solid ${(() => {
-                                                        const h = new Date().getHours();
-                                                        return (h >= 9 && h < 19) ? '#86efac' : '#fde68a';
-                                                    })()}`,
-                                                    display: 'flex',
-                                                    justifyContent: 'space-between',
-                                                    alignItems: 'center',
-                                                    flexWrap: 'wrap',
-                                                    gap: '10px'
-                                                }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                {/* Step 2 Heading */}
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                                                    <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
+                                                        <FileText size={18} color="#3b82f6" />
+                                                        2. {isHindi ? 'पर्चा अपलोड करें या फोन पर ऑर्डर करें' : (t('pharmacy.uploadPrescriptionStep') || 'Upload Prescription or Order by Phone')}
+                                                    </h4>
+                                                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#2563eb', background: '#eff6ff', padding: '3px 8px', borderRadius: '10px' }}>
+                                                        {isHindi ? 'चरण 2 का 4' : 'Step 2 of 4'}
+                                                    </span>
+                                                </div>
+
+                                                {/* Two Equal Size Ordering Cards (Phone Call vs Prescription Upload) */}
+                                                {(() => {
+                                                    const h = new Date().getHours();
+                                                    const isServiceHours = h >= 9 && h < 19;
+
+                                                    return (
                                                         <div style={{
-                                                            width: '32px',
-                                                            height: '32px',
-                                                            borderRadius: '8px',
-                                                            background: 'white',
                                                             display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            color: '#0284c7',
-                                                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                                                            flexShrink: 0
+                                                            flexDirection: 'column',
+                                                            gap: '12px',
+                                                            marginBottom: '16px'
                                                         }}>
-                                                            <Phone size={16} />
-                                                        </div>
-                                                        <div>
-                                                            <div style={{ fontWeight: '700', fontSize: '13px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                                <span>फोन पर दवाई ऑर्डर करें</span>
-                                                                <span style={{ fontSize: '10px', color: '#059669', background: '#dcfce7', padding: '1px 6px', borderRadius: '4px', fontWeight: '600' }}>Call to Order</span>
-                                                            </div>
-                                                            <div style={{ fontSize: '11px', color: '#475569', marginTop: '2px' }}>
-                                                                {(() => {
-                                                                    const h = new Date().getHours();
-                                                                    return (h >= 9 && h < 19) 
-                                                                        ? `फार्मासिस्ट उपलब्ध हैं (सुबह 9 AM - शाम 7 PM)`
-                                                                        : `उपलब्ध समय: सुबह 9 AM - शाम 7 PM`;
-                                                                })()}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        {(() => {
-                                                            const h = new Date().getHours();
-                                                            if (h >= 9 && h < 19) {
-                                                                return (
-                                                                    <a
-                                                                        href={`tel:${(contactPhone || '8306305569').replace(/\s+/g, '')}`}
-                                                                        style={{
+                                                            {/* Card 1: Order by Phone */}
+                                                            <div style={{
+                                                                borderRadius: '16px',
+                                                                background: isServiceHours ? 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)' : '#fffbeb',
+                                                                border: `1.5px solid ${isServiceHours ? '#86efac' : '#fde68a'}`,
+                                                                padding: '20px 16px',
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'space-between',
+                                                                textAlign: 'center',
+                                                                boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                                                                minHeight: '160px'
+                                                            }}>
+                                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                                                                    <div style={{
+                                                                        width: '46px',
+                                                                        height: '46px',
+                                                                        borderRadius: '50%',
+                                                                        background: isServiceHours ? '#dcfce7' : '#fef3c7',
+                                                                        color: isServiceHours ? '#16a34a' : '#d97706',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'center',
+                                                                        marginBottom: '10px',
+                                                                        boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
+                                                                    }}>
+                                                                        <Phone size={22} />
+                                                                    </div>
+                                                                    <div style={{ fontWeight: '700', fontSize: '15px', color: '#0f172a', marginBottom: '4px' }}>
+                                                                        {isHindi ? 'फोन पर दवाई ऑर्डर करें' : 'Order Medicine by Phone'}
+                                                                    </div>
+                                                                    <div style={{ fontSize: '12px', color: '#475569', lineHeight: '1.4', marginBottom: '12px' }}>
+                                                                        {isServiceHours 
+                                                                            ? (isHindi ? 'फार्मासिस्ट उपलब्ध हैं (सुबह 9 AM - शाम 7 PM)' : 'Pharmacists available now (9 AM - 7 PM)')
+                                                                            : (isHindi ? 'उपलब्ध समय: सुबह 9 AM - शाम 7 PM' : 'Service Hours: 9 AM - 7 PM')
+                                                                        }
+                                                                    </div>
+                                                                </div>
+
+                                                                <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                                                                    {isServiceHours ? (
+                                                                        <a
+                                                                            href={`tel:${(contactPhone || '8306305569').replace(/\s+/g, '')}`}
+                                                                            style={{
+                                                                                display: 'inline-flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                gap: '8px',
+                                                                                background: '#16a34a',
+                                                                                color: 'white',
+                                                                                padding: '9px 18px',
+                                                                                borderRadius: '10px',
+                                                                                fontWeight: '700',
+                                                                                fontSize: '13px',
+                                                                                textDecoration: 'none',
+                                                                                width: '100%',
+                                                                                maxWidth: '240px',
+                                                                                boxShadow: '0 3px 10px rgba(22, 163, 74, 0.25)',
+                                                                                transition: 'all 0.2s ease'
+                                                                            }}
+                                                                        >
+                                                                            <Phone size={14} /> {isHindi ? 'कॉल करें: ' : 'Call: '}{contactPhone || '8306305569'}
+                                                                        </a>
+                                                                    ) : (
+                                                                        <div style={{
                                                                             display: 'inline-flex',
                                                                             alignItems: 'center',
+                                                                            justifyContent: 'center',
                                                                             gap: '6px',
-                                                                            background: '#16a34a',
-                                                                            color: 'white',
-                                                                            padding: '6px 12px',
-                                                                            borderRadius: '8px',
+                                                                            background: '#fef3c7',
+                                                                            color: '#92400e',
+                                                                            border: '1px solid #fde68a',
+                                                                            padding: '8px 16px',
+                                                                            borderRadius: '10px',
                                                                             fontWeight: '700',
-                                                                            fontSize: '12px',
-                                                                            textDecoration: 'none',
-                                                                            boxShadow: '0 2px 6px rgba(22, 163, 74, 0.25)'
-                                                                        }}
-                                                                    >
-                                                                        <Phone size={13} /> कॉल करें: {contactPhone || '8306305569'}
-                                                                    </a>
-                                                                );
-                                                            } else {
-                                                                return (
-                                                                    <div style={{
-                                                                        display: 'inline-flex',
-                                                                        alignItems: 'center',
-                                                                        gap: '5px',
-                                                                        background: '#fef3c7',
-                                                                        color: '#92400e',
-                                                                        border: '1px solid #fde68a',
-                                                                        padding: '4px 10px',
-                                                                        borderRadius: '8px',
-                                                                        fontWeight: '700',
-                                                                        fontSize: '11px'
-                                                                    }}>
-                                                                        <Clock size={13} /> समय: 9 AM - 7 PM
+                                                                            fontSize: '12px'
+                                                                        }}>
+                                                                            <Clock size={14} /> {isHindi ? 'समय: 9 AM - 7 PM' : 'Hours: 9 AM - 7 PM'}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Divider: ----- OR ----- */}
+                                                            <div style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                width: '100%',
+                                                                margin: '2px 0',
+                                                                userSelect: 'none'
+                                                            }}>
+                                                                <div style={{ flex: 1, height: '1.5px', background: 'linear-gradient(to right, transparent, #cbd5e1)' }} />
+                                                                <span style={{
+                                                                    padding: '4px 16px',
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '800',
+                                                                    color: '#64748b',
+                                                                    background: '#f8fafc',
+                                                                    border: '1px solid #e2e8f0',
+                                                                    borderRadius: '20px',
+                                                                    textTransform: 'uppercase',
+                                                                    letterSpacing: '0.8px',
+                                                                    boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+                                                                }}>
+                                                                    {isHindi ? 'या / OR' : 'OR'}
+                                                                </span>
+                                                                <div style={{ flex: 1, height: '1.5px', background: 'linear-gradient(to left, transparent, #cbd5e1)' }} />
+                                                            </div>
+
+                                                            {/* Card 2: Upload Prescription */}
+                                                            <div
+                                                                className={`drop-area ${preview ? 'preview-active' : ''} ${isDragOver ? 'drag-over' : ''}`}
+                                                                onClick={() => {
+                                                                    if (!preview) {
+                                                                        setShowUploadPickerModal(true);
+                                                                    }
+                                                                }}
+                                                                onDragOver={handleDragOver}
+                                                                onDragLeave={handleDragLeave}
+                                                                onDrop={handleDrop}
+                                                                style={{
+                                                                    border: '2px dashed #93c5fd',
+                                                                    borderRadius: '16px',
+                                                                    minHeight: '170px',
+                                                                    padding: '20px 16px',
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    cursor: 'pointer',
+                                                                    background: isDragOver ? '#eff6ff' : '#f8fafc',
+                                                                    borderColor: isDragOver ? '#2563eb' : '#93c5fd',
+                                                                    transform: isDragOver ? 'scale(1.01)' : 'none',
+                                                                    transition: 'all 0.2s ease',
+                                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+                                                                }}
+                                                            >
+                                                                {preview ? (
+                                                                    <div className="preview-container" style={{ position: 'relative' }}>
+                                                                        <img src={preview} alt="Doctor Prescription Receipt Preview for Free Medicine Delivery" />
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setFile(null);
+                                                                                setPreview(null);
+                                                                                setSelectedPastRx(null);
+                                                                                const camInput = document.getElementById('presc-upload-camera');
+                                                                                if (camInput) camInput.value = '';
+                                                                                const galInput = document.getElementById('presc-upload-gallery');
+                                                                                if (galInput) galInput.value = '';
+                                                                                const fileInput = document.getElementById('presc-upload');
+                                                                                if (fileInput) fileInput.value = '';
+                                                                            }}
+                                                                            title={isHindi ? 'हटाएं' : 'Remove'}
+                                                                            aria-label="Remove prescription"
+                                                                            style={{
+                                                                                position: 'absolute',
+                                                                                top: '8px',
+                                                                                right: '8px',
+                                                                                width: '32px',
+                                                                                height: '32px',
+                                                                                borderRadius: '50%',
+                                                                                background: 'rgba(239, 68, 68, 0.92)',
+                                                                                color: '#ffffff',
+                                                                                border: '2px solid #ffffff',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                cursor: 'pointer',
+                                                                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+                                                                                zIndex: 10,
+                                                                                transition: 'transform 0.15s ease, background 0.15s ease'
+                                                                            }}
+                                                                        >
+                                                                            <X size={18} strokeWidth={2.5} />
+                                                                        </button>
+                                                                        <div
+                                                                            className="change-btn"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setShowUploadPickerModal(true);
+                                                                            }}
+                                                                            style={{ cursor: 'pointer' }}
+                                                                        >
+                                                                            {t('pharmacy.changePhoto', { defaultValue: isHindi ? 'फोटो बदलें' : 'Change Photo' })}
+                                                                        </div>
                                                                     </div>
-                                                                );
-                                                            }
-                                                        })()}
-                                                    </div>
-                                                </div>
+                                                                ) : (
+                                                                    <div className="placeholder" style={{ padding: 0, width: '100%', textAlign: 'center' }}>
+                                                                        <div className="icon-circle" style={{ margin: '0 auto 10px', width: '46px', height: '46px' }}>
+                                                                            <Upload size={22} />
+                                                                        </div>
+                                                                        <p style={{ fontWeight: '700', fontSize: '15px', color: '#0f172a', marginBottom: '4px' }}>
+                                                                            {t('pharmacy.dropPrescription', { defaultValue: isHindi ? 'पर्चा यहाँ अपलोड करें' : 'Drop your prescription here' })}
+                                                                        </p>
+                                                                        <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 12px' }}>
+                                                                            {isHindi ? 'कैमरा से फोटो खींचें या गैलरी से चुनें' : 'Take a photo with camera or choose from gallery'}
+                                                                        </p>
 
-                                        {/* Step 2: Upload Prescription */}
-                                        <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '700', color: '#1e293b', marginBottom: '15px' }}>
-                                            <FileText size={18} color="#3b82f6" />
-                                            2. {t('pharmacy.uploadPrescriptionStep') || "Upload Prescription"}
-                                        </h4>
+                                                                        {/* Both Options: Camera & Gallery */}
+                                                                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap', width: '100%' }}>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    openCameraPicker();
+                                                                                }}
+                                                                                style={{
+                                                                                    display: 'inline-flex',
+                                                                                    alignItems: 'center',
+                                                                                    gap: '7px',
+                                                                                    padding: '8px 16px',
+                                                                                    borderRadius: '10px',
+                                                                                    background: '#eff6ff',
+                                                                                    border: '1.5px solid #93c5fd',
+                                                                                    color: '#1d4ed8',
+                                                                                    fontWeight: '700',
+                                                                                    fontSize: '12.5px',
+                                                                                    cursor: 'pointer',
+                                                                                    transition: 'all 0.15s ease',
+                                                                                    boxShadow: '0 1px 3px rgba(37,99,235,0.08)'
+                                                                                }}
+                                                                            >
+                                                                                <Camera size={16} color="#2563eb" />
+                                                                                <span>{isHindi ? 'कैमरा (Camera)' : 'Camera'}</span>
+                                                                            </button>
 
-                                        <div
-                                            className={`drop-area ${preview ? 'preview-active' : ''}`}
-                                            onClick={() => document.getElementById('presc-upload').click()}
-                                        >
-                                            {preview ? (
-                                                <div className="preview-container">
-                                                    <img src={preview} alt="Doctor Prescription Receipt Preview for Free Medicine Delivery" />
-                                                    <div className="change-btn">{t('pharmacy.changePhoto', { defaultValue: 'Change Photo' })}</div>
-                                                </div>
-                                            ) : (
-                                                <div className="placeholder">
-                                                    <div className="icon-circle">
-                                                        <Upload size={24} />
-                                                    </div>
-                                                    <p>{t('pharmacy.dropPrescription')}</p>
-                                                    <span>{t('pharmacy.supports')}</span>
-                                                    <small className="text-gray-500 mt-1 block">{t('pharmacy.maxSize')}</small>
-                                                </div>
-                                            )}
-                                            <input
-                                                type="file"
-                                                id="presc-upload"
-                                                hidden
-                                                onChange={handleFileChange}
-                                                accept="image/*"
-                                            />
-                                        </div>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    openGalleryPicker();
+                                                                                }}
+                                                                                style={{
+                                                                                    display: 'inline-flex',
+                                                                                    alignItems: 'center',
+                                                                                    gap: '7px',
+                                                                                    padding: '8px 16px',
+                                                                                    borderRadius: '10px',
+                                                                                    background: '#f8fafc',
+                                                                                    border: '1.5px solid #cbd5e1',
+                                                                                    color: '#334155',
+                                                                                    fontWeight: '700',
+                                                                                    fontSize: '12.5px',
+                                                                                    cursor: 'pointer',
+                                                                                    transition: 'all 0.15s ease',
+                                                                                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                                                                                }}
+                                                                            >
+                                                                                <Upload size={16} color="#475569" />
+                                                                                <span>{isHindi ? 'गैलरी (Gallery)' : 'Gallery'}</span>
+                                                                            </button>
+                                                                        </div>
 
-                                        {/* Client Flowchart Requirements: Past Rx & Days Options */}
-                                        <div style={{ marginTop: '16px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                                        <span style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginTop: '10px' }}>
+                                                                            {isHindi ? 'JPG, PNG फॉर्मेट (अधिकतम 4MB)' : 'Supports JPG, PNG (Max 4MB)'}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Camera capture input */}
+                                                                <input
+                                                                    type="file"
+                                                                    id="presc-upload-camera"
+                                                                    hidden
+                                                                    accept="image/*"
+                                                                    capture="environment"
+                                                                    onChange={(e) => {
+                                                                        handleFileChange(e);
+                                                                        e.target.value = '';
+                                                                    }}
+                                                                />
+
+                                                                {/* Gallery / File picker input */}
+                                                                <input
+                                                                    type="file"
+                                                                    id="presc-upload-gallery"
+                                                                    hidden
+                                                                    accept="image/*"
+                                                                    onChange={(e) => {
+                                                                        handleFileChange(e);
+                                                                        e.target.value = '';
+                                                                    }}
+                                                                />
+
+                                                                {/* Legacy input alias */}
+                                                                <input
+                                                                    type="file"
+                                                                    id="presc-upload"
+                                                                    hidden
+                                                                    accept="image/*"
+                                                                    onChange={(e) => {
+                                                                        handleFileChange(e);
+                                                                        e.target.value = '';
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })()}
+
+                                        {/* Subtle Select from Past Prescriptions option */}
+                                        <div style={{ marginTop: '14px', textAlign: 'center' }}>
                                             <button
                                                 type="button"
                                                 onClick={() => setShowPastRxModal(true)}
                                                 style={{
-                                                    flex: 1,
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    gap: '8px',
-                                                    padding: '10px 14px',
-                                                    background: selectedPastRx ? '#ecfdf5' : '#f8fafc',
-                                                    border: `1px solid ${selectedPastRx ? '#10b981' : '#cbd5e1'}`,
-                                                    borderRadius: '10px',
-                                                    color: selectedPastRx ? '#047857' : '#334155',
-                                                    fontWeight: '600',
+                                                    background: 'transparent',
+                                                    border: 'none',
+                                                    color: selectedPastRx ? '#059669' : '#2563eb',
                                                     fontSize: '12px',
-                                                    cursor: 'pointer'
+                                                    fontWeight: '600',
+                                                    cursor: 'pointer',
+                                                    textDecoration: 'underline',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '5px'
                                                 }}
                                             >
-                                                <FileText size={16} color={selectedPastRx ? '#10b981' : '#3b82f6'} />
-                                                {selectedPastRx ? `पर्ची चुनी गई (#${selectedPastRx._id.slice(-4)})` : 'पहले की पर्ची चुनें (Archive)'}
+                                                <FileText size={14} />
+                                                {selectedPastRx 
+                                                    ? (isHindi ? `पिछली पर्ची चुनी गई (#${selectedPastRx._id.slice(-4)}) (बदलें)` : `Selected Past Rx (#${selectedPastRx._id.slice(-4)}) (Change)`) 
+                                                    : (isHindi ? 'या पहले की पर्ची चुनें (पुराने ऑर्डर से)' : 'Or choose from past prescriptions')
+                                                }
                                             </button>
                                         </div>
 
-                                        {/* Medicine Scope & Duration Selector */}
-                                        <div style={{ marginTop: '16px', padding: '14px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                            <div style={{ marginBottom: '12px' }}>
-                                                <label style={{ fontSize: '12px', fontWeight: '700', color: '#334155', display: 'block', marginBottom: '8px' }}>
-                                                    पर्ची की दवाई का चयन:
-                                                </label>
-                                                <div style={{ display: 'flex', gap: '10px' }}>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setNeedAllMedicines(true)}
-                                                        style={{
-                                                            flex: 1,
-                                                            padding: '8px 12px',
-                                                            borderRadius: '8px',
-                                                            border: `1px solid ${needAllMedicines ? '#2563eb' : '#cbd5e1'}`,
-                                                            background: needAllMedicines ? '#eff6ff' : '#fff',
-                                                            color: needAllMedicines ? '#1d4ed8' : '#64748b',
-                                                            fontSize: '12px',
-                                                            fontWeight: '600',
-                                                            cursor: 'pointer'
-                                                        }}
-                                                    >
-                                                        पर्ची की सभी दवाई चाहिए
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setNeedAllMedicines(false)}
-                                                        style={{
-                                                            flex: 1,
-                                                            padding: '8px 12px',
-                                                            borderRadius: '8px',
-                                                            border: `1px solid ${!needAllMedicines ? '#2563eb' : '#cbd5e1'}`,
-                                                            background: !needAllMedicines ? '#eff6ff' : '#fff',
-                                                            color: !needAllMedicines ? '#1d4ed8' : '#64748b',
-                                                            fontSize: '12px',
-                                                            fontWeight: '600',
-                                                            cursor: 'pointer'
-                                                        }}
-                                                    >
-                                                        कुछ दवाई चाहिए (Notes में लिखें)
-                                                    </button>
+                                        {error && <div className="alert alert-error" style={{ marginTop: '14px' }}>{error}</div>}
+
+                                        {/* Fixed/Sticky Bottom Actions for Step 2 */}
+                                        <div className="fixed-bottom-actions">
+                                            <div className="fixed-bottom-actions-inner">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setActiveStep(1)}
+                                                    style={{
+                                                        minHeight: '48px',
+                                                        padding: '0 20px',
+                                                        borderRadius: '12px',
+                                                        border: '1.5px solid #cbd5e1',
+                                                        background: '#f8fafc',
+                                                        color: '#334155',
+                                                        fontWeight: '700',
+                                                        fontSize: '13px',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '6px',
+                                                        whiteSpace: 'nowrap',
+                                                        flexShrink: 0,
+                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    ← {t('pharmacy.back', { defaultValue: isHindi ? 'पता बदलें' : 'Change Address' })}
+                                                </button>
+
+                                                <button 
+                                                    type="button"
+                                                    onClick={handleProceedToStep3}
+                                                    className="btn-submit-premium" 
+                                                    style={{ 
+                                                        flex: 1, 
+                                                        margin: 0,
+                                                        minHeight: '48px',
+                                                        padding: '0 24px',
+                                                        fontSize: '15px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '8px'
+                                                    }}
+                                                >
+                                                    <span>{isHindi ? 'आगे बढ़ें: दवाई चयन' : 'Continue: Medicine Details'}</span>
+                                                    <ArrowRight size={18} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ================= STEP 3: MEDICINE SELECTION / SCOPE ================= */}
+                                {activeStep === 3 && (
+                                    <div className="medicine-selection-step-content">
+                                        {/* Step 3 Heading */}
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                                            <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
+                                                <span style={{ fontSize: '18px' }}>💊</span>
+                                                3. {isHindi ? 'पर्ची की दवाई का चयन' : 'Medicine Selection'}
+                                            </h4>
+                                            <span style={{ fontSize: '11px', fontWeight: '700', color: '#2563eb', background: '#eff6ff', padding: '3px 8px', borderRadius: '10px' }}>
+                                                {isHindi ? 'चरण 3 का 4' : 'Step 3 of 4'}
+                                            </span>
+                                        </div>
+
+                                        {/* Selected Prescription Confirmation Card */}
+                                        <div style={{
+                                            marginBottom: '16px',
+                                            padding: '12px 14px',
+                                            borderRadius: '12px',
+                                            background: '#f8fafc',
+                                            border: '1px solid #e2e8f0',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            gap: '12px'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                                                {preview ? (
+                                                    <img 
+                                                        src={preview} 
+                                                        alt="Prescription Preview" 
+                                                        style={{ width: '42px', height: '42px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                                                    />
+                                                ) : (
+                                                    <div style={{ width: '42px', height: '42px', borderRadius: '8px', background: '#ecfdf5', border: '1px solid #a7f3d0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                        <FileText size={20} color="#059669" />
+                                                    </div>
+                                                )}
+                                                <div style={{ overflow: 'hidden' }}>
+                                                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                                                        {selectedPastRx 
+                                                            ? (isHindi ? `पिछली पर्ची #${selectedPastRx._id.slice(-6)}` : `Past Prescription #${selectedPastRx._id.slice(-6)}`) 
+                                                            : (file?.name || (isHindi ? 'अपलोड किया गया पर्चा' : 'Uploaded Prescription'))
+                                                        }
+                                                    </div>
+                                                    <div style={{ fontSize: '11px', color: '#16a34a', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <CheckCircle size={12} color="#16a34a" /> {isHindi ? 'पर्चा संलग्न है' : 'Prescription attached'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setActiveStep(2)}
+                                                style={{
+                                                    padding: '5px 12px',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #cbd5e1',
+                                                    background: '#ffffff',
+                                                    color: '#2563eb',
+                                                    fontSize: '11px',
+                                                    fontWeight: '700',
+                                                    cursor: 'pointer',
+                                                    flexShrink: 0
+                                                }}
+                                            >
+                                                {isHindi ? 'पर्चा बदलें' : 'Change'}
+                                            </button>
+                                        </div>
+
+                                        {/* Medicine Selection Scope Cards */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '18px' }}>
+                                            <label style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', display: 'block' }}>
+                                                {isHindi ? 'कृपया अपनी आवश्यकता अनुसार विकल्प चुनें:' : 'Please choose your requirement:'}
+                                            </label>
+
+                                            {/* Option 1: Need All Medicines */}
+                                            <div 
+                                                onClick={() => setNeedAllMedicines(true)}
+                                                style={{
+                                                    padding: '16px',
+                                                    borderRadius: '14px',
+                                                    border: `2px solid ${needAllMedicines ? '#2563eb' : '#e2e8f0'}`,
+                                                    background: needAllMedicines ? 'linear-gradient(135deg, #eff6ff 0%, #ffffff 100%)' : '#ffffff',
+                                                    boxShadow: needAllMedicines ? '0 4px 12px rgba(37, 99, 235, 0.1)' : '0 1px 3px rgba(0,0,0,0.02)',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease',
+                                                    display: 'flex',
+                                                    alignItems: 'flex-start',
+                                                    gap: '14px'
+                                                }}
+                                            >
+                                                <div style={{
+                                                    width: '22px',
+                                                    height: '22px',
+                                                    borderRadius: '50%',
+                                                    border: `2px solid ${needAllMedicines ? '#2563eb' : '#94a3b8'}`,
+                                                    background: needAllMedicines ? '#2563eb' : 'transparent',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    flexShrink: 0,
+                                                    marginTop: '2px'
+                                                }}>
+                                                    {needAllMedicines && <CheckCircle size={14} color="#ffffff" />}
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontSize: '14px', fontWeight: '700', color: needAllMedicines ? '#1d4ed8' : '#1e293b', marginBottom: '4px' }}>
+                                                        {isHindi ? 'पर्ची की सभी दवाई चाहिए' : 'Need All Medicines from Prescription'}
+                                                    </div>
+                                                    <div style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.4' }}>
+                                                        {isHindi 
+                                                            ? 'डॉक्टर द्वारा पर्चे में लिखी सभी दवाइयाँ तैयार करके आपके पते पर भेजी जाएँगी।' 
+                                                            : 'All medicines prescribed by the doctor will be prepared and delivered.'}
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <div>
-                                                <label style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                                    <span>Course Duration:</span>
-                                                    {courseDays && (
-                                                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#059669', background: '#ecfdf5', padding: '2px 8px', borderRadius: '6px' }}>
-                                                            {courseDays} दिन का कोर्स
-                                                        </span>
-                                                    )}
-                                                </label>
-                                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                    <div style={{ position: 'relative', width: '100%', maxWidth: '280px' }}>
-                                                        <input 
-                                                            type="number" 
-                                                            min="1" 
-                                                            max="365"
-                                                            value={courseDays} 
-                                                            onChange={(e) => {
-                                                                const val = e.target.value;
-                                                                setCourseDays(val === '' ? '' : Math.max(1, parseInt(val) || 1));
-                                                            }}
-                                                            placeholder="दिन संख्या लिखें (उदा. 15)"
-                                                            required
-                                                            style={{
-                                                                width: '100%',
-                                                                padding: '10px 48px 10px 14px',
-                                                                borderRadius: '10px',
-                                                                border: '2px solid #cbd5e1',
-                                                                fontSize: '14px',
-                                                                fontWeight: '700',
-                                                                color: '#0f172a',
-                                                                background: '#ffffff',
-                                                                outline: 'none',
-                                                                boxSizing: 'border-box'
-                                                            }}
-                                                            onFocus={(e) => e.target.style.borderColor = '#10b981'}
-                                                            onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
-                                                        />
-                                                        <span style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', fontWeight: '700', color: '#64748b', pointerEvents: 'none' }}>
-                                                            दिन
-                                                        </span>
+                                            {/* Option 2: Need Specific Medicines */}
+                                            <div 
+                                                onClick={() => setNeedAllMedicines(false)}
+                                                style={{
+                                                    padding: '16px',
+                                                    borderRadius: '14px',
+                                                    border: `2px solid ${!needAllMedicines ? '#2563eb' : '#e2e8f0'}`,
+                                                    background: !needAllMedicines ? 'linear-gradient(135deg, #eff6ff 0%, #ffffff 100%)' : '#ffffff',
+                                                    boxShadow: !needAllMedicines ? '0 4px 12px rgba(37, 99, 235, 0.1)' : '0 1px 3px rgba(0,0,0,0.02)',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease',
+                                                    display: 'flex',
+                                                    alignItems: 'flex-start',
+                                                    gap: '14px'
+                                                }}
+                                            >
+                                                <div style={{
+                                                    width: '22px',
+                                                    height: '22px',
+                                                    borderRadius: '50%',
+                                                    border: `2px solid ${!needAllMedicines ? '#2563eb' : '#94a3b8'}`,
+                                                    background: !needAllMedicines ? '#2563eb' : 'transparent',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    flexShrink: 0,
+                                                    marginTop: '2px'
+                                                }}>
+                                                    {!needAllMedicines && <CheckCircle size={14} color="#ffffff" />}
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontSize: '14px', fontWeight: '700', color: !needAllMedicines ? '#1d4ed8' : '#1e293b', marginBottom: '4px' }}>
+                                                        {isHindi ? 'कुछ विशेष दवाई चाहिए (अगले स्टेप में नोट्स में लिखें)' : 'Need Specific Medicines (Specify in next step)'}
+                                                    </div>
+                                                    <div style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.4' }}>
+                                                        {isHindi 
+                                                            ? 'यदि आपको केवल कुछ दवाइयाँ चाहिए, तो अगले स्टेप में आप उनके नाम आसानी से लिख सकेंगे।' 
+                                                            : 'If you only need select medicines, you will be able to list their names in the next step.'}
                                                     </div>
                                                 </div>
-                                                <small style={{ color: '#64748b', fontSize: '11px', marginTop: '6px', display: 'block' }}>
-                                                    मरीज अपनी आवश्यकता अनुसार जितने दिन की दवाई चाहिए यहाँ संख्या (दिन) भर सकते हैं।
-                                                </small>
                                             </div>
                                         </div>
 
+                                        {error && <div className="alert alert-error" style={{ marginBottom: '14px' }}>{error}</div>}
+
+                                        {/* Fixed/Sticky Bottom Actions for Step 3 */}
+                                        <div className="fixed-bottom-actions">
+                                            <div className="fixed-bottom-actions-inner">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setActiveStep(2)}
+                                                    style={{
+                                                        minHeight: '48px',
+                                                        padding: '0 20px',
+                                                        borderRadius: '12px',
+                                                        border: '1.5px solid #cbd5e1',
+                                                        background: '#f8fafc',
+                                                        color: '#334155',
+                                                        fontWeight: '700',
+                                                        fontSize: '13px',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '6px',
+                                                        whiteSpace: 'nowrap',
+                                                        flexShrink: 0,
+                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    ← {t('pharmacy.back', { defaultValue: isHindi ? 'पीछे जाएँ' : 'Back' })}
+                                                </button>
+
+                                                <button 
+                                                    type="button"
+                                                    onClick={handleProceedToStep4}
+                                                    className="btn-submit-premium" 
+                                                    style={{ 
+                                                        flex: 1, 
+                                                        margin: 0,
+                                                        minHeight: '48px',
+                                                        padding: '0 24px',
+                                                        fontSize: '15px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '8px'
+                                                    }}
+                                                >
+                                                    <span>{isHindi ? 'आगे बढ़ें: कोर्स अवधि व सबमिट' : 'Next: Course Duration & Submit'}</span>
+                                                    <ArrowRight size={18} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ================= STEP 4: COURSE DURATION & FINAL DETAILS ================= */}
+                                {activeStep === 4 && (
+                                    <div className="course-duration-step-content">
+                                        {/* Step 4 Heading */}
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                                            <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '700', color: '#1e293b', margin: 0 }}>
+                                                <span style={{ fontSize: '18px' }}>📅</span>
+                                                4. {isHindi ? 'कोर्स अवधि एवं अंतिम विवरण' : 'Course Duration & Final Details'}
+                                            </h4>
+                                            <span style={{ fontSize: '11px', fontWeight: '700', color: '#2563eb', background: '#eff6ff', padding: '3px 8px', borderRadius: '10px' }}>
+                                                {isHindi ? 'चरण 4 का 4' : 'Step 4 of 4'}
+                                            </span>
+                                        </div>
+
+                                        {/* Course Duration Selector */}
+                                        <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '14px', border: '1.5px solid #e2e8f0', marginBottom: '16px' }}>
+                                            <label style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <Clock size={16} color="#059669" />
+                                                    {isHindi ? 'दवाई कितने दिन की चाहिए:' : 'Course Duration:'}
+                                                </span>
+                                                {courseDays && (
+                                                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#059669', background: '#ecfdf5', border: '1px solid #a7f3d0', padding: '3px 10px', borderRadius: '8px' }}>
+                                                        {courseDays} {isHindi ? 'दिन का कोर्स' : 'Days Course'}
+                                                    </span>
+                                                )}
+                                            </label>
+
+                                            {/* Quick preset chips */}
+                                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                                                {[7, 15, 30, 45, 60, 90].map((d) => (
+                                                    <button
+                                                        key={d}
+                                                        type="button"
+                                                        onClick={() => setCourseDays(d)}
+                                                        style={{
+                                                            padding: '6px 14px',
+                                                            borderRadius: '8px',
+                                                            border: `1.5px solid ${Number(courseDays) === d ? '#10b981' : '#cbd5e1'}`,
+                                                            background: Number(courseDays) === d ? '#ecfdf5' : '#ffffff',
+                                                            color: Number(courseDays) === d ? '#047857' : '#475569',
+                                                            fontWeight: '700',
+                                                            fontSize: '12px',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.15s ease'
+                                                        }}
+                                                    >
+                                                        {d} {isHindi ? 'दिन' : 'Days'}
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            {/* Custom days input */}
+                                            <div style={{ position: 'relative', width: '100%', maxWidth: '240px' }}>
+                                                <input 
+                                                    type="number" 
+                                                    min="1" 
+                                                    max="365"
+                                                    value={courseDays} 
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setCourseDays(val === '' ? '' : Math.max(1, Math.min(365, parseInt(val) || 1)));
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        e.target.style.borderColor = '#cbd5e1';
+                                                        if (!courseDays || Number(courseDays) < 1) {
+                                                            setCourseDays(15);
+                                                        }
+                                                    }}
+                                                    placeholder={isHindi ? "दिन संख्या लिखें" : "Enter days"}
+                                                    required
+                                                    style={{
+                                                        width: '100%',
+                                                        padding: '10px 48px 10px 14px',
+                                                        borderRadius: '10px',
+                                                        border: '2px solid #cbd5e1',
+                                                        fontSize: '14px',
+                                                        fontWeight: '700',
+                                                        color: '#0f172a',
+                                                        background: '#ffffff',
+                                                        outline: 'none',
+                                                        boxSizing: 'border-box'
+                                                    }}
+                                                    onFocus={(e) => e.target.style.borderColor = '#10b981'}
+                                                />
+                                                <span style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', fontWeight: '700', color: '#64748b', pointerEvents: 'none' }}>
+                                                    {isHindi ? 'दिन' : 'Days'}
+                                                </span>
+                                            </div>
+                                            <small style={{ color: '#64748b', fontSize: '11px', marginTop: '8px', display: 'block' }}>
+                                                {isHindi ? 'मरीज अपनी आवश्यकता अनुसार जितने दिन की दवाई चाहिए यहाँ संख्या (दिन) भर सकते हैं।' : 'Enter the number of days for which medicines are required.'}
+                                            </small>
+                                        </div>
+
+                                        {/* Patient Notes / Specific Medicines List */}
+                                        <div style={{ 
+                                            marginBottom: '16px', 
+                                            padding: !needAllMedicines ? '14px' : '0', 
+                                            background: !needAllMedicines ? '#fffbeb' : 'transparent',
+                                            borderRadius: '12px',
+                                            border: !needAllMedicines ? '1.5px solid #fde68a' : 'none'
+                                        }}>
+                                            <label style={{ fontSize: '12px', fontWeight: '700', color: !needAllMedicines ? '#92400e' : '#475569', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <FileText size={15} color={!needAllMedicines ? '#d97706' : '#64748b'} />
+                                                {!needAllMedicines 
+                                                    ? (isHindi ? 'आवश्यक दवाइयों के नाम व निर्देश (यहाँ लिखें):' : 'Specify Medicine Names & Instructions:')
+                                                    : (isHindi ? 'अतिरिक्त निर्देश / वैकल्पिक नोट्स (वैकल्पिक):' : (t('pharmacy.optionalNotes') || 'Additional Notes (Optional)'))
+                                                }
+                                            </label>
+                                            <textarea
+                                                value={notes}
+                                                onChange={(e) => setNotes(e.target.value)}
+                                                placeholder={!needAllMedicines 
+                                                    ? (isHindi ? "उदा. मुझे केवल Paracetamol 650 और Cetirizine 10mg चाहिए..." : "e.g. I only need Paracetamol 650 and Cetirizine 10mg...")
+                                                    : (t('pharmacy.placeholderNotes') || "Any specific instructions for the pharmacy or delivery person...")
+                                                }
+                                                style={{ 
+                                                    width: '100%', 
+                                                    padding: '12px', 
+                                                    borderRadius: '10px', 
+                                                    border: '1.5px solid #cbd5e1', 
+                                                    background: '#ffffff', 
+                                                    fontSize: '13px', 
+                                                    minHeight: '80px', 
+                                                    resize: 'none',
+                                                    boxSizing: 'border-box'
+                                                }}
+                                            />
+                                        </div>
+
+                                        {/* Pharmacy FAQs */}
                                         {pharmacyConfig?.faqs?.length > 0 && (
-                                            <div style={{ marginTop: '20px' }}>
+                                            <div style={{ marginBottom: '16px' }}>
                                                 <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '8px', display: 'block' }}>{t('pharmacy.additionalInfo')}</label>
                                                 {pharmacyConfig.faqs.map((faq, idx) => (
                                                     <div key={idx} style={{ marginBottom: '12px' }}>
                                                         <label style={{ fontSize: '12px', fontWeight: '600', color: '#64748b', marginBottom: '4px', display: 'block' }}>
-                                                            {(i18n.language === 'hi' && faq.question_hi) ? faq.question_hi : faq.question} <span style={{ color: '#ef4444' }}>*</span>
+                                                            {(isHindi && faq.question_hi) ? faq.question_hi : faq.question} <span style={{ color: '#ef4444' }}>*</span>
                                                         </label>
                                                         <input
                                                             type="text"
@@ -1855,24 +2361,15 @@ const OrderMedicine = () => {
                                                             onChange={(e) => setFaqAnswers(prev => ({ ...prev, [faq.id]: e.target.value }))}
                                                             placeholder={t('pharmacy.yourAnswer')}
                                                             required
-                                                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', fontSize: '13px' }}
+                                                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', fontSize: '13px', boxSizing: 'border-box' }}
                                                         />
                                                     </div>
                                                 ))}
                                             </div>
                                         )}
 
-                                        <div style={{ marginTop: '20px' }}>
-                                            <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '8px', display: 'block' }}>{t('pharmacy.optionalNotes')}</label>
-                                            <textarea
-                                                value={notes}
-                                                onChange={(e) => setNotes(e.target.value)}
-                                                placeholder={t('pharmacy.placeholderNotes')}
-                                                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px solid #e2e8f0', background: '#f8fafc', fontSize: '13px', minHeight: '80px', resize: 'none' }}
-                                            />
-                                        </div>
-
-                                        <div style={{ marginTop: '15px', padding: '10px 15px', borderRadius: '10px', background: getContactTiming().type === 'day' ? '#f0fdf4' : '#fffbeb', border: `1px solid ${getContactTiming().type === 'day' ? '#bbf7d0' : '#fef3c7'}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        {/* Contact Timing Notification Banner */}
+                                        <div style={{ marginBottom: '15px', padding: '10px 15px', borderRadius: '10px', background: getContactTiming().type === 'day' ? '#f0fdf4' : '#fffbeb', border: `1px solid ${getContactTiming().type === 'day' ? '#bbf7d0' : '#fef3c7'}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
                                             <div style={{ color: getContactTiming().type === 'day' ? '#16a34a' : '#d97706' }}>
                                                 {getContactTiming().icon}
                                             </div>
@@ -1881,71 +2378,72 @@ const OrderMedicine = () => {
                                             </span>
                                         </div>
 
-                                                {error && <div className="alert alert-error">{error}</div>}
-                                                {success && <div className="alert alert-success">Successfully uploaded! Review in progress.</div>}
+                                        {error && <div className="alert alert-error" style={{ marginBottom: '12px' }}>{error}</div>}
+                                        {success && <div className="alert alert-success" style={{ marginBottom: '12px' }}>{isHindi ? 'सफलतापूर्वक अपलोड किया गया! समीक्षा जारी है।' : 'Successfully uploaded! Review in progress.'}</div>}
 
-                                                {/* Fixed/Sticky Bottom Actions for Step 2 */}
-                                                <div className="fixed-bottom-actions">
-                                                    <div className="fixed-bottom-actions-inner">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setActiveStep(1)}
-                                                            style={{
-                                                                minHeight: '48px',
-                                                                padding: '0 20px',
-                                                                borderRadius: '12px',
-                                                                border: '1.5px solid #cbd5e1',
-                                                                background: '#f8fafc',
-                                                                color: '#334155',
-                                                                fontWeight: '700',
-                                                                fontSize: '13px',
-                                                                cursor: 'pointer',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                gap: '6px',
-                                                                whiteSpace: 'nowrap',
-                                                                flexShrink: 0,
-                                                                boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
-                                                                transition: 'all 0.2s'
-                                                            }}
-                                                        >
-                                                            ← {t('pharmacy.back') || "पता बदलें (Back)"}
-                                                        </button>
+                                        {/* Fixed/Sticky Bottom Actions for Step 4 */}
+                                        <div className="fixed-bottom-actions">
+                                            <div className="fixed-bottom-actions-inner">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setActiveStep(3)}
+                                                    style={{
+                                                        minHeight: '48px',
+                                                        padding: '0 20px',
+                                                        borderRadius: '12px',
+                                                        border: '1.5px solid #cbd5e1',
+                                                        background: '#f8fafc',
+                                                        color: '#334155',
+                                                        fontWeight: '700',
+                                                        fontSize: '13px',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '6px',
+                                                        whiteSpace: 'nowrap',
+                                                        flexShrink: 0,
+                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    ← {t('pharmacy.back', { defaultValue: isHindi ? 'पीछे जाएँ' : 'Back' })}
+                                                </button>
 
-                                                        <button 
-                                                            type="submit" 
-                                                            className="btn-submit-premium" 
-                                                            disabled={loading} 
-                                                            style={{ 
-                                                                flex: 1, 
-                                                                margin: 0,
-                                                                minHeight: '48px',
-                                                                padding: '0 24px',
-                                                                fontSize: '15px'
-                                                            }}
-                                                        >
-                                                            {loading ? (
-                                                                <div className="loader"></div>
-                                                            ) : (
-                                                                <>
-                                                                    <Zap size={18} fill="currentColor" />
-                                                                    {t('pharmacy.submitNow')}
-                                                                </>
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                </div>
+                                                <button 
+                                                    type="submit" 
+                                                    className="btn-submit-premium" 
+                                                    disabled={loading} 
+                                                    style={{ 
+                                                        flex: 1, 
+                                                        margin: 0,
+                                                        minHeight: '48px',
+                                                        padding: '0 24px',
+                                                        fontSize: '15px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '8px'
+                                                    }}
+                                                >
+                                                    {loading ? (
+                                                        <div className="loader"></div>
+                                                    ) : (
+                                                        <>
+                                                            <Zap size={18} fill="currentColor" />
+                                                            {t('pharmacy.submitNow', { defaultValue: isHindi ? 'ऑर्डर सबमिट करें' : 'Submit Order' })}
+                                                        </>
+                                                    )}
+                                                </button>
                                             </div>
-                                        )}
+                                        </div>
+                                    </div>
+                                )}
                                     </div>
                                 </form>
 
 
-                                <div className="security-tag">
-                                    <ShieldCheck size={14} />
-                                    <span>{t('pharmacy.encryptedPrivate')}</span>
-                                </div>
+                                
                             </div>
                         </div>
                     </div>
@@ -1982,7 +2480,7 @@ const OrderMedicine = () => {
                             ))}
                             <div className="checkout-total">
                                 <span>{t('pharmacy.grandTotal')}</span>
-                                <span>₹{calculateTotal(selectedPrescription.verifiedItems).toFixed(2)}</span>
+                                <span>₹{(Number(calculateTotal(selectedPrescription.verifiedItems)) || 0).toFixed(2)}</span>
                             </div>
                         </div>
                         {checkoutSuccess ? (
@@ -2049,7 +2547,7 @@ const OrderMedicine = () => {
                                                             <div style={{ fontWeight: '600', marginBottom: '2px' }}>{addr.label || t('pharmacy.home')}</div>
                                                             <div style={{ color: '#4a5568' }}>{addr.street}, {addr.city}, {addr.zip}</div>
                                                             <div style={{ color: '#718096', fontSize: '12px', marginTop: '4px' }}>
-                                                                Phone: {addr.phone} {addr.altPhone && `| Alt: ${addr.altPhone}`}
+                                                                {isHindi ? 'मोबाइल: ' : 'Phone: '}{addr.phone} {addr.altPhone && `| ${isHindi ? 'अन्य: ' : 'Alt: '}${addr.altPhone}`}
                                                             </div>
                                                         </div>
                                                         <button
@@ -2116,7 +2614,7 @@ const OrderMedicine = () => {
                                             </div>
                                             <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
                                                 <div className="form-group" style={{ flex: 1 }}>
-                                                    <label>{t('pharmacy.pinCode')} <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'normal' }}>(पहला चरण / Step 1)</span></label>
+                                                    <label>{t('pharmacy.pinCode')} <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'normal' }}>{isHindi ? '(पहला चरण)' : '(Step 1)'}</span></label>
                                                     <input type="text" required value={shippingDetails.zip} onChange={e => handleManualZipChange(e.target.value)} placeholder={t('pharmacy.placeholderPin')} />
                                                 </div>
                                                 <div className="form-group" style={{ flex: 1 }}>
@@ -2136,7 +2634,7 @@ const OrderMedicine = () => {
                                                 <div className="form-group" style={{ marginBottom: '15px', background: '#f0fdf4', padding: '12px', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
                                                     <label style={{ fontSize: '13px', fontWeight: '700', color: '#166534', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                                                         <CheckCircle size={16} color="#16a34a" />
-                                                        गाँव / कस्बा चुनें (Step 2: Select Village/City for PIN {shippingDetails.zip}) <span style={{ color: '#ef4444' }}>*</span>
+                                                        {isHindi ? `गाँव / कस्बा चुनें (चरण 2: पिन ${shippingDetails.zip} के लिए)` : `Select Village / Town (Step 2: For PIN ${shippingDetails.zip})`} <span style={{ color: '#ef4444' }}>*</span>
                                                     </label>
                                                     <select
                                                         value={shippingDetails.villageName || shippingDetails.city || ''}
@@ -2157,13 +2655,13 @@ const OrderMedicine = () => {
                                                             cursor: 'pointer'
                                                         }}
                                                     >
-                                                        <option value="">-- इस पिन कोड के तहत अपना गाँव / कस्बा चुनें --</option>
+                                                        <option value="">{isHindi ? '-- इस पिन कोड के तहत अपना गाँव / कस्बा चुनें --' : '-- Select your Village / Town for this PIN --'}</option>
                                                         {getVillagesForPincode(shippingDetails.zip).map((village, idx) => (
                                                             <option key={idx} value={village}>{village}</option>
                                                         ))}
                                                     </select>
                                                     <small style={{ color: '#15803d', fontSize: '11px', marginTop: '5px', display: 'block', fontWeight: '500' }}>
-                                                        ✓ पिन कोड स्वीकृत! कृपया डिलीवरी के लिए उपरोक्त सूची में से अपना गाँव/शहर चुनें।
+                                                        {isHindi ? '✓ पिन कोड स्वीकृत! कृपया डिलीवरी के लिए उपरोक्त सूची में से अपना गाँव/शहर चुनें।' : '✓ PIN code accepted! Please select your village/city from above list for delivery.'}
                                                     </small>
                                                 </div>
                                             )}
@@ -2226,7 +2724,7 @@ const OrderMedicine = () => {
                                     {checkoutLoading ? <div className="loader" style={{ margin: '0 auto' }}></div> : (
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                                             <Zap size={18} fill="currentColor" />
-                                            <span>{t('pharmacy.confirmPlaceReorder', { total: calculateTotal(selectedPrescription.verifiedItems).toFixed(2) })}</span>
+                                            <span>{t('pharmacy.confirmPlaceReorder', { total: (Number(calculateTotal(selectedPrescription.verifiedItems)) || 0).toFixed(2) })}</span>
                                         </div>
                                     )}
                                 </button>
@@ -2484,12 +2982,12 @@ const OrderMedicine = () => {
                                             <div style={{ borderTop: '1px dashed #e2e8f0', margin: '15px 0', paddingTop: '15px' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                                                     <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '600' }}>{t('pharmacy.itemsTotal')}</span>
-                                                    <span style={{ fontSize: '13px', color: '#475569', fontWeight: '700' }}>₹{selectedTrackOrder.totalAmount.toFixed(2)}</span>
+                                                    <span style={{ fontSize: '13px', color: '#475569', fontWeight: '700' }}>₹{(Number(selectedTrackOrder.totalAmount) || 0).toFixed(2)}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #e2e8f0' }}>
                                                     <span style={{ fontSize: '15px', color: '#1e293b', fontWeight: '800' }}>{t('pharmacy.amountPaid')}</span>
                                                     <div style={{ textAlign: 'right' }}>
-                                                        <div style={{ fontSize: '22px', color: '#16a34a', fontWeight: '900', lineHeight: '1' }}>₹{selectedTrackOrder.totalAmount.toFixed(2)}</div>
+                                                        <div style={{ fontSize: '22px', color: '#16a34a', fontWeight: '900', lineHeight: '1' }}>₹{(Number(selectedTrackOrder.totalAmount) || 0).toFixed(2)}</div>
                                                         <div style={{ fontSize: '10px', color: '#16a34a', fontWeight: '700', textTransform: 'uppercase', marginTop: '4px' }}>{t('pharmacy.transactionSuccess')}</div>
                                                     </div>
                                                 </div>
@@ -2564,7 +3062,17 @@ const OrderMedicine = () => {
                         <button
                             className="btn-submit-premium"
                             style={{ marginTop: '0' }}
-                            onClick={() => setShowPostUploadModal(false)}
+                            onClick={() => {
+                                setShowPostUploadModal(false);
+                                if (!localStorage.getItem('user')) {
+                                    toast.success(
+                                        isHindi 
+                                            ? "पर्चा सफलतापूर्वक जमा हो गया! सत्यापन के बाद आपको SMS/WhatsApp पर सूचना मिलेगी।"
+                                            : "Prescription submitted! You will receive updates via SMS/WhatsApp."
+                                    );
+                                }
+                                navigate('/order-history');
+                            }}
                         >
                             {t('pharmacy.gotItThanks')}
                         </button>
@@ -2622,63 +3130,212 @@ const OrderMedicine = () => {
                 </div>
             )}
 
+            {/* Prescription Source Chooser Modal (Camera vs Gallery) */}
+            {showUploadPickerModal && (
+                <div
+                    className="checkout-modal-overlay"
+                    style={{ zIndex: 2000 }}
+                    onClick={() => setShowUploadPickerModal(false)}
+                >
+                    <div
+                        className="checkout-modal-card"
+                        style={{ maxWidth: '400px', padding: '24px', borderRadius: '20px', textAlign: 'center' }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                            <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#1e293b', fontWeight: '800' }}>
+                                {isHindi ? 'पर्चा अपलोड करें' : 'Upload Prescription'}
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => setShowUploadPickerModal(false)}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <p style={{ color: '#64748b', fontSize: '13px', margin: '0 0 20px' }}>
+                            {isHindi ? 'कृपया पर्चा जोड़ने के लिए विकल्प चुनें:' : 'Please choose an option to upload prescription:'}
+                        </p>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                            {/* Camera Option */}
+                            <button
+                                type="button"
+                                onClick={openCameraPicker}
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '10px',
+                                    padding: '18px 12px',
+                                    borderRadius: '16px',
+                                    background: '#eff6ff',
+                                    border: '2px solid #bfdbfe',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                <div style={{
+                                    width: '46px',
+                                    height: '46px',
+                                    borderRadius: '50%',
+                                    background: '#2563eb',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: '#ffffff',
+                                    boxShadow: '0 4px 10px rgba(37,99,235,0.25)'
+                                }}>
+                                    <Camera size={22} />
+                                </div>
+                                <div>
+                                    <div style={{ fontWeight: '800', fontSize: '13.5px', color: '#1d4ed8' }}>
+                                        {isHindi ? 'कैमरा' : 'Camera'}
+                                    </div>
+                                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                                        {isHindi ? 'फोटो खींचें' : 'Take photo'}
+                                    </div>
+                                </div>
+                            </button>
+
+                            {/* Gallery Option */}
+                            <button
+                                type="button"
+                                onClick={openGalleryPicker}
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '10px',
+                                    padding: '18px 12px',
+                                    borderRadius: '16px',
+                                    background: '#f8fafc',
+                                    border: '2px solid #cbd5e1',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                <div style={{
+                                    width: '46px',
+                                    height: '46px',
+                                    borderRadius: '50%',
+                                    background: '#0f172a',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: '#ffffff',
+                                    boxShadow: '0 4px 10px rgba(15,23,42,0.2)'
+                                }}>
+                                    <Upload size={22} />
+                                </div>
+                                <div>
+                                    <div style={{ fontWeight: '800', fontSize: '13.5px', color: '#1e293b' }}>
+                                        {isHindi ? 'गैलरी' : 'Gallery'}
+                                    </div>
+                                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                                        {isHindi ? 'फाइल्स से चुनें' : 'From files'}
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setShowUploadPickerModal(false)}
+                            style={{
+                                width: '100%',
+                                padding: '10px',
+                                borderRadius: '10px',
+                                background: '#f1f5f9',
+                                border: 'none',
+                                color: '#64748b',
+                                fontWeight: '700',
+                                fontSize: '13px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {isHindi ? 'रद्द करें' : 'Cancel'}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Past Prescription Archive Selector Modal ("पहले की पर्ची चुनें") */}
             {showPastRxModal && (
                 <div className="modal-overlay" onClick={() => setShowPastRxModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px', maxHeight: '80vh', overflowY: 'auto' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>पहले की पर्ची चुनें (Past Prescriptions)</h3>
+                            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>
+                                {isHindi ? 'पहले की पर्ची चुनें' : 'Select from Past Prescriptions'}
+                            </h3>
                             <button onClick={() => setShowPastRxModal(false)} style={{ border: 'none', background: 'transparent', fontSize: '18px', cursor: 'pointer' }}>✕</button>
                         </div>
 
-                        {history.length === 0 ? (
+                        {myPrescriptions.length === 0 ? (
                             <div style={{ padding: '30px 20px', textAlign: 'center', color: '#64748b' }}>
                                 <FileText size={40} color="#cbd5e1" style={{ marginBottom: '10px' }} />
-                                <p style={{ margin: 0 }}>No past uploaded prescriptions found in your account.</p>
+                                <p style={{ margin: 0 }}>
+                                    {isHindi ? 'आपके खाते में कोई पिछला पर्चा नहीं मिला।' : 'No past uploaded prescriptions found in your account.'}
+                                </p>
                             </div>
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                {history.map((rx) => (
-                                    <div
-                                        key={rx._id}
-                                        onClick={() => {
-                                            setSelectedPastRx(rx);
-                                            setPreview(rx.image);
-                                            setShowPastRxModal(false);
-                                            toast.success(`Selected past prescription #${rx._id.slice(-4)}`);
-                                        }}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '12px',
-                                            padding: '12px',
-                                            borderRadius: '10px',
-                                            border: '1px solid #e2e8f0',
-                                            cursor: 'pointer',
-                                            background: '#f8fafc'
-                                        }}
-                                    >
-                                        {rx.image && (
-                                            <img
-                                                src={rx.image}
-                                                alt="Rx thumbnail"
-                                                style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px' }}
-                                            />
-                                        )}
-                                        <div style={{ flex: 1 }}>
-                                            <strong style={{ fontSize: '13px', color: '#1e293b', display: 'block' }}>Ref: #{rx._id.slice(-6).toUpperCase()}</strong>
-                                            <span style={{ fontSize: '11px', color: '#64748b' }}>Uploaded: {new Date(rx.createdAt).toLocaleDateString()}</span>
-                                            <div style={{ fontSize: '11px', color: '#10b981', fontWeight: '600' }}>Status: {rx.status}</div>
+                                {myPrescriptions.map((rx) => {
+                                    const rxImg = rx.image ? (rx.image.startsWith('http') ? rx.image : `${API_BASE_URL}${rx.image.startsWith('/') ? '' : '/'}${rx.image}`) : null;
+                                    return (
+                                        <div
+                                            key={rx._id}
+                                            onClick={() => {
+                                                setFile(null);
+                                                const fileInput = document.getElementById('presc-upload');
+                                                if (fileInput) fileInput.value = '';
+                                                setSelectedPastRx(rx);
+                                                setPreview(rxImg);
+                                                setShowPastRxModal(false);
+                                                toast.success(isHindi ? `पर्ची चुनी गई #${rx._id.slice(-4)}` : `Selected past prescription #${rx._id.slice(-4)}`);
+                                            }}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '12px',
+                                                padding: '12px',
+                                                borderRadius: '10px',
+                                                border: '1px solid #e2e8f0',
+                                                cursor: 'pointer',
+                                                background: '#f8fafc'
+                                            }}
+                                        >
+                                            {rxImg && (
+                                                <img
+                                                    src={rxImg}
+                                                    alt="Rx thumbnail"
+                                                    style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px' }}
+                                                />
+                                            )}
+                                            <div style={{ flex: 1 }}>
+                                            <strong style={{ fontSize: '13px', color: '#1e293b', display: 'block' }}>
+                                                {isHindi ? 'संदर्भ: #' : 'Ref: #'}{rx._id.slice(-6).toUpperCase()}
+                                            </strong>
+                                            <span style={{ fontSize: '11px', color: '#64748b' }}>
+                                                {isHindi ? 'अपलोड तिथि: ' : 'Uploaded: '}{new Date(rx.createdAt).toLocaleDateString()}
+                                            </span>
+                                            <div style={{ fontSize: '11px', color: '#10b981', fontWeight: '600' }}>
+                                                {isHindi ? 'स्थिति: ' : 'Status: '}{rx.status}
+                                            </div>
                                         </div>
                                         <button
                                             type="button"
                                             style={{ padding: '6px 12px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}
                                         >
-                                            Choose
+                                            {isHindi ? 'चुनें' : 'Choose'}
                                         </button>
                                     </div>
-                                ))}
-                            </div>
+                                );
+                            })}
+                        </div>
                         )}
                     </div>
                 </div>

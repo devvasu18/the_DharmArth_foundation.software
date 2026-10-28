@@ -10,7 +10,20 @@ const notificationService = require('../services/notificationService');
 // @access  Private
 exports.uploadPrescription = async (req, res) => {
     try {
-        if (!req.file) {
+        let imagePath = req.file ? req.file.path : null;
+        let verifiedItemsToCarry = [];
+
+        if (!imagePath && req.body.reusedPrescriptionId) {
+            const pastRx = await Prescription.findById(req.body.reusedPrescriptionId);
+            if (pastRx && pastRx.image) {
+                imagePath = pastRx.image;
+                if (pastRx.verifiedItems && pastRx.verifiedItems.length > 0) {
+                    verifiedItemsToCarry = pastRx.verifiedItems;
+                }
+            }
+        }
+
+        if (!imagePath) {
             return res.status(400).json({ message: 'Please upload a prescription image' });
         }
 
@@ -73,15 +86,16 @@ exports.uploadPrescription = async (req, res) => {
 
         const prescription = await Prescription.create({
             user: userId,
-            image: req.file.path, // Cloudinary URL
+            image: imagePath,
             status: 'Pending',
             notes: req.body.notes,
-            courseDays: req.body.courseDays ? Number(req.body.courseDays) : 15,
+            courseDays: (req.body.courseDays && Number(req.body.courseDays) > 0) ? Number(req.body.courseDays) : 15,
             needAllMedicines: req.body.needAllMedicines || 'ALL',
             faqAnswers: parsedFaqAnswers,
             guestName: guestInfo.name,
             guestMobile: guestInfo.mobile,
-            pendingShippingAddress: parsedShippingAddress
+            pendingShippingAddress: parsedShippingAddress,
+            ...(verifiedItemsToCarry.length > 0 ? { verifiedItems: verifiedItemsToCarry } : {})
         });
 
         // Notify admin
@@ -179,9 +193,13 @@ exports.verifyPrescription = async (req, res) => {
         
         prescription.verifiedItems = verifiedItems.map(item => {
             const stockInfo = itemsWithStock.find(si => si.medicineName === item.medicineName);
+            const isAvailable = item.fulfillmentStatus === 'Shortlisted'
+                ? false
+                : (item.isAvailable !== undefined ? Boolean(item.isAvailable) : (stockInfo ? stockInfo.isAvailable : true));
+
             return {
                 ...item,
-                isAvailable: stockInfo ? stockInfo.isAvailable : true,
+                isAvailable: item.fulfillmentStatus === 'Shortlisted' ? false : (isAvailable !== false),
                 fulfillmentStatus: item.fulfillmentStatus || 'In Stock'
             };
         });
@@ -382,6 +400,11 @@ exports.approveAndCreateOrder = async (req, res) => {
             }
         }
         // -------------------------------------------------------------
+
+        // Asynchronously push confirmed order to MARG ERP B2C
+        MargErpService.pushOrderToMarg(order).catch(err => {
+            console.error(`[MARG ERP] Auto-push failed for order ${order._id}:`, err?.message || err);
+        });
 
         res.status(201).json(order);
     } catch (error) {
