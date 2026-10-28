@@ -185,6 +185,51 @@ exports.verifyPrescription = async (req, res) => {
             return res.json(prescription);
         }
 
+        // If status is Doctor Approval Pending
+        const isDocReq = status === 'Doctor Approval Pending' || Boolean(req.body.requiresDoctorConsultation);
+        if (isDocReq) {
+            let itemsToSave = [];
+            if (verifiedItems && verifiedItems.length > 0) {
+                const itemsWithStock = await MargErpService.checkStockAndPrice(verifiedItems);
+                itemsToSave = verifiedItems.map(item => {
+                    const stockInfo = itemsWithStock.find(si => si.medicineName === item.medicineName);
+                    const isAvailable = item.fulfillmentStatus === 'Shortlisted'
+                        ? false
+                        : (item.isAvailable !== undefined ? Boolean(item.isAvailable) : (stockInfo ? stockInfo.isAvailable : true));
+                    return {
+                        ...item,
+                        isAvailable: item.fulfillmentStatus === 'Shortlisted' ? false : (isAvailable !== false),
+                        fulfillmentStatus: item.fulfillmentStatus || 'In Stock'
+                    };
+                });
+            }
+
+            prescription.status = 'Doctor Approval Pending';
+            prescription.verifiedItems = itemsToSave;
+            prescription.doctorConsultation = {
+                required: true,
+                status: 'Pending'
+            };
+            prescription.adminNote = adminNote || 'Doctor permission requested by Pharmacist';
+            prescription.verificationLog.push({
+                status: 'Doctor Approval Pending',
+                updatedBy: req.user._id,
+                note: adminNote || 'Sent to Doctor Dashboard for clinical consultation and approval'
+            });
+
+            await prescription.save();
+
+            const io = req.app.get('io');
+            if (io) {
+                io.to('admin_notifications').emit('doctor_consultation_requested', {
+                    prescriptionId: prescription._id,
+                    patientName: prescription.guestName || (prescription.user && prescription.user.name)
+                });
+            }
+
+            return res.json(prescription);
+        }
+
         // Check stock via MARG ERP Simulation for each item
         const itemsWithStock = await MargErpService.checkStockAndPrice(verifiedItems);
 
@@ -254,8 +299,10 @@ exports.approveAndCreateOrder = async (req, res) => {
         // For shareable links, we allow skip of ownership check if the prescription is verified.
         // If req.user is missing, it's a guest payment for someone else.
 
-        // Filter out unavailable items
-        const availableItems = prescription.verifiedItems.filter(item => item.isAvailable);
+        // Filter out unavailable items (items that are shortlisted or explicitly unavailable without a price)
+        const availableItems = prescription.verifiedItems.filter(item => 
+            item.fulfillmentStatus !== 'Shortlisted' && (item.isAvailable !== false || Number(item.price) > 0)
+        );
         if (availableItems.length === 0) {
             return res.status(400).json({ message: 'No items are currently available' });
         }

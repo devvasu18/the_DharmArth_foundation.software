@@ -127,28 +127,47 @@ const OrderMedicine = () => {
     const zipTimeoutRef = useRef(null);
 
     // Client Flowchart Page 1 Requirements
-    const [courseDays, setCourseDays] = useState(15);
+    const [courseDays, setCourseDays] = useState('');
     const [needAllMedicines, setNeedAllMedicines] = useState(true); // true: 'पर्ची की सभी दवाई चाहिए', false: 'पर्ची की कुछ दवाई चाहिए'
     const [showPastRxModal, setShowPastRxModal] = useState(false);
     const [selectedPastRx, setSelectedPastRx] = useState(null);
     const [showUploadPickerModal, setShowUploadPickerModal] = useState(false);
 
-    const openCameraPicker = () => {
-        setShowUploadPickerModal(false);
-        const camInput = document.getElementById('presc-upload-camera');
-        if (camInput) {
-            camInput.value = '';
-            camInput.click();
+    // Auto-dismiss upload picker modal whenever a preview is present
+    useEffect(() => {
+        if (preview) {
+            setShowUploadPickerModal(false);
         }
+    }, [preview]);
+
+    const openCameraPicker = (e) => {
+        if (e && e.stopPropagation) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        setShowUploadPickerModal(false);
+        setTimeout(() => {
+            const camInput = document.getElementById('presc-upload-camera');
+            if (camInput) {
+                camInput.value = '';
+                camInput.click();
+            }
+        }, 50);
     };
 
-    const openGalleryPicker = () => {
-        setShowUploadPickerModal(false);
-        const galInput = document.getElementById('presc-upload-gallery');
-        if (galInput) {
-            galInput.value = '';
-            galInput.click();
+    const openGalleryPicker = (e) => {
+        if (e && e.stopPropagation) {
+            e.preventDefault();
+            e.stopPropagation();
         }
+        setShowUploadPickerModal(false);
+        setTimeout(() => {
+            const galInput = document.getElementById('presc-upload-gallery');
+            if (galInput) {
+                galInput.value = '';
+                galInput.click();
+            }
+        }, 50);
     };
 
     const validatePincode = (pincodeValue) => {
@@ -570,6 +589,7 @@ const OrderMedicine = () => {
     const [isDragOver, setIsDragOver] = useState(false);
 
     const processFile = (selectedFile) => {
+        setShowUploadPickerModal(false);
         if (!selectedFile) return;
         if (!selectedFile.type.startsWith('image/')) {
             toast.error(isHindi ? "केवल छवि फ़ाइलें (JPG, PNG) स्वीकार्य हैं" : "Only image files (JPG, PNG) are accepted");
@@ -582,10 +602,12 @@ const OrderMedicine = () => {
         setFile(selectedFile);
         setSelectedPastRx(null);
         setPreview(URL.createObjectURL(selectedFile));
+        setShowUploadPickerModal(false);
         setError(null);
     };
 
     const handleFileChange = (e) => {
+        setShowUploadPickerModal(false);
         const selectedFile = e.target.files && e.target.files[0];
         if (selectedFile) {
             processFile(selectedFile);
@@ -1878,44 +1900,43 @@ const OrderMedicine = () => {
                                                                         </span>
                                                                     </div>
                                                                 )}
-
-                                                                {/* Camera capture input */}
-                                                                <input
-                                                                    type="file"
-                                                                    id="presc-upload-camera"
-                                                                    hidden
-                                                                    accept="image/*"
-                                                                    capture="environment"
-                                                                    onChange={(e) => {
-                                                                        handleFileChange(e);
-                                                                        e.target.value = '';
-                                                                    }}
-                                                                />
-
-                                                                {/* Gallery / File picker input */}
-                                                                <input
-                                                                    type="file"
-                                                                    id="presc-upload-gallery"
-                                                                    hidden
-                                                                    accept="image/*"
-                                                                    onChange={(e) => {
-                                                                        handleFileChange(e);
-                                                                        e.target.value = '';
-                                                                    }}
-                                                                />
-
-                                                                {/* Legacy input alias */}
-                                                                <input
-                                                                    type="file"
-                                                                    id="presc-upload"
-                                                                    hidden
-                                                                    accept="image/*"
-                                                                    onChange={(e) => {
-                                                                        handleFileChange(e);
-                                                                        e.target.value = '';
-                                                                    }}
-                                                                />
                                                             </div>
+
+                                                            {/* Hidden inputs placed outside the clickable drop area to prevent event bubbling */}
+                                                            <input
+                                                                type="file"
+                                                                id="presc-upload-camera"
+                                                                hidden
+                                                                accept="image/*"
+                                                                capture="environment"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                onChange={(e) => {
+                                                                    handleFileChange(e);
+                                                                    e.target.value = '';
+                                                                }}
+                                                            />
+                                                            <input
+                                                                type="file"
+                                                                id="presc-upload-gallery"
+                                                                hidden
+                                                                accept="image/*"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                onChange={(e) => {
+                                                                    handleFileChange(e);
+                                                                    e.target.value = '';
+                                                                }}
+                                                            />
+                                                            <input
+                                                                type="file"
+                                                                id="presc-upload"
+                                                                hidden
+                                                                accept="image/*"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                onChange={(e) => {
+                                                                    handleFileChange(e);
+                                                                    e.target.value = '';
+                                                                }}
+                                                            />
                                                         </div>
                                                     );
                                                 })()}
@@ -1993,7 +2014,7 @@ const OrderMedicine = () => {
                                                         gap: '8px'
                                                     }}
                                                 >
-                                                    <span>{isHindi ? 'आगे बढ़ें: दवाई चयन' : 'Continue: Medicine Details'}</span>
+                                                    <span>{isHindi ? 'आगे बढ़ें' : 'Continue'}</span>
                                                     <ArrowRight size={18} />
                                                 </button>
                                             </div>
@@ -2208,7 +2229,7 @@ const OrderMedicine = () => {
                                                         gap: '8px'
                                                     }}
                                                 >
-                                                    <span>{isHindi ? 'आगे बढ़ें: कोर्स अवधि व सबमिट' : 'Next: Course Duration & Submit'}</span>
+                                                    <span>{isHindi ? 'आगे बढ़ें' : 'Next'}</span>
                                                     <ArrowRight size={18} />
                                                 </button>
                                             </div>
@@ -2281,12 +2302,8 @@ const OrderMedicine = () => {
                                                     }}
                                                     onBlur={(e) => {
                                                         e.target.style.borderColor = '#cbd5e1';
-                                                        if (!courseDays || Number(courseDays) < 1) {
-                                                            setCourseDays(15);
-                                                        }
                                                     }}
                                                     placeholder={isHindi ? "दिन संख्या लिखें" : "Enter days"}
-                                                    required
                                                     style={{
                                                         width: '100%',
                                                         padding: '10px 48px 10px 14px',
@@ -3162,7 +3179,10 @@ const OrderMedicine = () => {
                             {/* Camera Option */}
                             <button
                                 type="button"
-                                onClick={openCameraPicker}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    openCameraPicker(e);
+                                }}
                                 style={{
                                     display: 'flex',
                                     flexDirection: 'column',
@@ -3203,7 +3223,10 @@ const OrderMedicine = () => {
                             {/* Gallery Option */}
                             <button
                                 type="button"
-                                onClick={openGalleryPicker}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    openGalleryPicker(e);
+                                }}
                                 style={{
                                     display: 'flex',
                                     flexDirection: 'column',

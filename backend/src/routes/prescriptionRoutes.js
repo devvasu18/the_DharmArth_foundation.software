@@ -34,9 +34,9 @@ router.patch('/:id/verify',
     protect, 
     checkPermission('Prescription Management', 'edit'), 
     [
-        body('status').isIn(['Verified', 'Rejected']),
+        body('status').isIn(['Verified', 'Rejected', 'Doctor Approval Pending']),
         body('adminNote').optional().isString(),
-        body('verifiedItems').if(body('status').equals('Verified')).isArray().notEmpty(),
+        body('verifiedItems').if(body('status').isIn(['Verified', 'Doctor Approval Pending'])).isArray().notEmpty(),
     ],
     validate,
     verifyPrescription

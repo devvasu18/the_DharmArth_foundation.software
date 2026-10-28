@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
-import { Check, X, Eye, Package, Truck, Search, User, Phone, Calendar, AlertCircle, Trash2, Plus, Edit2, Lock, Share2 } from 'lucide-react';
+import { Check, X, Eye, Package, Truck, Search, User, Phone, Calendar, AlertCircle, Trash2, Plus, Edit2, Lock, Share2, Stethoscope } from 'lucide-react';
 import { useConfirm } from '../../context/ConfirmContext';
 import toast from 'react-hot-toast';
 import './AdminPrescriptions.css';
@@ -13,7 +13,7 @@ const AdminPrescriptions = () => {
     const [note, setNote] = useState('');
     const [isReadOnly, setIsReadOnly] = useState(false);
     const [imageModalSrc, setImageModalSrc] = useState(null);
-    const defaultItem = { medicineName: '', frequency: '', time: '', foodRelation: '', intakeMethod: '', quantity: 1, price: '', margPack: 0, margBatch: '', margExpiry: '', margBillNo: '', batches: [] };
+    const defaultItem = { medicineName: '', frequency: '', time: '', foodRelation: '', intakeMethod: '', quantity: 1, price: '', isAvailable: true, margPack: 0, margBatch: '', margExpiry: '', margBillNo: '', batches: [] };
     const [verifiedItems, setVerifiedItems] = useState([{ ...defaultItem }]);
     const [errors, setErrors] = useState([]);
     const [searchingIndex, setSearchingIndex] = useState(null);
@@ -38,6 +38,19 @@ const AdminPrescriptions = () => {
             if (selected.status === 'Verified' || selected.status === 'Ordered') {
                 setIsReadOnly(true);
                 setNote(selected.adminNote || '');
+                if (selected.verifiedItems && selected.verifiedItems.length > 0) {
+                    setVerifiedItems(selected.verifiedItems.map(i => ({
+                        ...defaultItem, 
+                        ...i, 
+                        price: i.price || '',
+                        isManualAllowed: !i.margPID
+                    })));
+                } else {
+                    setVerifiedItems([{ ...defaultItem }]);
+                }
+            } else if (selected.status === 'Doctor Approval Pending') {
+                setIsReadOnly(true);
+                setNote(selected.adminNote || 'Doctor permission requested. Awaiting decision on Doctor Dashboard.');
                 if (selected.verifiedItems && selected.verifiedItems.length > 0) {
                     setVerifiedItems(selected.verifiedItems.map(i => ({
                         ...defaultItem, 
@@ -201,14 +214,35 @@ const AdminPrescriptions = () => {
                 toast.error("Please fill medicine name, quantity, and price for all items.");
                 return;
             }
+        } else if (status === 'Doctor Approval Pending') {
+            const hasAnyItem = verifiedItems.some(i => i.medicineName && i.medicineName.trim() !== '');
+            if (hasAnyItem) {
+                const newErrors = [];
+                verifiedItems.forEach((item, index) => {
+                    if (item.medicineName && (!item.quantity || item.price === '' || item.price === null || item.price === undefined)) {
+                        newErrors.push(index);
+                    }
+                });
+                if (newErrors.length > 0) {
+                    setErrors(newErrors);
+                    toast.error("Please fill quantity and price for entered medicines.");
+                    return;
+                }
+            }
         }
         setErrors([]);
         try {
             await api.patch(`/prescriptions/${selected._id}/verify`, {
                 status,
-                verifiedItems: status === 'Verified' ? verifiedItems : [],
-                adminNote: note
+                verifiedItems: (status === 'Verified' || status === 'Doctor Approval Pending') ? verifiedItems : [],
+                adminNote: note,
+                requiresDoctorConsultation: status === 'Doctor Approval Pending'
             });
+            toast.success(
+                status === 'Doctor Approval Pending'
+                    ? "Consultation ticket sent to Doctor Dashboard!"
+                    : (status === 'Verified' ? "Prescription verified & User notified!" : "Prescription marked as Rejected")
+            );
             setSelected(null);
             setVerifiedItems([{ ...defaultItem }]);
             setNote('');
@@ -248,13 +282,18 @@ const AdminPrescriptions = () => {
 
                     {/* Status Tabs */}
                     <div className="status-tabs-container">
-                        {['Pending', 'Verified', 'All'].map(tab => (
+                        {[
+                            { label: 'Pending', value: 'Pending' },
+                            { label: 'Doctor Pending', value: 'Doctor Approval Pending' },
+                            { label: 'Verified', value: 'Verified' },
+                            { label: 'All', value: 'All' }
+                        ].map(tab => (
                             <button
-                                key={tab}
-                                className={`status-tab ${statusFilter === tab ? 'active' : ''}`}
-                                onClick={() => setStatusFilter(tab)}
+                                key={tab.value}
+                                className={`status-tab ${statusFilter === tab.value ? 'active' : ''}`}
+                                onClick={() => setStatusFilter(tab.value)}
                             >
-                                {tab}
+                                {tab.label}
                             </button>
                         ))}
                     </div>
@@ -316,7 +355,18 @@ const AdminPrescriptions = () => {
                                             </div>
                                         )}
                                         <span>{new Date(p.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                                        <div style={{fontSize: '0.75rem', marginTop:'4px', color: p.status==='Pending'?'#eab308' : '#10b981'}}>
+                                        <div style={{
+                                            fontSize: '0.75rem', 
+                                            marginTop: '4px', 
+                                            fontWeight: '600',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            color: p.status === 'Pending' 
+                                                ? '#eab308' 
+                                                : (p.status === 'Doctor Approval Pending' ? '#7c3aed' : (p.status === 'Rejected' ? '#ef4444' : '#10b981'))
+                                        }}>
+                                            {p.status === 'Doctor Approval Pending' && <Stethoscope size={12} />}
                                             {p.status}
                                         </div>
                                     </div>
@@ -375,10 +425,47 @@ const AdminPrescriptions = () => {
                             </div>
 
                             <div className="master-grid">
-
-
                                 {/* Right: Verification Form */}
                                 <div className="form-view-pane">
+                                    {/* Doctor Approval Pending Banner */}
+                                    {selected.status === 'Doctor Approval Pending' && (
+                                        <div style={{
+                                            background: '#f5f3ff',
+                                            border: '1.5px solid #c4b5fd',
+                                            borderRadius: '12px',
+                                            padding: '14px 18px',
+                                            marginBottom: '20px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            gap: '12px'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <Stethoscope size={24} color="#7c3aed" />
+                                                <div>
+                                                    <strong style={{ color: '#5b21b6', fontSize: '14px', display: 'block' }}>
+                                                        Doctor Permission Requested (चिकित्सक परामर्श लंबित)
+                                                    </strong>
+                                                    <span style={{ fontSize: '12px', color: '#6d28d9' }}>
+                                                        {selected.adminNote || 'This prescription has been sent to the Doctor Dashboard for clinical review and approval.'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <span style={{
+                                                background: '#7c3aed',
+                                                color: '#fff',
+                                                fontSize: '11px',
+                                                fontWeight: '700',
+                                                padding: '4px 10px',
+                                                borderRadius: '20px',
+                                                textTransform: 'uppercase',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                Dr. Consultation Pending
+                                            </span>
+                                        </div>
+                                    )}
+
                                     {/* Prescription Image at Top */}
                                     {selected.image ? (
                                         <div className="image-view-pane" style={{ padding: '0 0 30px 0', background: 'none' }}>
@@ -744,11 +831,36 @@ const AdminPrescriptions = () => {
                                     </section>
 
                                     {!isReadOnly && (
-                                        <div className="action-footer">
-                                            <button className="btn-reject-p" onClick={() => handleVerify('Rejected')}>
+                                        <div className="action-footer" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                            <button 
+                                                type="button" 
+                                                className="btn-reject-p" 
+                                                onClick={() => handleVerify('Rejected')}
+                                                style={{ flex: 1, minWidth: '110px' }}
+                                            >
                                                 <X size={18} /> Reject
                                             </button>
-                                            <button className="btn-approve-p" onClick={() => handleVerify('Verified')}>
+                                            <button 
+                                                type="button" 
+                                                className="btn-approve-p" 
+                                                onClick={() => handleVerify('Doctor Approval Pending')}
+                                                style={{ 
+                                                    flex: 1.5, 
+                                                    minWidth: '220px', 
+                                                    backgroundColor: '#7c3aed', 
+                                                    borderColor: '#6d28d9',
+                                                    color: '#ffffff',
+                                                    boxShadow: '0 8px 16px rgba(124, 58, 237, 0.25)' 
+                                                }}
+                                            >
+                                                <Stethoscope size={18} /> Request Doctor Permission
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                className="btn-approve-p" 
+                                                onClick={() => handleVerify('Verified')}
+                                                style={{ flex: 1.5, minWidth: '190px' }}
+                                            >
                                                 <Check size={18} /> Approve & notify User
                                             </button>
                                         </div>

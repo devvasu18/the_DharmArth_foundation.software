@@ -122,7 +122,7 @@ class MargErpService {
                     medicineName: medicineNameQuery,
                     price: item.price ? Number(item.price) : 0,
                     quantity: item.quantity || 1,
-                    isAvailable: item.isAvailable || false,
+                    isAvailable: item.fulfillmentStatus === 'Shortlisted' ? false : (item.isAvailable !== undefined ? Boolean(item.isAvailable) : true),
                     alternativeSuggested: "Medicine not mapped in MARG. Admin needs to specify a manual price."
                 });
             }

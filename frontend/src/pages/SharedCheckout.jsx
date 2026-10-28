@@ -310,10 +310,10 @@ const SharedCheckout = () => {
     };
 
     const calculateSubtotal = () => {
-        if (!prescription) return 0;
+        if (!prescription || !prescription.verifiedItems) return 0;
         return prescription.verifiedItems
-            .filter(i => i.isAvailable)
-            .reduce((acc, item) => acc + (item.price || 0), 0);
+            .filter(i => i.fulfillmentStatus !== 'Shortlisted' && (i.isAvailable !== false || Number(i.price) > 0))
+            .reduce((acc, item) => acc + (Number(item.price) || 0), 0);
     };
 
     const calculateGst = (subtotal) => {
